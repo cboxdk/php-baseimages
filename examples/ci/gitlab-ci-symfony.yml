@@ -1,0 +1,164 @@
+# GitLab CI for Symfony with PHPeek Base Images
+
+variables:
+  DOCKER_DRIVER: overlay2
+  PHP_IMAGE: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+  MYSQL_DATABASE: symfony_test
+  MYSQL_ROOT_PASSWORD: root
+
+stages:
+  - build
+  - test
+  - deploy
+
+# Cache Composer and npm dependencies
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - vendor/
+    - node_modules/
+    - .php-cs-fixer.cache
+
+# Build Docker image with dependencies
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      docker build \
+        -f templates/Dockerfile.ci \
+        -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA \
+        -t $CI_REGISTRY_IMAGE:latest \
+        .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+
+# Install dependencies
+install:
+  stage: build
+  image: $PHP_IMAGE
+  script:
+    - composer install --prefer-dist --no-progress --no-interaction
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - vendor/
+      - node_modules/
+      - public/build/
+    expire_in: 1 hour
+
+# PHPStan static analysis
+phpstan:
+  stage: test
+  image: $PHP_IMAGE
+  dependencies:
+    - install
+  script:
+    - vendor/bin/phpstan analyse --memory-limit=1G
+
+# PHP CS Fixer code style
+php-cs-fixer:
+  stage: test
+  image: $PHP_IMAGE
+  dependencies:
+    - install
+  script:
+    - vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
+
+# PHPUnit tests with coverage
+phpunit:
+  stage: test
+  image: $PHP_IMAGE
+  services:
+    - mysql:8.3
+    - redis:7-alpine
+  variables:
+    DATABASE_URL: mysql://root:root@mysql:3306/symfony_test
+    REDIS_URL: redis://redis:6379
+  dependencies:
+    - install
+  before_script:
+    - cp .env.test .env
+    - php bin/console doctrine:database:create --if-not-exists --env=test
+    - php bin/console doctrine:migrations:migrate --no-interaction --env=test
+  script:
+    - php bin/console cache:clear --env=test
+    - vendor/bin/phpunit --coverage-text --colors=never
+  coverage: '/^\s*Lines:\s*\d+.\d+\%/'
+
+# Security check
+security:
+  stage: test
+  image: $PHP_IMAGE
+  dependencies:
+    - install
+  script:
+    - composer audit
+    - npm audit --audit-level=moderate
+
+# Integration tests
+integration:
+  stage: test
+  image: $PHP_IMAGE
+  services:
+    - mysql:8.3
+    - redis:7-alpine
+  variables:
+    DATABASE_URL: mysql://root:root@mysql:3306/symfony_test
+    REDIS_URL: redis://redis:6379
+  dependencies:
+    - install
+  before_script:
+    - php bin/console doctrine:database:create --if-not-exists --env=test
+    - php bin/console doctrine:migrations:migrate --no-interaction --env=test
+    - php bin/console doctrine:fixtures:load --no-interaction --env=test
+  script:
+    - vendor/bin/phpunit --testsuite=Integration
+
+# Deploy to staging
+deploy:staging:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - develop
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$STAGING_SERVER "
+        cd /var/www/app &&
+        docker compose pull &&
+        docker compose up -d &&
+        docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction &&
+        docker compose exec -T app php bin/console cache:clear
+      "
+
+# Deploy to production
+deploy:production:
+  stage: deploy
+  image: alpine:latest
+  only:
+    - main
+  when: manual
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+  script:
+    - ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$PRODUCTION_SERVER "
+        cd /var/www/app &&
+        docker compose pull &&
+        docker compose up -d &&
+        docker compose exec -T app php bin/console doctrine:migrations:migrate --no-interaction &&
+        docker compose exec -T app php bin/console cache:clear --env=prod
+      "

@@ -1,0 +1,137 @@
+version: '3.8'
+
+# PHPeek Development Environment Template
+# Includes: PHP + Nginx, MySQL, Redis, Mailpit, Node.js dev server
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: phpeek-dev
+    ports:
+      - "8000:80"      # Web server
+      - "5173:5173"    # Vite HMR
+      - "9003:9003"    # Xdebug
+    volumes:
+      - ./:/var/www/html
+      # Cache Composer dependencies
+      - composer-cache:/root/.composer
+      # Cache npm dependencies
+      - node-modules:/var/www/html/node_modules
+    environment:
+      # Laravel
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:your-app-key-here
+
+      # Database
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+
+      # Mail (Mailpit)
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_ENCRYPTION: null
+
+      # Xdebug
+      XDEBUG_MODE: debug,develop,coverage
+      XDEBUG_CONFIG: client_host=host.docker.internal
+
+      # PHPeek PM (optional - disable for simpler dev)
+      # PHPEEK_PROCESS_MANAGER: phpeek-pm
+
+    depends_on:
+      - mysql
+      - redis
+      - mailpit
+    networks:
+      - phpeek-dev
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.3
+    container_name: phpeek-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - phpeek-dev
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: phpeek-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - phpeek-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Mailpit (Email testing)
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: phpeek-mailpit
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - phpeek-dev
+
+  # Node.js Dev Server (alternative to installing in app container)
+  # Uncomment if you prefer separate Node.js container
+  # node:
+  #   image: node:20-alpine
+  #   container_name: phpeek-node
+  #   working_dir: /app
+  #   volumes:
+  #     - ./:/app
+  #   command: npm run dev
+  #   ports:
+  #     - "5173:5173"
+  #   networks:
+  #     - phpeek-dev
+
+volumes:
+  mysql-data:
+  redis-data:
+  composer-cache:
+  node-modules:
+
+networks:
+  phpeek-dev:
+    driver: bridge
+
+# Usage:
+# docker-compose -f docker-compose.dev.yml up -d
+# docker-compose -f docker-compose.dev.yml exec app bash
+# docker-compose -f docker-compose.dev.yml exec app php artisan migrate
+# docker-compose -f docker-compose.dev.yml exec app npm install
+# docker-compose -f docker-compose.dev.yml exec app npm run dev

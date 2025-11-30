@@ -1,0 +1,228 @@
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  PHPeek Base Image - Nginx Configuration Template                          ║
+# ║  Production-ready with security hardening                                  ║
+# ║  Variables substituted by envsubst at container startup                    ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+# Rate limiting zones (must be outside server block)
+# Uncomment in nginx.conf or include globally if needed:
+# limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+# limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+# limit_req_zone $binary_remote_addr zone=api:10m rate=30r/s;
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Reverse Proxy / Tunnel Support (Cloudflare, HAProxy, Traefik, Tailscale)
+# Configure via NGINX_TRUSTED_PROXIES environment variable
+# ─────────────────────────────────────────────────────────────────────────────
+${NGINX_REAL_IP_CONFIG}
+
+# HTTP Server Block
+server {
+    listen ${NGINX_HTTP_PORT};
+    server_name _;
+    root ${NGINX_WEBROOT};
+    index ${NGINX_INDEX};
+
+    # Client configuration
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE};
+    client_body_timeout ${NGINX_CLIENT_BODY_TIMEOUT};
+    client_header_timeout ${NGINX_CLIENT_HEADER_TIMEOUT};
+
+    # Hide Nginx version
+    server_tokens ${NGINX_SERVER_TOKENS};
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Security Headers (Modern Best Practices)
+    # ─────────────────────────────────────────────────────────────────────────
+    add_header X-Frame-Options "${NGINX_HEADER_X_FRAME_OPTIONS}" always;
+    add_header X-Content-Type-Options "${NGINX_HEADER_X_CONTENT_TYPE_OPTIONS}" always;
+    add_header X-XSS-Protection "${NGINX_HEADER_X_XSS_PROTECTION}" always;
+    add_header Content-Security-Policy "${NGINX_HEADER_CSP}" always;
+    add_header Referrer-Policy "${NGINX_HEADER_REFERRER_POLICY}" always;
+
+    # Modern Cross-Origin Isolation Headers (set to empty string to disable)
+    add_header Cross-Origin-Opener-Policy "${NGINX_HEADER_COOP}" always;
+    add_header Cross-Origin-Embedder-Policy "${NGINX_HEADER_COEP}" always;
+    add_header Cross-Origin-Resource-Policy "${NGINX_HEADER_CORP}" always;
+
+    # Permissions Policy (replaces Feature-Policy)
+    add_header Permissions-Policy "${NGINX_HEADER_PERMISSIONS_POLICY}" always;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Open File Cache (reduces file descriptor lookups)
+    # Set NGINX_OPEN_FILE_CACHE=off to disable
+    # ─────────────────────────────────────────────────────────────────────────
+    open_file_cache ${NGINX_OPEN_FILE_CACHE};
+    open_file_cache_valid ${NGINX_OPEN_FILE_CACHE_VALID};
+    open_file_cache_min_uses ${NGINX_OPEN_FILE_CACHE_MIN_USES};
+    open_file_cache_errors ${NGINX_OPEN_FILE_CACHE_ERRORS};
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Gzip Compression (3-5x smaller responses)
+    # Set NGINX_GZIP=off to disable
+    # ─────────────────────────────────────────────────────────────────────────
+    gzip ${NGINX_GZIP};
+    gzip_vary ${NGINX_GZIP_VARY};
+    gzip_proxied ${NGINX_GZIP_PROXIED};
+    gzip_comp_level ${NGINX_GZIP_COMP_LEVEL};
+    gzip_min_length ${NGINX_GZIP_MIN_LENGTH};
+    gzip_types ${NGINX_GZIP_TYPES};
+
+    # Logging
+    access_log ${NGINX_ACCESS_LOG};
+    error_log ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL};
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Main Location
+    # ─────────────────────────────────────────────────────────────────────────
+    location / {
+        try_files $uri $uri/ ${NGINX_TRY_FILES};
+    }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PHP-FPM (with PATH_INFO support for Symfony/Laravel)
+    # ─────────────────────────────────────────────────────────────────────────
+    location ~ \.php$ {
+        try_files $uri =404;
+
+        # Split path info for framework routing (CRITICAL for Symfony)
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+
+        # PHP-FPM connection
+        fastcgi_pass ${NGINX_FASTCGI_PASS};
+        fastcgi_index index.php;
+
+        # PATH_INFO support (required for Symfony, some Laravel routes)
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+        fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Proxy Headers (forwarded to PHP for trusted proxy detection)
+        # These enable Laravel TrustProxies, Symfony trusted_proxies, etc.
+        # ─────────────────────────────────────────────────────────────────────
+        fastcgi_param HTTP_X_FORWARDED_FOR $proxy_add_x_forwarded_for;
+        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+        fastcgi_param HTTP_X_FORWARDED_HOST $host;
+        fastcgi_param HTTP_X_FORWARDED_PORT $server_port;
+        fastcgi_param HTTP_X_REAL_IP $remote_addr;
+
+        # mTLS client certificate info (available when MTLS_ENABLED=true)
+        # Use in PHP: $_SERVER['SSL_CLIENT_VERIFY'], $_SERVER['SSL_CLIENT_S_DN']
+        fastcgi_param SSL_CLIENT_VERIFY $ssl_client_verify;
+        fastcgi_param SSL_CLIENT_S_DN $ssl_client_s_dn;
+        fastcgi_param SSL_CLIENT_I_DN $ssl_client_i_dn;
+        fastcgi_param SSL_CLIENT_SERIAL $ssl_client_serial;
+        fastcgi_param SSL_CLIENT_FINGERPRINT $ssl_client_fingerprint;
+
+        # FastCGI buffering
+        fastcgi_buffers ${NGINX_FASTCGI_BUFFERS};
+        fastcgi_buffer_size ${NGINX_FASTCGI_BUFFER_SIZE};
+        fastcgi_busy_buffers_size ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE};
+
+        # FastCGI timeouts
+        fastcgi_connect_timeout ${NGINX_FASTCGI_CONNECT_TIMEOUT};
+        fastcgi_send_timeout ${NGINX_FASTCGI_SEND_TIMEOUT};
+        fastcgi_read_timeout ${NGINX_FASTCGI_READ_TIMEOUT};
+
+        # Hide PHP version
+        fastcgi_hide_header X-Powered-By;
+    }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Rate Limited Endpoints (uncomment if rate limit zones defined)
+    # ─────────────────────────────────────────────────────────────────────────
+    # location /login {
+    #     limit_req zone=login burst=5 nodelay;
+    #     try_files $uri $uri/ /index.php?$query_string;
+    # }
+    #
+    # location /api {
+    #     limit_req zone=api burst=50;
+    #     try_files $uri $uri/ /index.php?$query_string;
+    # }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Health check (SECURITY: localhost only)
+    # ─────────────────────────────────────────────────────────────────────────
+    location /health {
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+
+    # PHP-FPM status (localhost only)
+    location ~ ^/(fpm-status|fpm-ping)$ {
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
+        access_log off;
+        fastcgi_pass ${NGINX_FASTCGI_PASS};
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Static files with caching
+    # ─────────────────────────────────────────────────────────────────────────
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot|webp|avif)$ {
+        expires ${NGINX_STATIC_EXPIRES};
+        add_header Cache-Control "${NGINX_STATIC_CACHE_CONTROL}";
+        access_log ${NGINX_STATIC_ACCESS_LOG};
+
+        # Prevent execution of PHP in static locations
+        location ~ \.php$ {
+            deny all;
+        }
+    }
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SECURITY: Block sensitive files and directories
+    # ─────────────────────────────────────────────────────────────────────────
+
+    # Block hidden files (.env, .git, .htaccess, .svn, etc.)
+    location ~ /\.(env|git|svn|htaccess|htpasswd|gitignore|gitattributes|dockerignore) {
+        deny all;
+        return 404;
+    }
+
+    # Block all other hidden files
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    # Block sensitive project files (in root or subdirectories)
+    location ~* ^/(composer\.(json|lock)|package(-lock)?\.json|yarn\.lock|Dockerfile|docker-compose\.ya?ml|Makefile|Vagrantfile|\.editorconfig|phpunit\.xml|phpstan\.neon|psalm\.xml)$ {
+        deny all;
+        return 404;
+    }
+
+    # Block sensitive directories
+    location ~ ^/(vendor|node_modules|storage/logs|storage/debugbar|tests|\.github|\.vscode|\.idea)/ {
+        deny all;
+        return 404;
+    }
+
+    # Block PHP files in upload directories (prevent malicious uploads)
+    location ~* /(?:uploads|files|media)/.*\.php$ {
+        deny all;
+        return 404;
+    }
+
+    # Block access to artisan (Laravel CLI)
+    location = /artisan {
+        deny all;
+        return 404;
+    }
+
+    # Block database and backup files
+    location ~* \.(sql|bak|old|backup|swp|db|sqlite)$ {
+        deny all;
+        return 404;
+    }
+}

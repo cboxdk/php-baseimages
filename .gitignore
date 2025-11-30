@@ -1,0 +1,39 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test app data
+test-app/vendor/
+test-app/node_modules/
+test-app/.env
+test-app/storage/
+test-app/bootstrap/cache/
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+*.log
+*.tmp
+.php_cs.cache
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Serena MCP local config
+.serena/
+
+# Claude local context
+.claude/context/
+
+# PHPeek PM is a separate repository
+phpeek-pm/

@@ -1,0 +1,104 @@
+services:
+  # PHP-FPM Service (Alpine)
+  php-fpm-alpine:
+    build:
+      context: .
+      dockerfile: ./php-fpm/8.3/alpine/Dockerfile
+    container_name: phpeek-fpm-alpine
+    volumes:
+      - ./test-app:/var/www/html
+    networks:
+      - phpeek-network
+
+  # PHP-FPM Dev Service (Alpine with Xdebug)
+  php-fpm-alpine-dev:
+    build:
+      context: .
+      dockerfile: ./php-fpm/8.3/alpine/Dockerfile.dev
+    container_name: phpeek-fpm-alpine-dev
+    volumes:
+      - ./test-app:/var/www/html
+    networks:
+      - phpeek-network
+    environment:
+      - XDEBUG_MODE=debug
+      - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
+    profiles:
+      - dev
+
+  # PHP-CLI Service (Alpine)
+  php-cli-alpine:
+    build:
+      context: .
+      dockerfile: ./php-cli/8.3/alpine/Dockerfile
+    container_name: phpeek-cli-alpine
+    volumes:
+      - ./test-app:/var/www/html
+    networks:
+      - phpeek-network
+    command: tail -f /dev/null
+
+  # Nginx Service (Alpine)
+  nginx-alpine:
+    build:
+      context: .
+      dockerfile: ./nginx/alpine/Dockerfile
+    container_name: phpeek-nginx-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./test-app:/var/www/html:ro
+    networks:
+      - phpeek-network
+    depends_on:
+      - php-fpm-alpine
+
+  # PHP-FPM + Nginx Multi-Service (Vanilla, no S6)
+  php-fpm-nginx-alpine:
+    build:
+      context: .
+      dockerfile: ./php-fpm-nginx/8.3/alpine/Dockerfile
+    container_name: phpeek-fpm-nginx-alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./test-app:/var/www/html
+    networks:
+      - phpeek-network
+    environment:
+      - LARAVEL_SCHEDULER_ENABLED=true
+      - LARAVEL_AUTO_OPTIMIZE=false
+    profiles:
+      - multi
+
+  php-fpm-nginx-debian:
+    build:
+      context: .
+      dockerfile: ./php-fpm-nginx/8.3/debian/Dockerfile
+    container_name: phpeek-fpm-nginx-debian
+    ports:
+      - "8082:80"
+    volumes:
+      - ./test-app:/var/www/html
+    networks:
+      - phpeek-network
+    profiles:
+      - multi
+
+  php-fpm-nginx-ubuntu:
+    build:
+      context: .
+      dockerfile: ./php-fpm-nginx/8.3/ubuntu/Dockerfile
+    container_name: phpeek-fpm-nginx-ubuntu
+    ports:
+      - "8083:80"
+    volumes:
+      - ./test-app:/var/www/html
+    networks:
+      - phpeek-network
+    profiles:
+      - multi
+
+networks:
+  phpeek-network:
+    driver: bridge

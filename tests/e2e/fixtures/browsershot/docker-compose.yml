@@ -1,0 +1,17 @@
+services:
+  app:
+    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-browsershot
+    ports:
+      - "8095:80"
+    volumes:
+      - ./public:/var/www/html/public
+      - ./storage:/var/www/html/storage
+    environment:
+      - APP_ENV=testing
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      start_period: 10s
+      retries: 10

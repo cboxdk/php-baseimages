@@ -1,0 +1,167 @@
+# Microservices Setup
+# Multiple PHP services communicating via HTTP/message queue
+# Usage: docker compose up -d
+
+services:
+  # API Gateway - routes requests to services
+  gateway:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: micro-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./gateway:/var/www/html
+    environment:
+      APP_ENV: local
+      USER_SERVICE_URL: http://user-service
+      ORDER_SERVICE_URL: http://order-service
+      NOTIFICATION_SERVICE_URL: http://notification-service
+      REDIS_HOST: redis
+    depends_on:
+      - user-service
+      - order-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # User Service - handles authentication and user data
+  user-service:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: micro-user
+    restart: unless-stopped
+    volumes:
+      - ./user-service:/var/www/html
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: mysql-users
+      DB_DATABASE: users
+      DB_USERNAME: users
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+    depends_on:
+      mysql-users:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Order Service - handles orders and inventory
+  order-service:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: micro-order
+    restart: unless-stopped
+    volumes:
+      - ./order-service:/var/www/html
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: mysql-orders
+      DB_DATABASE: orders
+      DB_USERNAME: orders
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      USER_SERVICE_URL: http://user-service
+    depends_on:
+      mysql-orders:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Notification Service - handles emails, SMS, push
+  notification-service:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: micro-notification
+    restart: unless-stopped
+    volumes:
+      - ./notification-service:/var/www/html
+    environment:
+      APP_ENV: local
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Notification worker
+  notification-worker:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: micro-notification-worker
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3
+    volumes:
+      - ./notification-service:/var/www/html
+    environment:
+      APP_ENV: local
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      - notification-service
+
+  # User Service Database
+  mysql-users:
+    image: mysql:8.0
+    container_name: micro-mysql-users
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: users
+      MYSQL_USER: users
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_users:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Order Service Database
+  mysql-orders:
+    image: mysql:8.0
+    container_name: micro-mysql-orders
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: orders
+      MYSQL_USER: orders
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_orders:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Shared Redis for caching and messaging
+  redis:
+    image: redis:7-alpine
+    container_name: micro-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_users:
+  mysql_orders:
+  redis_data:

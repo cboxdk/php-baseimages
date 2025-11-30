@@ -1,0 +1,118 @@
+# Multi-Tenant Setup
+# Single codebase serving multiple tenants with separate databases
+# Usage: docker compose up -d
+
+services:
+  app:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: tenant-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      # Central database for tenant registry
+      DB_CONNECTION: mysql
+      DB_HOST: mysql-central
+      DB_DATABASE: tenants
+      DB_USERNAME: tenants
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      # Tenant database connection
+      TENANT_DB_HOST: mysql-tenants
+      TENANT_DB_USERNAME: tenant
+      TENANT_DB_PASSWORD: secret
+    depends_on:
+      mysql-central:
+        condition: service_healthy
+      mysql-tenants:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Queue worker per tenant isolation
+  worker:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: tenant-worker
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: mysql-central
+      DB_DATABASE: tenants
+      DB_USERNAME: tenants
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      TENANT_DB_HOST: mysql-tenants
+      TENANT_DB_USERNAME: tenant
+      TENANT_DB_PASSWORD: secret
+    depends_on:
+      - app
+
+  # Central database for tenant registry
+  mysql-central:
+    image: mysql:8.0
+    container_name: tenant-mysql-central
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tenants
+      MYSQL_USER: tenants
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_central:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Tenant databases server
+  mysql-tenants:
+    image: mysql:8.0
+    container_name: tenant-mysql-tenants
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: tenant
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_tenants:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: tenant-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_central:
+  mysql_tenants:
+  redis_data:

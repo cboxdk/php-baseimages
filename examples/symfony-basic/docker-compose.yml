@@ -1,0 +1,62 @@
+# Symfony Basic Setup
+# Symfony with PostgreSQL database
+# Usage: docker compose up -d
+
+services:
+  app:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: symfony-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      DATABASE_URL: postgresql://symfony:secret@postgres:5432/symfony?serverVersion=16
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Queue worker for Symfony Messenger
+  worker:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: symfony-worker
+    restart: unless-stopped
+    command: php bin/console messenger:consume async -vv --time-limit=3600
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql://symfony:secret@postgres:5432/symfony?serverVersion=16
+      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: symfony-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: symfony
+      POSTGRES_USER: symfony
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U symfony -d symfony"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  postgres_data:

@@ -1,0 +1,77 @@
+[PHP]
+; Memory & Execution
+memory_limit = ${PHP_MEMORY_LIMIT:-256M}
+max_execution_time = ${PHP_MAX_EXECUTION_TIME:-60}
+max_input_time = ${PHP_MAX_INPUT_TIME:-60}
+default_socket_timeout = ${PHP_DEFAULT_SOCKET_TIMEOUT:-60}
+
+; Upload Limits
+upload_max_filesize = ${PHP_UPLOAD_MAX_FILE_SIZE:-64M}
+post_max_size = ${PHP_POST_MAX_SIZE:-64M}
+max_file_uploads = ${PHP_MAX_FILE_UPLOADS:-20}
+
+; Error Handling
+error_reporting = ${PHP_ERROR_REPORTING:-E_ALL & ~E_DEPRECATED & ~E_STRICT}
+display_errors = ${PHP_DISPLAY_ERRORS:-Off}
+display_startup_errors = ${PHP_DISPLAY_STARTUP_ERRORS:-Off}
+log_errors = ${PHP_LOG_ERRORS:-On}
+error_log = ${PHP_ERROR_LOG:-/proc/self/fd/2}
+
+; Date & Time
+date.timezone = ${PHP_DATE_TIMEZONE:-UTC}
+
+; Session
+session.save_handler = ${PHP_SESSION_SAVE_HANDLER:-files}
+session.save_path = ${PHP_SESSION_SAVE_PATH:-/tmp}
+session.gc_maxlifetime = ${PHP_SESSION_GC_MAXLIFETIME:-1440}
+session.gc_probability = ${PHP_SESSION_GC_PROBABILITY:-1}
+session.gc_divisor = ${PHP_SESSION_GC_DIVISOR:-100}
+
+; Security
+expose_php = ${PHP_EXPOSE_PHP:-Off}
+allow_url_fopen = ${PHP_ALLOW_URL_FOPEN:-On}
+allow_url_include = ${PHP_ALLOW_URL_INCLUDE:-Off}
+disable_functions = ${PHP_DISABLE_FUNCTIONS:-}
+
+; Output
+output_buffering = ${PHP_OUTPUT_BUFFERING:-4096}
+implicit_flush = ${PHP_IMPLICIT_FLUSH:-Off}
+
+; Resource Limits
+max_input_vars = ${PHP_MAX_INPUT_VARS:-1000}
+max_input_nesting_level = ${PHP_MAX_INPUT_NESTING_LEVEL:-64}
+
+[opcache]
+; Enable OPcache
+opcache.enable = ${PHP_OPCACHE_ENABLE:-1}
+opcache.enable_cli = ${PHP_OPCACHE_ENABLE_CLI:-0}
+
+; Memory Configuration
+opcache.memory_consumption = ${PHP_OPCACHE_MEMORY_CONSUMPTION:-256}
+opcache.interned_strings_buffer = ${PHP_OPCACHE_INTERNED_STRINGS_BUFFER:-16}
+opcache.max_accelerated_files = ${PHP_OPCACHE_MAX_ACCELERATED_FILES:-20000}
+
+; Performance Tuning
+opcache.validate_timestamps = ${PHP_OPCACHE_VALIDATE_TIMESTAMPS:-0}
+opcache.revalidate_freq = ${PHP_OPCACHE_REVALIDATE_FREQ:-0}
+opcache.save_comments = ${PHP_OPCACHE_SAVE_COMMENTS:-1}
+opcache.fast_shutdown = ${PHP_OPCACHE_FAST_SHUTDOWN:-1}
+
+; File Cache (optional, for shared hosting)
+opcache.file_cache = ${PHP_OPCACHE_FILE_CACHE:-}
+
+; JIT Configuration (PHP 8+)
+opcache.jit = ${PHP_OPCACHE_JIT:-tracing}
+opcache.jit_buffer_size = ${PHP_OPCACHE_JIT_BUFFER_SIZE:-100M}
+
+; Preloading (PHP 7.4+)
+opcache.preload = ${PHP_OPCACHE_PRELOAD:-}
+opcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER:-www-data}
+
+[apcu]
+; Enable APCu
+apc.enabled = ${PHP_APCU_ENABLED:-1}
+apc.shm_size = ${PHP_APCU_SHM_SIZE:-64M}
+apc.ttl = ${PHP_APCU_TTL:-7200}
+apc.gc_ttl = ${PHP_APCU_GC_TTL:-3600}
+apc.enable_cli = ${PHP_APCU_ENABLE_CLI:-0}

@@ -1,0 +1,142 @@
+# Production Setup
+# Optimized for production with caching, health checks, and security
+# Usage: docker compose up -d
+
+services:
+  app:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: prod-app
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_cache:/var/www/html/bootstrap/cache
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: https://yourdomain.com
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: app
+      DB_USERNAME: app
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Horizon for queue management
+  horizon:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: prod-horizon
+    restart: always
+    command: php artisan horizon
+    volumes:
+      - app_storage:/var/www/html/storage
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: app
+      DB_USERNAME: app
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      - app
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+
+  # Scheduler for cron jobs
+  scheduler:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: prod-scheduler
+    restart: always
+    command: >
+      sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    volumes:
+      - app_storage:/var/www/html/storage
+    environment:
+      APP_ENV: production
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: app
+      DB_USERNAME: app
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+    depends_on:
+      - app
+
+  mysql:
+    image: mysql:8.0
+    container_name: prod-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    container_name: prod-redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  app_storage:
+  app_cache:
+  mysql_data:
+  redis_data:

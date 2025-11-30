@@ -1,0 +1,95 @@
+FROM php:8.4-fpm-alpine
+
+LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
+LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.description="PHP 8.4 FPM Alpine - Minimal Edition Dev (with Xdebug)"
+
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# Install minimal system dependencies + dev tools
+RUN apk add --no-cache \
+    bash \
+    curl \
+    wget \
+    git \
+    unzip \
+    vim \
+    netcat-openbsd \
+    fcgi \
+    # Image processing (GD)
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libwebp-dev \
+    # Database drivers
+    postgresql-dev \
+    # Internationalization
+    icu-dev \
+    icu-data-full \
+    # Compression
+    libzip-dev \
+    # Build tools
+    $PHPIZE_DEPS
+
+# Configure GD
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    --with-webp
+
+# Install PHP core extensions
+RUN docker-php-ext-install -j$(nproc) \
+    opcache \
+    pdo_mysql \
+    pdo_pgsql \
+    mysqli \
+    zip \
+    intl \
+    bcmath \
+    gd \
+    exif \
+    pcntl
+
+# Install PECL extensions including Xdebug
+RUN pecl install redis-6.0.2 && \
+    pecl install xdebug-3.3.1 && \
+    docker-php-ext-enable redis xdebug
+
+# Install SPX profiler from source
+RUN cd /tmp && \
+    git clone https://github.com/NoiseByNorthwest/php-spx.git && \
+    cd php-spx && \
+    phpize && \
+    ./configure && \
+    make && \
+    make install && \
+    docker-php-ext-enable spx && \
+    cd / && rm -rf /tmp/php-spx
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Keep build dependencies for development
+
+# Copy PHP configuration (dev version with Xdebug)
+COPY php-fpm/common/php-minimal-dev.ini /usr/local/etc/php/conf.d/99-custom.ini
+COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
+
+# Create directories
+RUN mkdir -p /var/www/html && \
+    chown -R www-data:www-data /var/www && \
+    mkdir -p /tmp/xdebug && \
+    chown -R www-data:www-data /tmp/xdebug && \
+    mkdir -p /tmp/spx && \
+    chown -R www-data:www-data /tmp/spx
+
+WORKDIR /var/www/html
+
+EXPOSE 9000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 || exit 1
+
+CMD ["php-fpm"]

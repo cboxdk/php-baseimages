@@ -1,0 +1,151 @@
+# PHPeek Production Multi-Stage Build Template
+# Optimized for Laravel/Symfony production deployments
+#
+# Features:
+# - Multi-stage build (frontend assets built separately)
+# - Minimal final image (no dev dependencies)
+# - Pre-cached Laravel/Symfony configurations
+# - Security-hardened (non-root ready)
+# - Optimized for both AMD64 and ARM64
+
+# =============================================================================
+# ARG declarations (customize these)
+# =============================================================================
+ARG PHP_VERSION=8.4
+ARG OS_VARIANT=alpine
+ARG NODE_VERSION=20
+
+# =============================================================================
+# Stage 1: Frontend Assets Builder
+# =============================================================================
+FROM node:${NODE_VERSION}-alpine AS frontend-builder
+
+WORKDIR /build
+
+# Install frontend dependencies (cached layer)
+COPY package*.json ./
+RUN npm ci --prefer-offline --no-audit
+
+# Copy frontend source files
+COPY resources/ ./resources/
+COPY vite.config.* ./
+COPY tsconfig.json* ./
+COPY tailwind.config.* ./
+COPY postcss.config.* ./
+
+# Build production assets
+RUN npm run build
+
+# =============================================================================
+# Stage 2: Composer Dependencies
+# =============================================================================
+FROM composer:2 AS composer-builder
+
+WORKDIR /build
+
+# Copy composer files for dependency caching
+COPY composer.json composer.lock ./
+
+# Install production dependencies only
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist \
+    --ignore-platform-reqs
+
+# Copy application code for autoloader optimization
+COPY . .
+
+# Generate optimized autoloader
+RUN composer dump-autoload --optimize --classmap-authoritative
+
+# =============================================================================
+# Stage 3: Production Runtime
+# =============================================================================
+FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:${PHP_VERSION}-${OS_VARIANT} AS production
+
+LABEL maintainer="PHPeek <hello@phpeek.com>"
+LABEL description="Production-optimized PHP application"
+
+WORKDIR /var/www/html
+
+# Copy Composer dependencies from builder
+COPY --from=composer-builder /build/vendor ./vendor
+
+# Copy built frontend assets from builder
+COPY --from=frontend-builder /build/public/build ./public/build
+
+# Copy application code with correct ownership
+COPY --chown=www-data:www-data . .
+
+# Ensure storage and cache directories exist with correct permissions
+RUN mkdir -p \
+    storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
+
+# Laravel: Cache configuration, routes, and views for production
+# Uncomment for Laravel applications:
+# RUN php artisan config:cache && \
+#     php artisan route:cache && \
+#     php artisan view:cache && \
+#     php artisan event:cache
+
+# Symfony: Clear and warm up cache for production
+# Uncomment for Symfony applications:
+# RUN php bin/console cache:clear --env=prod --no-debug && \
+#     php bin/console cache:warmup --env=prod --no-debug
+
+# Production environment
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV LOG_CHANNEL=stderr
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
+
+EXPOSE 80
+
+# =============================================================================
+# Stage 4: Development (optional, for local development)
+# =============================================================================
+FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:${PHP_VERSION}-${OS_VARIANT}-dev AS development
+
+WORKDIR /var/www/html
+
+# Development-specific configuration
+ENV APP_ENV=local
+ENV APP_DEBUG=true
+ENV XDEBUG_MODE=debug,develop,coverage
+
+# Expose additional ports for development
+EXPOSE 80 5173 9003
+
+# =============================================================================
+# Usage Examples:
+# =============================================================================
+#
+# Build production image:
+#   docker build --target production -t myapp:prod .
+#
+# Build development image:
+#   docker build --target development -t myapp:dev .
+#
+# Build with specific PHP version:
+#   docker build --build-arg PHP_VERSION=8.3 --target production -t myapp:prod .
+#
+# Build with Debian instead of Alpine:
+#   docker build --build-arg OS_VARIANT=debian --target production -t myapp:prod .
+#
+# Multi-platform build (AMD64 + ARM64):
+#   docker buildx build --platform linux/amd64,linux/arm64 \
+#     --target production -t myapp:prod --push .
+#
+# =============================================================================

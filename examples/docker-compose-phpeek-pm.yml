@@ -1,0 +1,111 @@
+# PHPeek PM Example - Full Laravel Stack
+# ═══════════════════════════════════════════════════════════════════════════
+# This example demonstrates a complete Laravel application with:
+# - PHP-FPM + Nginx (managed by PHPeek PM)
+# - Laravel Horizon (queue management)
+# - Laravel Reverb (WebSocket server)
+# - Queue workers (default + high priority)
+# - Laravel Scheduler
+
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Laravel Application (PHPeek PM managed)
+  # ─────────────────────────────────────────────────────────────────────────
+  app:
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    container_name: laravel-app
+
+    environment:
+      # ═══════════════════════════════════════════════════════════════════
+      # Laravel Features (Shorthand - Easy to use!)
+      # ═══════════════════════════════════════════════════════════════════
+      LARAVEL_HORIZON: "true"              # Enable Laravel Horizon
+      LARAVEL_REVERB: "true"               # Enable Laravel Reverb (WebSockets)
+      LARAVEL_SCHEDULER: "true"            # Enable scheduler (schedule:work)
+      LARAVEL_QUEUE: "true"                # Enable default queue workers
+
+      # ═══════════════════════════════════════════════════════════════════
+      # Application Environment
+      # ═══════════════════════════════════════════════════════════════════
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://localhost}
+
+      # Database
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: redis
+      BROADCAST_DRIVER: reverb
+
+    ports:
+      - "80:80"           # HTTP (Nginx)
+      - "8080:8080"       # Reverb WebSockets
+
+    volumes:
+      - ./laravel-app:/var/www/html
+      - storage-data:/var/www/html/storage
+      - cache-data:/var/www/html/bootstrap/cache
+
+    networks:
+      - app-network
+
+    depends_on:
+      - db
+      - redis
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # MySQL Database
+  # ─────────────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: laravel-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Redis (cache, sessions, queues)
+  # ─────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: laravel-redis
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  redis-data:
+  storage-data:
+  cache-data:
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,65 @@
+services:
+  app:
+    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-laravel-app
+    ports:
+      - "8091:80"
+    volumes:
+      - ./app:/var/www/html
+    environment:
+      - APP_ENV=testing
+      - APP_KEY=base64:dGVzdGtleWZvcmUyZXRlc3Rpbmdvbmx5MTIzNA==
+      - APP_DEBUG=true
+      - LOG_CHANNEL=stderr
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=laravel
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - LARAVEL_SCHEDULER=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/app-health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  mysql:
+    image: mysql:8
+    container_name: e2e-laravel-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: e2e-laravel-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  mysql-data:

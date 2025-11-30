@@ -1,0 +1,102 @@
+# Development Environment Setup
+# Full development setup with hot reload, Xdebug, and dev tools
+# Usage: docker compose up -d
+
+services:
+  app:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: dev-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "5173:5173"  # Vite HMR
+    volumes:
+      - ./:/var/www/html
+      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:ro
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: app
+      DB_USERNAME: app
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      # Xdebug configuration
+      XDEBUG_MODE: debug,develop,coverage
+      XDEBUG_CONFIG: client_host=host.docker.internal client_port=9003
+      PHP_IDE_CONFIG: serverName=docker
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Vite dev server for hot module replacement
+  vite:
+    image: node:20-alpine
+    container_name: dev-vite
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "5174:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mysql:
+    image: mysql:8.0
+    container_name: dev-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"  # Exposed for database tools
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: dev-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"  # Exposed for Redis tools
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: dev-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+
+volumes:
+  mysql_data:
+  redis_data:

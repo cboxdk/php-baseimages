@@ -1,0 +1,24 @@
+services:
+  app:
+    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-security
+    ports:
+      - "8101:80"
+    volumes:
+      - ./public:/var/www/html/public
+      - ./uploads:/var/www/html/uploads
+      - ./storage:/var/www/html/storage
+      - ./vendor:/var/www/html/vendor
+      - ./node_modules:/var/www/html/node_modules
+      - ./.env:/var/www/html/.env
+      - ./.git:/var/www/html/.git
+      - ./.htaccess:/var/www/html/.htaccess
+      - ./composer.json:/var/www/html/composer.json
+      - ./composer.lock:/var/www/html/composer.lock
+      - ./database.sql:/var/www/html/database.sql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

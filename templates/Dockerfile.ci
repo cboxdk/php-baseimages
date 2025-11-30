@@ -1,0 +1,37 @@
+# PHPeek CI/CD Template
+# Optimized for continuous integration and testing
+
+FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+
+# Install CI/CD tools
+RUN apk add --no-cache \
+    git \
+    zip \
+    unzip
+
+# Install Node.js for frontend testing
+RUN apk add --no-cache \
+    nodejs \
+    npm
+
+# Install Composer dependencies globally for caching
+# (override in pipeline with project-specific composer.json)
+
+# Pre-warm Composer cache
+RUN composer global require --dev \
+    phpunit/phpunit \
+    squizlabs/php_codesniffer \
+    phpstan/phpstan
+
+# CI-optimized PHP settings
+RUN echo "memory_limit=1G" >> /usr/local/etc/php/conf.d/99-ci.ini && \
+    echo "max_execution_time=300" >> /usr/local/etc/php/conf.d/99-ci.ini
+
+# Add common CI environment detection
+ENV CI=true
+ENV APP_ENV=testing
+
+WORKDIR /var/www/html
+
+# Skip health checks in CI
+HEALTHCHECK NONE

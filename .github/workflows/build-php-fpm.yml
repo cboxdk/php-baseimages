@@ -1,0 +1,182 @@
+name: Build and Push PHP-FPM Images
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'php-fpm/**'
+      - '.github/workflows/build-php-fpm.yml'
+    tags:
+      - 'fpm-*'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'php-fpm/**'
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
+        required: false
+        default: 'all'
+      os_variant:
+        description: 'OS variant to build (alpine, debian, ubuntu, or all)'
+        required: false
+        default: 'all'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/php-fpm
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'debian', 'ubuntu']
+        variant: ['prod', 'dev']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Dockerfile
+        id: dockerfile
+        run: |
+          if [ "${{ matrix.variant }}" = "dev" ]; then
+            echo "dockerfile=Dockerfile.dev" >> $GITHUB_OUTPUT
+            echo "tag_suffix=-dev" >> $GITHUB_OUTPUT
+          else
+            echo "dockerfile=Dockerfile" >> $GITHUB_OUTPUT
+            echo "tag_suffix=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }},enable={{is_default_branch}}
+            type=raw,value=latest-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }},enable=${{ matrix.php_version == '8.3' && github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./php-fpm/${{ matrix.php_version }}/${{ matrix.os_variant }}
+          file: ./php-fpm/${{ matrix.php_version }}/${{ matrix.os_variant }}/${{ steps.dockerfile.outputs.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=fpm-${{ matrix.php_version }}-${{ matrix.os_variant }}-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php_version }}-${{ matrix.os_variant }}-${{ matrix.variant }}
+
+      - name: Test image
+        if: github.event_name != 'pull_request'
+        run: |
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }} php -v
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }} php -m | grep -E "opcache|redis|pdo_mysql"
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }} composer --version
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Minimal Edition Images (Laravel-optimized, smaller footprint)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-minimal-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'debian', 'ubuntu']
+        variant: ['prod', 'dev']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Dockerfile
+        id: dockerfile
+        run: |
+          if [ "${{ matrix.variant }}" = "dev" ]; then
+            echo "dockerfile=Dockerfile.dev" >> $GITHUB_OUTPUT
+            echo "tag_suffix=-minimal-dev" >> $GITHUB_OUTPUT
+          else
+            echo "dockerfile=Dockerfile" >> $GITHUB_OUTPUT
+            echo "tag_suffix=-minimal" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }},enable={{is_default_branch}}
+
+      - name: Build and push Minimal Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./php-fpm/${{ matrix.php_version }}/${{ matrix.os_variant }}/minimal
+          file: ./php-fpm/${{ matrix.php_version }}/${{ matrix.os_variant }}/minimal/${{ steps.dockerfile.outputs.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=fpm-minimal-${{ matrix.php_version }}-${{ matrix.os_variant }}-${{ matrix.variant }}
+          cache-to: type=gha,mode=max,scope=fpm-minimal-${{ matrix.php_version }}-${{ matrix.os_variant }}-${{ matrix.variant }}
+
+      - name: Test minimal image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}"
+          docker run --rm $IMAGE php -v
+          # Minimal should have redis, pdo_mysql but NOT opcache enabled by default
+          docker run --rm $IMAGE php -m | grep -E "redis|pdo_mysql"
+          docker run --rm $IMAGE composer --version

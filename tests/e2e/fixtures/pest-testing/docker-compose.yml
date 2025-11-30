@@ -1,0 +1,15 @@
+services:
+  app:
+    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-pest-testing
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - APP_ENV=testing
+    healthcheck:
+      test: ["CMD", "php", "-v"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 3

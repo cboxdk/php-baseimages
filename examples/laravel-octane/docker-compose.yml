@@ -1,0 +1,94 @@
+# Laravel Octane Setup
+# High-performance Laravel with Swoole/RoadRunner
+# Usage: docker compose up -d
+
+services:
+  app:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: octane-app
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./:/var/www/html
+    # Override entrypoint to run Octane instead of FPM
+    command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      OCTANE_SERVER: swoole
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # Queue worker
+  worker:
+    image: phpeek/php-fpm-nginx:8.3-alpine
+    container_name: octane-worker
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-jobs=1000
+    volumes:
+      - ./:/var/www/html
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      - app
+      - redis
+
+  mysql:
+    image: mysql:8.0
+    container_name: octane-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: octane-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  redis_data:

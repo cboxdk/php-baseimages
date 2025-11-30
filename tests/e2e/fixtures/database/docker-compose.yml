@@ -1,0 +1,66 @@
+services:
+  # PHP application
+  app:
+    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-database-app
+    ports:
+      - "8100:80"
+    volumes:
+      - ./public:/var/www/html/public
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: test_db
+      DB_USERNAME: test_user
+      DB_PASSWORD: test_password
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # MySQL 8
+  mysql:
+    image: mysql:8.0
+    container_name: e2e-database-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    tmpfs:
+      - /var/lib/mysql
+
+  # PostgreSQL 16
+  postgres:
+    image: postgres:16-alpine
+    container_name: e2e-database-postgres
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    tmpfs:
+      - /var/lib/postgresql/data

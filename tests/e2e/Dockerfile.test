@@ -1,0 +1,75 @@
+FROM php:8.3-fpm-alpine
+
+# Install system dependencies (including cron for Laravel scheduler)
+RUN apk add --no-cache \
+    bash curl wget git unzip \
+    netcat-openbsd nginx \
+    dcron \
+    libpng-dev libjpeg-turbo-dev freetype-dev \
+    libwebp-dev libavif-dev imagemagick-dev \
+    vips-dev vips-tools \
+    postgresql-dev icu-dev libzip-dev oniguruma-dev \
+    libxml2-dev libxslt-dev openldap-dev imap-dev bzip2-dev \
+    gettext-dev libmcrypt-dev readline-dev \
+    gmp-dev \
+    linux-headers gettext-dev \
+    $PHPIZE_DEPS
+
+# Configure GD with WebP/AVIF support
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    --with-webp \
+    --with-avif
+
+# Install PHP extensions
+RUN docker-php-ext-install -j$(nproc) \
+    opcache \
+    pdo_mysql pdo_pgsql mysqli pgsql \
+    zip intl bcmath gd exif \
+    pcntl sockets soap xsl ldap imap bz2 \
+    calendar gettext shmop sysvmsg sysvsem sysvshm \
+    gmp
+
+# Install PECL extensions (igbinary first, then others can use it)
+RUN pecl install igbinary-3.2.15 && \
+    docker-php-ext-enable igbinary && \
+    pecl install redis-6.0.2 imagick apcu-5.1.23 msgpack-3.0.0 mongodb-1.20.1 vips && \
+    docker-php-ext-enable redis imagick apcu msgpack mongodb vips
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# NOTE: PHPeek PM skipped for E2E tests (binaries not yet released)
+# Production images will include PHPeek PM once released
+
+# Copy PHP configurations
+COPY php-fpm/common/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+# Use simplified FPM config for testing (no env var references)
+COPY tests/e2e/fixtures/fpm-pool-test.conf /usr/local/etc/php-fpm.d/zz-custom.conf
+
+# Copy Nginx configurations
+COPY nginx/alpine/nginx.conf /etc/nginx/nginx.conf
+COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy ImageMagick security policy
+COPY php-fpm-nginx/common/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
+
+# Copy entrypoint and health check
+COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
+
+# Create directories
+RUN mkdir -p /var/www/html /run/nginx && \
+    chown -R www-data:www-data /var/www
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh || exit 1
+
+WORKDIR /var/www/html
+
+EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

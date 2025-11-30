@@ -1,0 +1,116 @@
+# Bitbucket Pipelines for Laravel with PHPeek
+
+image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+
+definitions:
+  services:
+    mysql:
+      image: mysql:8.3
+      environment:
+        MYSQL_DATABASE: laravel_test
+        MYSQL_ROOT_PASSWORD: root
+    redis:
+      image: redis:7-alpine
+
+  caches:
+    composer: vendor
+    npm: node_modules
+
+pipelines:
+  default:
+    - parallel:
+        - step:
+            name: Install Dependencies
+            caches:
+              - composer
+              - npm
+            script:
+              - composer install --prefer-dist --no-progress --no-interaction
+              - npm ci
+              - npm run build
+            artifacts:
+              - vendor/**
+              - node_modules/**
+              - public/build/**
+
+        - step:
+            name: Code Quality
+            script:
+              - composer install --prefer-dist --no-progress --no-interaction
+              - vendor/bin/phpstan analyse --memory-limit=1G
+              - vendor/bin/php-cs-fixer fix --dry-run --diff
+
+    - step:
+        name: Run Tests
+        services:
+          - mysql
+          - redis
+        caches:
+          - composer
+        script:
+          - cp .env.example .env
+          - php artisan key:generate
+          - php artisan config:cache
+          - php artisan migrate --force
+          - php artisan test --parallel --coverage
+
+    - step:
+        name: Security Audit
+        script:
+          - composer audit
+          - npm audit --audit-level=moderate
+
+  branches:
+    main:
+      - parallel:
+          - step:
+              name: Build & Test
+              services:
+                - mysql
+                - redis
+              script:
+                - composer install --no-dev --optimize-autoloader
+                - npm ci
+                - npm run build
+                - php artisan test
+
+      - step:
+          name: Build Docker Image
+          services:
+            - docker
+          script:
+            - docker build -t $DOCKER_REGISTRY/myapp:$BITBUCKET_COMMIT -t $DOCKER_REGISTRY/myapp:latest .
+            - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin $DOCKER_REGISTRY
+            - docker push $DOCKER_REGISTRY/myapp:$BITBUCKET_COMMIT
+            - docker push $DOCKER_REGISTRY/myapp:latest
+
+      - step:
+          name: Deploy to Production
+          deployment: production
+          script:
+            - pipe: atlassian/ssh-run:0.4.1
+              variables:
+                SSH_USER: $DEPLOY_USER
+                SERVER: $PRODUCTION_SERVER
+                COMMAND: |
+                  cd /var/www/app
+                  docker compose pull
+                  docker compose up -d
+                  docker compose exec -T app php artisan migrate --force
+                  docker compose exec -T app php artisan config:cache
+                  docker compose exec -T app php artisan route:cache
+                  docker compose exec -T app php artisan view:cache
+
+  pull-requests:
+    '**':
+      - step:
+          name: Lint & Test
+          services:
+            - mysql
+            - redis
+          script:
+            - composer install
+            - npm ci
+            - npm run build
+            - vendor/bin/phpstan analyse
+            - php artisan test

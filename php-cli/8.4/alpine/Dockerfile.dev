@@ -1,0 +1,77 @@
+FROM php:8.4-cli-alpine
+
+LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
+LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.description="PHP 8.4 CLI Alpine - Development with Xdebug"
+
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# Install system dependencies
+RUN apk add --no-cache \
+    bash \
+    curl \
+    wget \
+    git \
+    unzip \
+    vim \
+    # Database drivers
+    postgresql-dev \
+    # Internationalization
+    icu-dev \
+    icu-data-full \
+    # Compression
+    libzip-dev \
+    zlib-dev \
+    # Misc
+    oniguruma-dev \
+    libsodium-dev \
+    linux-headers \
+    gettext-dev \
+    # Build tools
+    $PHPIZE_DEPS
+
+# Install PHP core extensions
+RUN docker-php-ext-install -j$(nproc) \
+    opcache \
+    pdo_mysql \
+    pdo_pgsql \
+    zip \
+    intl \
+    bcmath \
+    pcntl \
+    sockets \
+    calendar \
+    gettext \
+    shmop \
+    sysvmsg \
+    sysvsem \
+    sysvshm
+
+# Install PECL extensions including Xdebug
+RUN pecl install redis-6.0.2 && \
+    pecl install apcu-5.1.23 && \
+    pecl install xdebug-3.3.1 && \
+    docker-php-ext-enable redis apcu xdebug
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Keep build dependencies for development
+
+# Copy PHP configuration (dev version with Xdebug)
+COPY php-cli/common/php-dev.ini /usr/local/etc/php/conf.d/99-custom.ini
+
+# Create directories
+RUN mkdir -p /var/www/html && \
+    chown -R www-data:www-data /var/www && \
+    mkdir -p /tmp/xdebug && \
+    chown -R www-data:www-data /tmp/xdebug
+
+WORKDIR /var/www/html
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD php -v || exit 1
+
+CMD ["php", "-a"]

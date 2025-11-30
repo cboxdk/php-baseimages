@@ -1,0 +1,60 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Minimal artisan stub for framework detection testing
+ * PHPeek entrypoint detects Laravel by checking for this file
+ */
+
+$command = $argv[1] ?? 'help';
+
+switch ($command) {
+    case 'schedule:run':
+        echo "[" . date('Y-m-d H:i:s') . "] Scheduler executed\n";
+        file_put_contents('/tmp/scheduler-last-run', date('c'));
+        break;
+
+    case 'config:cache':
+        echo "Configuration cached successfully.\n";
+        break;
+
+    case 'route:cache':
+        echo "Routes cached successfully.\n";
+        break;
+
+    case 'view:cache':
+        echo "Blade templates cached successfully.\n";
+        break;
+
+    case 'optimize':
+        echo "Configuration cached successfully.\n";
+        echo "Routes cached successfully.\n";
+        echo "Files cached successfully.\n";
+        break;
+
+    case 'migrate':
+        echo "Nothing to migrate.\n";
+        break;
+
+    case 'horizon':
+        echo "Horizon would start here.\n";
+        break;
+
+    case 'queue:work':
+        echo "Queue worker would start here.\n";
+        break;
+
+    case '--version':
+        echo "Laravel Framework 11.0.0\n";
+        break;
+
+    case 'help':
+    default:
+        echo "Laravel Framework 11.0.0 (E2E Test Stub)\n";
+        echo "Available commands:\n";
+        echo "  schedule:run    Run scheduled commands\n";
+        echo "  config:cache    Cache configuration\n";
+        echo "  route:cache     Cache routes\n";
+        echo "  optimize        Optimize the application\n";
+        echo "  migrate         Run database migrations\n";
+        break;
+}

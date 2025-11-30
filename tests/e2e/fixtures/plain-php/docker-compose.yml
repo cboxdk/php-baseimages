@@ -1,0 +1,14 @@
+services:
+  app:
+    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-plain-php
+    ports:
+      - "8090:80"
+    volumes:
+      - ./:/var/www/html:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s

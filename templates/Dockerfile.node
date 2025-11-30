@@ -1,0 +1,34 @@
+# PHPeek + Node.js Template
+# For full-stack applications needing both PHP and Node.js (Laravel + Vite, etc.)
+
+FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+
+# Install Node.js and npm
+RUN apk add --no-cache \
+    nodejs \
+    npm
+
+# Verify installation
+RUN node --version && npm --version
+
+# Optional: Install Yarn
+# RUN npm install -g yarn
+
+# Optional: Install pnpm (faster alternative)
+# RUN npm install -g pnpm
+
+WORKDIR /var/www/html
+
+# Build assets during image build (production)
+# Uncomment if you want to build assets in the image:
+# COPY package*.json ./
+# RUN npm ci --production
+# COPY . .
+# RUN npm run build
+
+# For development with hot-reload:
+# Expose Vite dev server port
+EXPOSE 5173
+
+# Example: Run Vite dev server alongside PHP-FPM + Nginx
+# Add to docker-entrypoint.sh or use process manager

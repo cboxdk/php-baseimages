@@ -1,0 +1,16 @@
+services:
+  app:
+    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-image-formats
+    ports:
+      - "8099:80"
+    volumes:
+      - ./public:/var/www/html/public
+    environment:
+      APP_ENV: testing
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

@@ -1,0 +1,59 @@
+# PHPeek Development Template
+# Includes Xdebug, SPX profiler, Node.js, and development tools
+
+FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+
+# Install development tools
+RUN apk add --no-cache \
+    $PHPIZE_DEPS \
+    nodejs \
+    npm \
+    git \
+    vim \
+    nano \
+    bash-completion
+
+# Install Xdebug
+RUN pecl install xdebug-3.4.0 && \
+    docker-php-ext-enable xdebug
+
+# Configure Xdebug for step debugging
+RUN echo "xdebug.mode=debug,develop,coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
+    echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
+    echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
+    echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini && \
+    echo "xdebug.log=/tmp/xdebug.log" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+# Install SPX Profiler for performance profiling
+RUN git clone https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx && \
+    cd /tmp/php-spx && \
+    phpize && \
+    ./configure && \
+    make && \
+    make install && \
+    docker-php-ext-enable spx && \
+    rm -rf /tmp/php-spx
+
+# Configure SPX
+RUN echo "spx.http_enabled=1" >> /usr/local/etc/php/conf.d/docker-php-ext-spx.ini && \
+    echo "spx.http_key=dev" >> /usr/local/etc/php/conf.d/docker-php-ext-spx.ini && \
+    echo "spx.http_ip_whitelist=*" >> /usr/local/etc/php/conf.d/docker-php-ext-spx.ini
+
+# Development PHP settings
+RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/99-dev.ini && \
+    echo "display_startup_errors=On" >> /usr/local/etc/php/conf.d/99-dev.ini && \
+    echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/99-dev.ini && \
+    echo "memory_limit=512M" >> /usr/local/etc/php/conf.d/99-dev.ini
+
+# Install Composer globally (already included in base, but ensure latest)
+RUN composer self-update
+
+WORKDIR /var/www/html
+
+# Expose Vite dev server port
+EXPOSE 5173
+
+# Expose SPX profiler UI port (accessible via ?SPX_KEY=dev&SPX_UI_URI=/)
+# Access at: http://localhost/?SPX_KEY=dev&SPX_UI_URI=/
+
+ENV XDEBUG_MODE=debug,develop,coverage

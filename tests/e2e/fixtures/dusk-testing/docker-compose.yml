@@ -1,0 +1,20 @@
+services:
+  app:
+    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-dusk-testing
+    ports:
+      - "8102:80"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - APP_ENV=local
+      - APP_KEY=base64:dummykeyforlaraveltestingonlydontuseinprod
+      - APP_URL=http://localhost
+      - DUSK_DRIVER_URL=http://localhost:9515
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 10
