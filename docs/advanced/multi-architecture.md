@@ -120,7 +120,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 
@@ -297,7 +297,7 @@ Always test on the deployment architecture:
 # GitHub Actions: Test on ARM64 runner
 jobs:
   test-arm64:
-    runs-on: ubuntu-24.04-arm64
+    runs-on: linux-arm64  # Use your CI provider's ARM64 runner
     steps:
       - uses: actions/checkout@v4
       - name: Test

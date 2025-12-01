@@ -29,7 +29,7 @@ PHPeek provides **pre-built development images** with Xdebug already installed a
 - `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev`
 - `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev`
 - `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine-dev`
-- Also available: `-debian-dev` and `-ubuntu-dev` variants
+- Also available: `-debian-dev` variant
 
 ### Development docker-compose.yml
 
@@ -245,7 +245,27 @@ XDEBUG_MODE=debug docker-compose up -d
 
 # Disable Xdebug
 XDEBUG_MODE=off docker-compose up -d
+````
+
+### macOS/Windows Performance Boost (Optional)
+
+Bind mounts on Docker Desktop can feel sluggish with large projects. Use a file-sync helper (Mutagen or Docker Desktop VirtioFS) to keep DX fast without touching your PHPeek stack.
+
+**Mutagen workflow:**
+
+```bash
+brew install mutagen-io/mutagen/mutagen
+
+# Start services as usual
+docker compose up -d
+
+# Sync host source to the container webroot
+mutagen sync create ./ app://phpeek-app/var/www/html
 ```
+
+> Replace `phpeek-app` with the container name from `docker compose ps`. Mutagen mirrors files quickly while PHPeek still sees a bind mount.
+
+Prefer native tooling? Enable **VirtioFS** under Docker Desktop → Settings → Resources → File Sharing for a big speed-up on macOS/Windows.
 
 ## Hot-Reload Setup
 

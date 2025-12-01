@@ -1,11 +1,12 @@
 # Microservices Setup
 # Multiple PHP services communicating via HTTP/message queue
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   # API Gateway - routes requests to services
   gateway:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: micro-gateway
     restart: unless-stopped
     ports:
@@ -13,102 +14,107 @@ services:
     volumes:
       - ./gateway:/var/www/html
     environment:
+      # No workers needed for gateway - just routing
       APP_ENV: local
       USER_SERVICE_URL: http://user-service
       ORDER_SERVICE_URL: http://order-service
       NOTIFICATION_SERVICE_URL: http://notification-service
       REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
     depends_on:
       - user-service
       - order-service
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    # PHPeek PM healthcheck - already built into image
 
   # User Service - handles authentication and user data
   user-service:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: micro-user
     restart: unless-stopped
     volumes:
       - ./user-service:/var/www/html
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_QUEUE: "true"             # Enables queue workers
+
+      # Application
       APP_ENV: local
+
+      # Database
       DB_CONNECTION: mysql
       DB_HOST: mysql-users
       DB_DATABASE: users
       DB_USERNAME: users
       DB_PASSWORD: secret
+
+      # Redis
       REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+      QUEUE_CONNECTION: redis
     depends_on:
       mysql-users:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      redis:
+        condition: service_healthy
+    # PHPeek PM healthcheck - already built into image
 
   # Order Service - handles orders and inventory
   order-service:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: micro-order
     restart: unless-stopped
     volumes:
       - ./order-service:/var/www/html
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_QUEUE: "true"             # Enables queue workers
+
+      # Application
       APP_ENV: local
+
+      # Database
       DB_CONNECTION: mysql
       DB_HOST: mysql-orders
       DB_DATABASE: orders
       DB_USERNAME: orders
       DB_PASSWORD: secret
+
+      # Redis
       REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+      QUEUE_CONNECTION: redis
       USER_SERVICE_URL: http://user-service
     depends_on:
       mysql-orders:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      redis:
+        condition: service_healthy
+    # PHPeek PM healthcheck - already built into image
 
   # Notification Service - handles emails, SMS, push
   notification-service:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: micro-notification
     restart: unless-stopped
     volumes:
       - ./notification-service:/var/www/html
     environment:
-      APP_ENV: local
-      REDIS_HOST: redis
-      QUEUE_CONNECTION: redis
-    depends_on:
-      - redis
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_QUEUE: "true"             # Enables queue workers for notifications
 
-  # Notification worker
-  notification-worker:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: micro-notification-worker
-    restart: unless-stopped
-    command: php artisan queue:work redis --sleep=3 --tries=3
-    volumes:
-      - ./notification-service:/var/www/html
-    environment:
+      # Application
       APP_ENV: local
+
+      # Redis
       REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
       QUEUE_CONNECTION: redis
     depends_on:
-      - notification-service
+      redis:
+        condition: service_healthy
+    # PHPeek PM healthcheck - already built into image
+    # NOTE: No separate worker container needed!
+    # PHPeek PM runs queue workers inside the same container
 
   # User Service Database
   mysql-users:

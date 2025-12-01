@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os_variant: ['alpine', 'debian', 'ubuntu']
+        os_variant: ['alpine', 'bookworm', 'trixie']
 
     permissions:
       contents: read
@@ -33,6 +33,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./nginx/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              echo "context=./nginx/alpine" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./nginx/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              echo "context=./nginx/debian/bookworm" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./nginx/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              echo "context=./nginx/debian/trixie" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -65,8 +84,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./nginx/${{ matrix.os_variant }}
-          file: ./nginx/${{ matrix.os_variant }}/Dockerfile
+          context: ${{ steps.dockerfile.outputs.context }}
+          file: ${{ steps.dockerfile.outputs.path }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

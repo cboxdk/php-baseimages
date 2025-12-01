@@ -43,7 +43,7 @@ All notable changes to PHPeek base images.
 
 ### Added
 - PHP 8.4 GA support
-- Ubuntu 24.04 LTS variant
+- Debian Trixie (testing) variant
 - SPX Profiler in dev images
 - Multi-architecture builds (amd64/arm64)
 

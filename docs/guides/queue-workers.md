@@ -14,7 +14,7 @@ Run background jobs reliably with PHPeek images.
 # docker-compose.yml
 services:
   worker:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     command: php artisan queue:work redis --sleep=3 --tries=3
     volumes:
       - ./:/var/www/html
@@ -23,6 +23,14 @@ services:
       REDIS_HOST: redis
     depends_on:
       - redis
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
 ```
 
 ## Worker Types
@@ -33,7 +41,7 @@ Simple worker for processing jobs:
 
 ```yaml
 worker:
-  image: phpeek/php-fpm-nginx:8.3-alpine
+  image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
   command: php artisan queue:work redis --sleep=3 --tries=3 --max-jobs=1000 --max-time=3600
   restart: unless-stopped
 ```
@@ -50,7 +58,7 @@ Comprehensive queue management with dashboard:
 
 ```yaml
 horizon:
-  image: phpeek/php-fpm-nginx:8.3-alpine
+  image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
   command: php artisan horizon
   restart: unless-stopped
   volumes:
@@ -74,7 +82,7 @@ Run Laravel scheduled tasks:
 
 ```yaml
 scheduler:
-  image: phpeek/php-fpm-nginx:8.3-alpine
+  image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
   command: >
     sh -c "while true; do
       php artisan schedule:run --verbose --no-interaction
@@ -87,9 +95,9 @@ Or use the built-in cron support:
 
 ```yaml
 scheduler:
-  image: phpeek/php-fpm-nginx:8.3-alpine
+  image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
   environment:
-    LARAVEL_SCHEDULER_ENABLED: "true"
+    LARAVEL_SCHEDULER: "true"
 ```
 
 ## Architecture Patterns
@@ -99,10 +107,10 @@ scheduler:
 ```yaml
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
 
   worker:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     command: php artisan queue:work
     deploy:
       replicas: 3
@@ -113,11 +121,11 @@ services:
 ```yaml
 services:
   worker-high:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     command: php artisan queue:work --queue=high,default
 
   worker-low:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     command: php artisan queue:work --queue=low
 ```
 
@@ -155,6 +163,9 @@ services:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+
+volumes:
+  redis_data:
 ```
 
 ### Database

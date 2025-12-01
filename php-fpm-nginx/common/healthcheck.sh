@@ -3,14 +3,25 @@
 # ║  PHPeek Base Image - Health Check                                         ║
 # ║  Queries PHPeek PM health endpoint for comprehensive status               ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
+# shellcheck shell=sh
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Source shared library
+LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+if [ -f "$LIB_PATH" ]; then
+    # shellcheck source=/dev/null
+    . "$LIB_PATH"
+else
+    # Fallback: minimal check functions if library not found
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m'
+    check_passed()  { printf '%b✓%b %s\n' "$GREEN" "$NC" "$1"; }
+    check_failed()  { printf '%b✗%b %s\n' "$RED" "$NC" "$1"; }
+    check_warning() { printf '%b!%b %s\n' "$YELLOW" "$NC" "$1"; }
+fi
 
 # Configuration
 METRICS_PORT="${PHPEEK_PM_METRICS_PORT:-9090}"
@@ -19,24 +30,16 @@ PHP_FPM_PORT="9000"
 
 FAILURES=0
 
-check_failed() {
+# Override check_failed to track failures
+_check_failed() {
     FAILURES=$((FAILURES + 1))
-    echo "${RED}✗${NC} $1"
-}
-
-check_passed() {
-    echo "${GREEN}✓${NC} $1"
-}
-
-check_warning() {
-    echo "${YELLOW}!${NC} $1"
+    check_failed "$1"
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Primary: PHPeek PM Health Endpoint (if metrics enabled)
 # ─────────────────────────────────────────────────────────────────────────────
 if [ "${PHPEEK_PM_METRICS_ENABLED:-true}" = "true" ]; then
-    # Try PHPeek PM metrics endpoint first (most comprehensive)
     if wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${METRICS_PORT}/health" 2>/dev/null; then
         check_passed "PHPeek PM healthy (metrics endpoint)"
     elif curl -sf --max-time 3 "http://127.0.0.1:${METRICS_PORT}/health" >/dev/null 2>&1; then
@@ -48,7 +51,7 @@ if [ "${PHPEEK_PM_METRICS_ENABLED:-true}" = "true" ]; then
         if pgrep -x phpeek-pm >/dev/null 2>&1; then
             check_passed "PHPeek PM process running"
         else
-            check_failed "PHPeek PM not running"
+            _check_failed "PHPeek PM not running"
         fi
     fi
 fi
@@ -56,23 +59,37 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # PHP-FPM Check
 # ─────────────────────────────────────────────────────────────────────────────
-if nc -z 127.0.0.1 ${PHP_FPM_PORT} 2>/dev/null; then
+if command -v check_port >/dev/null 2>&1; then
+    if check_port ${PHP_FPM_PORT}; then
+        check_passed "PHP-FPM listening on :${PHP_FPM_PORT}"
+    else
+        _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
+    fi
+elif nc -z 127.0.0.1 ${PHP_FPM_PORT} 2>/dev/null; then
     check_passed "PHP-FPM listening on :${PHP_FPM_PORT}"
 else
-    check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
+    _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Nginx Check (HTTP health endpoint)
 # ─────────────────────────────────────────────────────────────────────────────
-if wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${NGINX_PORT}/health" 2>/dev/null; then
+if command -v check_http >/dev/null 2>&1; then
+    if check_http "http://127.0.0.1:${NGINX_PORT}/health" 3; then
+        check_passed "Nginx healthy on :${NGINX_PORT}"
+    elif nc -z 127.0.0.1 ${NGINX_PORT} 2>/dev/null; then
+        check_passed "Nginx listening on :${NGINX_PORT}"
+    else
+        _check_failed "Nginx not responding on :${NGINX_PORT}"
+    fi
+elif wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${NGINX_PORT}/health" 2>/dev/null; then
     check_passed "Nginx healthy on :${NGINX_PORT}"
 elif curl -sf --max-time 3 "http://127.0.0.1:${NGINX_PORT}/health" >/dev/null 2>&1; then
     check_passed "Nginx healthy on :${NGINX_PORT}"
 elif nc -z 127.0.0.1 ${NGINX_PORT} 2>/dev/null; then
     check_passed "Nginx listening on :${NGINX_PORT}"
 else
-    check_failed "Nginx not responding on :${NGINX_PORT}"
+    _check_failed "Nginx not responding on :${NGINX_PORT}"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -103,9 +120,9 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
 if [ $FAILURES -gt 0 ]; then
-    echo "${RED}UNHEALTHY${NC} ($FAILURES failures)"
+    printf '%bUNHEALTHY%b (%d failures)\n' "$RED" "$NC" "$FAILURES"
     exit 1
 else
-    echo "${GREEN}HEALTHY${NC}"
+    printf '%bHEALTHY%b\n' "$GREEN" "$NC"
     exit 0
 fi

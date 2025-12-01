@@ -1,10 +1,23 @@
 # WordPress Setup
 # WordPress with MySQL and persistent storage
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
+#
+# IMPORTANT: WordPress does NOT use public/ folder
+# Set WEBROOT=/var/www/html to serve from root
+#
+# First-time setup:
+#   1. docker compose up -d
+#   2. docker compose exec app sh -c "cd /var/www/html && wp core download"
+#   3. Visit http://localhost:8080 to complete installation
+#
+# Or mount existing WordPress:
+#   volumes:
+#     - ./your-wordpress:/var/www/html
 
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: wordpress-app
     restart: unless-stopped
     ports:
@@ -13,20 +26,21 @@ services:
       - wordpress_data:/var/www/html
       - ./uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
     environment:
-      # WordPress will auto-configure from these
+      # CRITICAL: WordPress has index.php in root, NOT public/
+      WEBROOT: /var/www/html
+
+      # WordPress database configuration
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: secret
+
+      # Optional: Table prefix for security
+      WORDPRESS_TABLE_PREFIX: wp_
     depends_on:
       mysql:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    # PHPeek PM healthcheck - already built into image
 
   mysql:
     image: mysql:8.0

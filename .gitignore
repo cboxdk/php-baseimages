@@ -16,6 +16,14 @@ test-app/.env
 test-app/storage/
 test-app/bootstrap/cache/
 
+# Test fixtures (vendor, node_modules, storage)
+tests/e2e/fixtures/*/vendor/
+tests/e2e/fixtures/*/node_modules/
+tests/e2e/fixtures/*/storage/
+tests/e2e/fixtures/*/.phpunit.cache/
+tests/e2e/fixtures/*/composer.lock
+tests/benchmarks/results/
+
 # Docker
 docker-compose.override.yml
 

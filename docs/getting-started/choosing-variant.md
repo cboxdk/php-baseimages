@@ -1,12 +1,12 @@
 ---
 title: "Choosing a Variant"
-description: "Alpine vs Debian vs Ubuntu - which OS variant and edition to use for your PHP application"
+description: "Alpine vs Debian - which OS variant and edition to use for your PHP application"
 weight: 4
 ---
 
 # Choosing a Variant
 
-PHPeek offers multiple OS variants and editions. This guide helps you choose the right combination.
+PHPeek offers two OS variants and multiple editions. This guide helps you choose the right combination.
 
 ## Quick Decision Matrix
 
@@ -14,7 +14,6 @@ PHPeek offers multiple OS variants and editions. This guide helps you choose the
 |----------|---------------------|
 | Production (default) | `8.4-alpine` |
 | Need glibc compatibility | `8.4-debian` |
-| Enterprise/familiar env | `8.4-ubuntu` |
 | Local development | `8.4-alpine-dev` |
 | Native extensions | `8.4-debian` |
 
@@ -85,38 +84,6 @@ services:
     # glibc compatibility for all extensions
 ```
 
-### Ubuntu (24.04 LTS)
-
-```bash
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-ubuntu
-```
-
-**Size**: ~130MB
-
-**Pros**:
-- Most familiar environment
-- Excellent documentation
-- Enterprise support available
-- LTS releases
-
-**Cons**:
-- Largest image size
-- No significant advantage over Debian
-
-**Best for**:
-- Teams familiar with Ubuntu
-- Enterprise environments
-- When using Ubuntu-specific tools
-- Development parity with production
-
-**Example**:
-```yaml
-services:
-  app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-ubuntu
-    # Familiar Ubuntu environment
-```
-
 ## Editions
 
 ### Standard Edition
@@ -175,7 +142,6 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-minimal
 |---------|----------|-----|---------|
 | Alpine | ~50MB | ~80MB | ~30MB |
 | Debian | ~120MB | ~150MB | ~80MB |
-| Ubuntu | ~130MB | ~160MB | ~90MB |
 
 ## Decision Flowchart
 
@@ -195,14 +161,7 @@ Need Xdebug/debugging?
         |
         +-- Yes --> Debian
         |
-        +-- No --> Continue
-              |
-              v
-          Team familiar with Ubuntu?
-              |
-              +-- Yes --> Ubuntu (if comfort > size)
-              |
-              +-- No --> Alpine (recommended)
+        +-- No --> Alpine (recommended)
 ```
 
 ## Common Scenarios
@@ -239,18 +198,9 @@ spec:
     - image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
-### Scenario 4: Enterprise with Ubuntu Standards
-
-```yaml
-# Ubuntu for team familiarity
-services:
-  app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-ubuntu
-```
-
 ## When Alpine Doesn't Work
 
-Alpine uses musl libc instead of glibc. Some scenarios where you need Debian/Ubuntu:
+Alpine uses musl libc instead of glibc. Some scenarios where you need Debian:
 
 ### Oracle Database (oci8)
 
@@ -315,7 +265,6 @@ docker build --target production -t myapp:prod .
 | Starting new project | `8.4-alpine` |
 | Local development | `8.4-alpine-dev` |
 | Need specific extension | `8.4-debian` |
-| Team uses Ubuntu | `8.4-ubuntu` |
 | Kubernetes production | `8.4-alpine` |
 | CI/CD pipelines | `8.4-alpine` (fast) |
 | Legacy migration | `8.3-debian` |

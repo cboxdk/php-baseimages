@@ -1,0 +1,46 @@
+# PHP Basic Setup
+# Minimal PHP application without framework
+# Works with apps that have index.php in root OR public/
+# All processes managed by PHPeek PM - NO command overrides!
+# Usage: docker compose up -d
+#
+# Webroot Strategy:
+#   - If your app has public/index.php → use this config as-is
+#   - If your app has index.php in root → set WEBROOT=/var/www/html
+#
+# See also:
+#   - wordpress/ for CMS without public/ folder
+#   - laravel-basic/ for Laravel framework
+
+services:
+  app:
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    container_name: php-basic-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+    environment:
+      # Webroot configuration
+      # Default: /var/www/html/public (for frameworks)
+      # Change to: /var/www/html (for apps without public/)
+      # WEBROOT: /var/www/html
+
+      # PHP Configuration (optional)
+      APP_ENV: local
+      APP_DEBUG: "true"
+    # PHPeek PM healthcheck - already built into image
+
+# No database by default - add as needed:
+#
+#   mysql:
+#     image: mysql:8.0
+#     environment:
+#       MYSQL_ROOT_PASSWORD: root
+#       MYSQL_DATABASE: app
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+#
+# volumes:
+#   mysql_data:

@@ -1,26 +1,25 @@
 #!/bin/sh
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# ============================================================================
+# PHPeek PHP-FPM Entrypoint
+# ============================================================================
+# shellcheck shell=sh
 
-log_info() {
-    echo "${GREEN}[INFO]${NC} $1"
-}
-
-log_warn() {
-    echo "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo "${RED}[ERROR]${NC} $1"
-}
+# Source shared library
+LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+if [ -f "$LIB_PATH" ]; then
+    # shellcheck source=/dev/null
+    . "$LIB_PATH"
+else
+    # Fallback: minimal logging if library not found
+    log_info()  { echo "[INFO] $1"; }
+    log_warn()  { echo "[WARN] $1"; }
+    log_error() { echo "[ERROR] $1" >&2; }
+fi
 
 # Validate PHP-FPM configuration
-validate_config() {
+validate_fpm_config() {
     log_info "Validating PHP-FPM configuration..."
     if ! php-fpm -t 2>&1; then
         log_error "PHP-FPM configuration validation failed!"
@@ -29,28 +28,8 @@ validate_config() {
     log_info "PHP-FPM configuration is valid"
 }
 
-# Check if required extensions are loaded
-check_extensions() {
-    log_info "Checking required PHP extensions..."
-
-    required_extensions="pdo_mysql pdo_pgsql redis"
-    missing_extensions=""
-
-    for ext in $required_extensions; do
-        if ! php -m | grep -q "^${ext}$"; then
-            missing_extensions="${missing_extensions} ${ext}"
-        fi
-    done
-
-    if [ -n "$missing_extensions" ]; then
-        log_warn "Missing recommended extensions:${missing_extensions}"
-    else
-        log_info "All required extensions are loaded"
-    fi
-}
-
 # Setup proper permissions
-setup_permissions() {
+setup_fpm_permissions() {
     log_info "Setting up permissions..."
 
     # Ensure www-data can write to necessary directories
@@ -69,18 +48,18 @@ graceful_shutdown() {
     log_info "Received shutdown signal, gracefully stopping PHP-FPM..."
 
     # Send QUIT signal to PHP-FPM for graceful shutdown
-    kill -QUIT "$(cat /var/run/php-fpm.pid)" 2>/dev/null || true
+    kill -QUIT "$(cat /var/run/php-fpm.pid 2>/dev/null)" 2>/dev/null || true
 
     # Wait for PHP-FPM to finish processing requests (max 30 seconds)
     timeout=30
-    while [ $timeout -gt 0 ] && kill -0 "$(cat /var/run/php-fpm.pid)" 2>/dev/null; do
+    while [ $timeout -gt 0 ] && [ -f /var/run/php-fpm.pid ] && kill -0 "$(cat /var/run/php-fpm.pid 2>/dev/null)" 2>/dev/null; do
         sleep 1
         timeout=$((timeout - 1))
     done
 
     if [ $timeout -eq 0 ]; then
         log_warn "Graceful shutdown timeout, forcing shutdown"
-        kill -TERM "$(cat /var/run/php-fpm.pid)" 2>/dev/null || true
+        kill -TERM "$(cat /var/run/php-fpm.pid 2>/dev/null)" 2>/dev/null || true
     else
         log_info "PHP-FPM stopped gracefully"
     fi
@@ -101,13 +80,19 @@ if [ -n "$XDEBUG_MODE" ]; then
     log_warn "This should NOT be used in production!"
 fi
 
-# Run startup checks
-validate_config
-check_extensions
-setup_permissions
+# Check PHPeek PM
+if command -v phpeek-pm >/dev/null 2>&1; then
+    log_info "PHPeek PM $(phpeek-pm --version 2>/dev/null | head -n1)"
+fi
 
-# Allow custom initialization scripts
-if [ -d /docker-entrypoint-init.d ]; then
+# Run startup checks
+validate_fpm_config
+setup_fpm_permissions
+
+# Run user-provided init scripts (using shared function if available)
+if command -v run_init_scripts >/dev/null 2>&1; then
+    run_init_scripts /docker-entrypoint-init.d
+elif [ -d /docker-entrypoint-init.d ]; then
     log_info "Running initialization scripts..."
     for script in /docker-entrypoint-init.d/*; do
         if [ -f "$script" ] && [ -x "$script" ]; then

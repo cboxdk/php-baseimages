@@ -22,7 +22,7 @@ usage() {
     echo ""
     echo "Arguments:"
     echo "  IMAGE     Docker image to test (default: $DEFAULT_IMAGE)"
-    echo "  SCENARIO  Scenario to run: all, plain-php, laravel, wordpress, health-checks"
+    echo "  SCENARIO  Scenario to run: all, plain-php, laravel, symfony, wordpress, magento, drupal, typo3, statamic, health-checks"
     echo ""
     echo "Environment variables:"
     echo "  PARALLEL=true   Run scenarios in parallel (experimental)"
@@ -97,16 +97,14 @@ run_scenario() {
 
     log_info "Running scenario: $scenario_name"
 
-    chmod +x "$scenario_file"
-
     if [ "$VERBOSE" = "true" ]; then
-        if "$scenario_file"; then
+        if bash "$scenario_file"; then
             return 0
         else
             return 1
         fi
     else
-        if "$scenario_file" > "$log_file" 2>&1; then
+        if bash "$scenario_file" > "$log_file" 2>&1; then
             # Extract summary from log
             grep -E "^\[PASS\]|\[FAIL\]" "$log_file" | tail -20
             rm -f "$log_file"

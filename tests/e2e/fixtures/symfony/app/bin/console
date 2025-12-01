@@ -1,0 +1,206 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Minimal Symfony-like console for E2E testing
+ * Simulates the basic Symfony console structure and commands
+ */
+
+define('SYMFONY_START', microtime(true));
+
+// Simple autoloader
+spl_autoload_register(function ($class) {
+    // Not used in minimal testing
+});
+
+// Parse command line arguments
+$args = array_slice($argv, 1);
+$command = $args[0] ?? 'list';
+$options = array_filter($args, fn($a) => str_starts_with($a, '--'));
+
+$noAnsi = in_array('--no-ansi', $options);
+$env = 'prod';
+foreach ($options as $opt) {
+    if (str_starts_with($opt, '--env=')) {
+        $env = substr($opt, 6);
+    }
+}
+
+// Color helpers
+function green($text, $noAnsi) {
+    return $noAnsi ? $text : "\033[32m{$text}\033[0m";
+}
+
+function yellow($text, $noAnsi) {
+    return $noAnsi ? $text : "\033[33m{$text}\033[0m";
+}
+
+function cyan($text, $noAnsi) {
+    return $noAnsi ? $text : "\033[36m{$text}\033[0m";
+}
+
+// Command routing
+switch ($command) {
+    case 'list':
+    case '':
+        echo "Symfony " . ($noAnsi ? "" : "\033[32m") . "7.0.0" . ($noAnsi ? "" : "\033[0m") . " (env: {$env})\n";
+        echo "\n";
+        echo yellow("Usage:", $noAnsi) . "\n";
+        echo "  command [options] [arguments]\n\n";
+        echo yellow("Available commands:", $noAnsi) . "\n";
+        echo green("  about", $noAnsi) . "              Display information about the current project\n";
+        echo green("  list", $noAnsi) . "               List commands\n";
+        echo green("  help", $noAnsi) . "               Display help for a command\n";
+        echo " " . cyan("cache", $noAnsi) . "\n";
+        echo green("  cache:clear", $noAnsi) . "        Clear the cache\n";
+        echo green("  cache:warmup", $noAnsi) . "       Warm up an empty cache\n";
+        echo " " . cyan("debug", $noAnsi) . "\n";
+        echo green("  debug:config", $noAnsi) . "       Dump the current configuration\n";
+        echo green("  debug:container", $noAnsi) . "    Display current services\n";
+        echo green("  debug:router", $noAnsi) . "       Display current routes\n";
+        echo " " . cyan("doctrine", $noAnsi) . "\n";
+        echo green("  doctrine:migrations:migrate", $noAnsi) . "  Execute migrations\n";
+        echo green("  doctrine:schema:update", $noAnsi) . "       Update database schema\n";
+        break;
+
+    case 'about':
+        echo "\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        echo "  " . green("Symfony", $noAnsi) . "\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        echo "  Version              " . green("7.0.0", $noAnsi) . "\n";
+        echo "  Long-Term Support    No\n";
+        echo "  End of maintenance   07/2024\n";
+        echo "  End of life          07/2024\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        echo "  " . green("Kernel", $noAnsi) . "\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        echo "  Type                 App\\Kernel\n";
+        echo "  Environment          {$env}\n";
+        echo "  Debug                " . ($env === 'dev' ? 'true' : 'false') . "\n";
+        echo "  Charset              UTF-8\n";
+        echo "  Cache directory      ./var/cache/{$env}\n";
+        echo "  Build directory      ./var/cache/{$env}\n";
+        echo "  Log directory        ./var/log\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        echo "  " . green("PHP", $noAnsi) . "\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        echo "  Version              " . PHP_VERSION . "\n";
+        echo "  Architecture         " . (PHP_INT_SIZE * 8) . " bits\n";
+        echo "  Intl locale          " . (extension_loaded('intl') ? locale_get_default() : 'n/a') . "\n";
+        echo "  Timezone             " . date_default_timezone_get() . "\n";
+        echo "  OPcache              " . (extension_loaded('Zend OPcache') ? 'true' : 'false') . "\n";
+        echo "  APCu                 " . (extension_loaded('apcu') ? 'true' : 'false') . "\n";
+        echo "  Xdebug               " . (extension_loaded('xdebug') ? 'true' : 'false') . "\n";
+        echo " " . yellow("-------------------- ---------------------------------", $noAnsi) . "\n";
+        break;
+
+    case 'cache:clear':
+        $cacheDir = __DIR__ . '/../var/cache';
+        $noWarmup = in_array('--no-warmup', $options);
+
+        // Clear cache directory
+        if (is_dir($cacheDir)) {
+            $files = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($cacheDir, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
+            );
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    @rmdir($file->getRealPath());
+                } else {
+                    @unlink($file->getRealPath());
+                }
+            }
+        }
+
+        // Recreate directory structure
+        @mkdir($cacheDir . '/' . $env, 0777, true);
+
+        echo "\n";
+        echo " // Clearing the cache for the " . green($env, $noAnsi) . " environment\n";
+        echo " // with debug " . ($env === 'dev' ? 'true' : 'false') . "\n\n";
+        echo " " . green("[OK]", $noAnsi) . " Cache for the \"{$env}\" environment (debug=" . ($env === 'dev' ? 'true' : 'false') . ") was successfully cleared.\n\n";
+
+        if (!$noWarmup) {
+            echo " // Warming up cache for the " . green($env, $noAnsi) . " environment\n";
+            echo " " . green("[OK]", $noAnsi) . " Cache warmup completed.\n\n";
+        }
+        break;
+
+    case 'cache:warmup':
+        $cacheDir = __DIR__ . '/../var/cache/' . $env;
+        @mkdir($cacheDir, 0777, true);
+
+        // Create some dummy cache files
+        file_put_contents($cacheDir . '/container.php', '<?php // Container cache');
+        file_put_contents($cacheDir . '/routing.php', '<?php // Routing cache');
+
+        echo "\n";
+        echo " // Warming up cache for the " . green($env, $noAnsi) . " environment\n\n";
+        echo " " . green("[OK]", $noAnsi) . " Cache warmup completed.\n\n";
+        break;
+
+    case 'debug:config':
+        echo "Available registered bundles with their configuration:\n\n";
+        echo green("  framework", $noAnsi) . "          FrameworkBundle\n";
+        echo green("  twig", $noAnsi) . "               TwigBundle\n";
+        echo green("  doctrine", $noAnsi) . "           DoctrineBundle\n";
+        echo green("  security", $noAnsi) . "           SecurityBundle\n";
+        break;
+
+    case 'debug:container':
+        echo "\n";
+        echo yellow("Symfony Container Services", $noAnsi) . "\n";
+        echo str_repeat("=", 50) . "\n\n";
+        echo " " . green("-------------------- ", $noAnsi) . " " . green("---------------------------------------------", $noAnsi) . "\n";
+        echo "  " . yellow("Service ID", $noAnsi) . "              " . yellow("Class name", $noAnsi) . "\n";
+        echo " " . green("-------------------- ", $noAnsi) . " " . green("---------------------------------------------", $noAnsi) . "\n";
+        echo "  kernel               App\\Kernel\n";
+        echo "  router               Symfony\\Component\\Routing\\Router\n";
+        echo "  request_stack        Symfony\\Component\\HttpFoundation\\RequestStack\n";
+        echo "  http_kernel          Symfony\\Component\\HttpKernel\\HttpKernel\n";
+        echo "  twig                 Twig\\Environment\n";
+        echo " " . green("-------------------- ", $noAnsi) . " " . green("---------------------------------------------", $noAnsi) . "\n";
+        break;
+
+    case 'debug:router':
+        echo "\n";
+        echo yellow("Symfony Routes", $noAnsi) . "\n";
+        echo str_repeat("=", 50) . "\n\n";
+        echo " " . green("---------- ", $noAnsi) . " " . green("-------- ", $noAnsi) . " " . green("-------- ", $noAnsi) . " " . green("------------------", $noAnsi) . "\n";
+        echo "  " . yellow("Name", $noAnsi) . "        " . yellow("Method", $noAnsi) . "    " . yellow("Scheme", $noAnsi) . "    " . yellow("Path", $noAnsi) . "\n";
+        echo " " . green("---------- ", $noAnsi) . " " . green("-------- ", $noAnsi) . " " . green("-------- ", $noAnsi) . " " . green("------------------", $noAnsi) . "\n";
+        echo "  home        GET       ANY       /\n";
+        echo "  health      GET       ANY       /health\n";
+        echo "  api_test    GET|POST  ANY       /api/test\n";
+        echo " " . green("---------- ", $noAnsi) . " " . green("-------- ", $noAnsi) . " " . green("-------- ", $noAnsi) . " " . green("------------------", $noAnsi) . "\n";
+        break;
+
+    case 'doctrine:migrations:migrate':
+        echo "\n";
+        echo yellow("Application Migrations", $noAnsi) . "\n\n";
+        echo " " . green("[OK]", $noAnsi) . " Already at the latest version.\n\n";
+        break;
+
+    case 'doctrine:schema:update':
+        echo "\n";
+        echo yellow("Doctrine Schema Update", $noAnsi) . "\n\n";
+        echo " " . green("[OK]", $noAnsi) . " Nothing to update - your database is already in sync with the current entity metadata.\n\n";
+        break;
+
+    case 'help':
+        $helpCommand = $args[1] ?? 'list';
+        echo "\n";
+        echo yellow("Description:", $noAnsi) . "\n";
+        echo "  Display help for the given command. When no command is given display help for the list command.\n\n";
+        echo yellow("Usage:", $noAnsi) . "\n";
+        echo "  help [options] [--] [<command_name>]\n\n";
+        break;
+
+    default:
+        fwrite(STDERR, "\n");
+        fwrite(STDERR, " " . ($noAnsi ? "[ERROR]" : "\033[37;41m [ERROR] \033[0m") . " Command \"{$command}\" is not defined.\n\n");
+        exit(1);
+}
+
+exit(0);

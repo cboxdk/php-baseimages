@@ -1,10 +1,11 @@
 # Symfony Basic Setup
 # Symfony with PostgreSQL database
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: symfony-app
     restart: unless-stopped
     ports:
@@ -12,34 +13,24 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      SYMFONY_MESSENGER: "true"         # Enables Symfony Messenger consumer
+      SYMFONY_SCHEDULER: "true"         # Enables Symfony Scheduler (if used)
+
+      # Application
       APP_ENV: dev
       APP_DEBUG: "1"
+
+      # Database
       DATABASE_URL: postgresql://symfony:secret@postgres:5432/symfony?serverVersion=16
+
+      # Messenger
       MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # Queue worker for Symfony Messenger
-  worker:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: symfony-worker
-    restart: unless-stopped
-    command: php bin/console messenger:consume async -vv --time-limit=3600
-    volumes:
-      - ./:/var/www/html
-    environment:
-      APP_ENV: dev
-      DATABASE_URL: postgresql://symfony:secret@postgres:5432/symfony?serverVersion=16
-      MESSENGER_TRANSPORT_DSN: doctrine://default?auto_setup=0
-    depends_on:
-      - app
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
 
   postgres:
     image: postgres:16-alpine

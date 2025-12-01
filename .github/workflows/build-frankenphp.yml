@@ -1,0 +1,121 @@
+name: Build and Push FrankenPHP Images
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frankenphp/**'
+      - '.github/workflows/build-frankenphp.yml'
+    tags:
+      - 'frankenphp-*'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frankenphp/**'
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
+        required: false
+        default: 'all'
+      os_variant:
+        description: 'OS variant to build (debian, ubuntu, or all)'
+        required: false
+        default: 'all'
+  repository_dispatch:
+    types: [php-base-updated]
+  schedule:
+    # Weekly security rebuild - Monday 03:00 UTC (after php-base at 01:00)
+    - cron: '0 3 * * 1'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/frankenphp
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        # FrankenPHP: Debian/Ubuntu + Alpine, with bookworm/trixie
+        os_variant: ['alpine', 'bookworm', 'trixie', 'ubuntu']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./frankenphp/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./frankenphp/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./frankenphp/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            ubuntu)
+              echo "path=./frankenphp/${{ matrix.php_version }}/ubuntu/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
+            type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=frankenphp-${{ matrix.php_version }}-${{ matrix.os_variant }}
+          cache-to: type=gha,mode=max,scope=frankenphp-${{ matrix.php_version }}-${{ matrix.os_variant }}
+
+      - name: Test image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
+          echo "Testing $IMAGE..."
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE frankenphp version
+          docker run --rm $IMAGE composer --version
+          docker run --rm $IMAGE node --version
+          docker run --rm $IMAGE phpeek-pm --version

@@ -1,0 +1,180 @@
+name: Check Dependency Updates
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC (before weekly security rebuilds)
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup jq
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Check PHP patch versions
+        id: php
+        run: |
+          echo "## PHP Versions" >> updates.md
+          for minor in $(jq -r '.php.supported[]' versions.json); do
+            # Get latest PHP patch version from php.net
+            LATEST=$(curl -sf "https://www.php.net/releases/index.php?json&version=$minor" | jq -r '.version // empty' || echo "")
+            CURRENT=$(jq -r ".php.latest_patch.\"$minor\"" versions.json)
+
+            if [ -n "$LATEST" ] && [ "$LATEST" != "$CURRENT" ]; then
+              echo "::warning::PHP $minor: $CURRENT → $LATEST available"
+              echo "- PHP $minor: \`$CURRENT\` → \`$LATEST\`" >> updates.md
+              echo "php_update=true" >> $GITHUB_OUTPUT
+            fi
+          done
+
+      - name: Check for new PHP minor version (8.5+)
+        run: |
+          # Check if PHP 8.5 is released
+          for version in 8.5 9.0; do
+            if curl -sf "https://www.php.net/releases/index.php?json&version=$version" > /dev/null 2>&1; then
+              PHP_NEW=$(curl -s "https://www.php.net/releases/index.php?json&version=$version" | jq -r '.version // empty')
+              if [ -n "$PHP_NEW" ] && ! jq -e ".php.supported | index(\"$version\")" versions.json > /dev/null; then
+                echo "::warning::🆕 PHP $version released: $PHP_NEW - Consider adding support!"
+                echo "- 🆕 **NEW**: PHP $version ($PHP_NEW) released!" >> updates.md
+              fi
+            fi
+          done
+
+      - name: Check PHP EOL dates
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          echo "" >> updates.md
+          echo "## EOL Warnings" >> updates.md
+
+          for version in $(jq -r '.php.supported[]' versions.json); do
+            EOL=$(jq -r ".php.eol.\"$version\"" versions.json)
+            # Calculate days until EOL (works on Linux)
+            TODAY_SEC=$(date -d "$TODAY" +%s)
+            EOL_SEC=$(date -d "$EOL" +%s)
+            DAYS_LEFT=$(( (EOL_SEC - TODAY_SEC) / 86400 ))
+
+            if [ "$DAYS_LEFT" -lt 90 ]; then
+              echo "::warning::⚠️ PHP $version EOL in $DAYS_LEFT days ($EOL)"
+              echo "- ⚠️ PHP $version: EOL in **$DAYS_LEFT days** ($EOL)" >> updates.md
+            elif [ "$DAYS_LEFT" -lt 180 ]; then
+              echo "- ℹ️ PHP $version: EOL in $DAYS_LEFT days ($EOL)" >> updates.md
+            fi
+          done
+
+      - name: Check PECL extension versions
+        run: |
+          echo "" >> updates.md
+          echo "## PHP Extensions" >> updates.md
+
+          for ext in $(jq -r '.extensions | keys[]' versions.json); do
+            CURRENT=$(jq -r ".extensions.$ext" versions.json)
+            # Get latest from PECL
+            LATEST=$(curl -sf "https://pecl.php.net/rest/r/$ext/latest.txt" || echo "")
+
+            if [ -n "$LATEST" ] && [ "$LATEST" != "$CURRENT" ]; then
+              echo "::warning::$ext: $CURRENT → $LATEST available"
+              echo "- $ext: \`$CURRENT\` → \`$LATEST\`" >> updates.md
+              echo "ext_update=true" >> $GITHUB_OUTPUT
+            fi
+          done
+
+      - name: Check Node.js LTS
+        run: |
+          echo "" >> updates.md
+          echo "## Tools" >> updates.md
+
+          # Get current LTS major version
+          LATEST_LTS=$(curl -sf https://nodejs.org/dist/index.json | jq -r '[.[] | select(.lts != false)][0].version' | tr -d 'v' | cut -d. -f1)
+          CURRENT=$(jq -r '.node.version' versions.json)
+
+          if [ -n "$LATEST_LTS" ] && [ "$LATEST_LTS" != "$CURRENT" ]; then
+            echo "::warning::Node.js LTS: $CURRENT → $LATEST_LTS available"
+            echo "- Node.js: \`$CURRENT\` → \`$LATEST_LTS\` (LTS)" >> updates.md
+          fi
+
+      - name: Check FrankenPHP
+        run: |
+          LATEST=$(curl -sf https://api.github.com/repos/dunglas/frankenphp/releases/latest | jq -r '.tag_name // empty' | tr -d 'v')
+          CURRENT=$(jq -r '.tools.frankenphp' versions.json)
+
+          if [ -n "$LATEST" ] && [ "$LATEST" != "$CURRENT" ]; then
+            echo "::warning::FrankenPHP: $CURRENT → $LATEST available"
+            echo "- FrankenPHP: \`$CURRENT\` → \`$LATEST\`" >> updates.md
+          fi
+
+      - name: Check Composer
+        run: |
+          LATEST=$(curl -sf https://api.github.com/repos/composer/composer/releases/latest | jq -r '.tag_name // empty' | tr -d 'v' | cut -d. -f1)
+          CURRENT=$(jq -r '.tools.composer' versions.json)
+
+          if [ -n "$LATEST" ] && [ "$LATEST" != "$CURRENT" ]; then
+            echo "::warning::Composer: $CURRENT → $LATEST available"
+            echo "- Composer: \`$CURRENT\` → \`$LATEST\`" >> updates.md
+          fi
+
+      - name: Check if updates found
+        id: check
+        run: |
+          if [ -s updates.md ] && grep -q "→" updates.md; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "Updates found:"
+            cat updates.md
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "No updates found"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check.outputs.has_updates == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: dependency updates available"
+          title: "chore: Dependency updates available"
+          body: |
+            ## 📦 Dependency Updates Available
+
+            The following updates have been detected:
+
+            $(cat updates.md)
+
+            ---
+
+            ### Action Required
+
+            1. Review each update for breaking changes
+            2. Update `versions.json` with new versions
+            3. Run tests locally: `make test-all`
+            4. Merge when CI is green
+
+            ### How to Update
+
+            Edit `versions.json` and update the relevant version numbers. The next build will automatically use the new versions.
+
+            ---
+
+            🤖 Generated by [Check Dependency Updates](.github/workflows/check-updates.yml)
+          branch: deps/version-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+
+      - name: Summary
+        run: |
+          echo "## Dependency Check Summary" >> $GITHUB_STEP_SUMMARY
+          if [ -s updates.md ]; then
+            cat updates.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All dependencies are up to date!" >> $GITHUB_STEP_SUMMARY
+          fi

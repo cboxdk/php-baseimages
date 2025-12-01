@@ -1,82 +1,115 @@
 #!/bin/sh
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  PHPeek PHP CLI Health Check                                              ║
+# ║  Validates PHP CLI, Composer, extensions, and PHPeek PM                   ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+# shellcheck shell=sh
+
 set -e
 
-# Health check script for PHP CLI
-# Returns 0 if healthy, 1 if unhealthy
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
+# Source shared library
+LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+if [ -f "$LIB_PATH" ]; then
+    # shellcheck source=/dev/null
+    . "$LIB_PATH"
+else
+    # Fallback: minimal check functions if library not found
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m'
+    check_passed()  { printf '%b✓%b %s\n' "$GREEN" "$NC" "$1"; }
+    check_failed()  { printf '%b✗%b %s\n' "$RED" "$NC" "$1"; }
+    check_warning() { printf '%b!%b %s\n' "$YELLOW" "$NC" "$1"; }
+fi
 
 FAILURES=0
 
-check_failed() {
+# Override check_failed to track failures
+_check_failed() {
     FAILURES=$((FAILURES + 1))
-    echo "${RED}✗${NC} $1"
+    check_failed "$1"
 }
 
-check_passed() {
-    echo "${GREEN}✓${NC} $1"
-}
-
-# Check 1: PHP CLI is executable
-if ! php -v >/dev/null 2>&1; then
-    check_failed "PHP CLI not working"
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 1: PHP CLI Executable
+# ─────────────────────────────────────────────────────────────────────────────
+if php -v >/dev/null 2>&1; then
+    check_passed "PHP CLI working"
+else
+    _check_failed "PHP CLI not working"
     exit 1
-else
-    check_passed "PHP CLI is working"
 fi
 
-# Check 2: Can execute simple PHP code
-if ! php -r "exit(0);" 2>/dev/null; then
-    check_failed "Cannot execute PHP code"
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 2: PHP Code Execution
+# ─────────────────────────────────────────────────────────────────────────────
+if php -r "exit(0);" 2>/dev/null; then
+    check_passed "PHP code execution working"
 else
-    check_passed "Can execute PHP code"
+    _check_failed "Cannot execute PHP code"
 fi
 
-# Check 3: OPcache is loaded
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 3: OPcache Extension
+# ─────────────────────────────────────────────────────────────────────────────
 if php -m 2>/dev/null | grep -q "^Zend OPcache$"; then
     check_passed "OPcache extension loaded"
 else
-    check_failed "OPcache extension not loaded"
+    check_warning "OPcache not loaded (recommended for performance)"
 fi
 
-# Check 4: Composer is available
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 4: Composer
+# ─────────────────────────────────────────────────────────────────────────────
 if command -v composer >/dev/null 2>&1; then
     if composer --version --no-ansi >/dev/null 2>&1; then
-        check_passed "Composer is available"
+        check_passed "Composer available"
     else
-        check_failed "Composer not working properly"
+        check_warning "Composer installed but not responding"
     fi
 else
-    check_failed "Composer not found"
+    check_warning "Composer not found"
 fi
 
-# Check 5: Critical extensions
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 5: PHPeek PM
+# ─────────────────────────────────────────────────────────────────────────────
+if command -v phpeek-pm >/dev/null 2>&1; then
+    if phpeek-pm --version >/dev/null 2>&1; then
+        check_passed "PHPeek PM available"
+    else
+        check_warning "PHPeek PM installed but not responding"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 6: Critical PHP Extensions
+# ─────────────────────────────────────────────────────────────────────────────
 required_extensions="json mbstring"
 for ext in $required_extensions; do
-    if php -m 2>/dev/null | grep -q "^${ext}$"; then
-        check_passed "Extension loaded: $ext"
+    if php -m 2>/dev/null | grep -qi "^${ext}$"; then
+        check_passed "Extension: ${ext}"
     else
-        check_failed "Extension missing: $ext"
+        _check_failed "Extension missing: ${ext}"
     fi
 done
 
-# Check PDO separately (uses different naming)
+# Check PDO separately (class-based check)
 if php -r "exit(class_exists('PDO') ? 0 : 1);" 2>/dev/null; then
-    check_passed "Extension loaded: PDO"
+    check_passed "Extension: PDO"
 else
-    check_failed "Extension missing: PDO"
+    _check_failed "Extension missing: PDO"
 fi
 
-# Final verdict
+# ─────────────────────────────────────────────────────────────────────────────
+# Final Verdict
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
 if [ $FAILURES -gt 0 ]; then
-    echo ""
-    echo "${RED}Health check FAILED${NC} ($FAILURES failures)"
+    printf '%bUNHEALTHY%b (%d failures)\n' "$RED" "$NC" "$FAILURES"
     exit 1
 else
-    echo ""
-    echo "${GREEN}Health check PASSED${NC}"
+    printf '%bHEALTHY%b\n' "$GREEN" "$NC"
     exit 0
 fi

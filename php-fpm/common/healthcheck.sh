@@ -1,91 +1,127 @@
 #!/bin/sh
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  PHPeek PHP-FPM Health Check                                              ║
+# ║  Validates PHP-FPM process, port, extensions, and PHPeek PM               ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+# shellcheck shell=sh
+
 set -e
 
-# Health check script for PHP-FPM
-# Returns 0 if healthy, 1 if unhealthy
+# Source shared library
+LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+if [ -f "$LIB_PATH" ]; then
+    # shellcheck source=/dev/null
+    . "$LIB_PATH"
+else
+    # Fallback: minimal check functions if library not found
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    NC='\033[0m'
+    check_passed()  { printf '%b✓%b %s\n' "$GREEN" "$NC" "$1"; }
+    check_failed()  { printf '%b✗%b %s\n' "$RED" "$NC" "$1"; }
+    check_warning() { printf '%b!%b %s\n' "$YELLOW" "$NC" "$1"; }
+fi
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+# Configuration
+PHP_FPM_PORT="${PHP_FPM_PORT:-9000}"
+MAX_FAILURES="${HEALTHCHECK_MAX_FAILURES:-3}"
 
 FAILURES=0
-MAX_FAILURES=3
 
-check_failed() {
+# Override check_failed to track failures
+_check_failed() {
     FAILURES=$((FAILURES + 1))
-    echo "${RED}✗${NC} $1"
+    check_failed "$1"
 }
 
-check_passed() {
-    echo "${GREEN}✓${NC} $1"
-}
-
-# Check 1: PHP-FPM process is running
-if ! pgrep -x php-fpm >/dev/null 2>&1; then
-    check_failed "PHP-FPM process not running"
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 1: PHP-FPM Process
+# ─────────────────────────────────────────────────────────────────────────────
+if pgrep -x php-fpm >/dev/null 2>&1; then
+    check_passed "PHP-FPM process running"
 else
-    check_passed "PHP-FPM process is running"
+    _check_failed "PHP-FPM process not running"
 fi
 
-# Check 2: PHP-FPM is listening on port 9000
-if ! nc -z localhost 9000 2>/dev/null; then
-    check_failed "PHP-FPM not listening on port 9000"
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 2: PHP-FPM Port Listening
+# ─────────────────────────────────────────────────────────────────────────────
+if command -v check_port >/dev/null 2>&1; then
+    if check_port ${PHP_FPM_PORT}; then
+        check_passed "PHP-FPM listening on :${PHP_FPM_PORT}"
+    else
+        _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
+    fi
+elif nc -z 127.0.0.1 ${PHP_FPM_PORT} 2>/dev/null; then
+    check_passed "PHP-FPM listening on :${PHP_FPM_PORT}"
 else
-    check_passed "PHP-FPM listening on port 9000"
+    _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
 fi
 
-# Check 3: PHP-FPM status page (if enabled)
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 3: PHP-FPM Ping/Pong (if cgi-fcgi available)
+# ─────────────────────────────────────────────────────────────────────────────
 if command -v cgi-fcgi >/dev/null 2>&1; then
-    if SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 2>/dev/null | grep -q "pong"; then
+    if SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET \
+       cgi-fcgi -bind -connect 127.0.0.1:${PHP_FPM_PORT} 2>/dev/null | grep -q "pong"; then
         check_passed "PHP-FPM ping/pong working"
     else
-        check_failed "PHP-FPM ping/pong failed"
+        check_warning "PHP-FPM ping/pong not responding (may need pm.status_path configured)"
     fi
 fi
 
-# Check 4: OPcache status (should be enabled)
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 4: OPcache Extension
+# ─────────────────────────────────────────────────────────────────────────────
 if php -r "exit(function_exists('opcache_get_status') ? 0 : 1);" 2>/dev/null; then
     check_passed "OPcache extension loaded"
 else
-    check_failed "OPcache extension not loaded"
+    check_warning "OPcache not loaded (recommended for production)"
 fi
 
-# Check 5: Critical extensions loaded
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 5: PHPeek PM
+# ─────────────────────────────────────────────────────────────────────────────
+if command -v phpeek-pm >/dev/null 2>&1; then
+    if phpeek-pm --version >/dev/null 2>&1; then
+        check_passed "PHPeek PM available"
+    else
+        check_warning "PHPeek PM installed but not responding"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Check 6: Critical PHP Extensions
+# ─────────────────────────────────────────────────────────────────────────────
 required_extensions="json mbstring"
 for ext in $required_extensions; do
-    if php -m 2>/dev/null | grep -q "^${ext}$"; then
-        check_passed "Extension loaded: $ext"
+    if php -m 2>/dev/null | grep -qi "^${ext}$"; then
+        check_passed "Extension: ${ext}"
     else
-        check_failed "Extension missing: $ext"
+        _check_failed "Extension missing: ${ext}"
     fi
 done
 
-# Check PDO separately (uses different naming)
+# Check PDO separately (class-based check)
 if php -r "exit(class_exists('PDO') ? 0 : 1);" 2>/dev/null; then
-    check_passed "Extension loaded: PDO"
+    check_passed "Extension: PDO"
 else
-    check_failed "Extension missing: PDO"
+    _check_failed "Extension missing: PDO"
 fi
 
-# Check 6: Memory usage (warn if > 80%)
-if command -v free >/dev/null 2>&1; then
-    memory_usage=$(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100}')
-    if [ "$memory_usage" -lt 80 ]; then
-        check_passed "Memory usage: ${memory_usage}%"
-    else
-        echo "${YELLOW}⚠${NC} High memory usage: ${memory_usage}%"
-    fi
-fi
-
-# Final verdict
+# ─────────────────────────────────────────────────────────────────────────────
+# Final Verdict
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
 if [ $FAILURES -ge $MAX_FAILURES ]; then
-    echo ""
-    echo "${RED}Health check FAILED${NC} ($FAILURES failures)"
+    printf '%bUNHEALTHY%b (%d failures, max: %d)\n' "$RED" "$NC" "$FAILURES" "$MAX_FAILURES"
     exit 1
 else
-    echo ""
-    echo "${GREEN}Health check PASSED${NC}"
+    if [ $FAILURES -gt 0 ]; then
+        printf '%bHEALTHY%b (with %d warning(s))\n' "$YELLOW" "$NC" "$FAILURES"
+    else
+        printf '%bHEALTHY%b\n' "$GREEN" "$NC"
+    fi
     exit 0
 fi

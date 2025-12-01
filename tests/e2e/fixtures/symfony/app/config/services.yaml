@@ -1,0 +1,19 @@
+# Minimal Symfony-like services configuration for E2E testing
+# This file exists to help trigger Symfony framework detection
+
+parameters:
+    app.env: '%env(APP_ENV)%'
+    app.debug: '%env(bool:APP_DEBUG)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'

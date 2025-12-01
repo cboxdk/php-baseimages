@@ -112,7 +112,7 @@ PHPeek images already run as non-root, but verify:
 
 ```bash
 docker exec <container> whoami
-# Should output: www-data (Debian/Ubuntu) or nginx (Alpine)
+# Should output: www-data (Debian) or nginx (Alpine)
 ```
 
 ## Performance Optimization
@@ -200,6 +200,7 @@ services:
     volumes:
       - ./:/var/www/html:ro  # Read-only for security
       - app-storage:/var/www/html/storage  # Writable storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
       - ./docker/php/production.ini:/usr/local/etc/php/conf.d/zz-production.ini:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./docker/nginx/ssl:/etc/nginx/ssl:ro
@@ -221,7 +222,7 @@ services:
       - PHP_FPM_REQUEST_TERMINATE_TIMEOUT=60
 
       # Laravel Production
-      - LARAVEL_SCHEDULER_ENABLED=true
+      - LARAVEL_SCHEDULER=true
       - LARAVEL_AUTO_OPTIMIZE=true
       - APP_ENV=production
       - APP_DEBUG=false
@@ -540,7 +541,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 
@@ -551,7 +552,7 @@ jobs:
 
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 
@@ -569,7 +570,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
     steps:
       - name: Deploy to Production
         uses: appleboy/ssh-action@master

@@ -1,27 +1,39 @@
 # Development Environment Setup
 # Full development setup with hot reload, Xdebug, and dev tools
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: dev-app
     restart: unless-stopped
     ports:
       - "8080:80"
-      - "5173:5173"  # Vite HMR
+      - "5173:5173"  # Vite HMR (proxied through app)
     volumes:
       - ./:/var/www/html
       - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:ro
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_QUEUE: "true"             # Enables queue workers for dev
+      LARAVEL_SCHEDULER: "true"         # Enables scheduler
+
+      # Application
       APP_ENV: local
       APP_DEBUG: "true"
+
+      # Database
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_DATABASE: app
       DB_USERNAME: app
       DB_PASSWORD: secret
+
+      # Redis
       REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+
       # Xdebug configuration
       XDEBUG_MODE: debug,develop,coverage
       XDEBUG_CONFIG: client_host=host.docker.internal client_port=9003
@@ -31,14 +43,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
 
   # Vite dev server for hot module replacement
+  # This is a separate Node.js container, NOT PHP - command is fine here
   vite:
     image: node:20-alpine
     container_name: dev-vite

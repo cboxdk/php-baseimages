@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
     paths:
       - 'php-cli/**'
+      - 'php-base/**'
       - '.github/workflows/build-php-cli.yml'
     tags:
       - 'cli-*'
@@ -13,6 +14,20 @@ on:
     paths:
       - 'php-cli/**'
   workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
+        required: false
+        default: 'all'
+      os_variant:
+        description: 'OS variant to build (alpine, debian, ubuntu, or all)'
+        required: false
+        default: 'all'
+  repository_dispatch:
+    types: [php-base-updated]
+  schedule:
+    # Weekly security rebuild - Monday 02:00 UTC (after php-base at 01:00)
+    - cron: '0 2 * * 1'
 
 env:
   REGISTRY: ghcr.io
@@ -25,8 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'debian', 'ubuntu']
-        variant: ['prod', 'dev']
+        os_variant: ['alpine', 'bookworm', 'trixie']
 
     permissions:
       contents: read
@@ -35,6 +49,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-cli/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-cli/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -51,45 +81,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine Dockerfile
-        id: dockerfile
-        run: |
-          if [ "${{ matrix.variant }}" = "dev" ]; then
-            echo "dockerfile=Dockerfile.dev" >> $GITHUB_OUTPUT
-            echo "tag_suffix=-dev" >> $GITHUB_OUTPUT
-          else
-            echo "dockerfile=Dockerfile" >> $GITHUB_OUTPUT
-            echo "tag_suffix=" >> $GITHUB_OUTPUT
-          fi
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
-            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }}
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }},enable=${{ matrix.php_version == '8.3' && github.ref == 'refs/heads/main' }}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
+            type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./php-cli/${{ matrix.php_version }}/${{ matrix.os_variant }}
-          file: ./php-cli/${{ matrix.php_version }}/${{ matrix.os_variant }}/${{ steps.dockerfile.outputs.dockerfile }}
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-${{ matrix.variant }}
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-${{ matrix.variant }}
+          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}
+          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}
 
       - name: Test image
         if: github.event_name != 'pull_request'
         run: |
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }} php -v
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }} php -m | grep -E "opcache|redis|pdo_mysql"
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}${{ steps.dockerfile.outputs.tag_suffix }} composer --version
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
+          echo "Testing $IMAGE..."
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
+          docker run --rm $IMAGE composer --version
+          docker run --rm $IMAGE node --version
+          docker run --rm $IMAGE phpeek-pm --version

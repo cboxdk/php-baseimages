@@ -1,91 +1,55 @@
 # Laravel Reverb WebSockets Setup
 # Real-time features with Laravel Reverb (native PHP WebSocket server)
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: reverb-app
     restart: unless-stopped
     ports:
       - "8080:80"
+      - "8085:8085"           # Reverb WebSocket port
     volumes:
       - ./:/var/www/html
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_REVERB: "true"            # Enables Reverb WebSocket server
+      LARAVEL_QUEUE: "true"             # Enables queue workers (for broadcasting)
+      LARAVEL_SCHEDULER: "true"         # Enables scheduler
+
+      # Reverb configuration
+      REVERB_HOST: 0.0.0.0
+      REVERB_PORT: 8085
+      REVERB_APP_ID: app-id
+      REVERB_APP_KEY: app-key
+      REVERB_APP_SECRET: app-secret
+      REVERB_SCHEME: http
+
+      # Application
       APP_ENV: local
       APP_DEBUG: "true"
+      BROADCAST_DRIVER: reverb
+
+      # Database
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_DATABASE: app
       DB_USERNAME: app
       DB_PASSWORD: secret
+
+      # Redis
       REDIS_HOST: redis
-      BROADCAST_DRIVER: reverb
+      REDIS_CLIENT: phpredis
       QUEUE_CONNECTION: redis
-      REVERB_APP_ID: app-id
-      REVERB_APP_KEY: app-key
-      REVERB_APP_SECRET: app-secret
-      REVERB_HOST: reverb
-      REVERB_PORT: 8080
-      REVERB_SCHEME: http
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # Laravel Reverb WebSocket Server
-  reverb:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: reverb-server
-    restart: unless-stopped
-    ports:
-      - "8085:8080"  # WebSocket port
-    command: php artisan reverb:start --host=0.0.0.0 --port=8080
-    volumes:
-      - ./:/var/www/html
-    environment:
-      APP_ENV: local
-      REDIS_HOST: redis
-      REVERB_APP_ID: app-id
-      REVERB_APP_KEY: app-key
-      REVERB_APP_SECRET: app-secret
-    depends_on:
-      - redis
-    healthcheck:
-      test: ["CMD", "php", "artisan", "reverb:status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  # Queue worker for broadcasting
-  worker:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: reverb-worker
-    restart: unless-stopped
-    command: php artisan queue:work redis --sleep=3 --tries=3
-    volumes:
-      - ./:/var/www/html
-    environment:
-      APP_ENV: local
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_DATABASE: app
-      DB_USERNAME: app
-      DB_PASSWORD: secret
-      REDIS_HOST: redis
-      BROADCAST_DRIVER: reverb
-      QUEUE_CONNECTION: redis
-    depends_on:
-      - app
-      - redis
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
 
   mysql:
     image: mysql:8.0

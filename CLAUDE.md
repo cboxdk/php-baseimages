@@ -289,7 +289,7 @@ Comprehensive docs in `docs/` following ServerSideUp quality standards:
 
 ```bash
 # Laravel Features
-LARAVEL_SCHEDULER_ENABLED=true    # Enable cron for schedule:run
+LARAVEL_SCHEDULER=true            # Enable cron for schedule:run (LARAVEL_SCHEDULER_ENABLED still accepted)
 LARAVEL_AUTO_OPTIMIZE=false       # Auto-cache config/routes on startup
 LARAVEL_AUTO_MIGRATE=false        # Auto-run migrations (dangerous in prod!)
 

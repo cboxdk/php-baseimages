@@ -13,7 +13,7 @@ weight: 10
 PHPeek Base Images is a collection of production-ready Docker images for PHP applications. We provide:
 
 - **40+ PHP extensions** pre-installed and optimized
-- **Multiple OS variants**: Alpine (smallest), Debian (compatibility), Ubuntu (familiarity)
+- **Multiple OS variants**: Alpine (smallest), Debian (compatibility)
 - **PHP versions**: 8.2, 8.3, 8.4
 - **Architecture types**: Single-process (PHP-FPM, PHP-CLI, Nginx) and Multi-service (PHP-FPM + Nginx)
 - **Development variants** with Xdebug pre-configured
@@ -131,10 +131,10 @@ environment:
 
 ```yaml
 environment:
-  LARAVEL_SCHEDULER_ENABLED: "true"
+  LARAVEL_SCHEDULER: "true"
 ```
 
-This automatically sets up cron to run `php artisan schedule:run` every minute.
+This automatically sets up cron to run `php artisan schedule:run` every minute. Older configs that still export `LARAVEL_SCHEDULER_ENABLED` continue to work, but `LARAVEL_SCHEDULER` is the canonical flag going forward.
 
 ## Performance
 

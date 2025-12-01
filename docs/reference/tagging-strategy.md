@@ -26,11 +26,6 @@ PHPeek Base Images follow a clear, predictable tagging strategy with OS version 
 - **Previous**: Bullseye (Debian 11) - PHP 8.2, 8.3 only
 - **Tag format**: `8.3-bookworm`, `8.3-bookworm-minimal`
 
-### Ubuntu
-- **Current**: Ubuntu 24.04 (Noble Numbat) - PHP 8.2, 8.3, 8.4
-- **Previous**: Ubuntu 22.04 (Jammy Jellyfish) - PHP 8.2, 8.3 only
-- **Tag format**: `8.3-ubuntu-24.04`, `8.3-ubuntu-24.04-minimal`
-
 ## Edition Suffixes
 
 - **Full Edition** (default): No suffix - `8.3-alpine`
@@ -71,24 +66,6 @@ ghcr.io/phpeek/baseimages/php-fpm:8.2-bullseye
 ghcr.io/phpeek/baseimages/php-fpm:8.3-bullseye
 ```
 
-**Ubuntu 24.04 (Full Edition)**:
-```
-ghcr.io/phpeek/baseimages/php-fpm:8.3-ubuntu-24.04
-ghcr.io/phpeek/baseimages/php-fpm:8.4-ubuntu-24.04
-```
-
-**Ubuntu 24.04 (Minimal Edition)**:
-```
-ghcr.io/phpeek/baseimages/php-fpm:8.3-ubuntu-24.04-minimal
-ghcr.io/phpeek/baseimages/php-fpm:8.4-ubuntu-24.04-minimal
-```
-
-**Ubuntu 22.04 (Legacy Support)**:
-```
-ghcr.io/phpeek/baseimages/php-fpm:8.2-ubuntu-22.04
-ghcr.io/phpeek/baseimages/php-fpm:8.3-ubuntu-22.04
-```
-
 ### PHP-FPM-Nginx Images
 
 **Alpine**:
@@ -103,21 +80,15 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm-minimal
 ```
 
-**Ubuntu 24.04**:
-```
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu-24.04
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu-24.04-minimal
-```
-
 ## Version Matrix
 
-| PHP Version | Alpine | Debian Bookworm | Debian Bullseye | Ubuntu 24.04 | Ubuntu 22.04 |
-|-------------|--------|-----------------|-----------------|--------------|--------------|
-| 8.2         | ✅     | ✅              | ✅              | ✅           | ✅           |
-| 8.3         | ✅     | ✅              | ✅              | ✅           | ✅           |
-| 8.4         | ✅     | ✅              | ❌              | ✅           | ❌           |
+| PHP Version | Alpine | Debian Bookworm | Debian Bullseye |
+|-------------|--------|-----------------|-----------------|
+| 8.2         | ✅     | ✅              | ✅              |
+| 8.3         | ✅     | ✅              | ✅              |
+| 8.4         | ✅     | ✅              | ❌              |
 
-**Note**: PHP 8.4 Bullseye and Ubuntu 22.04 variants not available (newer PHP requires newer OS)
+**Note**: PHP 8.4 Bullseye variant not available (newer PHP requires newer OS)
 
 ## Alias Tags
 
@@ -131,7 +102,6 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu-24.04-minimal
 
 **OS-specific latest**:
 - `debian` → `8.3-bookworm`
-- `ubuntu` → `8.3-ubuntu-24.04`
 
 ## Deprecation Policy
 
@@ -161,13 +131,6 @@ services:
 services:
   app:
     image: ghcr.io/phpeek/baseimages/php-fpm:8.2-bullseye
-```
-
-### Ubuntu Preference (Full Edition)
-```yaml
-services:
-  app:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.3-ubuntu-24.04
 ```
 
 ## See Also

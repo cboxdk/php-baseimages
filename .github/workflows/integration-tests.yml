@@ -27,8 +27,8 @@ jobs:
       - name: Build test images
         run: |
           docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian -f php-fpm-nginx/8.3/debian/Dockerfile .
-          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu -f php-fpm-nginx/8.3/ubuntu/Dockerfile .
+          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run Docker integration tests
         run: |
@@ -57,8 +57,8 @@ jobs:
       - name: Build benchmark images
         run: |
           docker build -t phpeek-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-          docker build -t phpeek-debian -f php-fpm-nginx/8.3/debian/Dockerfile .
-          docker build -t phpeek-ubuntu -f php-fpm-nginx/8.3/ubuntu/Dockerfile .
+          docker build -t phpeek-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build -t phpeek-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run performance benchmarks
         run: |
@@ -86,8 +86,8 @@ jobs:
       - name: Build images for scanning
         run: |
           docker build -t phpeek-scan:alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-          docker build -t phpeek-scan:debian -f php-fpm-nginx/8.3/debian/Dockerfile .
-          docker build -t phpeek-scan:ubuntu -f php-fpm-nginx/8.3/ubuntu/Dockerfile .
+          docker build -t phpeek-scan:bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build -t phpeek-scan:trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run Trivy vulnerability scanner (Alpine)
         uses: aquasecurity/trivy-action@master
@@ -97,20 +97,20 @@ jobs:
           output: 'trivy-alpine-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Run Trivy vulnerability scanner (Debian)
+      - name: Run Trivy vulnerability scanner (Bookworm)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'phpeek-scan:debian'
+          image-ref: 'phpeek-scan:bookworm'
           format: 'sarif'
-          output: 'trivy-debian-results.sarif'
+          output: 'trivy-bookworm-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Run Trivy vulnerability scanner (Ubuntu)
+      - name: Run Trivy vulnerability scanner (Trixie)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'phpeek-scan:ubuntu'
+          image-ref: 'phpeek-scan:trixie'
           format: 'sarif'
-          output: 'trivy-ubuntu-results.sarif'
+          output: 'trivy-trixie-results.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security tab
@@ -127,8 +127,8 @@ jobs:
           echo "## Alpine" >> $GITHUB_STEP_SUMMARY
           docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-scan:alpine >> $GITHUB_STEP_SUMMARY || true
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Debian" >> $GITHUB_STEP_SUMMARY
-          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-scan:debian >> $GITHUB_STEP_SUMMARY || true
+          echo "## Bookworm (Debian 12)" >> $GITHUB_STEP_SUMMARY
+          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Ubuntu" >> $GITHUB_STEP_SUMMARY
-          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-scan:ubuntu >> $GITHUB_STEP_SUMMARY || true
+          echo "## Trixie (Debian 13)" >> $GITHUB_STEP_SUMMARY
+          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-scan:trixie >> $GITHUB_STEP_SUMMARY || true

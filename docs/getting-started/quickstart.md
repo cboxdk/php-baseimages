@@ -85,14 +85,13 @@ curl localhost:8000/health    # Health check
 
 ## Available Images
 
-Use Alpine (smallest), Debian/Ubuntu for glibc compatibility:
+Use Alpine (smallest), Debian for glibc compatibility:
 
 ```
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine  # ~80MB
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian  # ~150MB
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu  # ~160MB
 ```
 
 ## Troubleshooting

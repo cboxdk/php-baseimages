@@ -328,8 +328,10 @@ environment:
 ```yaml
 # Enable scheduler
 environment:
-  - LARAVEL_SCHEDULER_ENABLED=true
+  - LARAVEL_SCHEDULER=true
 ```
+
+`LARAVEL_SCHEDULER_ENABLED` still works for older configs, but `LARAVEL_SCHEDULER` is the preferred flag.
 
 **Verify:**
 

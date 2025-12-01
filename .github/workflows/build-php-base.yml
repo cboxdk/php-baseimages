@@ -1,0 +1,154 @@
+name: Build and Push PHP-Base Images
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'php-base/**'
+      - 'versions.json'
+      - '.github/workflows/build-php-base.yml'
+    tags:
+      - 'base-*'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'php-base/**'
+      - 'versions.json'
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
+        required: false
+        default: 'all'
+      os_variant:
+        description: 'OS variant to build (alpine, bookworm, trixie, or all)'
+        required: false
+        default: 'all'
+  schedule:
+    # Weekly security rebuild - Monday 01:00 UTC (runs before dependent images)
+    - cron: '0 1 * * 1'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/php-base
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'bookworm', 'trixie']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
+          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
+            type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}
+          build-args: |
+            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
+            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+
+      - name: Test image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
+          echo "Testing $IMAGE..."
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+          docker run --rm $IMAGE composer --version
+          docker run --rm $IMAGE node --version
+          docker run --rm $IMAGE phpeek-pm --version
+
+  # Trigger dependent image builds after php-base completes
+  trigger-dependent-builds:
+    needs: build-matrix
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger php-cli build
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: php-base-updated
+
+      - name: Trigger php-fpm build
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: php-base-updated

@@ -58,7 +58,7 @@ docker build -f Dockerfile.rootless -t myapp:rootless .
 docker run -p 8080:8080 myapp:rootless
 ```
 
-### Debian/Ubuntu Conversion
+### Debian Conversion
 
 ```dockerfile
 FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian

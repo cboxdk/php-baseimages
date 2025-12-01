@@ -118,12 +118,12 @@ services:
 
 ```bash
 # Bitnami uses UID 1001
-# PHPeek uses www-data (82 on Alpine, 33 on Debian/Ubuntu)
+# PHPeek uses www-data (82 on Alpine, 33 on Debian)
 
 # Update file ownership
 chown -R 82:82 .  # Alpine
 # OR
-chown -R 33:33 .  # Debian/Ubuntu
+chown -R 33:33 .  # Debian
 ```
 
 **3. Update configuration paths:**
@@ -264,7 +264,7 @@ COPY docker-entrypoint-init.d/ /docker-entrypoint-init.d/
 ```yaml
 # Add Laravel-specific settings
 environment:
-  - LARAVEL_SCHEDULER_ENABLED=true
+  - LARAVEL_SCHEDULER=true
   - LARAVEL_AUTO_OPTIMIZE=true
   - LARAVEL_QUEUE_ENABLED=true
 ```

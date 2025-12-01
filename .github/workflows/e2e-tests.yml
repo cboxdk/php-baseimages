@@ -4,13 +4,23 @@ on:
   push:
     branches: [main]
     paths:
+      - 'php-base/**'
+      - 'php-fpm/**'
       - 'php-fpm-nginx/**'
+      - 'php-swoole/**'
+      - 'php-openswoole/**'
+      - 'frankenphp/**'
       - 'tests/e2e/**'
       - '.github/workflows/e2e-tests.yml'
   pull_request:
     branches: [main]
     paths:
+      - 'php-base/**'
+      - 'php-fpm/**'
       - 'php-fpm-nginx/**'
+      - 'php-swoole/**'
+      - 'php-openswoole/**'
+      - 'frankenphp/**'
       - 'tests/e2e/**'
       - '.github/workflows/e2e-tests.yml'
   workflow_dispatch:
@@ -32,8 +42,8 @@ on:
         type: choice
         options:
           - 'alpine'
-          - 'debian'
-          - 'ubuntu'
+          - 'bookworm'
+          - 'trixie'
           - 'all'
       scenario:
         description: 'Test scenario to run'
@@ -46,6 +56,14 @@ on:
           - 'laravel'
           - 'wordpress'
           - 'health-checks'
+          - 'image-formats'
+          - 'browsershot'
+          - 'dusk-capabilities'
+          - 'pest'
+          - 'database'
+          - 'security'
+          - 'env-config'
+          - 'phpeek-pm'
 
 env:
   REGISTRY: ghcr.io/phpeek/baseimages
@@ -86,17 +104,17 @@ jobs:
         run: |
           tests/e2e/run-e2e-tests.sh "$IMAGE" health-checks
 
-  # Full matrix test (manual trigger or scheduled)
-  full-matrix:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+      - name: Run image formats test (GD, ImageMagick, AVIF, HEIF, WebP, PDF)
+        env:
+          IMAGE: test-image:local
+        run: |
+          tests/e2e/run-e2e-tests.sh "$IMAGE" image-formats
 
-    strategy:
-      fail-fast: false
-      matrix:
-        php_version: ${{ github.event.inputs.php_version == 'all' && fromJson('["8.2", "8.3", "8.4"]') || fromJson(format('["{0}"]', github.event.inputs.php_version)) }}
-        os_variant: ${{ github.event.inputs.os_variant == 'all' && fromJson('["alpine", "debian", "ubuntu"]') || fromJson(format('["{0}"]', github.event.inputs.os_variant)) }}
+  # Advanced tests - run on main branch pushes (separate job for browser-dependent tests)
+  advanced-tests:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -108,7 +126,96 @@ jobs:
       - name: Build test image
         run: |
           docker build \
-            -f php-fpm-nginx/${{ matrix.php_version }}/${{ matrix.os_variant }}/Dockerfile \
+            -f php-fpm-nginx/8.3/alpine/Dockerfile \
+            -t test-image:local \
+            .
+
+      - name: Run Browsershot test (Node.js, npm, Chromium, PDF)
+        env:
+          IMAGE: test-image:local
+        run: |
+          chmod +x tests/e2e/run-e2e-tests.sh
+          chmod +x tests/e2e/scenarios/*.sh
+          chmod +x tests/e2e/lib/*.sh
+          tests/e2e/run-e2e-tests.sh "$IMAGE" browsershot
+
+      - name: Run Dusk capabilities test (browser automation)
+        env:
+          IMAGE: test-image:local
+        run: |
+          tests/e2e/run-e2e-tests.sh "$IMAGE" dusk-capabilities
+
+      - name: Run Pest v4 test
+        env:
+          IMAGE: test-image:local
+        run: |
+          tests/e2e/run-e2e-tests.sh "$IMAGE" pest
+
+      - name: Run security test
+        env:
+          IMAGE: test-image:local
+        run: |
+          tests/e2e/run-e2e-tests.sh "$IMAGE" security
+
+      - name: Run environment config test
+        env:
+          IMAGE: test-image:local
+        run: |
+          tests/e2e/run-e2e-tests.sh "$IMAGE" env-config
+
+      - name: Run PHPeek PM test
+        env:
+          IMAGE: test-image:local
+        run: |
+          tests/e2e/run-e2e-tests.sh "$IMAGE" phpeek-pm
+
+      - name: Upload test logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advanced-test-logs
+          path: /tmp/e2e-*.log
+          retention-days: 7
+
+  # Full matrix test (manual trigger or scheduled)
+  full-matrix:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ${{ github.event.inputs.php_version == 'all' && fromJson('["8.2", "8.3", "8.4"]') || fromJson(format('["{0}"]', github.event.inputs.php_version)) }}
+        os_variant: ${{ github.event.inputs.os_variant == 'all' && fromJson('["alpine", "bookworm", "trixie"]') || fromJson(format('["{0}"]', github.event.inputs.os_variant)) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Build test image
+        run: |
+          docker build \
+            -f ${{ steps.dockerfile.outputs.path }} \
             -t test-image:${{ matrix.php_version }}-${{ matrix.os_variant }} \
             .
 
@@ -145,15 +252,19 @@ jobs:
             os_variant: 'alpine'
             scenario: 'all'
           - php_version: '8.3'
-            os_variant: 'debian'
+            os_variant: 'bookworm'
             scenario: 'plain-php'
           - php_version: '8.3'
-            os_variant: 'ubuntu'
+            os_variant: 'trixie'
             scenario: 'plain-php'
           # Also test latest PHP on Alpine
           - php_version: '8.4'
             os_variant: 'alpine'
             scenario: 'all'
+          # Test latest PHP on Trixie (newest Debian)
+          - php_version: '8.4'
+            os_variant: 'trixie'
+            scenario: 'plain-php'
 
     steps:
       - name: Checkout
@@ -162,10 +273,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
       - name: Build test image
         run: |
           docker build \
-            -f php-fpm-nginx/${{ matrix.php_version }}/${{ matrix.os_variant }}/Dockerfile \
+            -f ${{ steps.dockerfile.outputs.path }} \
             -t test-image:${{ matrix.php_version }}-${{ matrix.os_variant }} \
             .
 
@@ -189,12 +316,14 @@ jobs:
   # Summary job
   summary:
     if: always()
-    needs: [smoke-test, comprehensive]
+    needs: [smoke-test, advanced-tests, comprehensive]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
-          if [ "${{ needs.smoke-test.result }}" == "failure" ] || [ "${{ needs.comprehensive.result }}" == "failure" ]; then
+          if [ "${{ needs.smoke-test.result }}" == "failure" ] || \
+             [ "${{ needs.advanced-tests.result }}" == "failure" ] || \
+             [ "${{ needs.comprehensive.result }}" == "failure" ]; then
             echo "::error::E2E tests failed"
             exit 1
           fi

@@ -159,7 +159,6 @@ php-fpm-nginx/     # All-in-one (recommended for most)
 |---------|------|----------|
 | Alpine | ~50MB | Production, smallest footprint |
 | Debian | ~120MB | glibc compatibility, native extensions |
-| Ubuntu | ~130MB | Familiar environment, enterprise |
 
 ### Editions
 
@@ -175,7 +174,7 @@ Ready to try PHPeek?
 
 1. **[5-Minute Quickstart](quickstart)** - Get running immediately
 2. **[Laravel Guide](../guides/laravel-guide)** - Complete Laravel setup
-3. **[Choosing a Variant](choosing-variant)** - Alpine vs Debian vs Ubuntu
+3. **[Choosing a Variant](choosing-variant)** - Alpine vs Debian
 
 ## Requirements
 

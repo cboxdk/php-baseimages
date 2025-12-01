@@ -25,7 +25,7 @@ Perfect for beginners and those evaluating PHPeek.
 - **[5-Minute Quickstart](getting-started/quickstart)** ⭐ Start here!
 - [Introduction](getting-started/introduction) - Why PHPeek? Comparisons
 - [Installation](getting-started/installation) - All installation methods
-- [Choosing a Variant](getting-started/choosing-variant) - Alpine vs Debian vs Ubuntu
+- [Choosing a Variant](getting-started/choosing-variant) - Alpine vs Debian
 
 ### Framework Guides
 
@@ -182,7 +182,7 @@ Solutions to common issues and systematic debugging.
 **"Something is broken, I need help"**
 → [Common Issues](troubleshooting/common-issues)
 
-**"Alpine vs Debian vs Ubuntu?"**
+**"Alpine vs Debian?"**
 → [Choosing a Variant](getting-started/choosing-variant)
 
 **"Single container or separate containers?"**
@@ -222,7 +222,7 @@ Solutions to common issues and systematic debugging.
 **Phase 5 - Extended Reference**
 - ✅ Introduction (Why PHPeek?)
 - ✅ Installation Guide
-- ✅ Choosing a Variant (Alpine vs Debian vs Ubuntu)
+- ✅ Choosing a Variant (Alpine vs Debian)
 - ✅ Custom Extensions Guide
 - ✅ Custom Initialization Guide
 - ✅ Reverse Proxy & mTLS Guide

@@ -30,9 +30,6 @@ Single container with both PHP-FPM and Nginx - perfect for simple deployments.
 | `php-fpm-nginx:8.4-debian` | 8.4 | Debian Bookworm | ~150MB | amd64, arm64 |
 | `php-fpm-nginx:8.3-debian` | 8.3 | Debian Bookworm | ~150MB | amd64, arm64 |
 | `php-fpm-nginx:8.2-debian` | 8.2 | Debian Bookworm | ~150MB | amd64, arm64 |
-| `php-fpm-nginx:8.4-ubuntu` | 8.4 | Ubuntu 24.04 | ~160MB | amd64, arm64 |
-| `php-fpm-nginx:8.3-ubuntu` | 8.3 | Ubuntu 24.04 | ~160MB | amd64, arm64 |
-| `php-fpm-nginx:8.2-ubuntu` | 8.2 | Ubuntu 24.04 | ~160MB | amd64, arm64 |
 
 ### Development Images (with Xdebug)
 
@@ -44,9 +41,6 @@ Single container with both PHP-FPM and Nginx - perfect for simple deployments.
 | `php-fpm-nginx:8.4-debian-dev` | 8.4 | Debian | Xdebug 3.4, dev settings |
 | `php-fpm-nginx:8.3-debian-dev` | 8.3 | Debian | Xdebug 3.3, dev settings |
 | `php-fpm-nginx:8.2-debian-dev` | 8.2 | Debian | Xdebug 3.3, dev settings |
-| `php-fpm-nginx:8.4-ubuntu-dev` | 8.4 | Ubuntu | Xdebug 3.4, dev settings |
-| `php-fpm-nginx:8.3-ubuntu-dev` | 8.3 | Ubuntu | Xdebug 3.3, dev settings |
-| `php-fpm-nginx:8.2-ubuntu-dev` | 8.2 | Ubuntu | Xdebug 3.3, dev settings |
 
 ## Single-Process Images
 
@@ -60,9 +54,6 @@ Single container with both PHP-FPM and Nginx - perfect for simple deployments.
 | `php-fpm:8.4-debian` | 8.4 | Debian | ~120MB |
 | `php-fpm:8.3-debian` | 8.3 | Debian | ~120MB |
 | `php-fpm:8.2-debian` | 8.2 | Debian | ~120MB |
-| `php-fpm:8.4-ubuntu` | 8.4 | Ubuntu | ~130MB |
-| `php-fpm:8.3-ubuntu` | 8.3 | Ubuntu | ~130MB |
-| `php-fpm:8.2-ubuntu` | 8.2 | Ubuntu | ~130MB |
 
 ### PHP-FPM (Minimal Edition)
 
@@ -76,9 +67,6 @@ Optimized for Laravel with ~30% smaller size:
 | `php-fpm:8.4-debian-minimal` | 8.4 | Debian | ~85MB |
 | `php-fpm:8.3-debian-minimal` | 8.3 | Debian | ~85MB |
 | `php-fpm:8.2-debian-minimal` | 8.2 | Debian | ~85MB |
-| `php-fpm:8.4-ubuntu-minimal` | 8.4 | Ubuntu | ~95MB |
-| `php-fpm:8.3-ubuntu-minimal` | 8.3 | Ubuntu | ~95MB |
-| `php-fpm:8.2-ubuntu-minimal` | 8.2 | Ubuntu | ~95MB |
 
 ### PHP-FPM Development Images
 
@@ -159,14 +147,14 @@ docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 ## OS Variant Comparison
 
-| Feature | Alpine | Debian | Ubuntu |
-|---------|--------|--------|--------|
-| **Base Size** | ~5MB | ~125MB | ~75MB |
-| **Package Manager** | apk | apt | apt |
-| **libc** | musl | glibc | glibc |
-| **Security Updates** | Weekly | Weekly | Weekly |
-| **Compatibility** | Good | Excellent | Excellent |
-| **Best For** | Production, size | Compatibility | Development |
+| Feature | Alpine | Debian |
+|---------|--------|--------|
+| **Base Size** | ~5MB | ~125MB |
+| **Package Manager** | apk | apt |
+| **libc** | musl | glibc |
+| **Security Updates** | Weekly | Weekly |
+| **Compatibility** | Good | Excellent |
+| **Best For** | Production, size | Compatibility |
 
 ### When to Choose
 
@@ -179,11 +167,6 @@ docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 - Maximum compatibility with native extensions
 - Required for some enterprise software
 - glibc-dependent packages
-
-**Ubuntu**:
-- Familiar development environment
-- Matches production Ubuntu servers
-- Easier debugging
 
 ## Edition Comparison
 

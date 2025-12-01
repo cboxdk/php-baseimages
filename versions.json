@@ -1,0 +1,46 @@
+{
+  "php": {
+    "supported": ["8.2", "8.3", "8.4"],
+    "default": "8.4",
+    "eol": {
+      "8.2": "2025-12-08",
+      "8.3": "2026-11-23",
+      "8.4": "2027-11-23"
+    },
+    "latest_patch": {
+      "8.2": "8.2.27",
+      "8.3": "8.3.15",
+      "8.4": "8.4.2"
+    }
+  },
+  "node": {
+    "version": "22",
+    "lts_name": "Jod"
+  },
+  "extensions": {
+    "redis": "6.3.0",
+    "imagick": "3.8.1",
+    "apcu": "5.1.27",
+    "mongodb": "2.1.4",
+    "igbinary": "3.2.16",
+    "msgpack": "3.0.0",
+    "swoole": "6.0.0",
+    "openswoole": "22.1.2",
+    "xdebug": "3.4.0",
+    "pcov": "1.0.12",
+    "uuid": "1.2.1",
+    "excimer": "1.2.4",
+    "vips": "1.0.13"
+  },
+  "tools": {
+    "composer": "2",
+    "frankenphp": "1.3.6",
+    "phpeek_pm": "0.1.0"
+  },
+  "os_variants": ["alpine", "debian", "ubuntu"],
+  "_meta": {
+    "last_updated": "2025-11-30",
+    "update_frequency": "weekly",
+    "auto_pr_enabled": true
+  }
+}

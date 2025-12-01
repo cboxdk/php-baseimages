@@ -26,11 +26,11 @@ PHPeek Base Images come in two editions optimized for different use cases.
 
 ## Size Comparison
 
-| Edition | Alpine | Debian | Ubuntu |
-|---------|--------|--------|--------|
-| **Minimal** | ~130MB | ~280MB | ~290MB |
-| **Full** | ~200MB | ~450MB | ~470MB |
-| **Savings** | -35% | -38% | -38% |
+| Edition | Alpine | Debian |
+|---------|--------|--------|
+| **Minimal** | ~130MB | ~280MB |
+| **Full** | ~200MB | ~450MB |
+| **Savings** | -35% | -38% |
 
 ## Extensions Comparison
 
@@ -87,8 +87,8 @@ These 15 extensions are **only** in the Full edition:
 #### Advanced Image Processing
 | Extension | Purpose | Performance |
 |-----------|---------|------------|
-| `imagick` | ImageMagick | Complex image operations |
-| `vips` | libvips | 4-10x faster than ImageMagick |
+| `imagick` | ImageMagick | Complex image operations, PDF support |
+| `vips` | libvips | 4-10x faster than ImageMagick, low memory |
 
 #### Enterprise Integration
 | Extension | Purpose | Common In |
@@ -125,7 +125,8 @@ These 15 extensions are **only** in the Full edition:
 |------|---------|------|---------|
 | `composer` | ✅ | ✅ | Dependency management |
 | `redis-cli` | ❌ | ✅ | Redis debugging |
-| `vips` | ❌ | ✅ | Image processing CLI |
+| `exiftool` | ✅ | ✅ | Image metadata extraction |
+| `vips` | ✅ | ✅ | High-performance image processing CLI |
 
 ## Configuration Differences
 
@@ -164,7 +165,7 @@ These 15 extensions are **only** in the Full edition:
 | Legacy Enterprise App | Full | SOAP, LDAP, IMAP often required |
 | Microservice | Minimal | Smaller footprint, faster startup |
 | Monolith | Full | Comprehensive coverage |
-| Image Processing Service | Full | ImageMagick + libvips for performance |
+| Image Processing Service | Full | ImageMagick for comprehensive format support |
 | Email Application | Full | IMAP extension required |
 | SaaS Platform | Full | Need MongoDB, advanced features |
 
@@ -174,7 +175,7 @@ These 15 extensions are **only** in the Full edition:
 
 **When to migrate**:
 - Adding features requiring exclusive extensions (SOAP, MongoDB, etc.)
-- Need advanced image processing (ImageMagick, libvips)
+- Need advanced image processing (ImageMagick)
 - Legacy dependencies discovered
 
 **How to migrate**:
@@ -258,10 +259,10 @@ environment:
 
 ### Build Time
 
-| Edition | Alpine | Debian | Ubuntu |
-|---------|--------|--------|--------|
-| Minimal | ~2min | ~4min | ~4.5min |
-| Full | ~4min | ~8min | ~9min |
+| Edition | Alpine | Debian |
+|---------|--------|--------|
+| Minimal | ~2min | ~4min |
+| Full | ~4min | ~8min |
 
 ## Decision Flowchart
 
@@ -270,7 +271,7 @@ Do you KNOW you need SOAP, LDAP, IMAP, or MongoDB?
 ├─ Yes → Full Edition
 └─ No
    │
-   Do you need advanced image processing (ImageMagick/libvips)?
+   Do you need advanced image processing (ImageMagick)?
    ├─ Yes → Full Edition
    └─ No
       │

@@ -69,6 +69,15 @@ Deep dives for experienced users who need to customize and optimize PHPeek image
   - Multi-platform Docker Buildx workflows
   - CI/CD for multi-architecture images
 
+### Development & Testing
+
+- **[Testing Guide](testing-guide)** 🆕
+  - E2E test scenarios (Laravel, Symfony, WordPress)
+  - Matrix testing across PHP versions and OS variants
+  - Writing custom tests with fixtures
+  - Test utilities and assertions
+  - CI/CD integration
+
 ## What You'll Learn
 
 - How to create custom Docker images based on PHPeek

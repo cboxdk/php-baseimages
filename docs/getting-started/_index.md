@@ -13,12 +13,12 @@ New to PHPeek? This section will help you get up and running quickly.
 1. **[5-Minute Quickstart](quickstart)** - Get your first PHP application running in just 5 minutes
 2. **[Introduction](introduction)** - Learn why PHPeek exists and how it compares to alternatives
 3. **[Installation](installation)** - Detailed installation instructions for all platforms
-4. **[Choosing a Variant](choosing-variant)** - Alpine vs Debian vs Ubuntu - which is right for you?
+4. **[Choosing a Variant](choosing-variant)** - Alpine vs Debian - which is right for you?
 
 ## What You'll Learn
 
 - How to run PHPeek containers with Docker Compose
-- Differences between Alpine, Debian, and Ubuntu variants
+- Differences between Alpine and Debian variants
 - When to use multi-service vs single-process containers
 - Basic configuration and environment variables
 

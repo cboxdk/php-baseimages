@@ -143,6 +143,7 @@ services:
     volumes:
       - ./:/var/www/html:ro  # Read-only
       - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
     restart: unless-stopped
 ```
 
@@ -175,7 +176,9 @@ DB_HOST=mysql
 MySQL not ready. Use healthcheck or wait:
 
 ```bash
-docker compose exec app php artisan migrate --wait
+# Wait for MySQL to respond, then run migrations
+docker compose exec mysql sh -c 'until mysqladmin ping -h localhost --silent; do sleep 1; done'
+docker compose exec app php artisan migrate --force
 ```
 
 ### ❌ Permission errors

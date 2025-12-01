@@ -1,10 +1,11 @@
 # API-Only Setup
 # Minimal Laravel/Lumen API without frontend assets
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   api:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: api-server
     restart: unless-stopped
     ports:
@@ -12,49 +13,34 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_QUEUE: "true"             # Enables queue workers
+      LARAVEL_SCHEDULER: "true"         # Enables scheduler
+
+      # Application
       APP_ENV: local
       APP_DEBUG: "true"
+
+      # Database (PostgreSQL)
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
       DB_DATABASE: api
       DB_USERNAME: api
       DB_PASSWORD: secret
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
       CACHE_DRIVER: redis
       QUEUE_CONNECTION: redis
-      REDIS_HOST: redis
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
-
-  # Queue worker for background jobs
-  worker:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: api-worker
-    restart: unless-stopped
-    command: php artisan queue:work redis --sleep=3 --tries=3 --max-jobs=1000
-    volumes:
-      - ./:/var/www/html
-    environment:
-      APP_ENV: local
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_DATABASE: api
-      DB_USERNAME: api
-      DB_PASSWORD: secret
-      CACHE_DRIVER: redis
-      QUEUE_CONNECTION: redis
-      REDIS_HOST: redis
-    depends_on:
-      - api
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
 
   postgres:
     image: postgres:16-alpine

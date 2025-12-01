@@ -11,7 +11,7 @@ Clean, minimal, and production-ready PHP Docker base images for modern PHP appli
 - **Two Editions**: Minimal (Laravel-optimized, 17 extensions) OR Full (comprehensive, 32+ extensions)
 - **Flexible Process Management**: Choose simple bash OR production-grade [PHPeek PM](https://github.com/phpeek/phpeek-pm)
 - **Flexible Architecture**: Choose single-process OR multi-service containers
-- **Multiple Variants**: Alpine (smallest), Debian Bookworm, Ubuntu 24.04
+- **Multiple Variants**: Alpine 3.21, Debian 12 (Bookworm), Debian 13 (Trixie)
 - **Framework Optimized**: Auto-detection for Laravel, Symfony, WordPress
 - **Production Ready**: Optimized configurations for real-world applications
 
@@ -56,71 +56,67 @@ docker-compose up -d
 
 📖 **Full guide:** [5-Minute Quickstart →](docs/getting-started/quickstart.md)
 
-## 🎨 Choose Your Edition
+## 🎨 Available Images
 
-### Minimal Edition (Laravel-Optimized)
-**Perfect for Laravel apps and modern PHP projects** - 17 essential extensions, 30-40% smaller.
+### Base OS Versions
 
-```yaml
-image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine-minimal
+| Variant | Base Image | OS Version | Package Manager | libc |
+|---------|------------|------------|-----------------|------|
+| **Alpine** | `php:8.x-cli-alpine` | Alpine 3.21 | apk | musl |
+| **Bookworm** | `php:8.x-cli-bookworm` | Debian 12 (Bookworm) | apt | glibc |
+| **Trixie** | `php:8.x-cli-trixie` | Debian 13 (Trixie) | apt | glibc |
+
+### Image Matrix
+
+| Image Type | Alpine | Bookworm (Debian 12) | Trixie (Debian 13) |
+|------------|--------|----------------------|--------------------|
+| **php-fpm-nginx** | `8.2-alpine` `8.3-alpine` `8.4-alpine` | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | `8.2-trixie` `8.3-trixie` `8.4-trixie` |
+| **php-fpm** | `8.2-alpine` `8.3-alpine` `8.4-alpine` | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | `8.2-trixie` `8.3-trixie` `8.4-trixie` |
+| **php-cli** | `8.2-alpine` `8.3-alpine` `8.4-alpine` | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | `8.2-trixie` `8.3-trixie` `8.4-trixie` |
+| **nginx** | `alpine` | `bookworm` | `trixie` |
+
+**Full image name:** `ghcr.io/phpeek/baseimages/{type}:{tag}`
+
+```bash
+# Examples
+ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/phpeek/baseimages/php-fpm:8.3-bookworm
+ghcr.io/phpeek/baseimages/php-cli:8.2-trixie
 ```
 
-✅ All Laravel requirements (GD, EXIF, POSIX, Redis)
-✅ Smaller images (~130MB Alpine, ~280MB Debian)
-✅ Faster startup and deployment
-✅ Explicit configuration (OPcache disabled by default)
+### Editions: Full vs Minimal
 
-### Full Edition (Comprehensive)
-**Everything included** - 36+ extensions for enterprise and legacy apps.
+| Edition | Extensions | Size | Best For |
+|---------|------------|------|----------|
+| **Full** (default) | 36+ | ~200MB Alpine | Enterprise, legacy, comprehensive coverage |
+| **Minimal** | 17 | ~130MB Alpine | Laravel, modern PHP, size-constrained |
 
-```yaml
-image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
-```
+**Minimal tags:** Add `-minimal` suffix (e.g., `8.4-alpine-minimal`)
 
-✅ MongoDB, ImageMagick, libvips
-✅ SOAP, LDAP, IMAP for enterprise integration
-✅ Production-ready (OPcache enabled by default)
-✅ ImageMagick security policy included
+| Full Edition | Minimal Edition |
+|--------------|-----------------|
+| `php-fpm-nginx:8.4-alpine` | `php-fpm-nginx:8.4-alpine-minimal` |
+| `php-fpm:8.3-bookworm` | `php-fpm:8.3-bookworm-minimal` |
+| `php-fpm:8.4-trixie` | `php-fpm:8.4-trixie-minimal` |
+
+**Full includes:** MongoDB, ImageMagick, libvips, SOAP, LDAP, IMAP, APCu
+**Minimal includes:** Redis, GD, EXIF, PCNTL, intl, bcmath, zip
 
 📖 **Detailed comparison:** [Minimal vs Full Editions →](docs/reference/editions-comparison.md)
 
-## 📦 Available Images
+### Development Images
 
-All images available on [GitHub Container Registry](https://github.com/orgs/phpeek/packages).
+Add `-dev` suffix for development images with Xdebug:
 
-### Multi-Service Images (PHP-FPM + Nginx in One Container)
+| Production | Development |
+|------------|-------------|
+| `php-fpm-nginx:8.4-alpine` | `php-fpm-nginx:8.4-alpine-dev` |
+| `php-fpm:8.3-bookworm` | `php-fpm:8.3-bookworm-dev` |
+| `php-fpm:8.4-trixie` | `php-fpm:8.4-trixie-dev` |
 
-**Perfect for simple deployments without orchestration complexity.**
+**Dev images include:** Xdebug 3.x, PHP error display, OPcache timestamp validation, port 9003
 
-#### Production Images
-| Image | PHP Version | OS | Size | Security Updates |
-|-------|-------------|----|----- |------------------|
-| `php-fpm-nginx:8.4-alpine` | 8.4 | Alpine | ~70MB | Weekly |
-| `php-fpm-nginx:8.3-alpine` | 8.3 | Alpine | ~70MB | Weekly |
-| `php-fpm-nginx:8.2-alpine` | 8.2 | Alpine | ~70MB | Weekly |
-| `php-fpm-nginx:8.4-debian` | 8.4 | Debian | ~150MB | Weekly |
-| `php-fpm-nginx:8.4-ubuntu` | 8.4 | Ubuntu | ~160MB | Weekly |
-
-#### Development Images (with Xdebug)
-| Image | PHP Version | OS | Includes |
-|-------|-------------|----|----- |
-| `php-fpm-nginx:8.4-alpine-dev` | 8.4 | Alpine | Xdebug 3.x, dev settings |
-| `php-fpm-nginx:8.3-alpine-dev` | 8.3 | Alpine | Xdebug 3.3, dev settings |
-| `php-fpm-nginx:8.2-alpine-dev` | 8.2 | Alpine | Xdebug 3.3, dev settings |
-| `php-fpm-nginx:8.4-debian-dev` | 8.4 | Debian | Xdebug 3.x, dev settings |
-| `php-fpm-nginx:8.4-ubuntu-dev` | 8.4 | Ubuntu | Xdebug 3.x, dev settings |
-
-**Dev images include:** Xdebug pre-configured, PHP error display enabled, OPcache timestamp validation enabled, port 9003 exposed for debugging.
-
-📖 **All versions:** [Complete Image List →](docs/reference/available-images.md)
-
-### Single-Process Images (Traditional Separation)
-
-| Type | Image | Description |
-|------|-------|-------------|
-| PHP-FPM | `php-fpm:8.3-alpine` | PHP-FPM only |
-| PHP-CLI | `php-cli:8.3-alpine` | Command-line PHP |
-| Nginx | `nginx:alpine` | Nginx web server |
+📖 **Complete image list:** [Available Images →](docs/reference/available-images.md)
 
 ## 🚀 Ready-to-Use Templates
 
@@ -311,11 +307,11 @@ services:
 
 ## 📊 Image Comparison
 
-| Variant | Size (FPM) | Build Time | Compatibility | Best For |
-|---------|-----------|------------|---------------|----------|
-| **Alpine** | ~50MB | Fast | Good | Production, size-constrained |
-| **Debian** | ~120MB | Moderate | Excellent | Production, compatibility |
-| **Ubuntu** | ~130MB | Moderate | Excellent | Development, familiar |
+| Variant | OS Version | Size (FPM) | Build Time | Compatibility | Best For |
+|---------|------------|-----------|------------|---------------|----------|
+| **Alpine** | 3.21 | ~50MB | Fast | Good | Production, size-constrained |
+| **Bookworm** | Debian 12 | ~120MB | Moderate | Excellent | Production, glibc compatibility |
+| **Trixie** | Debian 13 | ~125MB | Moderate | Excellent | Latest packages, testing Debian 13 |
 
 📖 **Detailed comparison:** [Choosing a Variant →](docs/getting-started/choosing-variant.md)
 
@@ -326,8 +322,10 @@ services:
 git clone https://github.com/phpeek/baseimages.git
 cd baseimages
 
-# Build multi-service image
+# Build multi-service images (Alpine, Bookworm, Trixie)
 docker build -f php-fpm-nginx/8.3/alpine/Dockerfile -t my-image:8.3-alpine .
+docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t my-image:8.3-bookworm .
+docker build -f php-fpm-nginx/8.3/debian/trixie/Dockerfile -t my-image:8.3-trixie .
 
 # Test it
 docker run --rm -p 8000:80 my-image:8.3-alpine
@@ -394,7 +392,7 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      - LARAVEL_SCHEDULER_ENABLED=true
+      - LARAVEL_SCHEDULER=true
       - LARAVEL_AUTO_OPTIMIZE=true
     depends_on:
       - mysql

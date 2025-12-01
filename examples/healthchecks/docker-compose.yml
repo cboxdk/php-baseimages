@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ../test-app:/var/www/html
+    environment:
+      - APP_ENV=local
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+      - LARAVEL_SCHEDULER=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php-fpm-healthcheck"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  mysql:
+    image: mysql:8.3
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mysql-data:

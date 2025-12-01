@@ -5,20 +5,27 @@ on:
     branches: [main, develop]
     paths:
       - 'php-fpm-nginx/**'
+      - 'php-fpm/**'
       - '.github/workflows/build-php-fpm-nginx.yml'
   pull_request:
     branches: [main]
     paths:
       - 'php-fpm-nginx/**'
-  schedule:
-    # Weekly security rebuild - every Monday at 03:00 UTC
-    - cron: '0 3 * * 1'
   workflow_dispatch:
     inputs:
       php_version:
         description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
         required: false
         default: 'all'
+      os_variant:
+        description: 'OS variant to build (alpine, debian, ubuntu, or all)'
+        required: false
+        default: 'all'
+  repository_dispatch:
+    types: [php-fpm-updated]
+  schedule:
+    # Weekly security rebuild - Monday 04:00 UTC (after php-fpm at 02:00)
+    - cron: '0 4 * * 1'
 
 env:
   REGISTRY: ghcr.io
@@ -34,7 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'debian', 'ubuntu']
+        os_variant: ['alpine', 'bookworm', 'trixie']
 
     permissions:
       contents: read
@@ -44,6 +51,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          # Map os_variant to Dockerfile path
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-fpm-nginx/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -82,7 +105,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./php-fpm-nginx/${{ matrix.php_version }}/${{ matrix.os_variant }}/Dockerfile
+          file: ${{ steps.dockerfile.outputs.path }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -111,11 +134,15 @@ jobs:
       - name: Test image
         if: github.event_name != 'pull_request'
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}
-          docker run -d --name test-multi -p 8080:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
+          docker pull $IMAGE
+          docker run -d --name test-multi -p 8080:80 $IMAGE
           sleep 10
           curl -f http://localhost:8080/health || exit 1
           docker exec test-multi php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
+          docker exec test-multi phpeek-pm --version || exit 1
+          docker exec test-multi composer --version || exit 1
+          docker exec test-multi node --version || exit 1
           docker stop test-multi && docker rm test-multi
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -185,13 +212,17 @@ jobs:
       - name: Test dev image (verify Xdebug)
         if: github.event_name != 'pull_request'
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}
-          docker run -d --name test-dev -p 8081:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
+          docker pull $IMAGE
+          docker run -d --name test-dev -p 8081:80 $IMAGE
           sleep 10
           # Verify Xdebug is installed
           docker exec test-dev php -m | grep -i xdebug || exit 1
           # Verify PHP version
           docker exec test-dev php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
+          docker exec test-dev phpeek-pm --version || exit 1
+          docker exec test-dev composer --version || exit 1
+          docker exec test-dev node --version || exit 1
           docker stop test-dev && docker rm test-dev
 
   notify-security-updates:

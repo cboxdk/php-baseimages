@@ -42,19 +42,18 @@ What are you building?
 |---------|------|----------|
 | **Alpine** | ~50MB | Default choice, production, most cases |
 | **Debian** | ~120MB | Need glibc, specific libraries, debugging |
-| **Ubuntu** | ~130MB | Team familiarity, specific Ubuntu packages |
 
 ### Detailed Comparison
 
-| Feature | Alpine | Debian | Ubuntu |
-|---------|--------|--------|--------|
-| Base size | ~5MB | ~120MB | ~130MB |
-| C library | musl | glibc | glibc |
-| Package manager | apk | apt | apt |
-| Security updates | Fast | Fast | Fast |
-| Binary compatibility | Limited | Excellent | Excellent |
-| Debug tools | Minimal | Full | Full |
-| Cron daemon | dcron | cron | cron |
+| Feature | Alpine | Debian |
+|---------|--------|--------|
+| Base size | ~5MB | ~120MB |
+| C library | musl | glibc |
+| Package manager | apk | apt |
+| Security updates | Fast | Fast |
+| Binary compatibility | Limited | Excellent |
+| Debug tools | Minimal | Full |
+| Cron daemon | dcron | cron |
 
 ### When to Choose Each
 
@@ -72,13 +71,6 @@ What are you building?
 - ✅ Familiar apt package management
 - ✅ Better for debugging with full tools
 - ⚠️ Larger image size
-
-**Ubuntu**:
-- ✅ Familiar to most developers
-- ✅ Maximum compatibility
-- ✅ Extensive documentation
-- ✅ Same environment as many CI systems
-- ⚠️ Largest image size
 
 ## PHP Version Selection
 
@@ -135,29 +127,27 @@ What are you building?
 | Team Profile | Recommendation |
 |--------------|----------------|
 | DevOps experienced | Alpine (smallest, fastest) |
-| Traditional PHP dev | Debian/Ubuntu (familiar) |
+| Traditional PHP dev | Debian (familiar apt) |
 | Mixed/new team | Debian (best docs, most compatible) |
 
 ## Complete Image Reference
 
 ```
+ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine
+ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-debian
 
 ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
 ghcr.io/phpeek/baseimages/php-fpm:8.3-debian
-ghcr.io/phpeek/baseimages/php-fpm:8.3-ubuntu
 
 ghcr.io/phpeek/baseimages/php-cli:8.3-alpine
 ghcr.io/phpeek/baseimages/php-cli:8.3-debian
-ghcr.io/phpeek/baseimages/php-cli:8.3-ubuntu
 
 ghcr.io/phpeek/baseimages/nginx:alpine
 ghcr.io/phpeek/baseimages/nginx:debian
-ghcr.io/phpeek/baseimages/nginx:ubuntu
 ```
 
 ## Migration Guide

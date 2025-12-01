@@ -30,6 +30,26 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Redis Object Cache setup
   - Production deployment and optimization
 
+- **[Magento Guide](magento-guide)** ✨ New
+  - MySQL, Redis, and OpenSearch stack
+  - Cron and queue configuration
+  - Production storage layout
+
+- **[Drupal Guide](drupal-guide)** ✨ New
+  - PostgreSQL or MySQL setup
+  - Redis cache + Drush cron
+  - File storage best practices
+
+- **[TYPO3 Guide](typo3-guide)** ✨ New
+  - Composer-based install flow
+  - Redis caching + scheduler
+  - Persistent volumes for fileadmin
+
+- **[Statamic Guide](statamic-guide)** ✨ New
+  - Laravel-based Statamic stack
+  - Queue + scheduler toggles
+  - Asset + Glide configuration
+
 ### Workflow Guides
 
 - **[Development Workflow](development-workflow)**
@@ -38,6 +58,13 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Testing and quality assurance
   - Git workflow integration
 
+- **[Image Processing Guide](image-processing)** 🖼️ New
+  - GD, ImageMagick, and libvips comparison
+  - HEIC/HEIF conversion (iPhone photos)
+  - PDF generation and SVG rendering
+  - Browsershot setup for screenshots/PDFs
+  - Laravel integration (Intervention, Spatie Media)
+
 - **[Production Deployment](production-deployment)**
   - Security hardening checklist
   - Performance optimization
@@ -45,11 +72,22 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - CI/CD integration
   - Zero-downtime deployments
 
+- **[PHPeek vs ServerSideUp](phpeek-vs-serversideup)** ✨ New
+  - DX, docs, and feature scorecard
+  - Actionable follow-ups to widen the gap
+  - Talking points for stakeholders
+
+- **[Health Checks & CI Templates](healthchecks-ci)** ✨ New
+  - Docker Compose health-check override file
+  - GitHub Actions workflow for `php artisan test`
+  - Deployment-ready verification checklist
+
 ## What You'll Learn
 
 - Complete framework setup from scratch
 - Database and caching configuration
 - Development and production environments
+- Image processing with GD, ImageMagick, libvips
 - Common mistakes and how to avoid them
 - Testing and debugging strategies
 - Deployment best practices

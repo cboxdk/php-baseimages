@@ -1,10 +1,11 @@
 # Laravel Horizon Setup
 # Laravel with Redis queues and Horizon dashboard
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: horizon-app
     restart: unless-stopped
     ports:
@@ -12,16 +13,26 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_HORIZON: "true"           # Enables Horizon (queue dashboard + workers)
+      LARAVEL_SCHEDULER: "true"         # Enables scheduler (schedule:work)
+
+      # Application
       APP_ENV: local
       APP_DEBUG: "true"
+
+      # Database
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
       DB_DATABASE: laravel
       DB_USERNAME: laravel
       DB_PASSWORD: secret
+
+      # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_CLIENT: phpredis
       CACHE_DRIVER: redis
       SESSION_DRIVER: redis
       QUEUE_CONNECTION: redis
@@ -30,59 +41,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # Horizon worker - runs queue jobs
-  horizon:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: horizon-worker
-    restart: unless-stopped
-    command: php artisan horizon
-    volumes:
-      - ./:/var/www/html
-    environment:
-      APP_ENV: local
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_DATABASE: laravel
-      DB_USERNAME: laravel
-      DB_PASSWORD: secret
-      REDIS_HOST: redis
-      QUEUE_CONNECTION: redis
-    depends_on:
-      - app
-      - redis
-    healthcheck:
-      test: ["CMD", "php", "artisan", "horizon:status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  # Scheduler - runs Laravel scheduled tasks
-  scheduler:
-    image: phpeek/php-fpm-nginx:8.3-alpine
-    container_name: horizon-scheduler
-    restart: unless-stopped
-    command: >
-      sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
-    volumes:
-      - ./:/var/www/html
-    environment:
-      APP_ENV: local
-      DB_CONNECTION: mysql
-      DB_HOST: mysql
-      DB_DATABASE: laravel
-      DB_USERNAME: laravel
-      DB_PASSWORD: secret
-      REDIS_HOST: redis
-    depends_on:
-      - app
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
 
   mysql:
     image: mysql:8.0

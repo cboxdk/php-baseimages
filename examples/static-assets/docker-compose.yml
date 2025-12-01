@@ -1,10 +1,11 @@
 # Static Assets Setup
 # PHP backend with compiled frontend assets (no Node in production)
+# All processes managed by PHPeek PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: static-app
     restart: unless-stopped
     ports:
@@ -14,20 +15,18 @@ services:
       # Pre-built assets mounted read-only
       - ./public/build:/var/www/html/public/build:ro
     environment:
+      # No workers needed for static site - just serving
       APP_ENV: production
       APP_DEBUG: "false"
       DB_CONNECTION: sqlite
       DB_DATABASE: /var/www/html/database/database.sqlite
       CACHE_DRIVER: file
       SESSION_DRIVER: file
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
 
   # Build service (run once during CI/CD)
+  # This is a Node.js build container, NOT PHP - command is fine here
   builder:
     image: node:20-alpine
     profiles: ["build"]  # Only run with --profile build

@@ -1,0 +1,81 @@
+services:
+  app:
+    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-magento-app
+    ports:
+      - "8096:80"
+    volumes:
+      - ./app:/var/www/html/public
+    environment:
+      - APP_ENV=testing
+      - DB_HOST=mysql
+      - DB_DATABASE=magento
+      - DB_USERNAME=magento
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - LARAVEL_SCHEDULER=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      opensearch:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+
+  mysql:
+    image: mysql:8.0
+    container_name: e2e-magento-mysql
+    environment:
+      MYSQL_DATABASE: magento
+      MYSQL_USER: magento
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_secret"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: e2e-magento-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  opensearch:
+    image: opensearchproject/opensearch:2.15.0
+    container_name: e2e-magento-opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "19200:9200"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  mysql-data:

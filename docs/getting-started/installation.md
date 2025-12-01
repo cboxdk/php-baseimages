@@ -58,9 +58,6 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Debian (glibc, ~120MB)
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
-
-# Ubuntu (familiar, ~130MB)
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-ubuntu
 ```
 
 ### Development Editions
@@ -70,7 +67,6 @@ Include Xdebug and SPX profiler:
 ```bash
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian-dev
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-ubuntu-dev
 ```
 
 ### Single-Process (Microservices)
@@ -204,7 +200,7 @@ spec:
 # .github/workflows/deploy.yml
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 
@@ -316,5 +312,5 @@ docker pull --platform linux/amd64 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-a
 ## Next Steps
 
 - **[5-Minute Quickstart](quickstart)** - Get a Laravel app running
-- **[Choosing a Variant](choosing-variant)** - Alpine vs Debian vs Ubuntu
+- **[Choosing a Variant](choosing-variant)** - Alpine vs Debian
 - **[Laravel Guide](../guides/laravel-guide)** - Complete Laravel setup

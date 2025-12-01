@@ -55,9 +55,33 @@ The Full Edition includes all extensions for maximum compatibility.
 |-----------|------|---------|-------------|
 | `gd` | Built-in | Built-in | Image creation and manipulation |
 | `imagick` | PECL | - | ImageMagick binding (Full only) |
+| `vips` | PECL | - | High-performance libvips binding (Full only) |
 | `exif` | Built-in | Built-in | EXIF metadata reading |
 
-**GD Formats Supported**: JPEG, PNG, GIF, WebP, AVIF, BMP, XPM
+#### Format Support Matrix
+
+| Format | GD | ImageMagick | libvips | Notes |
+|--------|:--:|:-----------:|:-------:|-------|
+| JPEG | ✓ | ✓ | ✓ | Universal support |
+| PNG | ✓ | ✓ | ✓ | With transparency |
+| GIF | ✓ | ✓ | ✓ | Animated GIF support |
+| WebP | ✓ | ✓ | ✓ | Modern web format |
+| AVIF | ✓ | ✓ | ✓ | Next-gen compression |
+| HEIC/HEIF | - | ✓ | ✓ | iPhone photos (requires libheif) |
+| PDF | - | ✓ | - | Read/write via Ghostscript |
+| SVG | - | ✓ | ✓ | Read-only (security) |
+| BMP | ✓ | ✓ | ✓ | Legacy format |
+| TIFF | - | ✓ | ✓ | Professional imaging |
+
+#### Pre-installed Image Processing Tools
+
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| `exiftool` | Image metadata extraction | `exiftool image.jpg` |
+| `chromium` | PDF generation via Browsershot | Puppeteer/Browsershot |
+| `ghostscript` | PDF/PostScript processing | ImageMagick PDF support |
+
+> **Note**: HEIC/HEIF support requires `libheif` which is pre-installed. PDF operations require Ghostscript which is also pre-installed. See [Image Processing Guide](../guides/image-processing) for usage examples.
 
 ### Compression
 

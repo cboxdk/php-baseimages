@@ -1,154 +1,78 @@
+# ============================================================================
+# PHPeek PHP-FPM Image - Alpine 8.3
+# ============================================================================
+# LAYER 3: Multi-stage build that copies extensions from php-base
+#          and uses official php-fpm as base
+# ============================================================================
+
+# Stage 1: Get compiled extensions and tools from php-base
+FROM ghcr.io/phpeek/baseimages/php-base:8.3-alpine AS base
+
+# Stage 2: Build final image from official PHP-FPM
 FROM php:8.3-fpm-alpine
 
-LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
+LABEL org.opencontainers.image.title="PHPeek PHP-FPM 8.3 Alpine"
+LABEL org.opencontainers.image.description="PHP-FPM with all extensions, Composer, Node.js, and PHPeek PM"
+LABEL org.opencontainers.image.vendor="PHPeek"
 LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
-LABEL org.opencontainers.image.description="PHP 8.3 FPM Alpine - Production"
 
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-
-# Install system dependencies
+# Copy runtime dependencies from base
 RUN apk add --no-cache \
-    bash \
-    curl \
-    wget \
-    git \
-    unzip \
-    netcat-openbsd \
-    fcgi \
-    redis \
-    # Image processing
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    libwebp-dev \
-    libavif-dev \
-    imagemagick-dev \
+    bash curl wget git unzip procps netcat-openbsd \
+    dcron \
+    icu-libs icu-data-full libpq libzip \
+    libpng libjpeg-turbo freetype libwebp libavif \
     imagemagick \
-    vips-dev \
-    vips-tools \
-    # Database drivers
-    postgresql-dev \
-    # Internationalization
-    icu-dev \
-    icu-data-full \
-    # XML processing
-    libxml2-dev \
-    libxslt-dev \
-    # Compression
-    libzip-dev \
-    zlib-dev \
-    bzip2-dev \
-    # Misc
-    oniguruma-dev \
-    libsodium-dev \
-    linux-headers \
-    gettext-dev \
-    openldap-dev \
-    imap-dev \
-    krb5-dev \
-    openssl-dev \
-    # Image metadata tools
-    exiftool \
-    # Build tools (will be removed later)
-    $PHPIZE_DEPS
+    # HEIC/HEIF support for ImageMagick
+    libheif \
+    # PDF support for ImageMagick (Ghostscript)
+    ghostscript \
+    # SVG support for ImageMagick
+    librsvg \
+    libxml2 libxslt libsodium oniguruma \
+    c-ares openldap bzip2 gmp readline gettext \
+    exiftool chromium nss freetype harfbuzz ca-certificates ttf-freefont
 
-# Configure GD with support for multiple formats
-RUN docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-    --with-webp \
-    --with-avif
+# Set Puppeteer to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Configure IMAP with Kerberos
-RUN docker-php-ext-configure imap \
-    --with-kerberos \
-    --with-imap-ssl
+# Copy PHP extensions from base image
+COPY --from=base /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=base /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
-# Install PHP core extensions
-RUN docker-php-ext-install -j$(nproc) \
-    opcache \
-    pdo_mysql \
-    pdo_pgsql \
-    mysqli \
-    pgsql \
-    zip \
-    intl \
-    bcmath \
-    gd \
-    exif \
-    pcntl \
-    soap \
-    sockets \
-    xsl \
-    calendar \
-    gettext \
-    shmop \
-    sysvmsg \
-    sysvsem \
-    sysvshm \
-    bz2 \
-    ldap \
-    imap
+# Copy Node.js from base image
+COPY --from=base /usr/local/bin/node /usr/local/bin/node
+COPY --from=base /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
-# Install PECL extensions
-RUN pecl install redis-6.0.2 && \
-    pecl install imagick && \
-    pecl install vips && \
-    pecl install mongodb && \
-    pecl install apcu-5.1.23 && \
-    docker-php-ext-enable redis imagick vips mongodb apcu
+# Copy Composer from base image
+COPY --from=base /usr/bin/composer /usr/bin/composer
 
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Copy PHPeek PM from base image
+COPY --from=base /usr/local/bin/phpeek-pm /usr/local/bin/phpeek-pm
 
-# Remove build dependencies to reduce image size
-RUN apk del $PHPIZE_DEPS
+# Copy ImageMagick policy from base image
+COPY --from=base /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 
-# Create ImageMagick security policy
-RUN mkdir -p /etc/ImageMagick-6 && \
-    cat > /etc/ImageMagick-6/policy.xml <<'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<policymap>
-  <!-- Disable dangerous coders -->
-  <policy domain="coder" rights="none" pattern="EPHEMERAL" />
-  <policy domain="coder" rights="none" pattern="URL" />
-  <policy domain="coder" rights="none" pattern="HTTPS" />
-  <policy domain="coder" rights="none" pattern="MVG" />
-  <policy domain="coder" rights="none" pattern="MSL" />
-
-  <!-- Resource limits -->
-  <policy domain="resource" name="memory" value="512MiB"/>
-  <policy domain="resource" name="map" value="1GiB"/>
-  <policy domain="resource" name="width" value="16KP"/>
-  <policy domain="resource" name="height" value="16KP"/>
-  <policy domain="resource" name="area" value="128MP"/>
-  <policy domain="resource" name="disk" value="1GiB"/>
-</policymap>
-EOF
-
-# Copy PHP configuration
-COPY php-fpm/common/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+# Copy FPM-specific configurations
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-
-# Copy entrypoint and health check scripts
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 # Create directories
-RUN mkdir -p /var/www/html && \
-    chown -R www-data:www-data /var/www && \
-    mkdir -p /tmp/xdebug && \
-    chown -R www-data:www-data /tmp/xdebug
-
-WORKDIR /var/www/html
-
-EXPOSE 9000
+RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
+    chown -R www-data:www-data /var/www /var/lib/php/sessions
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
+
+WORKDIR /var/www/html
+
+EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]

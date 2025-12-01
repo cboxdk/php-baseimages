@@ -208,13 +208,12 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine
 
 # Debian (glibc, ~150MB)
+ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
-
-# Ubuntu (~160MB)
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu
 
 # Development (with Xdebug)
 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
+ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian-dev
 ```
 
 ---

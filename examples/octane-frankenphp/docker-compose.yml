@@ -1,0 +1,106 @@
+# Laravel Octane with FrankenPHP
+# High-performance Laravel with FrankenPHP (Caddy-based server)
+# All processes managed by PHPeek PM - NO command overrides!
+# Usage: docker compose up -d
+#
+# Requirements:
+#   - Laravel Octane installed: composer require laravel/octane
+#   - FrankenPHP configured: php artisan octane:install --server=frankenphp
+#
+# FrankenPHP advantages:
+#   - Built on Caddy (automatic HTTPS)
+#   - HTTP/2 and HTTP/3 native support
+#   - Early Hints (103) support
+#   - Worker mode for persistent PHP processes
+#   - No PHP extension required
+#
+# See also:
+#   - octane-swoole/ for Swoole setup
+#   - octane-roadrunner/ for RoadRunner setup
+
+services:
+  app:
+    # Use php-frankenphp image for FrankenPHP
+    image: ghcr.io/phpeek/baseimages/php-frankenphp:8.3-alpine
+    container_name: octane-frankenphp-app
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+      - "8443:443"                      # HTTPS (auto-configured by Caddy)
+    volumes:
+      - ./:/var/www/html
+    environment:
+      # PHPeek PM manages ALL processes via env vars
+      LARAVEL_OCTANE: "true"            # Enables Octane server
+      LARAVEL_QUEUE: "true"             # Enables queue workers
+      LARAVEL_SCHEDULER: "true"         # Enables scheduler
+
+      # Octane configuration - FRANKENPHP
+      OCTANE_SERVER: frankenphp         # Server type: frankenphp
+      OCTANE_HOST: 0.0.0.0              # Listen on all interfaces
+      OCTANE_PORT: 8000                 # Internal HTTP port
+      OCTANE_HTTPS_PORT: 443            # HTTPS port (Caddy auto-TLS)
+      OCTANE_WORKERS: auto              # Worker count (auto = CPU cores)
+      OCTANE_MAX_REQUESTS: 500          # Requests before worker restart
+      OCTANE_WATCH: "false"             # File watching (dev only)
+      OCTANE_CADDYFILE: ""              # Custom Caddyfile path (optional)
+
+      # Application
+      APP_ENV: local
+      APP_DEBUG: "true"
+
+      # Database
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_CLIENT: phpredis
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # PHPeek PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/phpeek-pm health
+
+  mysql:
+    image: mysql:8.0
+    container_name: octane-frankenphp-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: octane-frankenphp-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  redis_data:

@@ -1,0 +1,57 @@
+services:
+  app:
+    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    container_name: e2e-drupal-app
+    ports:
+      - "8097:80"
+    volumes:
+      - ./app:/var/www/html/public
+    environment:
+      - APP_ENV=testing
+      - DB_DRIVER=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=drupal
+      - DB_USERNAME=drupal
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - LARAVEL_SCHEDULER=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: e2e-drupal-postgres
+    environment:
+      POSTGRES_DB: drupal
+      POSTGRES_USER: drupal
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d drupal -U drupal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: e2e-drupal-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg-data:

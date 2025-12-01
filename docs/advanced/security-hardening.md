@@ -459,11 +459,11 @@ PHPeek images already run as non-root by default:
 ```bash
 # Verify non-root
 docker exec <container> whoami
-# Output: www-data (Debian/Ubuntu) or nginx (Alpine)
+# Output: www-data (Debian) or nginx (Alpine)
 
 # Check user ID
 docker exec <container> id
-# Output: uid=82(www-data) gid=82(www-data)
+# Output: uid=82(www-data) gid=82(www-data) (Alpine) or uid=33(www-data) gid=33(www-data) (Debian)
 ```
 
 ### Read-Only Root Filesystem
@@ -525,7 +525,7 @@ on:
 
 jobs:
   scan:
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 
@@ -693,7 +693,7 @@ docker-compose up -d
 ### Automated CVE Scanning with Trivy
 
 [Trivy](https://trivy.dev/) is a comprehensive security scanner that detects vulnerabilities in:
-- OS packages (Alpine, Debian, Ubuntu)
+- OS packages (Alpine, Debian)
 - Application dependencies (Composer, npm, etc.)
 - Container images and configuration issues
 - Misconfigurations and secrets
@@ -747,8 +747,6 @@ trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3
 # Debian
 trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
 
-# Ubuntu
-trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu
 ```
 
 #### CI/CD Integration
@@ -770,7 +768,7 @@ on:
 
 jobs:
   scan:
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
 
     steps:
       - name: Checkout code
@@ -827,11 +825,11 @@ on:
 jobs:
   trivy-scan:
     name: Trivy Security Scan
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
 
     strategy:
       matrix:
-        os: [alpine, debian, ubuntu]
+        os: [alpine, debian]
 
     steps:
       - name: Checkout code
@@ -1028,7 +1026,7 @@ on:
 jobs:
   scan-production-images:
     name: Scan Production Images
-    runs-on: ubuntu-latest
+    runs-on: linux-latest  # Use your CI provider's Linux runner
 
     strategy:
       matrix:
