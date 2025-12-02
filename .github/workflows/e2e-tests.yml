@@ -101,6 +101,7 @@ jobs:
       - name: Run plain PHP E2E test
         env:
           IMAGE: test-image:local
+          VERBOSE: "true"
         run: |
           chmod +x tests/e2e/run-e2e-tests.sh
           chmod +x tests/e2e/scenarios/*.sh
@@ -110,12 +111,14 @@ jobs:
       - name: Run health check E2E test
         env:
           IMAGE: test-image:local
+          VERBOSE: "true"
         run: |
           tests/e2e/run-e2e-tests.sh "$IMAGE" health-checks
 
       - name: Run image formats test
         env:
           IMAGE: test-image:local
+          VERBOSE: "true"
         run: |
           tests/e2e/run-e2e-tests.sh "$IMAGE" image-formats
 
