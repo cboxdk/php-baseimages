@@ -27,7 +27,8 @@ if ! command -v _default_cleanup >/dev/null 2>&1; then
         log_info "Received shutdown signal, exiting..."
         exit 0
     }
-    trap graceful_shutdown SIGTERM SIGINT SIGQUIT
+    # Use POSIX signal names (without SIG prefix) for dash compatibility on Debian
+    trap graceful_shutdown TERM INT QUIT
 else
     setup_signal_handlers
 fi

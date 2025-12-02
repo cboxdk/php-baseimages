@@ -91,8 +91,9 @@ graceful_reload() {
     fi
 }
 
-trap cleanup SIGTERM SIGINT SIGQUIT
-trap graceful_reload SIGHUP
+# Use POSIX signal names (without SIG prefix) for dash compatibility on Debian
+trap cleanup TERM INT QUIT
+trap graceful_reload HUP
 
 ###########################################
 # Nginx-specific Validation

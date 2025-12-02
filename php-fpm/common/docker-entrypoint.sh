@@ -76,8 +76,8 @@ graceful_shutdown() {
     exit 0
 }
 
-# Setup signal handlers
-trap graceful_shutdown SIGTERM SIGINT SIGQUIT
+# Setup signal handlers (use POSIX signal names without SIG prefix for dash compatibility)
+trap graceful_shutdown TERM INT QUIT
 
 # ============================================================================
 # Lifecycle Warning (deprecation/preview notices)

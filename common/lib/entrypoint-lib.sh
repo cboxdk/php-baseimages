@@ -209,7 +209,8 @@ check_http() {
 # Usage: setup_signal_handlers <cleanup_function>
 setup_signal_handlers() {
     local cleanup_fn="${1:-_default_cleanup}"
-    trap "$cleanup_fn" SIGTERM SIGINT SIGQUIT
+    # Use POSIX signal names (without SIG prefix) for dash compatibility on Debian
+    trap "$cleanup_fn" TERM INT QUIT
 }
 
 _default_cleanup() {

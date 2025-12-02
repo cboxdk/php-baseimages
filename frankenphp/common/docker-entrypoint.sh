@@ -33,7 +33,8 @@ cleanup() {
     exit 0
 }
 
-trap cleanup SIGTERM SIGINT SIGQUIT
+# Use POSIX signal names (without SIG prefix) for dash compatibility on Debian
+trap cleanup TERM INT QUIT
 
 # Display environment information
 print_banner "PHPeek FrankenPHP Image" 2>/dev/null || {

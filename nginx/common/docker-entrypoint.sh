@@ -96,8 +96,8 @@ graceful_shutdown() {
     exit 0
 }
 
-# Setup signal handlers
-trap graceful_shutdown SIGTERM SIGINT SIGQUIT
+# Setup signal handlers (use POSIX signal names without SIG prefix for dash compatibility)
+trap graceful_shutdown TERM INT QUIT
 
 # Handle reload signal
 reload_config() {
@@ -111,7 +111,7 @@ reload_config() {
     fi
 }
 
-trap reload_config SIGHUP
+trap reload_config HUP
 
 # Display environment information
 log_info "Starting nginx..."
