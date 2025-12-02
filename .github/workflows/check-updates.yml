@@ -21,6 +21,29 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y jq curl
 
+      - name: Run EOL check
+        id: eol
+        run: |
+          chmod +x scripts/check-eol.sh
+
+          # Run EOL check and capture output
+          ./scripts/check-eol.sh 2>&1 | tee eol-output.txt || true
+          EOL_EXIT=$?
+
+          # Store results
+          echo "eol_exit_code=$EOL_EXIT" >> $GITHUB_OUTPUT
+
+          # Extract warnings for annotations
+          if [[ $EOL_EXIT -ge 1 ]]; then
+            echo "has_eol_warnings=true" >> $GITHUB_OUTPUT
+            # Create GitHub warning annotations
+            grep -E "CRITICAL|WARNING" eol-output.txt | while read -r line; do
+              echo "::warning::$line"
+            done
+          else
+            echo "has_eol_warnings=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run version update script
         id: update
         run: |
@@ -37,26 +60,7 @@ jobs:
             echo "has_updates=false" >> $GITHUB_OUTPUT
           else
             echo "has_updates=true" >> $GITHUB_OUTPUT
-
-            # Extract update list for PR body
-            grep -E "^\[UPDATE\]|^  -" update-output.txt > updates-summary.txt || true
           fi
-
-      - name: Check PHP EOL warnings
-        if: steps.update.outputs.has_updates == 'true'
-        run: |
-          TODAY=$(date +%Y-%m-%d)
-
-          for version in $(jq -r '.php.supported[]' versions.json); do
-            EOL=$(jq -r ".php.eol.\"$version\"" versions.json)
-            TODAY_SEC=$(date -d "$TODAY" +%s)
-            EOL_SEC=$(date -d "$EOL" +%s)
-            DAYS_LEFT=$(( (EOL_SEC - TODAY_SEC) / 86400 ))
-
-            if [ "$DAYS_LEFT" -lt 90 ]; then
-              echo "::warning::PHP $version EOL in $DAYS_LEFT days ($EOL)"
-            fi
-          done
 
       - name: Check for new PHP minor version
         run: |
@@ -69,7 +73,7 @@ jobs:
             fi
           done
 
-      - name: Create Pull Request
+      - name: Create Version Updates PR
         if: steps.update.outputs.has_updates == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
@@ -112,10 +116,29 @@ jobs:
             dependencies
             automated
 
+      - name: Create EOL Warning Issue
+        if: steps.eol.outputs.eol_exit_code == '2'
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "🚨 CRITICAL: Components past EOL require removal"
+          content-filepath: eol-output.txt
+          labels: |
+            critical
+            deprecation
+            automated
+
       - name: Summary
         run: |
-          echo "## Dependency Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Dependency & EOL Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
+          echo "### EOL Status" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat eol-output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Version Updates" >> $GITHUB_STEP_SUMMARY
           if [ -f update-output.txt ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
             cat update-output.txt >> $GITHUB_STEP_SUMMARY

@@ -15,7 +15,30 @@
   },
   "node": {
     "version": "22",
-    "lts_name": "Jod"
+    "lts_name": "Jod",
+    "eol": "2027-04-30"
+  },
+  "os": {
+    "alpine": {
+      "supported": ["3.20", "3.21"],
+      "default": "3.21",
+      "eol": {
+        "3.20": "2026-04-01",
+        "3.21": "2026-11-01"
+      }
+    },
+    "debian": {
+      "supported": ["bookworm", "trixie"],
+      "default": "bookworm",
+      "eol": {
+        "bookworm": "2028-06-30",
+        "trixie": "2030-06-30"
+      },
+      "codename_to_version": {
+        "bookworm": "12",
+        "trixie": "13"
+      }
+    }
   },
   "extensions": {
     "redis": "6.3.0",
@@ -37,7 +60,13 @@
     "frankenphp": "1.3.6",
     "phpeek_pm": "1.2.0"
   },
-  "os_variants": ["alpine", "debian", "ubuntu"],
+  "deprecation_policy": {
+    "php_removal_after_eol_months": 6,
+    "os_removal_after_eol_months": 3,
+    "node_removal_after_eol_months": 6,
+    "warning_before_removal_days": 90,
+    "deprecated": []
+  },
   "_meta": {
     "last_updated": "2025-11-30",
     "update_frequency": "weekly",

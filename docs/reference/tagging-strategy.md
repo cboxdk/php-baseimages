@@ -105,10 +105,60 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm-minimal
 
 ## Deprecation Policy
 
-1. **Current + 1**: Support current OS version + 1 previous version
-2. **PHP EOL**: Remove PHP versions 6 months after PHP project EOL
-3. **OS EOL**: Remove OS versions 3 months after OS vendor EOL
-4. **Migration Path**: Always provide clear upgrade path in docs
+PHPeek follows a predictable deprecation schedule based on upstream EOL dates.
+
+### Timeline
+
+| Component | Removal After EOL | Warning Period |
+|-----------|-------------------|----------------|
+| PHP       | 6 months          | 90 days        |
+| Debian    | 3 months          | 90 days        |
+| Alpine    | 3 months          | 90 days        |
+| Node.js   | 6 months          | 90 days        |
+
+### Current EOL Dates
+
+Check `versions.json` for current EOL dates, or run:
+
+```bash
+./scripts/check-eol.sh
+```
+
+### Deprecation Process
+
+1. **Warning Phase** (90 days before removal):
+   - Deprecation notice added to image labels
+   - Warning in CI workflow output
+   - Documentation updated with migration guide
+
+2. **EOL Phase** (upstream EOL reached):
+   - Images still built but marked deprecated
+   - No new features, security patches only
+   - Migration reminder in container startup
+
+3. **Removal Phase** (after grace period):
+   - Images removed from registry
+   - Dockerfiles archived to `archive/` branch
+   - Final migration guide published
+
+### Checking Deprecation Status
+
+```bash
+# Check all EOL dates
+./scripts/check-eol.sh
+
+# Only show warnings
+./scripts/check-eol.sh --warnings
+
+# JSON output for CI
+./scripts/check-eol.sh --json
+```
+
+### Migration Guides
+
+When a version is deprecated, migration guides are published at:
+- `docs/troubleshooting/migration-guide.md`
+- GitHub release notes
 
 ## Examples by Use Case
 
