@@ -47,11 +47,13 @@ test_laravel_container() {
     echo "<?php echo 'Laravel Test';" > tests/integration/framework-detection/fixtures/laravel/index.php
 
     # Run container with timeout to prevent hangs
+    # Note: Source the library directly (not entrypoint) to avoid starting services
+    # Use '.' instead of 'source' for POSIX compatibility (dash on Debian)
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/laravel:/var/www/html" \
         --entrypoint /bin/sh \
         ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine \
-        -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/laravel-test.log 2>&1 || true
+        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/laravel-test.log 2>&1 || true
 
     RESULT=$(cat /tmp/laravel-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
@@ -71,17 +73,21 @@ test_symfony_container() {
     info "Testing Symfony detection in Bookworm container..."
 
     # Create test Symfony structure
+    # Note: detect_framework requires both bin/console AND symfony.lock
     mkdir -p tests/integration/framework-detection/fixtures/symfony/bin
     mkdir -p tests/integration/framework-detection/fixtures/symfony/var/cache
     touch tests/integration/framework-detection/fixtures/symfony/bin/console
+    touch tests/integration/framework-detection/fixtures/symfony/symfony.lock
     echo "<?php echo 'Symfony Test';" > tests/integration/framework-detection/fixtures/symfony/index.php
 
     # Run container with timeout to prevent hangs
+    # Note: Source the library directly (not entrypoint) to avoid starting services
+    # Use '.' instead of 'source' for POSIX compatibility (dash on Debian)
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/symfony:/var/www/html" \
         --entrypoint /bin/sh \
         ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm \
-        -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/symfony-test.log 2>&1 || true
+        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/symfony-test.log 2>&1 || true
 
     RESULT=$(cat /tmp/symfony-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
@@ -106,11 +112,13 @@ test_wordpress_container() {
     echo "<?php echo 'WordPress Test';" > tests/integration/framework-detection/fixtures/wordpress/index.php
 
     # Run container with timeout to prevent hangs
+    # Note: Source the library directly (not entrypoint) to avoid starting services
+    # Use '.' instead of 'source' for POSIX compatibility (dash on Debian)
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/wordpress:/var/www/html" \
         --entrypoint /bin/sh \
         ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-trixie \
-        -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/wordpress-test.log 2>&1 || true
+        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/wordpress-test.log 2>&1 || true
 
     RESULT=$(cat /tmp/wordpress-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
@@ -134,11 +142,13 @@ test_generic_container() {
     echo "<?php phpinfo();" > tests/integration/framework-detection/fixtures/generic/index.php
 
     # Run container with timeout to prevent hangs
+    # Note: Source the library directly (not entrypoint) to avoid starting services
+    # Use '.' instead of 'source' for POSIX compatibility (dash on Debian)
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/generic:/var/www/html" \
         --entrypoint /bin/sh \
         ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine \
-        -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/generic-test.log 2>&1 || true
+        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/generic-test.log 2>&1 || true
 
     RESULT=$(cat /tmp/generic-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 

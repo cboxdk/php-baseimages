@@ -7,6 +7,10 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   framework-detection-tests:
     name: Framework Detection Tests
