@@ -12,7 +12,7 @@ PROJECT_NAME="e2e-magento"
 CONTAINER_NAME="e2e-magento-app"
 BASE_URL="http://localhost:8096"
 
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"' EXIT
+trap 'ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
 
 log_section "Magento E2E Test"
 

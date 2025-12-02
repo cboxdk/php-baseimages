@@ -12,7 +12,7 @@ PROJECT_NAME="e2e-typo3"
 CONTAINER_NAME="e2e-typo3-app"
 BASE_URL="http://localhost:8098"
 
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"' EXIT
+trap 'ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
 
 log_section "TYPO3 E2E Test"
 

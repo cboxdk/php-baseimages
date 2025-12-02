@@ -14,7 +14,7 @@ PROJECT_NAME="e2e-dusk-capabilities"
 CONTAINER_NAME="e2e-dusk-capabilities"
 
 # Cleanup on exit
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"' EXIT
+trap 'ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
 
 log_section "Laravel Dusk Capabilities E2E Test"
 

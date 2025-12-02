@@ -13,9 +13,10 @@ PROJECT_NAME="e2e-plain-php"
 CONTAINER_NAME="e2e-plain-php"
 BASE_URL="http://localhost:8090"
 
-# Cleanup on exit (preserve exit code for CI)
-# Using explicit exit 0 after successful print_summary since trap exit code handling is unreliable
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"' EXIT
+# Cleanup on exit with proper exit code preservation
+# Note: The trap must explicitly exit with the saved code to prevent bash from using
+# the exit code of the last trap command instead of the intended script exit code
+trap 'ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
 
 log_section "Plain PHP E2E Test"
 

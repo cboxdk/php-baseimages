@@ -14,7 +14,7 @@ PROJECT_NAME="e2e-pest-testing"
 CONTAINER_NAME="e2e-pest-testing"
 
 # Cleanup on exit
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"' EXIT
+trap 'ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
 
 log_section "Pest PHP v4 Testing Framework E2E Test"
 

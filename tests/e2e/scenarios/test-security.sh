@@ -12,7 +12,7 @@ FIXTURE_DIR="$E2E_ROOT/fixtures/security"
 PROJECT_NAME="e2e-security"
 
 # Cleanup on exit
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"' EXIT
+trap 'ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
 
 log_section "Security Baseline E2E Test"
 
