@@ -59,7 +59,8 @@
       "WebFetch(domain:stackoverflow.com)",
       "mcp__serena__get_current_config",
       "mcp__serena__write_memory",
-      "mcp__serena__read_memory"
+      "mcp__serena__read_memory",
+      "Bash(gh run view:*)"
     ],
     "deny": [],
     "ask": []
