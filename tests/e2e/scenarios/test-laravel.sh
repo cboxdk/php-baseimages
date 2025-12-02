@@ -13,8 +13,8 @@ PROJECT_NAME="e2e-laravel"
 CONTAINER_NAME="e2e-laravel-app"
 BASE_URL="http://localhost:8091"
 
-# Cleanup on exit
-trap 'ec=$?; set +e; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
+# Cleanup on exit - simple pattern that preserves original exit code
+trap 'set +e; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" || true' EXIT
 
 log_section "Laravel E2E Test"
 

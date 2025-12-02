@@ -12,8 +12,8 @@ E2E_ROOT="$(get_e2e_root)"
 FIXTURE_DIR="$E2E_ROOT/fixtures/image-formats"
 PROJECT_NAME="e2e-image-formats"
 
-# Cleanup on exit
-trap 'ec=$?; set +e; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $ec' EXIT
+# Cleanup on exit - simple pattern that preserves original exit code
+trap 'set +e; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" || true' EXIT
 
 log_section "Image Format Support E2E Test"
 
