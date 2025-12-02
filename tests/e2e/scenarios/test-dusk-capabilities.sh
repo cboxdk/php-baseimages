@@ -13,8 +13,14 @@ FIXTURE_DIR="$E2E_ROOT/fixtures/browsershot"  # Reuse browsershot fixture (has C
 PROJECT_NAME="e2e-dusk-capabilities"
 CONTAINER_NAME="e2e-dusk-capabilities"
 
-# Cleanup on exit - simple pattern that preserves original exit code
-trap 'set +e; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" || true' EXIT
+# Cleanup on exit - capture exit code, run cleanup, restore exit code
+cleanup_and_exit() {
+    local exit_code=$?
+    set +euo pipefail 2>/dev/null || true
+    cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" 2>/dev/null || true
+    exit $exit_code
+}
+trap cleanup_and_exit EXIT
 
 log_section "Laravel Dusk Capabilities E2E Test"
 

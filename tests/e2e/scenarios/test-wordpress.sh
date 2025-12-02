@@ -13,8 +13,14 @@ PROJECT_NAME="e2e-wordpress"
 CONTAINER_NAME="e2e-wordpress-app"
 BASE_URL="http://localhost:8092"
 
-# Cleanup on exit - simple pattern that preserves original exit code
-trap 'set +e; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" || true' EXIT
+# Cleanup on exit - capture exit code, run cleanup, restore exit code
+cleanup_and_exit() {
+    local exit_code=$?
+    set +euo pipefail 2>/dev/null || true
+    cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" 2>/dev/null || true
+    exit $exit_code
+}
+trap cleanup_and_exit EXIT
 
 log_section "WordPress E2E Test"
 

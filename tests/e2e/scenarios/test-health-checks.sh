@@ -13,8 +13,14 @@ PROJECT_NAME="e2e-health-check"
 CONTAINER_NAME="e2e-health-check"
 BASE_URL="http://localhost:8093"
 
-# Cleanup on exit
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.override.yml" "$PROJECT_NAME" 2>/dev/null || true' EXIT
+# Cleanup on exit - capture exit code, run cleanup, restore exit code
+cleanup_and_exit() {
+    local exit_code=$?
+    set +euo pipefail 2>/dev/null || true
+    cleanup_compose "$FIXTURE_DIR/docker-compose.override.yml" "$PROJECT_NAME" 2>/dev/null || true
+    exit $exit_code
+}
+trap cleanup_and_exit EXIT
 
 log_section "Health Check E2E Test"
 

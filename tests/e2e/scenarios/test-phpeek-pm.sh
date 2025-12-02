@@ -16,7 +16,14 @@ BASE_URL="http://localhost:8094"
 FIXTURE_DIR="$E2E_ROOT/fixtures/phpeek-pm"
 
 # Cleanup on exit
-trap 'cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" 2>/dev/null || true' EXIT
+# Cleanup on exit - capture exit code, run cleanup, restore exit code
+cleanup_and_exit() {
+    local exit_code=$?
+    set +euo pipefail 2>/dev/null || true
+    cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" 2>/dev/null || true
+    exit $exit_code
+}
+trap cleanup_and_exit EXIT
 
 log_section "PHPeek PM E2E Test"
 
