@@ -227,6 +227,7 @@ map_env_aliases() {
     # Backward compatibility
     [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export PHPEEK_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
     [ -n "$LARAVEL_AUTO_MIGRATE" ] && export LARAVEL_MIGRATE_ENABLED="$LARAVEL_AUTO_MIGRATE"
+    return 0
 }
 
 ###########################################
