@@ -197,11 +197,26 @@ jobs:
           output: 'trivy-trixie-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Upload Trivy results to GitHub Security tab
+      - name: Upload Trivy results to GitHub Security tab (Alpine)
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: '.'
+          sarif_file: trivy-alpine-results.sarif
+          category: trivy-alpine
+
+      - name: Upload Trivy results to GitHub Security tab (Bookworm)
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-bookworm-results.sarif
+          category: trivy-bookworm
+
+      - name: Upload Trivy results to GitHub Security tab (Trixie)
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-trixie-results.sarif
+          category: trivy-trixie
 
       - name: Generate security report summary
         if: always()
