@@ -49,18 +49,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download PHPeek PM binaries
-        run: |
-          mkdir -p phpeek-pm/binaries
-          PHPEEK_PM_VERSION="1.2.0"
-          echo "Downloading PHPeek PM v${PHPEEK_PM_VERSION}..."
-          curl -sL "https://github.com/gophpeek/phpeek-pm/releases/download/v${PHPEEK_PM_VERSION}/phpeek-pm-linux-amd64" \
-            -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -sL "https://github.com/gophpeek/phpeek-pm/releases/download/v${PHPEEK_PM_VERSION}/phpeek-pm-linux-arm64" \
-            -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/*
-          ls -la phpeek-pm/binaries/
-
       - name: Read versions from versions.json
         id: versions
         run: |
@@ -72,6 +60,26 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Download and verify PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading PHPeek PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd phpeek-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd -
+
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          ls -la phpeek-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -168,18 +176,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download PHPeek PM binaries
-        run: |
-          mkdir -p phpeek-pm/binaries
-          PHPEEK_PM_VERSION="1.2.0"
-          echo "Downloading PHPeek PM v${PHPEEK_PM_VERSION}..."
-          curl -sL "https://github.com/gophpeek/phpeek-pm/releases/download/v${PHPEEK_PM_VERSION}/phpeek-pm-linux-amd64" \
-            -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -sL "https://github.com/gophpeek/phpeek-pm/releases/download/v${PHPEEK_PM_VERSION}/phpeek-pm-linux-arm64" \
-            -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/*
-          ls -la phpeek-pm/binaries/
-
       - name: Read versions from versions.json
         id: versions
         run: |
@@ -191,6 +187,26 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Download and verify PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading PHPeek PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd phpeek-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd -
+
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          ls -la phpeek-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile

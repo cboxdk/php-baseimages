@@ -35,7 +35,7 @@
   "tools": {
     "composer": "2",
     "frankenphp": "1.3.6",
-    "phpeek_pm": "0.1.0"
+    "phpeek_pm": "1.2.0"
   },
   "os_variants": ["alpine", "debian", "ubuntu"],
   "_meta": {
