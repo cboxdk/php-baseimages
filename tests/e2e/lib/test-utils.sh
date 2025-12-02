@@ -255,14 +255,20 @@ assert_dir_exists() {
 }
 
 # Cleanup function for docker compose
-# Note: When used in EXIT trap, wrap it to preserve exit code:
-#   trap '_ec=$?; cleanup_compose "file" "project"; exit $_ec' EXIT
+# Note: This function is designed to be safe in EXIT traps with set -euo pipefail
+# It disables all strict modes and runs cleanup in a subshell to prevent any errors
+# from affecting the trap exit code
 cleanup_compose() {
-    local compose_file=$1
-    local project=${2:-"e2e-test"}
+    local compose_file="${1:-}"
+    local project="${2:-e2e-test}"
 
-    log_info "Cleaning up $project..."
-    docker compose -f "$compose_file" -p "$project" down -v --remove-orphans 2>/dev/null || true
+    # Run in a subshell with all strict modes disabled to ensure cleanup completes
+    # even if docker compose fails for any reason
+    (
+        set +euo pipefail 2>/dev/null || true
+        echo -e "${BLUE:-}[INFO]${NC:-} Cleaning up $project..."
+        docker compose -f "$compose_file" -p "$project" down -v --remove-orphans 2>/dev/null
+    ) || true
 }
 
 # Start docker compose stack
