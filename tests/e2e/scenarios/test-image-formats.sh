@@ -314,6 +314,7 @@ if docker exec "$CONTAINER_NAME" php -m 2>/dev/null | grep -qi "vips"; then
 
     # Additional: Test actual image processing in container
     log_info "Running direct VIPS image processing test..."
+    # Note: Using || echo to prevent set -e from triggering if php returns non-zero
     DIRECT_TEST=$(docker exec "$CONTAINER_NAME" php -r "
         if (!extension_loaded('vips')) { echo 'no_vips'; exit; }
         \$img = imagecreatetruecolor(100, 100);
@@ -330,7 +331,7 @@ if docker exec "$CONTAINER_NAME" php -m 2>/dev/null | grep -qi "vips"; then
             echo 'failed';
         }
         @unlink('/tmp/vips_direct_test.jpg');
-    " 2>&1)
+    " 2>&1 || echo "command_failed")
 
     if echo "$DIRECT_TEST" | grep -q "ok:100x100"; then
         log_success "VIPS: Direct image processing validated (100x100 image)"
