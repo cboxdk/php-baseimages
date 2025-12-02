@@ -234,17 +234,22 @@ assert_dir_exists "$CONTAINER_NAME" "/var/www/html/storage" "Storage directory e
 FINAL_PASSED=$TESTS_PASSED
 FINAL_FAILED=$TESTS_FAILED
 
-# Print summary (doesn't affect exit code when used with ||)
-print_summary || true
-
-# Disable strict mode for cleanup - this is critical for proper exit codes
-set +euo pipefail
-
-# Always cleanup, ignoring any errors
-do_cleanup
-
-# Exit based on test results
+# Determine exit code BEFORE cleanup
 if [ "$FINAL_FAILED" -gt 0 ]; then
-    exit 1
+    TEST_EXIT_CODE=1
+else
+    TEST_EXIT_CODE=0
 fi
-exit 0
+
+# Print summary (ignore any errors from print function)
+print_summary 2>/dev/null || true
+
+# Run cleanup in a subshell to completely isolate it from main script exit code
+# The subshell will run with its own environment and cannot affect our exit code
+(
+    set +euo pipefail
+    do_cleanup 2>/dev/null
+) || true
+
+# Use explicit exit with the pre-determined code
+exit "$TEST_EXIT_CODE"
