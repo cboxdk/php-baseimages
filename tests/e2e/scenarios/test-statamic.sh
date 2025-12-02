@@ -50,8 +50,11 @@ FINAL_FAILED=$TESTS_FAILED
 # Print summary (doesn't affect exit code when used with ||)
 print_summary || true
 
+# Disable strict mode for cleanup - this is critical for proper exit codes
+set +euo pipefail
+
 # Always cleanup, ignoring any errors
-do_cleanup || true
+do_cleanup
 
 # Exit based on test results
 if [ "$FINAL_FAILED" -gt 0 ]; then
