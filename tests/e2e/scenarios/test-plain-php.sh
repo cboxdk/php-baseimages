@@ -85,15 +85,20 @@ else
     TEST_EXIT_CODE=0
 fi
 
-# Print summary (ignore any errors from print function)
-print_summary 2>/dev/null || true
+# Print summary - call directly without error suppression
+print_summary || true
+
+# Debug: Show what we're about to do
+echo "[DEBUG] FINAL_PASSED=$FINAL_PASSED, FINAL_FAILED=$FINAL_FAILED, TEST_EXIT_CODE=$TEST_EXIT_CODE"
 
 # Run cleanup in a subshell to completely isolate it from main script exit code
-# The subshell will run with its own environment and cannot affect our exit code
+echo "[DEBUG] Starting cleanup subshell..."
 (
     set +euo pipefail
-    do_cleanup 2>/dev/null
+    do_cleanup
+    echo "[DEBUG] Cleanup subshell completed"
 ) || true
+echo "[DEBUG] Cleanup subshell finished, about to exit with code $TEST_EXIT_CODE"
 
 # Use explicit exit with the pre-determined code
 exit "$TEST_EXIT_CODE"
