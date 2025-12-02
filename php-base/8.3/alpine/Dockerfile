@@ -21,7 +21,7 @@ ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-alpine AS node
 
 # Stage 2: PHP CLI base (NOT FPM - that's a separate layer)
-FROM php:8.3-cli-alpine
+FROM php:8.3-cli-alpine AS base
 
 LABEL org.opencontainers.image.title="PHPeek PHP Base 8.3 Alpine"
 LABEL org.opencontainers.image.description="Base PHP image with all extensions, Composer, Node.js, and PHPeek PM"
@@ -222,4 +222,29 @@ ENV PHPEEK_LIFECYCLE=${PHPEEK_LIFECYCLE} \
 RUN mkdir -p /var/www/html && \
     chown -R www-data:www-data /var/www
 
+WORKDIR /var/www/html
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ROOT VARIANT (default) - Runs as root, PUID/PGID mapping at runtime
+# ═══════════════════════════════════════════════════════════════════════════
+FROM base AS root
+
+ENV PHPEEK_ROOTLESS=false
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ROOTLESS VARIANT - Runs entirely as www-data, no root privileges
+# ═══════════════════════════════════════════════════════════════════════════
+FROM base AS rootless
+
+# Pre-create ALL directories with www-data ownership for rootless operation
+RUN mkdir -p \
+    /var/www/html /var/www/.composer /var/www/.npm \
+    /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
+    chown -R www-data:www-data \
+        /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
+
+ENV PHPEEK_ROOTLESS=true \
+    HOME=/var/www
+
+USER www-data
 WORKDIR /var/www/html

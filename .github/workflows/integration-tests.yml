@@ -24,11 +24,39 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build test images
+      - name: Read PHPeek PM version
+        id: versions
         run: |
-          docker build -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-          docker build -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-          docker build -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Download PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+
+      - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
+        run: |
+          # Alpine
+          echo "=== Building Alpine chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-alpine -f php-base/8.3/alpine/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine -f php-fpm/8.3/alpine/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
+
+          # Bookworm
+          echo "=== Building Bookworm chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+
+          # Trixie
+          echo "=== Building Trixie chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-trixie -f php-base/8.3/debian/trixie/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-trixie -f php-fpm/8.3/debian/trixie/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run Docker integration tests
         run: |
@@ -54,11 +82,39 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build benchmark images
+      - name: Read PHPeek PM version
+        id: versions
         run: |
-          docker build -t phpeek-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-          docker build -t phpeek-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-          docker build -t phpeek-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Download PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+
+      - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
+        run: |
+          # Alpine
+          echo "=== Building Alpine chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-alpine -f php-base/8.3/alpine/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine -f php-fpm/8.3/alpine/Dockerfile .
+          docker build --target root -t phpeek-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
+
+          # Bookworm
+          echo "=== Building Bookworm chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t phpeek-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+
+          # Trixie
+          echo "=== Building Trixie chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-trixie -f php-base/8.3/debian/trixie/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-trixie -f php-fpm/8.3/debian/trixie/Dockerfile .
+          docker build --target root -t phpeek-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run performance benchmarks
         run: |
@@ -83,11 +139,38 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build images for scanning
+      - name: Read PHPeek PM version
+        id: versions
         run: |
-          # Build only the root stage (not rootless which requires base images that may not exist yet)
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Download PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+
+      - name: Build images for scanning (full chain)
+        run: |
+          # Alpine chain
+          echo "=== Building Alpine chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-alpine -f php-base/8.3/alpine/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine -f php-fpm/8.3/alpine/Dockerfile .
           docker build --target root -t phpeek-scan:alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
+
+          # Bookworm chain
+          echo "=== Building Bookworm chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
           docker build --target root -t phpeek-scan:bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+
+          # Trixie chain
+          echo "=== Building Trixie chain ==="
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-trixie -f php-base/8.3/debian/trixie/Dockerfile .
+          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-trixie -f php-fpm/8.3/debian/trixie/Dockerfile .
           docker build --target root -t phpeek-scan:trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run Trivy vulnerability scanner (Alpine)
