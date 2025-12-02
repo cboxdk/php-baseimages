@@ -13,13 +13,15 @@ TESTS_FAILED=0
 # Test result functions
 pass() {
     echo -e "${GREEN}✓${NC} $1"
-    ((TESTS_PASSED++))
+    # Note: Using $((x + 1)) instead of ((x++)) to avoid errexit on first increment
+    # ((x++)) returns 1 when x=0, which triggers set -e
+    TESTS_PASSED=$((TESTS_PASSED + 1))
 }
 
 fail() {
     echo -e "${RED}✗${NC} $1"
     echo -e "  ${RED}Details:${NC} $2"
-    ((TESTS_FAILED++))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
 }
 
 info() {
