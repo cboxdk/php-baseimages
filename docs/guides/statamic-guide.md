@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8083:80"
     volumes:
@@ -121,7 +121,7 @@ Scheduler handles `php artisan schedule:run` for static cache warming, sitemaps,
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     environment:
       - APP_ENV=production
       - APP_URL=https://example.com

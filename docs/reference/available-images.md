@@ -13,7 +13,7 @@ Complete reference of all available PHPeek base image tags and variants.
 All images are published to GitHub Container Registry:
 
 ```
-ghcr.io/phpeek/baseimages/{image-type}:{tag}
+ghcr.io/gophpeek/baseimages/{image-type}:{tag}
 ```
 
 ## Multi-Service Images (PHP-FPM + Nginx)
@@ -105,7 +105,7 @@ Rolling tags receive weekly security updates:
 
 ```yaml
 # Automatically gets security patches every Monday
-image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ### Immutable SHA Tags
@@ -114,7 +114,7 @@ For reproducible builds, use SHA-pinned tags:
 
 ```yaml
 # Locked to specific build
-image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine@sha256:abc123...
+image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine@sha256:abc123...
 ```
 
 ### Tag Format
@@ -142,7 +142,7 @@ Docker automatically pulls the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ## OS Variant Comparison
@@ -198,11 +198,11 @@ docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 ```bash
 # Pull latest PHP 8.4 Alpine
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Run with volume mount
 docker run -p 8000:80 -v $(pwd):/var/www/html \
-  ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+  ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ### Docker Compose
@@ -212,7 +212,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     ports:
       - "8000:80"
     volumes:
@@ -222,7 +222,7 @@ services:
 ### Dockerfile
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -242,7 +242,7 @@ All images are automatically rebuilt every Monday at 03:00 UTC:
 
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 docker-compose up -d --pull always
 ```
 

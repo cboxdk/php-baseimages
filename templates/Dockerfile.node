@@ -1,7 +1,7 @@
 # PHPeek + Node.js Template
 # For full-stack applications needing both PHP and Node.js (Laravel + Vite, etc.)
 
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Install Node.js and npm
 RUN apk add --no-cache \

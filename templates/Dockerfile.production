@@ -63,7 +63,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative
 # =============================================================================
 # Stage 3: Production Runtime
 # =============================================================================
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:${PHP_VERSION}-${OS_VARIANT} AS production
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:${PHP_VERSION}-${OS_VARIANT} AS production
 
 LABEL maintainer="PHPeek <hello@phpeek.com>"
 LABEL description="Production-optimized PHP application"
@@ -116,7 +116,7 @@ EXPOSE 80
 # =============================================================================
 # Stage 4: Development (optional, for local development)
 # =============================================================================
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:${PHP_VERSION}-${OS_VARIANT}-dev AS development
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:${PHP_VERSION}-${OS_VARIANT}-dev AS development
 
 WORKDIR /var/www/html
 

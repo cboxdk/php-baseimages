@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8080:80"
     volumes:
@@ -153,7 +153,7 @@ docker compose exec app bin/magento cron:run
 
 ## Development Tips
 
-- Use `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev` for Xdebug.
+- Use `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev` for Xdebug.
 - Disable static content deployment for faster dev: `bin/magento deploy:mode:set developer`.
 - Flush caches quickly: `bin/magento cache:flush`.
 
@@ -162,7 +162,7 @@ docker compose exec app bin/magento cron:run
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     volumes:
       - ./:/var/www/html:ro
       - ./var:/var/www/html/var

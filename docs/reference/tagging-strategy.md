@@ -37,47 +37,47 @@ PHPeek Base Images follow a clear, predictable tagging strategy with OS version 
 
 **Alpine (Full Edition)**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
-ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine
 ```
 
 **Alpine (Minimal Edition)**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine-minimal
-ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine-minimal
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine-minimal
+ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine-minimal
 ```
 
 **Debian Bookworm (Full Edition)**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm:8.2-bookworm
-ghcr.io/phpeek/baseimages/php-fpm:8.3-bookworm
-ghcr.io/phpeek/baseimages/php-fpm:8.4-bookworm
+ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
+ghcr.io/gophpeek/baseimages/php-fpm:8.4-bookworm
 ```
 
 **Debian Bookworm (Minimal Edition)**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm:8.3-bookworm-minimal
-ghcr.io/phpeek/baseimages/php-fpm:8.4-bookworm-minimal
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm-minimal
+ghcr.io/gophpeek/baseimages/php-fpm:8.4-bookworm-minimal
 ```
 
 **Debian Bullseye (Full Edition - Legacy Support)**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm:8.2-bullseye
-ghcr.io/phpeek/baseimages/php-fpm:8.3-bullseye
+ghcr.io/gophpeek/baseimages/php-fpm:8.2-bullseye
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-bullseye
 ```
 
 ### PHP-FPM-Nginx Images
 
 **Alpine**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-minimal
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-minimal
 ```
 
 **Debian Bookworm**:
 ```
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm-minimal
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-minimal
 ```
 
 ## Version Matrix
@@ -166,21 +166,21 @@ When a version is deprecated, migration guides are published at:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 ### Production (Minimal Edition, Laravel)
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.3-bookworm-minimal
+    image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm-minimal
 ```
 
 ### Legacy Application (Older OS)
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.2-bullseye
+    image: ghcr.io/gophpeek/baseimages/php-fpm:8.2-bullseye
 ```
 
 ## See Also

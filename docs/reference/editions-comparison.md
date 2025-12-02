@@ -181,8 +181,8 @@ These 15 extensions are **only** in the Full edition:
 **How to migrate**:
 ```dockerfile
 # Change tag from minimal to full
-- image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine-minimal
-+ image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
+- image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine-minimal
++ image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
 ```
 
 **Considerations**:
@@ -200,8 +200,8 @@ These 15 extensions are **only** in the Full edition:
 **How to downgrade**:
 ```dockerfile
 # Change tag from full to minimal
-- image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
-+ image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine-minimal
+- image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
++ image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine-minimal
 ```
 
 **Validation checklist**:

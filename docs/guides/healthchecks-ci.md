@@ -18,7 +18,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     environment:
       - APP_ENV=local
       - DB_HOST=mysql

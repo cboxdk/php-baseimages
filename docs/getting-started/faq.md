@@ -53,13 +53,13 @@ PHPeek Base Images is a collection of production-ready Docker images for PHP app
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Run with your Laravel project
 docker run -d \
   -p 8080:80 \
   -v $(pwd):/var/www/html \
-  ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+  ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ### How do I use the development image with Xdebug?
@@ -68,7 +68,7 @@ docker run -d \
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
     ports:
       - "8080:80"
       - "9003:9003"  # Xdebug port
@@ -107,7 +107,7 @@ environment:
 
 **Option 2**: Custom php.ini (build time)
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 COPY custom.ini /usr/local/etc/php/conf.d/99-custom.ini
 ```
 
@@ -115,7 +115,7 @@ COPY custom.ini /usr/local/etc/php/conf.d/99-custom.ini
 
 **Replace the default config**:
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 ```
 
@@ -283,7 +283,7 @@ kill -USR2 1  # Graceful reload
 
 **Fix**: Specify platform:
 ```bash
-docker pull --platform linux/amd64 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+docker pull --platform linux/amd64 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ## Updates & Maintenance
@@ -298,7 +298,7 @@ docker pull --platform linux/amd64 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-a
 
 ```bash
 # Pull latest
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Rebuild your image
 docker-compose build --pull
@@ -311,7 +311,7 @@ docker-compose up -d
 
 Use SHA-based tags for reproducibility:
 ```yaml
-image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine@sha256:abc123...
+image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine@sha256:abc123...
 ```
 
 Rolling tags (`8.4-alpine`) get weekly security updates automatically.
@@ -344,7 +344,7 @@ PHPeek includes everything from official images plus:
 FROM php:8.4-fpm-alpine
 
 # After
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ## Getting Help

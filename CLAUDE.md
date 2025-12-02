@@ -127,7 +127,7 @@ open http://localhost:8083  # Ubuntu
 
 # Run extension tests
 ./tests/test-extensions.sh phpeek-fpm-alpine
-./tests/test-extensions.sh ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
+./tests/test-extensions.sh ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
 
 # Check logs for entrypoint behavior
 docker-compose logs -f php-fpm-nginx-alpine
@@ -350,7 +350,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 
 ## Image Publishing
 
-Images published to GitHub Container Registry: `ghcr.io/phpeek/baseimages/`
+Images published to GitHub Container Registry: `ghcr.io/gophpeek/baseimages/`
 
 **Naming convention**:
 - `php-fpm:8.3-alpine`

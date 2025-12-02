@@ -39,7 +39,7 @@ Guide for choosing between PHPeek's multi-service containers (PHP-FPM + Nginx to
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     ports:
       - "80:80"
     volumes:
@@ -61,12 +61,12 @@ services:
 # docker-compose.yml
 services:
   php-fpm:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine
     volumes:
       - ./:/var/www/html
 
   nginx:
-    image: ghcr.io/phpeek/baseimages/nginx:alpine
+    image: ghcr.io/gophpeek/baseimages/nginx:alpine
     ports:
       - "80:80"
     volumes:
@@ -259,18 +259,18 @@ docker exec myapp cat /usr/local/etc/php/conf.d/99-custom.ini > php.ini
 # Before (multi-service)
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # After (separate)
 services:
   php-fpm:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine
     volumes:
       - ./:/var/www/html
       - ./php.ini:/usr/local/etc/php/conf.d/99-custom.ini
 
   nginx:
-    image: ghcr.io/phpeek/baseimages/nginx:alpine
+    image: ghcr.io/gophpeek/baseimages/nginx:alpine
     ports:
       - "80:80"
     volumes:
@@ -308,14 +308,14 @@ Merge Nginx and PHP configurations into the multi-service setup.
 # Before (separate)
 services:
   php-fpm:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine
   nginx:
-    image: ghcr.io/phpeek/baseimages/nginx:alpine
+    image: ghcr.io/gophpeek/baseimages/nginx:alpine
 
 # After (multi-service)
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     ports:
       - "80:80"
     volumes:
@@ -343,7 +343,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+        image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
         ports:
         - containerPort: 80
 ```
@@ -362,7 +362,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ghcr.io/phpeek/baseimages/nginx:alpine
+        image: ghcr.io/gophpeek/baseimages/nginx:alpine
         ports:
         - containerPort: 80
         volumeMounts:
@@ -371,7 +371,7 @@ spec:
           readOnly: true
 
       - name: php-fpm
-        image: ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine
+        image: ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine
         ports:
         - containerPort: 9000
         volumeMounts:
@@ -399,7 +399,7 @@ spec:
     spec:
       containers:
       - name: php-fpm
-        image: ghcr.io/phpeek/baseimages/php-fpm:8.4-alpine
+        image: ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine
 ---
 # nginx-deployment.yaml
 apiVersion: apps/v1
@@ -412,7 +412,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: ghcr.io/phpeek/baseimages/nginx:alpine
+        image: ghcr.io/gophpeek/baseimages/nginx:alpine
 ```
 
 ## Performance Comparison

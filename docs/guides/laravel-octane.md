@@ -13,7 +13,7 @@ Run Laravel Octane with PHPeek PM for high-performance applications. PHPeek PM s
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-swoole:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-alpine
     environment:
       LARAVEL_OCTANE: "true"
       OCTANE_SERVER: swoole
@@ -78,7 +78,7 @@ That's it. PHPeek PM handles everything else.
 # examples/octane-swoole/docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-swoole:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-alpine
     ports:
       - "8080:8000"
     environment:
@@ -107,7 +107,7 @@ services:
 # examples/octane-roadrunner/docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8080:8000"
     environment:
@@ -135,7 +135,7 @@ services:
 # examples/octane-frankenphp/docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-frankenphp:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-frankenphp:8.3-alpine
     ports:
       - "8080:8000"
       - "8443:443"
@@ -228,7 +228,7 @@ PHPeek PM includes built-in health checks for Octane. No configuration needed.
 # ✅ Correct - use built-in health check
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-swoole:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-alpine
     # No healthcheck override needed
 
 # ❌ Wrong - don't override
@@ -264,10 +264,10 @@ Ensure you're using the correct image:
 
 ```yaml
 # ✅ Correct for Swoole
-image: ghcr.io/phpeek/baseimages/php-swoole:8.3-alpine
+image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-alpine
 
 # ❌ Wrong - doesn't have Swoole extension
-image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 ## See Also

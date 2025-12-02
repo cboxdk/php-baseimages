@@ -20,7 +20,7 @@ Production PHP applications typically run behind reverse proxies, load balancers
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Trust private network ranges (Docker, Kubernetes)
       NGINX_TRUSTED_PROXIES: "10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
@@ -40,7 +40,7 @@ Cloudflare uses `CF-Connecting-IP` for the real client IP:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Cloudflare IP ranges (updated January 2025)
       NGINX_TRUSTED_PROXIES: >-
@@ -76,7 +76,7 @@ For Cloudflare Tunnel, trust private networks since the tunnel runs locally:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
       NGINX_REAL_IP_HEADER: CF-Connecting-IP
@@ -93,7 +93,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Trust Traefik container network
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
@@ -118,7 +118,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
       # HAProxy typically uses X-Forwarded-For (default)
@@ -143,7 +143,7 @@ Tailscale uses the `100.64.0.0/10` CGNAT range:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       NGINX_TRUSTED_PROXIES: "100.64.0.0/10"
     network_mode: service:tailscale
@@ -165,7 +165,7 @@ volumes:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
 ```
@@ -196,7 +196,7 @@ server {
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Fastly publishes IP ranges at https://api.fastly.com/public-ip-list
       NGINX_TRUSTED_PROXIES: "23.235.32.0/20 43.249.72.0/22 ..."
@@ -208,7 +208,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Trust VPC CIDR range
       NGINX_TRUSTED_PROXIES: "10.0.0.0/8"
@@ -225,7 +225,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+          image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
           env:
             - name: NGINX_TRUSTED_PROXIES
               value: "10.0.0.0/8"  # Pod network CIDR
@@ -281,7 +281,7 @@ mTLS adds client certificate verification for zero-trust security:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"
@@ -364,7 +364,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+          image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
           env:
             # Istio handles TLS termination
             - name: NGINX_TRUSTED_PROXIES
@@ -522,7 +522,7 @@ docker exec app cat /etc/nginx/conf.d/default.conf | grep ssl_client
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Cloudflare for public traffic
       NGINX_TRUSTED_PROXIES: "173.245.48.0/20 103.21.244.0/22 ..."
@@ -541,7 +541,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Trust Istio sidecar
       NGINX_TRUSTED_PROXIES: "127.0.0.6"
@@ -553,7 +553,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       NGINX_TRUSTED_PROXIES: "100.64.0.0/10"
     network_mode: service:tailscale

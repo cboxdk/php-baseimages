@@ -126,7 +126,7 @@ Configure everything via environment variables:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # PHP
       PHP_MEMORY_LIMIT: 512M

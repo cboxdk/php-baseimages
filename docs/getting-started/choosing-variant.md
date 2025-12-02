@@ -22,7 +22,7 @@ PHPeek offers two OS variants and multiple editions. This guide helps you choose
 ### Alpine Linux
 
 ```bash
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 **Size**: ~50MB (smallest)
@@ -48,14 +48,14 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     # ~50MB, boots in <1 second
 ```
 
 ### Debian (Bookworm)
 
 ```bash
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 ```
 
 **Size**: ~120MB
@@ -80,7 +80,7 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
     # glibc compatibility for all extensions
 ```
 
@@ -89,7 +89,7 @@ services:
 ### Standard Edition
 
 ```bash
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 **Includes**: 40+ PHP extensions for production
@@ -99,7 +99,7 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
 ### Development Edition
 
 ```bash
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
 ```
 
 **Includes**:
@@ -114,7 +114,7 @@ ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
     environment:
       XDEBUG_MODE: debug,develop,coverage
       XDEBUG_CONFIG: client_host=host.docker.internal client_port=9003
@@ -126,7 +126,7 @@ services:
 ### Minimal Edition
 
 ```bash
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-minimal
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-minimal
 ```
 
 **Includes**: Core extensions only (opcache, pdo, json, etc.)
@@ -172,12 +172,12 @@ Need Xdebug/debugging?
 # Development
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
 
 # Production
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ### Scenario 2: Legacy PHP Application
@@ -186,7 +186,7 @@ services:
 # Debian for maximum compatibility
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian
 ```
 
 ### Scenario 3: Kubernetes Microservices
@@ -195,7 +195,7 @@ services:
 # Alpine for smallest footprint
 spec:
   containers:
-    - image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    - image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ## When Alpine Doesn't Work
@@ -206,7 +206,7 @@ Alpine uses musl libc instead of glibc. Some scenarios where you need Debian:
 
 ```dockerfile
 # oci8 requires glibc - use Debian
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 
 RUN apt-get update && apt-get install -y libaio1 \
     && pecl install oci8
@@ -216,7 +216,7 @@ RUN apt-get update && apt-get install -y libaio1 \
 
 ```dockerfile
 # sqlsrv works better with glibc
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
     && curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
@@ -229,7 +229,7 @@ RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
 
 ```dockerfile
 # Some PECL extensions compile better with glibc
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 
 # Extensions that may have musl issues
 RUN pecl install grpc protobuf
@@ -241,11 +241,11 @@ Use different bases for dev and prod:
 
 ```dockerfile
 # Development target
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev AS development
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev AS development
 COPY . /var/www/html
 
 # Production target
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine AS production
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine AS production
 COPY --from=development /var/www/html /var/www/html
 RUN composer install --no-dev --optimize-autoloader
 ```

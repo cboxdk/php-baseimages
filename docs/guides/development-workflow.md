@@ -26,9 +26,9 @@ Optimize your local development experience with PHPeek base images including Xde
 PHPeek provides **pre-built development images** with Xdebug already installed and configured. These are the easiest way to get started with debugging.
 
 **Available dev images:**
-- `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev`
-- `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev`
-- `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine-dev`
+- `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev`
+- `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev`
+- `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-alpine-dev`
 - Also available: `-debian-dev` variant
 
 ### Development docker-compose.yml
@@ -39,7 +39,7 @@ version: '3.8'
 services:
   app:
     # Use the pre-built dev image with Xdebug included!
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-dev
     ports:
       - "8000:80"
       - "9003:9003"  # Xdebug port
@@ -290,7 +290,7 @@ services:
 **Install Node.js in container (Dockerfile.dev):**
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Install Node.js
 RUN apk add --no-cache nodejs npm
@@ -689,7 +689,7 @@ docker-compose build
 
 ```dockerfile
 # Cache composer dependencies
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 COPY composer.json composer.lock ./
 RUN composer install --no-scripts --no-autoloader
@@ -703,7 +703,7 @@ RUN composer dump-autoload --optimize
 **Dockerfile.dev:**
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Install Xdebug
 RUN apk add --no-cache $PHPIZE_DEPS \
@@ -720,7 +720,7 @@ RUN apk add --no-cache git vim
 **Dockerfile.prod:**
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Production optimizations only
 COPY --chown=www-data:www-data . /var/www/html

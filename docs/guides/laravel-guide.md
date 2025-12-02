@@ -15,7 +15,7 @@ Get Laravel running with MySQL, Redis, and scheduler support.
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -123,7 +123,7 @@ Use dev image with Xdebug:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
     environment:
       - XDEBUG_MODE=debug,develop,coverage
       - XDEBUG_CONFIG=client_host=host.docker.internal
@@ -139,7 +139,7 @@ See [Development Workflow](development-workflow) for Xdebug setup.
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine  # No -dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine  # No -dev
     volumes:
       - ./:/var/www/html:ro  # Read-only
       - ./storage:/var/www/html/storage

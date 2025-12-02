@@ -14,7 +14,7 @@
 services:
   app:
     # Use php-swoole image for Octane with Swoole
-    image: ghcr.io/phpeek/baseimages/php-swoole:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-alpine
     container_name: octane-swoole-app
     restart: unless-stopped
     ports:

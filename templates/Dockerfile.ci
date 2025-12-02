@@ -1,7 +1,7 @@
 # PHPeek CI/CD Template
 # Optimized for continuous integration and testing
 
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Install CI/CD tools
 RUN apk add --no-cache \

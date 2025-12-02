@@ -9,7 +9,7 @@ End-to-end tests for PHPeek base images ensuring stability across all code types
 ./run-e2e-tests.sh
 
 # Test specific image
-./run-e2e-tests.sh ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+./run-e2e-tests.sh ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Test specific scenario
 ./run-e2e-tests.sh local-image:latest laravel

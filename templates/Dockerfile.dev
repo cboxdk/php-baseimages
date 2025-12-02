@@ -1,7 +1,7 @@
 # PHPeek Development Template
 # Includes Xdebug, SPX profiler, Node.js, and development tools
 
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Install development tools
 RUN apk add --no-cache \

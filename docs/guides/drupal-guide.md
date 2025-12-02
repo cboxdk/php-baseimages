@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8081:80"
     volumes:
@@ -125,7 +125,7 @@ environment:
 
 ## Development Setup
 
-- Switch to `ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev` for Xdebug.
+- Switch to `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev` for Xdebug.
 - Mount `web/sites` read/write for config export/import.
 - Use `drush uli` to generate one-time login links.
 
@@ -134,7 +134,7 @@ environment:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     volumes:
       - ./:/var/www/html:ro
       - ./web/sites/default/files:/var/www/html/web/sites/default/files

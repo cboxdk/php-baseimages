@@ -15,7 +15,7 @@ Get Symfony running with PostgreSQL, Redis, and optimized caching.
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -92,7 +92,7 @@ Use dev image with Xdebug:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
     environment:
       - APP_ENV=dev
       - XDEBUG_MODE=debug,develop,coverage
@@ -108,7 +108,7 @@ See [Development Workflow](development-workflow) for Xdebug setup.
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     volumes:
       - .:/var/www/html:ro
       - ./var:/var/www/html/var

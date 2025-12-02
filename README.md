@@ -39,7 +39,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -75,13 +75,13 @@ docker-compose up -d
 | **php-cli** | `8.2-alpine` `8.3-alpine` `8.4-alpine` | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | `8.2-trixie` `8.3-trixie` `8.4-trixie` |
 | **nginx** | `alpine` | `bookworm` | `trixie` |
 
-**Full image name:** `ghcr.io/phpeek/baseimages/{type}:{tag}`
+**Full image name:** `ghcr.io/gophpeek/baseimages/{type}:{tag}`
 
 ```bash
 # Examples
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
-ghcr.io/phpeek/baseimages/php-fpm:8.3-bookworm
-ghcr.io/phpeek/baseimages/php-cli:8.2-trixie
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
+ghcr.io/gophpeek/baseimages/php-cli:8.2-trixie
 ```
 
 ### Editions: Full vs Minimal
@@ -281,7 +281,7 @@ environment:
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 docker-compose up -d
 ```
 
@@ -291,7 +291,7 @@ docker-compose up -d
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     # ↑ Automatically gets weekly security patches
 ```
 
@@ -299,7 +299,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-sha256:abc123...
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-sha256:abc123...
     # ↑ Locked to specific build
 ```
 
@@ -353,7 +353,7 @@ docker run --rm -p 8000:80 my-image:8.3-alpine
 ./tests/e2e/run-all-tests.sh --specific security
 
 # Run extension tests
-./tests/test-extensions.sh ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
+./tests/test-extensions.sh ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
 ```
 
 📖 **Test documentation:** [tests/README.md](tests/README.md)
@@ -386,7 +386,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -422,12 +422,12 @@ version: '3.8'
 
 services:
   php-fpm:
-    image: ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
     volumes:
       - ./:/var/www/html
 
   nginx:
-    image: ghcr.io/phpeek/baseimages/nginx:alpine
+    image: ghcr.io/gophpeek/baseimages/nginx:alpine
     ports:
       - "80:80"
     volumes:
@@ -441,7 +441,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
     volumes:
       - ./:/var/www/html
     environment:

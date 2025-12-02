@@ -72,7 +72,7 @@ Most reference pages include copy-paste ready examples:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     environment:
       # Reference: docs/reference/environment-variables
       - PHP_MEMORY_LIMIT=256M

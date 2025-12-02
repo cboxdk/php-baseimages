@@ -79,7 +79,7 @@ Override in docker-compose.yml:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 15s
@@ -91,7 +91,7 @@ services:
 Or in Dockerfile:
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Custom health check
 HEALTHCHECK --interval=15s --timeout=10s --retries=5 \
@@ -105,7 +105,7 @@ For CI/CD or testing scenarios:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     healthcheck:
       disable: true
 ```
@@ -122,7 +122,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     livenessProbe:
       httpGet:
         path: /health
@@ -143,7 +143,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     readinessProbe:
       httpGet:
         path: /health
@@ -165,7 +165,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     startupProbe:
       httpGet:
         path: /health
@@ -195,7 +195,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+        image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
         ports:
         - containerPort: 80
 

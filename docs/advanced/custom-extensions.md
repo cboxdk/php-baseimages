@@ -28,7 +28,7 @@ RUN apk add --no-cache dependency-package \
 ### Basic Installation
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Install build dependencies, extension, enable, cleanup
 RUN apk add --no-cache $PHPIZE_DEPS \
@@ -40,7 +40,7 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 ### With Version Pinning
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Pin specific version for reproducibility
 RUN apk add --no-cache $PHPIZE_DEPS \
@@ -64,7 +64,7 @@ RUN apk add --no-cache $PHPIZE_DEPS openssl-dev curl-dev \
 
 ```dockerfile
 # Note: Works better on Debian due to glibc
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 
 RUN apt-get update && apt-get install -y \
     libgrpc-dev libprotobuf-dev protobuf-compiler \
@@ -140,7 +140,7 @@ For extensions not on PECL or needing custom options:
 ### Example: OpenSwoole with Custom Options
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 RUN apk add --no-cache $PHPIZE_DEPS git openssl-dev curl-dev \
     && git clone https://github.com/openswoole/swoole-src.git \
@@ -190,7 +190,7 @@ Some extensions compile better on Debian (glibc):
 ### Debian Example
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -287,7 +287,7 @@ HEALTHCHECK --interval=30s --timeout=3s \
 docker build --progress=plain -t test .
 
 # Interactive debugging
-docker run --rm -it ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine sh
+docker run --rm -it ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine sh
 apk add $PHPIZE_DEPS
 pecl install extension-name
 ```
@@ -330,7 +330,7 @@ RUN pecl install igbinary \
 ### Laravel with Swoole + Redis
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Build dependencies
 RUN apk add --no-cache $PHPIZE_DEPS openssl-dev curl-dev
@@ -350,7 +350,7 @@ RUN composer install --no-dev --optimize-autoloader
 ### API with gRPC + Protobuf
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
 
 RUN apt-get update && apt-get install -y \
     libgrpc-dev libprotobuf-dev protobuf-compiler \

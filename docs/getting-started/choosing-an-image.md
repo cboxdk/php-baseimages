@@ -133,21 +133,21 @@ What are you building?
 ## Complete Image Reference
 
 ```
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-debian
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-debian
 
-ghcr.io/phpeek/baseimages/php-fpm:8.3-alpine
-ghcr.io/phpeek/baseimages/php-fpm:8.3-debian
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-fpm:8.3-debian
 
-ghcr.io/phpeek/baseimages/php-cli:8.3-alpine
-ghcr.io/phpeek/baseimages/php-cli:8.3-debian
+ghcr.io/gophpeek/baseimages/php-cli:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-cli:8.3-debian
 
-ghcr.io/phpeek/baseimages/nginx:alpine
-ghcr.io/phpeek/baseimages/nginx:debian
+ghcr.io/gophpeek/baseimages/nginx:alpine
+ghcr.io/gophpeek/baseimages/nginx:debian
 ```
 
 ## Migration Guide

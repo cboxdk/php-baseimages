@@ -33,13 +33,13 @@ cd tests/unit
 
 ```bash
 cd tests/e2e
-./run-e2e-tests.sh ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+./run-e2e-tests.sh ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 ### Run Specific Scenario
 
 ```bash
-./run-e2e-tests.sh ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine laravel
+./run-e2e-tests.sh ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine laravel
 ```
 
 ---
@@ -106,7 +106,7 @@ Each fixture contains a `docker-compose.yml` that uses the `IMAGE` environment v
 ```yaml
 services:
   app:
-    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine}
     # ...
 ```
 
@@ -224,7 +224,7 @@ mkdir -p tests/e2e/fixtures/{name}/app
 ```yaml
 services:
   app:
-    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine}
     container_name: e2e-{name}-app
     ports:
       - "{port}:80"

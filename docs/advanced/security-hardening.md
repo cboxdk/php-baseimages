@@ -170,7 +170,7 @@ NGINX_HEADER_CSP="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       # Strict CSP for high-security applications
       - NGINX_HEADER_CSP=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
@@ -343,7 +343,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     secrets:
       - app_key
       - db_password
@@ -431,7 +431,7 @@ spec:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     environment:
       - VAULT_ADDR=https://vault.example.com
       - VAULT_TOKEN=${VAULT_TOKEN}
@@ -471,7 +471,7 @@ docker exec <container> id
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     read_only: true
     tmpfs:
       - /tmp
@@ -502,13 +502,13 @@ services:
 
 ```bash
 # Scan image for vulnerabilities
-trivy image ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Scan with severity filter
-trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Fail CI on vulnerabilities
-trivy image --exit-code 1 --severity CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --exit-code 1 --severity CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 **Integrate in CI/CD:**
@@ -532,7 +532,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine'
+          image-ref: 'ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -683,7 +683,7 @@ PHPeek images are automatically rebuilt weekly (Mondays 03:00 UTC) to include:
 
 ```bash
 # Pull latest image
-docker pull ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Rebuild and restart
 docker-compose build --pull
@@ -719,33 +719,33 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:lates
 
 ```bash
 # Scan PHPeek Alpine image
-trivy image ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Scan with severity filter (only HIGH and CRITICAL)
-trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Scan and exit with error if vulnerabilities found
-trivy image --exit-code 1 --severity CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --exit-code 1 --severity CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Scan your custom image
 docker build -t my-app:latest .
 trivy image --severity HIGH,CRITICAL my-app:latest
 
 # Generate JSON report
-trivy image --format json --output trivy-report.json ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --format json --output trivy-report.json ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Generate HTML report (requires template)
-trivy image --format template --template "@contrib/html.tpl" --output trivy-report.html ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --format template --template "@contrib/html.tpl" --output trivy-report.html ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 **Compare OS variants:**
 
 ```bash
 # Alpine
-trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Debian
-trivy image --severity HIGH,CRITICAL ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
+trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian
 
 ```
 
@@ -973,7 +973,7 @@ Create `scripts/security-check.sh`:
 #!/bin/bash
 set -e
 
-IMAGE="${1:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}"
+IMAGE="${1:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine}"
 
 echo "🔍 Running security scan on: $IMAGE"
 
@@ -1083,7 +1083,7 @@ jobs:
 
 ```bash
 # Example Trivy table output
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine (alpine 3.19.0)
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine (alpine 3.19.0)
 ================================================================================
 Total: 5 (HIGH: 2, CRITICAL: 3)
 

@@ -35,7 +35,7 @@ EOF
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -88,10 +88,10 @@ curl localhost:8000/health    # Health check
 Use Alpine (smallest), Debian for glibc compatibility:
 
 ```
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine  # ~80MB
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian  # ~150MB
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine  # ~80MB
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian  # ~150MB
 ```
 
 ## Troubleshooting

@@ -64,7 +64,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     ports:
       - "80:80"
       - "9090:9090"  # PHPeek PM metrics

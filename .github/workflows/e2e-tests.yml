@@ -67,7 +67,7 @@ on:
           - 'rootless'
 
 env:
-  REGISTRY: ghcr.io/phpeek/baseimages
+  REGISTRY: ghcr.io/gophpeek/baseimages
 
 jobs:
   # Quick smoke test on every push
@@ -86,6 +86,7 @@ jobs:
       - name: Build test image
         run: |
           docker build \
+            --target root \
             -f php-fpm-nginx/8.3/alpine/Dockerfile \
             -t test-image:local \
             .
@@ -127,6 +128,7 @@ jobs:
       - name: Build test image
         run: |
           docker build \
+            --target root \
             -f php-fpm-nginx/8.3/alpine/Dockerfile \
             -t test-image:local \
             .
@@ -237,26 +239,26 @@ jobs:
             alpine)
               docker build --target rootless \
                 -f php-base/${{ matrix.php_version }}/alpine/Dockerfile \
-                -t ghcr.io/phpeek/baseimages/php-base:${{ matrix.php_version }}-alpine-rootless .
+                -t ghcr.io/gophpeek/baseimages/php-base:${{ matrix.php_version }}-alpine-rootless .
               docker build --target rootless \
                 -f php-fpm/${{ matrix.php_version }}/alpine/Dockerfile \
-                -t ghcr.io/phpeek/baseimages/php-fpm:${{ matrix.php_version }}-alpine-rootless .
+                -t ghcr.io/gophpeek/baseimages/php-fpm:${{ matrix.php_version }}-alpine-rootless .
               ;;
             bookworm)
               docker build --target rootless \
                 -f php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile \
-                -t ghcr.io/phpeek/baseimages/php-base:${{ matrix.php_version }}-bookworm-rootless .
+                -t ghcr.io/gophpeek/baseimages/php-base:${{ matrix.php_version }}-bookworm-rootless .
               docker build --target rootless \
                 -f php-fpm/${{ matrix.php_version }}/debian/bookworm/Dockerfile \
-                -t ghcr.io/phpeek/baseimages/php-fpm:${{ matrix.php_version }}-bookworm-rootless .
+                -t ghcr.io/gophpeek/baseimages/php-fpm:${{ matrix.php_version }}-bookworm-rootless .
               ;;
             trixie)
               docker build --target rootless \
                 -f php-base/${{ matrix.php_version }}/debian/trixie/Dockerfile \
-                -t ghcr.io/phpeek/baseimages/php-base:${{ matrix.php_version }}-trixie-rootless .
+                -t ghcr.io/gophpeek/baseimages/php-base:${{ matrix.php_version }}-trixie-rootless .
               docker build --target rootless \
                 -f php-fpm/${{ matrix.php_version }}/debian/trixie/Dockerfile \
-                -t ghcr.io/phpeek/baseimages/php-fpm:${{ matrix.php_version }}-trixie-rootless .
+                -t ghcr.io/gophpeek/baseimages/php-fpm:${{ matrix.php_version }}-trixie-rootless .
               ;;
           esac
 
@@ -323,6 +325,7 @@ jobs:
       - name: Build test image
         run: |
           docker build \
+            --target root \
             -f ${{ steps.dockerfile.outputs.path }} \
             -t test-image:${{ matrix.php_version }}-${{ matrix.os_variant }} \
             .
@@ -400,6 +403,7 @@ jobs:
       - name: Build test image
         run: |
           docker build \
+            --target root \
             -f ${{ steps.dockerfile.outputs.path }} \
             -t test-image:${{ matrix.php_version }}-${{ matrix.os_variant }} \
             .

@@ -1,6 +1,6 @@
 # Bitbucket Pipelines for Laravel with PHPeek
 
-image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 definitions:
   services:

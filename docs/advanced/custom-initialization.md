@@ -15,7 +15,7 @@ PHPeek provides hooks for running custom code at container startup. Use these fo
 Place executable scripts in `/docker-entrypoint-init.d/`:
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 COPY scripts/init-*.sh /docker-entrypoint-init.d/
 RUN chmod +x /docker-entrypoint-init.d/*.sh
@@ -37,7 +37,7 @@ Use built-in Laravel features:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       LARAVEL_MIGRATE_ENABLED: "true"    # Run migrations
       LARAVEL_OPTIMIZE_ENABLED: "true"   # Cache config/routes
@@ -48,7 +48,7 @@ services:
 For complete control:
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 COPY custom-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 RUN chmod +x /usr/local/bin/custom-entrypoint.sh
@@ -254,7 +254,7 @@ fi
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     volumes:
       - .:/var/www/html
       - ./docker/init:/docker-entrypoint-init.d:ro
@@ -313,7 +313,7 @@ spec:
 
         # Run migrations
         - name: migrations
-          image: ghcr.io/phpeek/baseimages/php-cli:8.4-alpine
+          image: ghcr.io/gophpeek/baseimages/php-cli:8.4-alpine
           command: ['php', 'artisan', 'migrate', '--force']
           volumeMounts:
             - name: app
@@ -321,7 +321,7 @@ spec:
 
       containers:
         - name: app
-          image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+          image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 ```
 
 ### Lifecycle Hooks
@@ -329,7 +329,7 @@ spec:
 ```yaml
 containers:
   - name: app
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     lifecycle:
       postStart:
         exec:

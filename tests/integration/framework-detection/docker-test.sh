@@ -48,7 +48,7 @@ test_laravel_container() {
     docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/laravel:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine \
+        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine \
         -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/laravel-test.log 2>&1
 
     RESULT=$(cat /tmp/laravel-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
@@ -78,7 +78,7 @@ test_symfony_container() {
     docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/symfony:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian \
+        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian \
         -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/symfony-test.log 2>&1
 
     RESULT=$(cat /tmp/symfony-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
@@ -107,7 +107,7 @@ test_wordpress_container() {
     docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/wordpress:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-ubuntu \
+        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-ubuntu \
         -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/wordpress-test.log 2>&1
 
     RESULT=$(cat /tmp/wordpress-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
@@ -135,7 +135,7 @@ test_generic_container() {
     docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/generic:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine \
+        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine \
         -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/generic-test.log 2>&1
 
     RESULT=$(cat /tmp/generic-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")

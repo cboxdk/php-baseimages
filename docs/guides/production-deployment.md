@@ -57,7 +57,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     secrets:
       - app_key
       - db_password
@@ -195,7 +195,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     restart: unless-stopped
     volumes:
       - ./:/var/www/html:ro  # Read-only for security
@@ -397,7 +397,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+        image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
         ports:
         - containerPort: 80
           name: http

@@ -21,7 +21,7 @@
 services:
   app:
     # Use php-fpm-nginx image for RoadRunner (includes RoadRunner binary)
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     container_name: octane-roadrunner-app
     restart: unless-stopped
     ports:

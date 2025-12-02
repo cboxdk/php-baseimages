@@ -26,9 +26,9 @@ jobs:
 
       - name: Build test images
         run: |
-          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-          docker build -t ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
+          docker build -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
+          docker build -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-trixie -f php-fpm-nginx/8.3/debian/trixie/Dockerfile .
 
       - name: Run Docker integration tests
         run: |

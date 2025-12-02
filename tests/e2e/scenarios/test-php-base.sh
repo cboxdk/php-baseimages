@@ -7,7 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib/test-utils.sh"
 
-IMAGE="${IMAGE:-ghcr.io/phpeek/baseimages/php-base:8.4-alpine}"
+IMAGE="${IMAGE:-ghcr.io/gophpeek/baseimages/php-base:8.4-alpine}"
 CONTAINER_NAME="phpeek-base-test-$$"
 
 log_section "PHP Base Image Tests"

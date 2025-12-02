@@ -208,7 +208,7 @@ xdebug.start_with_request=yes
 docker exec myapp php -m
 
 # One-liner
-docker run --rm ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine php -m
+docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine php -m
 ```
 
 ### Check Specific Extension
@@ -233,7 +233,7 @@ docker exec myapp php -i | grep -A 10 "redis"
 ### PECL Extensions
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Install PECL extension
 RUN apk add --no-cache $PHPIZE_DEPS && \
@@ -245,7 +245,7 @@ RUN apk add --no-cache $PHPIZE_DEPS && \
 ### Core Extensions
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Enable a disabled core extension
 RUN docker-php-ext-install shmop
@@ -256,7 +256,7 @@ RUN docker-php-ext-install shmop
 Some extensions require system packages:
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 # Example: Installing GMP
 RUN apk add --no-cache gmp-dev && \

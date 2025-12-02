@@ -306,7 +306,7 @@ When mTLS is enabled, client certificate details are available:
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"

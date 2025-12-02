@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine}
+    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine}
     container_name: e2e-drupal-app
     ports:
       - "8097:80"

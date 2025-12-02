@@ -41,7 +41,7 @@ services:
 # After (PHPeek)
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 **2. Update environment variables:**
@@ -109,7 +109,7 @@ services:
 # After (PHPeek)
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     volumes:
       - ./:/var/www/html
 ```
@@ -180,7 +180,7 @@ services:
 # After (PHPeek - combined)
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -195,7 +195,7 @@ FROM php:8.3-fpm
 RUN docker-php-ext-install pdo_mysql redis opcache gd
 
 # After - Extensions pre-installed, no Dockerfile needed!
-# Just use: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+# Just use: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ```
 
 **3. Update configuration method:**
@@ -236,7 +236,7 @@ Check if PHPeek includes everything you need:
 
 ```bash
 # Check included extensions
-docker run --rm ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine php -m
+docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine php -m
 ```
 
 **Option 2: Extend PHPeek Image**
@@ -244,7 +244,7 @@ docker run --rm ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine php -m
 For additional requirements:
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 # Add your custom extensions
 RUN apk add --no-cache ffmpeg

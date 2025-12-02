@@ -3,7 +3,7 @@
 
 services:
   app:
-    image: ${IMAGE:-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine-rootless}
+    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-rootless}
     container_name: e2e-rootless-app
     ports:
       # Rootless uses port 8080 internally, map to 8095 for testing

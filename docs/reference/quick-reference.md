@@ -14,7 +14,7 @@ Copy-paste ready snippets. No configuration needed.
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -31,7 +31,7 @@ docker compose up
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -71,7 +71,7 @@ REDIS_CLIENT=phpredis
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -99,7 +99,7 @@ volumes:
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8000:80"
     volumes:
@@ -203,17 +203,17 @@ docker compose exec app php artisan test
 
 ```
 # Alpine (smallest, ~80MB)
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.2-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-alpine
 
 # Debian (glibc, ~150MB)
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-debian
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-debian
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian
 
 # Development (with Xdebug)
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
-ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian-dev
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-dev
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian-dev
 ```
 
 ---
@@ -236,7 +236,7 @@ Verify: `docker compose exec app php -m`
 ## Add Custom Extension
 
 ```dockerfile
-FROM ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 
 RUN apk add --no-cache $PHPIZE_DEPS \
     && pecl install swoole \

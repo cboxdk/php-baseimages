@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/test-utils.sh"
 
 # Default configuration
-DEFAULT_IMAGE="ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine"
+DEFAULT_IMAGE="ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine"
 SCENARIOS_DIR="$SCRIPT_DIR/scenarios"
 PARALLEL=${PARALLEL:-false}
 VERBOSE=${VERBOSE:-false}
@@ -30,8 +30,8 @@ usage() {
     echo ""
     echo "Examples:"
     echo "  $0                                              # Test default image, all scenarios"
-    echo "  $0 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.4-alpine"
-    echo "  $0 ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-debian laravel"
+    echo "  $0 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine"
+    echo "  $0 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian laravel"
     echo "  $0 local-test-image:latest plain-php"
     exit 1
 }

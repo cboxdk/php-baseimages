@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     ports:
       - "8082:80"
     volumes:
@@ -128,7 +128,7 @@ docker compose exec app vendor/bin/typo3 scheduler:run
 ```yaml
 services:
   app:
-    image: ghcr.io/phpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
     environment:
       - APP_ENV=production
       - PHP_DISPLAY_ERRORS=Off
