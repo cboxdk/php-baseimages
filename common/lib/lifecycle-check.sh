@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # ============================================================================
 # PHPeek Base Images - Lifecycle Check (Runtime)
 # ============================================================================
@@ -14,9 +14,11 @@
 # To suppress warnings:
 #   PHPEEK_SUPPRESS_WARNINGS=true
 # ============================================================================
+# shellcheck shell=sh
 
 # Colors (only if terminal supports it)
-if [[ -t 1 ]]; then
+# Use POSIX [ -t 1 ] instead of bash [[ -t 1 ]]
+if [ -t 1 ]; then
     RED='\033[0;31m'
     YELLOW='\033[1;33m'
     BLUE='\033[0;34m'
@@ -29,10 +31,10 @@ else
 fi
 
 phpeek_lifecycle_check() {
-    # Skip if warnings are suppressed
-    [[ "${PHPEEK_SUPPRESS_WARNINGS:-false}" == "true" ]] && return 0
+    # Skip if warnings are suppressed (POSIX compatible string comparison)
+    [ "${PHPEEK_SUPPRESS_WARNINGS:-false}" = "true" ] && return 0
 
-    local lifecycle="${PHPEEK_LIFECYCLE:-stable}"
+    lifecycle="${PHPEEK_LIFECYCLE:-stable}"
 
     case "$lifecycle" in
         stable)
@@ -113,5 +115,5 @@ phpeek_lifecycle_check() {
     esac
 }
 
-# Export for use in entrypoints
-export -f phpeek_lifecycle_check 2>/dev/null || true
+# Note: Functions defined in sourced scripts are available to the sourcing script
+# No need to export functions in POSIX sh - the function is available after sourcing
