@@ -14,7 +14,7 @@ CONTAINER_NAME="e2e-plain-php"
 BASE_URL="http://localhost:8090"
 
 # Cleanup on exit (preserve exit code for CI)
-trap '_ec=$?; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; exit $_ec' EXIT
+trap '_ec=$?; log_info "Exit trap: captured exit code $_ec"; cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"; log_info "Exit trap: exiting with $_ec"; exit $_ec' EXIT
 
 log_section "Plain PHP E2E Test"
 
