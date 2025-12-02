@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
     cron \
     libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif16 libmagickwand-6.q16-7 \
+    libwebp7 libavif15 libmagickwand-6.q16-6 \
     libvips42 libvips-tools \
     libpq5 libicu72 libzip4 \
     libxml2 libxslt1.1 libldap-2.5-0 \
@@ -95,7 +95,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
     cron \
     libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif16 libmagickwand-6.q16-7 \
+    libwebp7 libavif15 libmagickwand-6.q16-6 \
     libvips42 libvips-tools \
     libpq5 libicu72 libzip4 \
     libxml2 libxslt1.1 libldap-2.5-0 \
