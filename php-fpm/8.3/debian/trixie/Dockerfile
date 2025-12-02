@@ -56,8 +56,8 @@ COPY --from=base-root /usr/bin/composer /usr/bin/composer
 # Copy PHPeek PM from base image
 COPY --from=base-root /usr/local/bin/phpeek-pm /usr/local/bin/phpeek-pm
 
-# Copy ImageMagick policy from base image (Debian uses ImageMagick-6)
-COPY --from=base-root /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+# Copy ImageMagick policy from base image (Trixie uses ImageMagick-7)
+COPY --from=base-root /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 
 # Copy FPM-specific configurations
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
@@ -128,8 +128,8 @@ COPY --from=base-rootless /usr/bin/composer /usr/bin/composer
 # Copy PHPeek PM from base image
 COPY --from=base-rootless /usr/local/bin/phpeek-pm /usr/local/bin/phpeek-pm
 
-# Copy ImageMagick policy from base image (Debian uses ImageMagick-6)
-COPY --from=base-rootless /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+# Copy ImageMagick policy from base image (Trixie uses ImageMagick-7)
+COPY --from=base-rootless /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 
 # Copy FPM-specific configurations
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
