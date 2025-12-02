@@ -25,9 +25,11 @@ RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
 # Fix nginx user for Alpine (runs as nginx by default, we want www-data)
 # Also fix conf.d include: Alpine nginx package includes conf.d at root context,
 # but we need it inside http block for server directives to work
+# Remove Alpine's default 404 server to prevent conflicts with our default_server
 RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || true && \
     sed -i '/^include \/etc\/nginx\/conf\.d\/\*\.conf;/d' /etc/nginx/nginx.conf && \
-    sed -i '/include \/etc\/nginx\/http\.d\/\*\.conf;/i\    include /etc/nginx/conf.d/*.conf;' /etc/nginx/nginx.conf
+    sed -i '/include \/etc\/nginx\/http\.d\/\*\.conf;/i\    include /etc/nginx/conf.d/*.conf;' /etc/nginx/nginx.conf && \
+    rm -f /etc/nginx/http.d/default.conf
 
 # Copy Nginx configuration
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
@@ -81,9 +83,11 @@ RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
 # Fix nginx user for Alpine (runs as nginx by default, we want www-data)
 # Also fix conf.d include: Alpine nginx package includes conf.d at root context,
 # but we need it inside http block for server directives to work
+# Remove Alpine's default 404 server to prevent conflicts with our default_server
 RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || true && \
     sed -i '/^include \/etc\/nginx\/conf\.d\/\*\.conf;/d' /etc/nginx/nginx.conf && \
-    sed -i '/include \/etc\/nginx\/http\.d\/\*\.conf;/i\    include /etc/nginx/conf.d/*.conf;' /etc/nginx/nginx.conf
+    sed -i '/include \/etc\/nginx\/http\.d\/\*\.conf;/i\    include /etc/nginx/conf.d/*.conf;' /etc/nginx/nginx.conf && \
+    rm -f /etc/nginx/http.d/default.conf
 
 # Copy Nginx configuration (rootless version with port 8080)
 COPY php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
