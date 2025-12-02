@@ -55,8 +55,8 @@ test_laravel_container() {
 
     RESULT=$(cat /tmp/laravel-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
-    # Cleanup
-    rm -rf tests/integration/framework-detection/fixtures/laravel
+    # Cleanup - use sudo because container may create files owned by root
+    sudo rm -rf tests/integration/framework-detection/fixtures/laravel || rm -rf tests/integration/framework-detection/fixtures/laravel 2>/dev/null || true
     rm -f /tmp/laravel-test.log
 
     if [ "$RESULT" = "laravel" ]; then
@@ -85,8 +85,8 @@ test_symfony_container() {
 
     RESULT=$(cat /tmp/symfony-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
-    # Cleanup
-    rm -rf tests/integration/framework-detection/fixtures/symfony
+    # Cleanup - use sudo because container may create files owned by root
+    sudo rm -rf tests/integration/framework-detection/fixtures/symfony || rm -rf tests/integration/framework-detection/fixtures/symfony 2>/dev/null || true
     rm -f /tmp/symfony-test.log
 
     if [ "$RESULT" = "symfony" ]; then
@@ -114,8 +114,8 @@ test_wordpress_container() {
 
     RESULT=$(cat /tmp/wordpress-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
-    # Cleanup
-    rm -rf tests/integration/framework-detection/fixtures/wordpress
+    # Cleanup - use sudo because container may create files owned by root
+    sudo rm -rf tests/integration/framework-detection/fixtures/wordpress || rm -rf tests/integration/framework-detection/fixtures/wordpress 2>/dev/null || true
     rm -f /tmp/wordpress-test.log
 
     if [ "$RESULT" = "wordpress" ]; then
@@ -142,8 +142,8 @@ test_generic_container() {
 
     RESULT=$(cat /tmp/generic-test.log | grep -o "laravel\|symfony\|wordpress\|generic" || echo "error")
 
-    # Cleanup
-    rm -rf tests/integration/framework-detection/fixtures/generic
+    # Cleanup - use sudo because container may create files owned by root
+    sudo rm -rf tests/integration/framework-detection/fixtures/generic || rm -rf tests/integration/framework-detection/fixtures/generic 2>/dev/null || true
     rm -f /tmp/generic-test.log
 
     if [ "$RESULT" = "generic" ]; then
