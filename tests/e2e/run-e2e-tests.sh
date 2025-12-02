@@ -98,9 +98,15 @@ run_scenario() {
     log_info "Running scenario: $scenario_name"
 
     if [ "$VERBOSE" = "true" ]; then
-        if bash "$scenario_file"; then
+        echo "[RUNNER DEBUG] Running: bash $scenario_file"
+        bash "$scenario_file"
+        local scenario_exit_code=$?
+        echo "[RUNNER DEBUG] Scenario exit code: $scenario_exit_code"
+        if [ "$scenario_exit_code" -eq 0 ]; then
+            echo "[RUNNER DEBUG] Returning 0 (success)"
             return 0
         else
+            echo "[RUNNER DEBUG] Returning 1 (failure)"
             return 1
         fi
     else
