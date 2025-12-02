@@ -15,16 +15,25 @@ BASE_URL="http://localhost:8098"
 # Global to track the script's intended exit code
 SCRIPT_EXIT_CODE=0
 
-# Cleanup on exit - use global variable to avoid $? issues
+# Cleanup on exit - completely isolated from strict modes
 cleanup_and_exit() {
-    # Disable all strict modes first
+    # Capture desired exit code FIRST before any commands
+    local desired_exit="${SCRIPT_EXIT_CODE:-0}"
+
+    # Disable all strict modes
     set +e
     set +u
     set +o pipefail
-    # Run cleanup
-    cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" 2>/dev/null || true
-    # Exit with the stored exit code
-    exit ${SCRIPT_EXIT_CODE:-0}
+
+    # Run cleanup in a fully isolated subshell
+    (
+        set +e +u +o pipefail 2>/dev/null
+        cleanup_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME" 2>/dev/null
+        true
+    ) 2>/dev/null || true
+
+    # Force the exact exit code we want
+    exit "$desired_exit"
 }
 trap cleanup_and_exit EXIT
 
