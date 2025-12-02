@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie', 'ubuntu']
+        os_variant: ['alpine', 'bookworm']
 
     permissions:
       contents: read
@@ -59,12 +59,6 @@ jobs:
               ;;
             bookworm)
               echo "path=./php-swoole/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-              ;;
-            trixie)
-              echo "path=./php-swoole/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
-              ;;
-            ubuntu)
-              echo "path=./php-swoole/${{ matrix.php_version }}/ubuntu/Dockerfile" >> $GITHUB_OUTPUT
               ;;
           esac
 
