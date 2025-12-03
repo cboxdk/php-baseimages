@@ -153,7 +153,22 @@ jobs:
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
           docker pull $IMAGE
           docker run -d --name test-multi -p 8080:80 $IMAGE
-          sleep 10
+
+          # Wait for container to become healthy (max 60 seconds)
+          echo "Waiting for container to become healthy..."
+          for i in {1..60}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-multi 2>/dev/null || echo "unknown")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "Container is healthy after ${i}s"
+              break
+            elif [ "$STATUS" = "unhealthy" ]; then
+              echo "Container became unhealthy after ${i}s"
+              docker logs test-multi
+              exit 1
+            fi
+            sleep 1
+          done
+
           echo "=== Container logs ===" && docker logs test-multi || true
           echo "=== Container status ===" && docker ps -a --filter name=test-multi || true
           # Health check from inside container (nginx /health blocks external IPs)
@@ -283,7 +298,22 @@ jobs:
           docker pull $IMAGE
           # Rootless uses port 8080 instead of 80
           docker run -d --name test-rootless -p 8082:8080 $IMAGE
-          sleep 10
+
+          # Wait for container to become healthy (max 60 seconds)
+          echo "Waiting for container to become healthy..."
+          for i in {1..60}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-rootless 2>/dev/null || echo "unknown")
+            if [ "$STATUS" = "healthy" ]; then
+              echo "Container is healthy after ${i}s"
+              break
+            elif [ "$STATUS" = "unhealthy" ]; then
+              echo "Container became unhealthy after ${i}s"
+              docker logs test-rootless
+              exit 1
+            fi
+            sleep 1
+          done
+
           echo "=== Container logs ===" && docker logs test-rootless || true
           echo "=== Container status ===" && docker ps -a --filter name=test-rootless || true
           # Verify running as non-root (www-data = uid 82 on Alpine, 33 on Debian)
