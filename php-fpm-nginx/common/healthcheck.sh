@@ -25,7 +25,12 @@ fi
 
 # Configuration
 METRICS_PORT="${PHPEEK_PM_METRICS_PORT:-9090}"
-NGINX_PORT="${NGINX_HTTP_PORT:-80}"
+# Default to 8080 for rootless containers, 80 for root
+if [ "${PHPEEK_ROOTLESS:-false}" = "true" ]; then
+    NGINX_PORT="${NGINX_HTTP_PORT:-8080}"
+else
+    NGINX_PORT="${NGINX_HTTP_PORT:-80}"
+fi
 PHP_FPM_PORT="9000"
 
 FAILURES=0

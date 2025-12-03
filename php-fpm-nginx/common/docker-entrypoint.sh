@@ -260,9 +260,14 @@ generate_runtime_configs() {
 
     # Nginx configuration
     if [ -f /etc/nginx/conf.d/default.conf.template ]; then
-        # Set defaults
-        : ${NGINX_HTTP_PORT:=80}
-        : ${NGINX_HTTPS_PORT:=443}
+        # Set defaults (rootless uses unprivileged ports)
+        if is_rootless; then
+            : ${NGINX_HTTP_PORT:=8080}
+            : ${NGINX_HTTPS_PORT:=8443}
+        else
+            : ${NGINX_HTTP_PORT:=80}
+            : ${NGINX_HTTPS_PORT:=443}
+        fi
         : ${NGINX_WEBROOT:=/var/www/html/public}
         : ${NGINX_INDEX:=index.php index.html}
         : ${NGINX_CLIENT_MAX_BODY_SIZE:=100M}
