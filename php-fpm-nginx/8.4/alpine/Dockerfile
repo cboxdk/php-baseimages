@@ -77,8 +77,9 @@ USER root
 RUN apk add --no-cache nginx gettext
 
 # Create nginx directories with www-data ownership
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx
+# Note: Alpine nginx uses /var/lib/nginx for tmp dirs and internal logs
+RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx/tmp && \
+    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx
 
 # Fix nginx user for Alpine (runs as nginx by default, we want www-data)
 # Also fix conf.d include: Alpine nginx package includes conf.d at root context,

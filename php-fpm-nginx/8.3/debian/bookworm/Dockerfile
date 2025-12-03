@@ -77,14 +77,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories with www-data ownership
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx
+# Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
+RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx && \
+    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Remove default site that conflicts with our configuration
 # Comment out user directive since we run as non-root (www-data can't switch users)
+# Move PID file to /run/nginx/ which we own (Debian default is /run/nginx.pid in root-owned /run/)
 RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || true && \
     sed -i 's/^user www-data;/# user www-data;/' /etc/nginx/nginx.conf && \
+    sed -i 's|pid /run/nginx.pid;|pid /run/nginx/nginx.pid;|' /etc/nginx/nginx.conf && \
     rm -f /etc/nginx/sites-enabled/default
 
 # Copy Nginx configuration (rootless version with port 8080)
