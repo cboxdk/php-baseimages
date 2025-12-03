@@ -116,8 +116,8 @@ All framework guides follow these principles:
 - **Quick answers**: Check [Common Issues](../troubleshooting/common-issues)
 - **Debugging**: Use our [Debugging Guide](../troubleshooting/debugging-guide)
 - **Migration**: See our [Migration Guide](../troubleshooting/migration-guide)
-- **Community**: Join [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
+- **Community**: Join [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
 
 ---
 
-**Can't find your framework?** Check the [Community Guides](https://github.com/phpeek/baseimages/discussions/categories/guides) or create one and share it!
+**Can't find your framework?** Check the [Community Guides](https://github.com/gophpeek/baseimages/discussions/categories/guides) or create one and share it!

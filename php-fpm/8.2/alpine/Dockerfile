@@ -17,7 +17,7 @@ FROM php:8.2-fpm-alpine AS root
 LABEL org.opencontainers.image.title="PHPeek PHP-FPM 8.2 Alpine"
 LABEL org.opencontainers.image.description="PHP-FPM with all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Copy runtime dependencies from base
 RUN apk add --no-cache \
@@ -93,7 +93,7 @@ FROM php:8.2-fpm-alpine AS rootless
 LABEL org.opencontainers.image.title="PHPeek PHP-FPM 8.2 Alpine (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with all extensions, Composer, Node.js, and PHPeek PM - Rootless"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Copy runtime dependencies from base
 RUN apk add --no-cache \

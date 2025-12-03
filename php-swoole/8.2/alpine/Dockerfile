@@ -10,7 +10,7 @@ FROM ghcr.io/gophpeek/baseimages/php-base:8.2-alpine
 LABEL org.opencontainers.image.title="PHPeek Swoole 8.2 Alpine"
 LABEL org.opencontainers.image.description="PHP with Swoole, all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Install Swoole build dependencies and compile
 RUN apk add --no-cache --virtual .build-deps \

@@ -7,7 +7,7 @@ FROM ghcr.io/gophpeek/baseimages/php-base:8.3-ubuntu
 LABEL org.opencontainers.image.title="PHPeek OpenSwoole 8.3 Ubuntu"
 LABEL org.opencontainers.image.description="PHP with OpenSwoole, all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 RUN apt-get update && \
     if apt-cache show php8.3-openswoole >/dev/null 2>&1; then \

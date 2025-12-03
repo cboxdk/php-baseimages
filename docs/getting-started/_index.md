@@ -38,4 +38,4 @@ Once you've completed the getting started guides:
 
 ---
 
-**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues) or [GitHub Discussions](https://github.com/phpeek/baseimages/discussions).
+**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues) or [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).

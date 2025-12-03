@@ -1,7 +1,7 @@
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  PHPeek PM Configuration (Rootless)                                       ║
 # ║  Process Manager for PHP Docker Containers - Unprivileged Port 8080       ║
-# ║  https://github.com/phpeek/phpeek-pm                                    ║
+# ║  https://github.com/gophpeek/phpeek-pm                                    ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 
 version: "1.0"

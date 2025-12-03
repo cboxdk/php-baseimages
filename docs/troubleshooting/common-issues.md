@@ -387,4 +387,4 @@ When something isn't working:
 
 ---
 
-**Still stuck?** Ask in [GitHub Discussions](https://github.com/phpeek/baseimages/discussions).
+**Still stuck?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).

@@ -10,7 +10,7 @@ FROM ghcr.io/gophpeek/baseimages/php-base:8.2-ubuntu
 LABEL org.opencontainers.image.title="PHPeek FrankenPHP 8.2 Ubuntu"
 LABEL org.opencontainers.image.description="FrankenPHP with all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Install FrankenPHP dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

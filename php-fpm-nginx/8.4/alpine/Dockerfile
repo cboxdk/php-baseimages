@@ -13,7 +13,7 @@ FROM ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine AS root
 LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.4 Alpine"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Install Nginx
 RUN apk add --no-cache nginx gettext
@@ -68,7 +68,7 @@ FROM ghcr.io/gophpeek/baseimages/php-fpm:8.4-alpine-rootless AS rootless
 LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.4 Alpine (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and PHPeek PM - Rootless"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Switch to root temporarily for setup
 USER root

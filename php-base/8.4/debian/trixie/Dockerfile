@@ -26,7 +26,7 @@ FROM php:8.4-cli-trixie AS base
 LABEL org.opencontainers.image.title="PHPeek PHP Base 8.4 Trixie"
 LABEL org.opencontainers.image.description="Base PHP image with all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Re-declare ARGs after FROM (they don't persist)
 ARG REDIS_VERSION

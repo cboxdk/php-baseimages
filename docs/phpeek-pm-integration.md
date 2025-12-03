@@ -668,12 +668,12 @@ environment:
 
 ## Resources
 
-- **PHPeek PM Repository**: https://github.com/phpeek/phpeek-pm
+- **PHPeek PM Repository**: https://github.com/gophpeek/phpeek-pm
 - **Environment Variables**: See [phpeek-pm-environment-variables.md](./phpeek-pm-environment-variables.md)
 - **Example Configs**: See examples throughout this documentation
 
 ## Support
 
 For issues and feature requests:
-- PHPeek Base Images: [GitHub Issues](https://github.com/phpeek/baseimages/issues)
-- PHPeek PM: [GitHub Issues](https://github.com/phpeek/phpeek-pm/issues)
+- PHPeek Base Images: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+- PHPeek PM: [GitHub Issues](https://github.com/gophpeek/phpeek-pm/issues)

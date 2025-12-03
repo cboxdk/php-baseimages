@@ -260,9 +260,9 @@ Inspired by ServerSideUp's excellent documentation standards.
 
 ## 💬 Get Help
 
-- **Documentation Issues:** [GitHub Issues](https://github.com/phpeek/baseimages/issues) (label: documentation)
-- **General Questions:** [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
-- **Security Issues:** [GitHub Security Advisories](https://github.com/phpeek/baseimages/security)
+- **Documentation Issues:** [GitHub Issues](https://github.com/gophpeek/baseimages/issues) (label: documentation)
+- **General Questions:** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Security Issues:** [GitHub Security Advisories](https://github.com/gophpeek/baseimages/security)
 
 ---
 

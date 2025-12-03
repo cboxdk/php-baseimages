@@ -17,7 +17,7 @@ FROM php:8.3-fpm-bookworm AS root
 LABEL org.opencontainers.image.title="PHPeek PHP-FPM 8.3 Debian"
 LABEL org.opencontainers.image.description="PHP-FPM with all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Copy runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -91,7 +91,7 @@ FROM php:8.3-fpm-bookworm AS rootless
 LABEL org.opencontainers.image.title="PHPeek PHP-FPM 8.3 Debian (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with all extensions, Composer, Node.js, and PHPeek PM - Rootless"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Copy runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

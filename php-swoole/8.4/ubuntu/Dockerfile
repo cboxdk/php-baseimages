@@ -11,7 +11,7 @@ FROM ghcr.io/gophpeek/baseimages/php-base:8.4-ubuntu
 LABEL org.opencontainers.image.title="PHPeek Swoole 8.4 Ubuntu"
 LABEL org.opencontainers.image.description="PHP with Swoole, all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Install Swoole from Ondrej PPA (if available) or compile
 RUN apt-get update && \

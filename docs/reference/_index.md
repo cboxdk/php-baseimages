@@ -91,7 +91,7 @@ Reference documentation links to:
 
 Found an undocumented variable or option?
 
-1. Check existing issues: [GitHub Issues](https://github.com/phpeek/baseimages/issues)
+1. Check existing issues: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
 2. Submit a pull request with documentation
 3. Include example usage and expected behavior
 

@@ -157,8 +157,8 @@ Document all customizations in your repository:
 - **Quick Answers**: [Common Issues](../troubleshooting/common-issues)
 - **Debugging**: [Debugging Guide](../troubleshooting/debugging-guide)
 - **Reference**: [Environment Variables](../reference/environment-variables)
-- **Community**: [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
+- **Community**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
 
 ---
 
-**Want to contribute?** Share your customization patterns in [GitHub Discussions](https://github.com/phpeek/baseimages/discussions/categories/show-and-tell)!
+**Want to contribute?** Share your customization patterns in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions/categories/show-and-tell)!

@@ -1,7 +1,7 @@
 FROM nginx:1.27
 
 LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 LABEL org.opencontainers.image.description="Nginx 1.27 Debian Trixie - Optimized for PHP"
 
 ARG TARGETPLATFORM

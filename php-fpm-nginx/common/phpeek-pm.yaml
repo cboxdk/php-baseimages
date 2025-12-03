@@ -1,7 +1,7 @@
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  PHPeek PM Configuration                                                   ║
 # ║  Process Manager for PHP Docker Containers                                ║
-# ║  https://github.com/phpeek/phpeek-pm                                    ║
+# ║  https://github.com/gophpeek/phpeek-pm                                    ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 
 version: "1.0"

@@ -185,5 +185,5 @@ Ready to try PHPeek?
 ## Support
 
 - **Documentation**: You're reading it!
-- **Issues**: [GitHub Issues](https://github.com/phpeek/baseimages/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
+- **Issues**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)

@@ -2,14 +2,14 @@
 
 Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions, multiple OS variants, and no unnecessary complexity.
 
-[![Build Status](https://github.com/phpeek/baseimages/workflows/Build/badge.svg)](https://github.com/phpeek/baseimages/actions)
-[![Security Scan](https://github.com/phpeek/baseimages/workflows/Security/badge.svg)](https://github.com/phpeek/baseimages/security)
+[![Build Status](https://github.com/gophpeek/baseimages/workflows/Build/badge.svg)](https://github.com/gophpeek/baseimages/actions)
+[![Security Scan](https://github.com/gophpeek/baseimages/workflows/Security/badge.svg)](https://github.com/gophpeek/baseimages/security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎯 Philosophy
 
 - **Two Editions**: Minimal (Laravel-optimized, 17 extensions) OR Full (comprehensive, 32+ extensions)
-- **Flexible Process Management**: Choose simple bash OR production-grade [PHPeek PM](https://github.com/phpeek/phpeek-pm)
+- **Flexible Process Management**: Choose simple bash OR production-grade [PHPeek PM](https://github.com/gophpeek/phpeek-pm)
 - **Flexible Architecture**: Choose single-process OR multi-service containers
 - **Multiple Variants**: Alpine 3.21, Debian 12 (Bookworm), Debian 13 (Trixie)
 - **Framework Optimized**: Auto-detection for Laravel, Symfony, WordPress
@@ -319,7 +319,7 @@ services:
 
 ```bash
 # Clone repository
-git clone https://github.com/phpeek/baseimages.git
+git clone https://github.com/gophpeek/baseimages.git
 cd baseimages
 
 # Build multi-service images (Alpine, Bookworm, Trixie)
@@ -490,15 +490,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Credits
 
-Built by [PHPeek](https://github.com/phpeek) team.
+Built by [PHPeek](https://github.com/gophpeek) team.
 
 Inspired by the PHP community's need for clean, no-nonsense base images without unnecessary complexity.
 
 ## 💬 Support
 
 - **Documentation:** [docs/](docs/)
-- **Issues:** [GitHub Issues](https://github.com/phpeek/baseimages/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
+- **Issues:** [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
 - **Security:** [SECURITY.md](SECURITY.md)
 
 ---

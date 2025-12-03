@@ -9,7 +9,7 @@ FROM ghcr.io/gophpeek/baseimages/php-base:8.2-alpine
 LABEL org.opencontainers.image.title="PHPeek OpenSwoole 8.2 Alpine"
 LABEL org.opencontainers.image.description="PHP with OpenSwoole, all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 RUN apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS openssl-dev curl-dev c-ares-dev postgresql-dev linux-headers \

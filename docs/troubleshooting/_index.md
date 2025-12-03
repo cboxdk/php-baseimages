@@ -105,7 +105,7 @@ docker-compose exec app nc -zv mysql 3306
 1. **Check logs**: `docker-compose logs -f app`
 2. **Search common issues**: Read [Common Issues](common-issues)
 3. **Try debugging guide**: Follow [Debugging Guide](debugging-guide)
-4. **Search GitHub**: Check [existing issues](https://github.com/phpeek/baseimages/issues)
+4. **Search GitHub**: Check [existing issues](https://github.com/gophpeek/baseimages/issues)
 
 ### When Asking for Help
 
@@ -133,10 +133,10 @@ docker-compose logs app > logs.txt
 
 ### Support Channels
 
-- **Documentation Issues**: [GitHub Issues](https://github.com/phpeek/baseimages/issues) (label: documentation)
-- **Bug Reports**: [GitHub Issues](https://github.com/phpeek/baseimages/issues) (label: bug)
-- **Questions**: [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
-- **Security Issues**: [GitHub Security Advisories](https://github.com/phpeek/baseimages/security)
+- **Documentation Issues**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues) (label: documentation)
+- **Bug Reports**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues) (label: bug)
+- **Questions**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Security Issues**: [GitHub Security Advisories](https://github.com/gophpeek/baseimages/security)
 
 ## Common Problem Categories
 
@@ -212,8 +212,8 @@ Found a solution not documented here?
 
 1. Check [Contributing Guide](../../CONTRIBUTING.md)
 2. Submit documentation PR
-3. Share in [GitHub Discussions](https://github.com/phpeek/baseimages/discussions/categories/show-and-tell)
+3. Share in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions/categories/show-and-tell)
 
 ---
 
-**Can't find what you're looking for?** Ask in [GitHub Discussions](https://github.com/phpeek/baseimages/discussions).
+**Can't find what you're looking for?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).

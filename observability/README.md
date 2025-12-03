@@ -141,4 +141,4 @@ groups:
 
 - [PHPeek Documentation](https://phpeek.com/docs)
 - [PHPeek PM Integration Guide](../docs/phpeek-pm-integration.md)
-- [GitHub Issues](https://github.com/phpeek/baseimages/issues)
+- [GitHub Issues](https://github.com/gophpeek/baseimages/issues)

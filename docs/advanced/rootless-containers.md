@@ -411,4 +411,4 @@ docker build -t myapp:rootless .
 
 ---
 
-**Need help?** [GitHub Discussions](https://github.com/phpeek/baseimages/discussions) | [Security Guide](security-hardening.md)
+**Need help?** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions) | [Security Guide](security-hardening.md)

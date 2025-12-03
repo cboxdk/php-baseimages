@@ -16,7 +16,7 @@ FROM base-root AS root
 LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.4 Trixie"
 LABEL org.opencontainers.image.description="PHP CLI with all extensions, Composer, Node.js, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
@@ -36,7 +36,7 @@ FROM base-rootless AS rootless
 LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.4 Trixie (Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with all extensions, Composer, Node.js, and PHPeek PM - Rootless"
 LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/phpeek/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Copy as root temporarily for permissions
 USER root

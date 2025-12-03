@@ -337,8 +337,8 @@ docker-compose exec app php -m | grep extension_name
 Need help with migration?
 
 1. **Check examples:** See [guides section](../guides) for your framework
-2. **Search issues:** [GitHub Issues](https://github.com/phpeek/baseimages/issues)
-3. **Ask community:** [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
+2. **Search issues:** [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+3. **Ask community:** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
 
 ## Related Documentation
 
@@ -349,4 +349,4 @@ Need help with migration?
 
 ---
 
-**Migration questions?** Ask in [GitHub Discussions](https://github.com/phpeek/baseimages/discussions).
+**Migration questions?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).

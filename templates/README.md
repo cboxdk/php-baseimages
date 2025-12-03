@@ -405,5 +405,5 @@ docker-compose build --no-cache app
 ## Need Help?
 
 - 📖 [Full Documentation](../docs/)
-- 💬 [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
-- 🐛 [Report Issues](https://github.com/phpeek/baseimages/issues)
+- 💬 [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- 🐛 [Report Issues](https://github.com/gophpeek/baseimages/issues)

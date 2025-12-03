@@ -113,6 +113,6 @@ docker compose exec app cat /etc/phpeek-version
 
 ## Reporting Issues
 
-- **Bugs**: [GitHub Issues](https://github.com/phpeek/baseimages/issues)
-- **Security**: See [SECURITY.md](https://github.com/phpeek/baseimages/blob/main/SECURITY.md)
-- **Questions**: [GitHub Discussions](https://github.com/phpeek/baseimages/discussions)
+- **Bugs**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+- **Security**: See [SECURITY.md](https://github.com/gophpeek/baseimages/blob/main/SECURITY.md)
+- **Questions**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)

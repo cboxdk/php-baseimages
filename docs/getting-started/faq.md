@@ -351,7 +351,7 @@ FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
 
 ### Where can I report issues?
 
-GitHub Issues: [github.com/phpeek/baseimages/issues](https://github.com/phpeek/baseimages/issues)
+GitHub Issues: [github.com/gophpeek/baseimages/issues](https://github.com/gophpeek/baseimages/issues)
 
 ### How do I contribute?
 

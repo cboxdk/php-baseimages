@@ -4,7 +4,7 @@ set -e
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  PHPeek Base Image - Docker Entrypoint                                    ║
 # ║  Powered by PHPeek PM (Process Manager)                                   ║
-# ║  https://github.com/phpeek/phpeek-pm                                      ║
+# ║  https://github.com/gophpeek/phpeek-pm                                      ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=bash
 
