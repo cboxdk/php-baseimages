@@ -82,11 +82,9 @@ RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
 RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || true
 
 # Copy Nginx configuration (rootless version with port 8080)
-COPY php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
-COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
-
-# Fix ownership of nginx config files for www-data (COPY runs as root)
-RUN chown -R www-data:www-data /etc/nginx/conf.d
+# Use --chown to set ownership atomically (avoids cache layer issues)
+COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
+COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy PHPeek PM configuration (rootless version with port 8080 health check)
 RUN mkdir -p /etc/phpeek-pm && chown -R www-data:www-data /etc/phpeek-pm
