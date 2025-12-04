@@ -3,6 +3,11 @@
 # ============================================================================
 # LAYER 2: Single source of truth for all PHP extensions, Composer, Node, PHPeek PM
 # All other images (php-cli, php-fpm, php-fpm-nginx, php-swoole, etc.) extend this
+#
+# IMAGE TIERS:
+# - slim:     Minimal PHP + essential extensions (~120MB) - API/microservices
+# - standard: + ImageMagick, vips, Node.js (~250MB) - Most Laravel apps (DEFAULT)
+# - full:     + Chromium for Browsershot/Dusk (~700MB) - PDF generation, testing
 # ============================================================================
 
 # ============================================================================
@@ -15,138 +20,101 @@ ARG MONGODB_VERSION=2.1.4
 ARG IGBINARY_VERSION=3.2.16
 ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
+ARG GRPC_VERSION=1.72.0
 
 # Stage 1: Get Node.js from official image
 ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-alpine AS node
 
-# Stage 2: PHP CLI base (NOT FPM - that's a separate layer)
-FROM php:8.4-cli-alpine AS base
+# ============================================================================
+# SLIM BASE - Minimal dependencies, essential extensions only
+# ============================================================================
+FROM php:8.4-cli-alpine AS slim-base
 
 LABEL org.opencontainers.image.title="PHPeek PHP Base 8.4 Alpine"
-LABEL org.opencontainers.image.description="Base PHP image with all extensions, Composer, Node.js, and PHPeek PM"
+LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and PHPeek PM"
 LABEL org.opencontainers.image.vendor="PHPeek"
 LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
 
 # Re-declare ARGs after FROM (they don't persist)
 ARG REDIS_VERSION
-ARG IMAGICK_VERSION
 ARG APCU_VERSION
 ARG MONGODB_VERSION
 ARG IGBINARY_VERSION
 ARG MSGPACK_VERSION
-ARG VIPS_VERSION
-
-# Copy Node.js binaries from official node image
-COPY --from=node /usr/local/bin/node /usr/local/bin/node
-COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
-
-# Create npm/npx symlinks
-RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
-    ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+ARG GRPC_VERSION
 
 # ============================================================================
-# System Dependencies
+# SLIM: Runtime Dependencies + PHP Extensions (all in one layer)
 # ============================================================================
-RUN apk add --no-cache \
-    # Essential tools
-    bash curl wget git unzip procps \
-    # Cron for Laravel Scheduler (dcron for Alpine)
-    dcron \
-    # Extension runtime dependencies
-    icu-libs icu-data-full \
-    libpq \
-    libzip \
-    libpng libjpeg-turbo freetype libwebp libavif \
-    imagemagick \
-    # HEIC/HEIF support for ImageMagick
-    libheif \
-    # PDF support for ImageMagick (Ghostscript)
-    ghostscript \
-    # SVG support for ImageMagick
-    librsvg \
-    vips vips-tools \
-    libxml2 libxslt \
-    libsodium \
-    oniguruma \
-    c-ares \
-    openldap \
-    bzip2 \
-    gmp \
-    readline \
-    gettext \
-    # Exiftool for image metadata
-    exiftool \
-    # Chromium for Browsershot/Puppeteer PDF generation
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
-
-# Set Puppeteer to use installed Chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-# ============================================================================
-# PHP Extensions (40+)
-# ============================================================================
-
-# Install build dependencies (will be removed after compilation)
-RUN apk add --no-cache --virtual .build-deps \
-    $PHPIZE_DEPS \
-    icu-dev \
-    postgresql-dev \
-    libzip-dev \
-    libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev libavif-dev \
-    imagemagick-dev \
-    vips-dev \
-    libxml2-dev libxslt-dev \
-    libsodium-dev \
-    oniguruma-dev \
-    c-ares-dev \
-    openldap-dev \
-    bzip2-dev \
-    gmp-dev \
-    readline-dev \
-    gettext-dev \
-    linux-headers
-
-# Configure GD with WebP/AVIF support
-RUN docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-    --with-webp \
-    --with-avif
-
-# Install core PHP extensions
-RUN docker-php-ext-install -j$(nproc) \
-    opcache \
-    pdo_mysql pdo_pgsql mysqli pgsql \
-    zip intl bcmath gd exif \
-    pcntl sockets soap xsl ldap bz2 \
-    calendar gettext shmop sysvmsg sysvsem sysvshm \
-    gmp
-
-# Install PECL extensions with PINNED versions (igbinary first for redis serialization)
-RUN pecl install igbinary-${IGBINARY_VERSION} && \
-    docker-php-ext-enable igbinary && \
-    pecl install redis-${REDIS_VERSION} --configureoptions 'enable-igbinary-serializer="yes"' && \
-    pecl install imagick-${IMAGICK_VERSION} && \
-    pecl install apcu-${APCU_VERSION} && \
-    pecl install msgpack-${MSGPACK_VERSION} && \
-    pecl install mongodb-${MONGODB_VERSION} && \
-    pecl install vips-${VIPS_VERSION} && \
-    docker-php-ext-enable redis imagick apcu msgpack mongodb vips
-
-# ============================================================================
-# Cleanup: Remove build deps, caches, and unnecessary files for slim image
-# ============================================================================
-RUN apk del .build-deps && \
-    rm -rf /tmp/* /var/cache/apk/* /var/tmp/* \
-    /root/.pearrc /root/.pear && \
-    # Strip debug symbols from PHP extensions
+RUN set -eux; \
+    # Install runtime dependencies
+    apk add --no-cache \
+        bash curl wget git unzip procps \
+        dcron \
+        icu-libs \
+        libpq \
+        libzip \
+        libpng libjpeg-turbo freetype libwebp \
+        libxml2 libxslt \
+        libsodium \
+        oniguruma \
+        c-ares \
+        openldap \
+        bzip2 \
+        gmp \
+        readline \
+        gettext \
+        grpc; \
+    \
+    # Install build dependencies (will be removed at end)
+    apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        icu-dev \
+        postgresql-dev \
+        libzip-dev \
+        libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev \
+        libxml2-dev libxslt-dev \
+        libsodium-dev \
+        oniguruma-dev \
+        c-ares-dev \
+        openldap-dev \
+        bzip2-dev \
+        gmp-dev \
+        readline-dev \
+        gettext-dev \
+        grpc-dev \
+        linux-headers; \
+    \
+    # Configure GD with WebP support (no AVIF in slim to keep size down)
+    docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+        --with-webp; \
+    \
+    # Install core PHP extensions
+    docker-php-ext-install -j$(nproc) \
+        opcache \
+        pdo_mysql pdo_pgsql mysqli pgsql \
+        zip intl bcmath gd exif \
+        pcntl sockets soap xsl ldap bz2 \
+        calendar gettext shmop sysvmsg sysvsem sysvshm \
+        gmp; \
+    \
+    # Install PECL extensions with PINNED versions
+    pecl install igbinary-${IGBINARY_VERSION}; \
+    docker-php-ext-enable igbinary; \
+    pecl install redis-${REDIS_VERSION}; \
+    pecl install apcu-${APCU_VERSION}; \
+    pecl install msgpack-${MSGPACK_VERSION}; \
+    pecl install mongodb-${MONGODB_VERSION}; \
+    pecl install grpc-${GRPC_VERSION}; \
+    docker-php-ext-enable redis apcu msgpack mongodb grpc; \
+    \
+    # Cleanup build deps and temp files (same layer = no size penalty)
+    apk del --no-network .build-deps; \
+    rm -rf /tmp/* /var/cache/apk/* /var/tmp/* /root/.pearrc /root/.pear; \
+    # Strip debug symbols from extensions
     find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all {} \; 2>/dev/null || true
 
 # ============================================================================
@@ -189,11 +157,6 @@ RUN set -eux; \
 COPY php-base/common/php.ini /usr/local/etc/php/conf.d/99-phpeek.ini
 
 # ============================================================================
-# ImageMagick Security Policy
-# ============================================================================
-COPY php-base/common/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
-
-# ============================================================================
 # PHPeek Shared Libraries (entrypoint helpers, lifecycle checks)
 # ============================================================================
 RUN mkdir -p /usr/local/lib/phpeek
@@ -224,27 +187,139 @@ RUN mkdir -p /var/www/html && \
 
 WORKDIR /var/www/html
 
-# ═══════════════════════════════════════════════════════════════════════════
-# ROOT VARIANT (default) - Runs as root, PUID/PGID mapping at runtime
-# ═══════════════════════════════════════════════════════════════════════════
-FROM base AS root
+# ============================================================================
+# STANDARD BASE - Add ImageMagick, vips, Node.js (DEFAULT)
+# ============================================================================
+FROM slim-base AS standard-base
 
-ENV PHPEEK_ROOTLESS=false
+# Re-declare ARGs
+ARG IMAGICK_VERSION
+ARG VIPS_VERSION
+
+# Copy Node.js binaries from official node image
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+# Create npm/npx symlinks
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+# ============================================================================
+# STANDARD: Additional deps + ImageMagick/vips extensions (single layer)
+# ============================================================================
+RUN set -eux; \
+    # Install runtime dependencies for standard tier
+    apk add --no-cache \
+        icu-data-full \
+        libavif \
+        imagemagick \
+        libheif \
+        ghostscript \
+        librsvg \
+        vips vips-tools \
+        exiftool \
+        netcat-openbsd; \
+    \
+    # Install build dependencies
+    apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        imagemagick-dev \
+        vips-dev \
+        libavif-dev \
+        libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev; \
+    \
+    # Reconfigure GD with AVIF support
+    docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+        --with-webp \
+        --with-avif; \
+    docker-php-ext-install -j$(nproc) gd; \
+    \
+    # Install PECL extensions
+    pecl install imagick-${IMAGICK_VERSION}; \
+    pecl install vips-${VIPS_VERSION}; \
+    docker-php-ext-enable imagick vips; \
+    \
+    # Cleanup
+    apk del --no-network .build-deps; \
+    rm -rf /tmp/* /var/cache/apk/* /var/tmp/* /root/.pearrc /root/.pear; \
+    find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all {} \; 2>/dev/null || true
+
+# ImageMagick Security Policy
+COPY php-base/common/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
+
+# ============================================================================
+# FULL BASE - Add Chromium for Browsershot/Dusk/Puppeteer
+# ============================================================================
+FROM standard-base AS full-base
+
+# Chromium and dependencies for headless browser
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
+# Set Puppeteer to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOTLESS VARIANT - Runs entirely as www-data, no root privileges
+# SLIM VARIANTS (root + rootless)
 # ═══════════════════════════════════════════════════════════════════════════
-FROM base AS rootless
+FROM slim-base AS slim-root
+ENV PHPEEK_ROOTLESS=false \
+    PHPEEK_IMAGE_TIER=slim
 
-# Pre-create ALL directories with www-data ownership for rootless operation
+FROM slim-base AS slim-rootless
 RUN mkdir -p \
     /var/www/html /var/www/.composer /var/www/.npm \
     /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
     chown -R www-data:www-data \
         /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
-
 ENV PHPEEK_ROOTLESS=true \
+    PHPEEK_IMAGE_TIER=slim \
     HOME=/var/www
+USER www-data
+WORKDIR /var/www/html
 
+# ═══════════════════════════════════════════════════════════════════════════
+# STANDARD VARIANTS (root + rootless) - DEFAULT
+# ═══════════════════════════════════════════════════════════════════════════
+FROM standard-base AS root
+ENV PHPEEK_ROOTLESS=false \
+    PHPEEK_IMAGE_TIER=standard
+
+FROM standard-base AS rootless
+RUN mkdir -p \
+    /var/www/html /var/www/.composer /var/www/.npm \
+    /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
+    chown -R www-data:www-data \
+        /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
+ENV PHPEEK_ROOTLESS=true \
+    PHPEEK_IMAGE_TIER=standard \
+    HOME=/var/www
+USER www-data
+WORKDIR /var/www/html
+
+# ═══════════════════════════════════════════════════════════════════════════
+# FULL VARIANTS (root + rootless)
+# ═══════════════════════════════════════════════════════════════════════════
+FROM full-base AS full-root
+ENV PHPEEK_ROOTLESS=false \
+    PHPEEK_IMAGE_TIER=full
+
+FROM full-base AS full-rootless
+RUN mkdir -p \
+    /var/www/html /var/www/.composer /var/www/.npm \
+    /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
+    chown -R www-data:www-data \
+        /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
+ENV PHPEEK_ROOTLESS=true \
+    PHPEEK_IMAGE_TIER=full \
+    HOME=/var/www
 USER www-data
 WORKDIR /var/www/html

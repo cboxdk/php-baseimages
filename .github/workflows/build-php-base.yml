@@ -26,6 +26,10 @@ on:
         description: 'OS variant to build (alpine, bookworm, trixie, or all)'
         required: false
         default: 'all'
+      tier:
+        description: 'Image tier to build (slim, standard, full, or all)'
+        required: false
+        default: 'all'
   schedule:
     # Weekly security rebuild - Monday 01:00 UTC (runs before dependent images)
     - cron: '0 1 * * 1'
@@ -35,6 +39,282 @@ env:
   IMAGE_NAME: ${{ github.repository }}/php-base
 
 jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SLIM TIER - Minimal PHP with essential extensions only
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-slim-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'bookworm', 'trixie']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
+          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
+          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
+          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
+          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
+
+      - name: Download and verify PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading PHPeek PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd phpeek-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd -
+
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          ls -la phpeek-pm/binaries/
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (slim)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
+
+      - name: Build and push slim image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: slim-root
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
+          build-args: |
+            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
+            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
+            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Test slim image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim"
+          echo "Testing slim $IMAGE..."
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
+          docker run --rm $IMAGE composer --version
+          # Slim does NOT have node, imagemagick, vips - that's expected
+
+  build-slim-rootless-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'bookworm', 'trixie']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
+          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
+          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
+          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
+          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
+
+      - name: Download and verify PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading PHPeek PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd phpeek-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd -
+
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          ls -la phpeek-pm/binaries/
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (slim-rootless)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
+
+      - name: Build and push slim-rootless image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: slim-rootless
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
+          build-args: |
+            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
+            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
+            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Test slim-rootless image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless"
+          echo "Testing slim-rootless $IMAGE..."
+          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+          docker run --rm $IMAGE php -v
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # STANDARD TIER (DEFAULT) - ImageMagick, vips, Node.js included
+  # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     runs-on: ubuntu-latest
     strategy:
@@ -74,7 +354,6 @@ jobs:
           echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
           echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
           echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-          # Output lifecycle info for debugging
           echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }}:"
           echo "$BUILD_STATE" | jq .
 
@@ -100,7 +379,6 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          # Map os_variant to Dockerfile path
           case "${{ matrix.os_variant }}" in
             alpine)
               echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
@@ -179,9 +457,6 @@ jobs:
           docker run --rm $IMAGE node --version
           docker run --rm $IMAGE phpeek-pm --version
 
-  # ─────────────────────────────────────────────────────────────────────────────
-  # Rootless Images
-  # ─────────────────────────────────────────────────────────────────────────────
   build-rootless-matrix:
     runs-on: ubuntu-latest
     strategy:
@@ -221,7 +496,6 @@ jobs:
           echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
           echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
           echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-          # Output lifecycle info for debugging
           echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (rootless):"
           echo "$BUILD_STATE" | jq .
 
@@ -247,7 +521,6 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          # Map os_variant to Dockerfile path
           case "${{ matrix.os_variant }}" in
             alpine)
               echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
@@ -320,7 +593,6 @@ jobs:
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless"
           echo "Testing rootless image $IMAGE..."
-          # Verify running as non-root (www-data = uid 82 on Alpine, 33 on Debian)
           docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
@@ -328,9 +600,286 @@ jobs:
           docker run --rm $IMAGE node --version
           docker run --rm $IMAGE phpeek-pm --version
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # FULL TIER - Includes Chromium for Browsershot/Dusk
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-full-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'bookworm', 'trixie']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
+          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
+          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
+          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
+          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
+
+      - name: Download and verify PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading PHPeek PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd phpeek-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd -
+
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          ls -la phpeek-pm/binaries/
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (full)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-full,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+
+      - name: Build and push full image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: full-root
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+          build-args: |
+            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
+            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
+            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Test full image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full"
+          echo "Testing full $IMAGE..."
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+          docker run --rm $IMAGE composer --version
+          docker run --rm $IMAGE node --version
+          docker run --rm $IMAGE phpeek-pm --version
+          # Verify Chromium is installed
+          docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+
+  build-full-rootless-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4']
+        os_variant: ['alpine', 'bookworm', 'trixie']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
+          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
+          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
+          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
+          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
+
+      - name: Download and verify PHPeek PM binaries
+        run: |
+          mkdir -p phpeek-pm/binaries
+          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading PHPeek PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd phpeek-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd -
+
+          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          ls -la phpeek-pm/binaries/
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          case "${{ matrix.os_variant }}" in
+            alpine)
+              echo "path=./php-base/${{ matrix.php_version }}/alpine/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            bookworm)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+            trixie)
+              echo "path=./php-base/${{ matrix.php_version }}/debian/trixie/Dockerfile" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (full-rootless)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+
+      - name: Build and push full-rootless image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: full-rootless
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+          build-args: |
+            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
+            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
+            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Test full-rootless image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless"
+          echo "Testing full-rootless $IMAGE..."
+          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+
   # Trigger dependent image builds after php-base completes
   trigger-dependent-builds:
-    needs: [build-matrix, build-rootless-matrix]
+    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-full-matrix, build-full-rootless-matrix]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
