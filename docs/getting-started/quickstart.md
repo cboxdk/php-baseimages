@@ -8,6 +8,28 @@ weight: 1
 
 Get a production-ready PHP environment running in under 5 minutes.
 
+## Really Quick Test (30 seconds)
+
+Just want to test the image? Run these docker commands:
+
+```bash
+# Test PHP version and extensions
+docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine php -v
+
+# List all loaded extensions
+docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine php -m
+
+# Run a one-liner to see available tools
+docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine sh -c "php -v && composer -V && node -v"
+
+# Start a web server with current directory mounted
+docker run --rm -p 8000:80 -v $(pwd):/var/www/html ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
+```
+
+For a proper project setup, continue below.
+
+---
+
 ## Prerequisites
 
 - Docker 20.10+ (`docker --version`)
@@ -91,8 +113,17 @@ Use Alpine (smallest), Debian for glibc compatibility:
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine  # ~80MB
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-alpine
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian  # ~150MB
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm  # ~150MB (Debian)
 ```
+
+### Tag Formats
+
+| Tag Format | Example | Use Case |
+|------------|---------|----------|
+| Rolling | `8.4-alpine` | Development, auto-updates |
+| Pinned | `8.4.7-alpine` | Production, version lock |
+| SHA | `8.4-alpine-abc123` | Debugging, reproducibility |
+| Rootless | `8.4-alpine-rootless` | Security-restricted environments |
 
 ## Troubleshooting
 

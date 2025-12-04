@@ -285,22 +285,37 @@ docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
 docker-compose up -d
 ```
 
-### Rolling vs Immutable Tags
+### Image Tag Formats
 
-**Recommended: Rolling Tags** (automatic security patches)
+| Tag Type | Example | Use Case |
+|----------|---------|----------|
+| **Rolling** | `8.4-alpine` | Development, auto-updates (recommended for dev) |
+| **PHP Pinned** | `8.4.7-alpine` | Production version lock (recommended for prod) |
+| **SHA Pinned** | `8.4-alpine-abc123` | Debugging, 100% reproducibility |
+| **Rootless** | `8.4-alpine-rootless` | Security-restricted environments |
+
+**Development: Rolling Tags** (automatic security patches)
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
     # ↑ Automatically gets weekly security patches
 ```
 
-**Advanced: Immutable SHA Tags** (reproducible builds)
+**Production: PHP Version Pinned Tags** (lock to known PHP version)
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine-sha256:abc123...
-    # ↑ Locked to specific build
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4.7-alpine
+    # ↑ Locked to PHP 8.4.7 - upgrade consciously
+```
+
+**Debugging: SHA Tags** (100% reproducible builds)
+```yaml
+services:
+  app:
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine-abc123
+    # ↑ Locked to exact build
 ```
 
 📖 **Security guide:** [Security Documentation →](docs/advanced/security-hardening.md)
