@@ -45,6 +45,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
@@ -181,6 +182,7 @@ jobs:
 
   build-slim-rootless-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
@@ -318,6 +320,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
@@ -460,6 +463,7 @@ jobs:
 
   build-rootless-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
@@ -607,6 +611,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-full-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
@@ -746,6 +751,7 @@ jobs:
 
   build-full-rootless-matrix:
     runs-on: ubuntu-latest
+    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
