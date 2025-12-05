@@ -40,7 +40,8 @@ env:
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
-  # SLIM TIER - Minimal PHP with essential extensions only
+  # SLIM TIER - Minimal PHP with essential extensions only (Alpine only)
+  # Note: Debian images don't have tiered builds - they include everything
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
@@ -48,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Slim tier only available for Alpine
 
     permissions:
       contents: read
@@ -184,7 +185,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Slim tier only available for Alpine
 
     permissions:
       contents: read
@@ -601,7 +602,8 @@ jobs:
           docker run --rm $IMAGE phpeek-pm --version
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # FULL TIER - Includes Chromium for Browsershot/Dusk
+  # FULL TIER - Includes Chromium for Browsershot/Dusk (Alpine only)
+  # Note: Debian standard tier already includes Chromium
   # ═══════════════════════════════════════════════════════════════════════════
   build-full-matrix:
     runs-on: ubuntu-latest
@@ -609,7 +611,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Full tier only available for Alpine
 
     permissions:
       contents: read
@@ -748,7 +750,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Full tier only available for Alpine
 
     permissions:
       contents: read

@@ -35,7 +35,7 @@ env:
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
-  # SLIM TIER - Minimal PHP + essential extensions
+  # SLIM TIER - Minimal PHP + essential extensions (Alpine only)
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Slim tier only available for Alpine
 
     permissions:
       contents: read
@@ -166,7 +166,7 @@ jobs:
           docker stop test-slim && docker rm test-slim
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # SLIM ROOTLESS
+  # SLIM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
   # ─────────────────────────────────────────────────────────────────────────────
   build-slim-rootless-matrix:
     runs-on: ubuntu-latest
@@ -174,7 +174,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Slim tier only available for Alpine
 
     permissions:
       contents: read
@@ -602,7 +602,7 @@ jobs:
           docker stop test-rootless && docker rm test-rootless
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # FULL TIER - + Chromium for Browsershot/Dusk/Puppeteer
+  # FULL TIER - + Chromium for Browsershot/Dusk/Puppeteer (Alpine only)
   # ═══════════════════════════════════════════════════════════════════════════
   build-full-matrix:
     runs-on: ubuntu-latest
@@ -610,7 +610,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Full tier only available for Alpine
 
     permissions:
       contents: read
@@ -748,7 +748,7 @@ jobs:
           docker stop test-full && docker rm test-full
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # FULL ROOTLESS
+  # FULL ROOTLESS (Alpine only - Debian doesn't have tiered builds)
   # ─────────────────────────────────────────────────────────────────────────────
   build-full-rootless-matrix:
     runs-on: ubuntu-latest
@@ -756,7 +756,7 @@ jobs:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4']
-        os_variant: ['alpine', 'bookworm', 'trixie']
+        os_variant: ['alpine']  # Full tier only available for Alpine
 
     permissions:
       contents: read
