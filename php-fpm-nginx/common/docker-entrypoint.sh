@@ -275,13 +275,16 @@ generate_runtime_configs() {
         : ${NGINX_CLIENT_HEADER_TIMEOUT:=60s}
         : ${NGINX_HEADER_X_FRAME_OPTIONS:=SAMEORIGIN}
         : ${NGINX_HEADER_X_CONTENT_TYPE_OPTIONS:=nosniff}
-        : "${NGINX_HEADER_X_XSS_PROTECTION:=1; mode=block}"
-        : "${NGINX_HEADER_CSP:=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'}"
+        # X-XSS-Protection removed - deprecated and can be exploited (see serversideup/docker-php#31)
+        : ${NGINX_HEADER_X_XSS_PROTECTION:=}
+        # CSP empty by default - too complex for one-size-fits-all (like ServerSideUp)
+        # Users can set via NGINX_HEADER_CSP env var
+        : ${NGINX_HEADER_CSP:=}
         : ${NGINX_HEADER_REFERRER_POLICY:=strict-origin-when-cross-origin}
         : ${NGINX_HEADER_COOP:=}
         : ${NGINX_HEADER_COEP:=}
         : ${NGINX_HEADER_CORP:=}
-        : ${NGINX_HEADER_PERMISSIONS_POLICY:=accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()}
+        : "${NGINX_HEADER_PERMISSIONS_POLICY:=accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()}"
         : ${NGINX_SERVER_TOKENS:=off}
 
         if [ "${NGINX_ACCESS_LOG:-}" = "false" ] || [ "${NGINX_ACCESS_LOG:-}" = "FALSE" ]; then
@@ -358,7 +361,22 @@ generate_runtime_configs() {
             export NGINX_MTLS_CONFIG="# mTLS disabled"
         fi
 
-        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_HEADER_X_FRAME_OPTIONS} ${NGINX_HEADER_X_CONTENT_TYPE_OPTIONS} ${NGINX_HEADER_X_XSS_PROTECTION} ${NGINX_HEADER_CSP} ${NGINX_HEADER_REFERRER_POLICY} ${NGINX_HEADER_COOP} ${NGINX_HEADER_COEP} ${NGINX_HEADER_CORP} ${NGINX_HEADER_PERMISSIONS_POLICY} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG}' \
+        # Generate security headers (only non-empty values)
+        NGINX_SECURITY_HEADERS=""
+        [ -n "${NGINX_HEADER_X_FRAME_OPTIONS}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header X-Frame-Options \"${NGINX_HEADER_X_FRAME_OPTIONS}\" always;\n"
+        [ -n "${NGINX_HEADER_X_CONTENT_TYPE_OPTIONS}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header X-Content-Type-Options \"${NGINX_HEADER_X_CONTENT_TYPE_OPTIONS}\" always;\n"
+        [ -n "${NGINX_HEADER_X_XSS_PROTECTION}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header X-XSS-Protection \"${NGINX_HEADER_X_XSS_PROTECTION}\" always;\n"
+        [ -n "${NGINX_HEADER_CSP}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header Content-Security-Policy \"${NGINX_HEADER_CSP}\" always;\n"
+        [ -n "${NGINX_HEADER_REFERRER_POLICY}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header Referrer-Policy \"${NGINX_HEADER_REFERRER_POLICY}\" always;\n"
+        [ -n "${NGINX_HEADER_COOP}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header Cross-Origin-Opener-Policy \"${NGINX_HEADER_COOP}\" always;\n"
+        [ -n "${NGINX_HEADER_COEP}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header Cross-Origin-Embedder-Policy \"${NGINX_HEADER_COEP}\" always;\n"
+        [ -n "${NGINX_HEADER_CORP}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header Cross-Origin-Resource-Policy \"${NGINX_HEADER_CORP}\" always;\n"
+        [ -n "${NGINX_HEADER_PERMISSIONS_POLICY}" ] && NGINX_SECURITY_HEADERS="${NGINX_SECURITY_HEADERS}    add_header Permissions-Policy \"${NGINX_HEADER_PERMISSIONS_POLICY}\" always;\n"
+        # Convert \n to actual newlines
+        NGINX_SECURITY_HEADERS=$(printf '%b' "$NGINX_SECURITY_HEADERS")
+        export NGINX_SECURITY_HEADERS
+
+        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
             log_error "Failed to generate Nginx config"
@@ -424,11 +442,7 @@ server {
     client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE:-100M};
 
     add_header Strict-Transport-Security "${SSL_HSTS_HEADER:-max-age=31536000; includeSubDomains}" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Content-Security-Policy "${NGINX_HEADER_CSP}" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+${NGINX_SECURITY_HEADERS}
 
     location / { try_files \$uri \$uri/ ${NGINX_TRY_FILES:-/index.php?\$query_string}; }
 

@@ -17,11 +17,18 @@ PHPeek base images come with enterprise-grade security features enabled by defau
 | Feature | Status | Description |
 |---------|--------|-------------|
 | Server version hidden | ✅ Enabled | `server_tokens off` - Nginx version not exposed |
-| Security headers | ✅ Enabled | X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, CSP, Referrer-Policy |
+| X-Frame-Options | ✅ Enabled | `SAMEORIGIN` - Prevents clickjacking |
+| X-Content-Type-Options | ✅ Enabled | `nosniff` - Prevents MIME sniffing |
+| Referrer-Policy | ✅ Enabled | `strict-origin-when-cross-origin` |
+| Permissions-Policy | ✅ Enabled | Restricts browser features (camera, microphone, etc.) |
+| X-XSS-Protection | ❌ Removed | [Deprecated and can be exploited](https://github.com/serversideup/docker-php/issues/31) |
+| Content-Security-Policy | ⚪ Opt-in | Disabled by default - too complex for one-size-fits-all |
 | Health endpoint restricted | ✅ Enabled | `/health` only accessible from localhost (127.0.0.1) |
 | Sensitive files blocked | ✅ Enabled | `.env`, `.git`, `composer.json`, `artisan`, `vendor/`, etc. return 404 |
 | Hidden files blocked | ✅ Enabled | All `/.` paths return 404 |
 | Upload directory protection | ✅ Enabled | PHP execution blocked in upload directories |
+
+> **Note**: This approach matches [ServerSideUp/docker-php](https://github.com/serversideup/docker-php) for compatibility. CSP is disabled by default because it's too application-specific.
 
 ### SSL/TLS Security (When Enabled)
 
@@ -157,34 +164,35 @@ services:
 
 ### Content Security Policy
 
-PHPeek includes a **configurable Content-Security-Policy header** via environment variable:
+CSP is **disabled by default** because it's too application-specific. Enable it via environment variable:
 
-**Default CSP (enabled by default):**
-
-```bash
-NGINX_HEADER_CSP="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'"
-```
-
-**Customize via docker-compose.yml:**
+**Enable CSP for Laravel/Livewire apps:**
 
 ```yaml
 services:
   app:
     image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      # Strict CSP for high-security applications
-      - NGINX_HEADER_CSP=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
-
-      # Or allow specific CDNs
-      - NGINX_HEADER_CSP=default-src 'self'; script-src 'self' https://cdn.example.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.example.com
+      # Recommended for Laravel with Livewire, Vite, and Google Fonts
+      - NGINX_HEADER_CSP=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net; font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net; img-src 'self' data: https:; connect-src 'self' wss: https:; frame-ancestors 'self'
 ```
 
-**Disable CSP entirely (not recommended):**
+**Strict CSP for high-security applications:**
 
 ```yaml
 environment:
-  - NGINX_HEADER_CSP=
+  # No external resources allowed
+  - NGINX_HEADER_CSP=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 ```
+
+**With specific CDNs:**
+
+```yaml
+environment:
+  - NGINX_HEADER_CSP=default-src 'self'; script-src 'self' https://cdn.example.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.example.com
+```
+
+> **Why disabled by default?** CSP is highly application-specific. A strict CSP breaks Google Fonts, Livewire WebSockets, external analytics, and most CDNs. Following [ServerSideUp's approach](https://github.com/serversideup/docker-php), we let you configure CSP for your specific needs.
 
 **Laravel middleware alternative** (for dynamic CSP per-route):
 
@@ -220,14 +228,11 @@ add_header X-Frame-Options "SAMEORIGIN" always;
 # Prevent MIME sniffing
 add_header X-Content-Type-Options "nosniff" always;
 
-# Enable XSS protection
-add_header X-XSS-Protection "1; mode=block" always;
-
 # Referrer policy
-add_header Referrer-Policy "no-referrer-when-downgrade" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
-# Content Security Policy
-add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" always;
+# Content Security Policy (customize for your app)
+# add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;" always;
 
 # HSTS (only with HTTPS)
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -237,6 +242,9 @@ add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
 
 # Hide Nginx version
 server_tokens off;
+
+# NOTE: X-XSS-Protection is intentionally omitted - it's deprecated and can be exploited
+# See: https://github.com/serversideup/docker-php/issues/31
 ```
 
 **Include in server block:**

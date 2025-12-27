@@ -33,20 +33,9 @@ server {
 
     # ─────────────────────────────────────────────────────────────────────────
     # Security Headers (Modern Best Practices)
+    # Generated dynamically - empty values are omitted
     # ─────────────────────────────────────────────────────────────────────────
-    add_header X-Frame-Options "${NGINX_HEADER_X_FRAME_OPTIONS}" always;
-    add_header X-Content-Type-Options "${NGINX_HEADER_X_CONTENT_TYPE_OPTIONS}" always;
-    add_header X-XSS-Protection "${NGINX_HEADER_X_XSS_PROTECTION}" always;
-    add_header Content-Security-Policy "${NGINX_HEADER_CSP}" always;
-    add_header Referrer-Policy "${NGINX_HEADER_REFERRER_POLICY}" always;
-
-    # Modern Cross-Origin Isolation Headers (set to empty string to disable)
-    add_header Cross-Origin-Opener-Policy "${NGINX_HEADER_COOP}" always;
-    add_header Cross-Origin-Embedder-Policy "${NGINX_HEADER_COEP}" always;
-    add_header Cross-Origin-Resource-Policy "${NGINX_HEADER_CORP}" always;
-
-    # Permissions Policy (replaces Feature-Policy)
-    add_header Permissions-Policy "${NGINX_HEADER_PERMISSIONS_POLICY}" always;
+${NGINX_SECURITY_HEADERS}
 
     # ─────────────────────────────────────────────────────────────────────────
     # Open File Cache (reduces file descriptor lookups)
