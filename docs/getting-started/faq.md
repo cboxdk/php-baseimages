@@ -14,7 +14,7 @@ PHPeek Base Images is a collection of production-ready Docker images for PHP app
 
 - **40+ PHP extensions** pre-installed and optimized
 - **Three tiers**: Slim (APIs), Standard (most apps), Full (Browsershot/Dusk)
-- **PHP versions**: 8.2, 8.3, 8.4
+- **PHP versions**: 8.2, 8.3, 8.4, 8.5
 - **Architecture types**: Single-process (PHP-FPM, PHP-CLI, Nginx) and Multi-service (PHP-FPM + Nginx)
 - **Development variants** with Xdebug pre-configured
 - **Framework auto-detection** for Laravel, Symfony, and WordPress
@@ -25,12 +25,12 @@ PHPeek Base Images is a collection of production-ready Docker images for PHP app
 |---------|--------|--------------|--------------|
 | Extensions pre-installed | 40+ | ~10 | 30+ |
 | Multi-service containers | Yes | No | Yes (S6) |
-| Process manager | Vanilla bash | None | S6 Overlay |
+| Process manager | PHPeek PM (Go) | None | S6 Overlay |
 | Framework detection | Yes | No | Yes |
 | Development variants | Yes | No | Yes |
 | Weekly security rebuilds | Yes | Varies | Yes |
 
-**Key differentiator**: PHPeek uses a vanilla bash entrypoint instead of S6 Overlay, resulting in simpler debugging and smaller image sizes.
+**Key differentiator**: PHPeek uses PHPeek PM, a lightweight Go-based process manager instead of S6 Overlay, resulting in simpler debugging, smaller image sizes, and built-in Prometheus metrics.
 
 ### Which image should I use?
 

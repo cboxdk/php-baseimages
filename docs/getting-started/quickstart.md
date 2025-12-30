@@ -57,7 +57,7 @@ EOF
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -78,7 +78,7 @@ Visit **http://localhost:8000**
 
 ## What You Get
 
-- PHP 8.3 with 40+ extensions (Redis, ImageMagick, MongoDB, etc.)
+- PHP 8.4 with 40+ extensions (Redis, ImageMagick, MongoDB, etc.)
 - Nginx with security headers
 - OPcache JIT enabled
 - Automatic health checks
@@ -110,6 +110,7 @@ curl localhost:8000/health    # Health check
 PHPeek Base Images use Debian 12 (Bookworm) for maximum compatibility:
 
 ```
+ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.5-bookworm
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm

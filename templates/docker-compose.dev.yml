@@ -48,9 +48,6 @@ services:
       XDEBUG_MODE: debug,develop,coverage
       XDEBUG_CONFIG: client_host=host.docker.internal
 
-      # PHPeek PM (optional - disable for simpler dev)
-      # PHPEEK_PROCESS_MANAGER: phpeek-pm
-
     depends_on:
       - mysql
       - redis

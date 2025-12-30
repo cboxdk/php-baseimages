@@ -34,6 +34,7 @@ Single container with both PHP-FPM and Nginx - perfect for simple deployments.
 
 | Image Tag | PHP | OS | Size | Architecture |
 |-----------|-----|----|----- |--------------|
+| `php-fpm-nginx:8.5-bookworm` | 8.5 | Debian 12 | ~250MB | amd64, arm64 |
 | `php-fpm-nginx:8.4-bookworm` | 8.4 | Debian 12 | ~250MB | amd64, arm64 |
 | `php-fpm-nginx:8.3-bookworm` | 8.3 | Debian 12 | ~250MB | amd64, arm64 |
 | `php-fpm-nginx:8.2-bookworm` | 8.2 | Debian 12 | ~250MB | amd64, arm64 |
@@ -44,6 +45,7 @@ Optimized for APIs and microservices with minimal footprint:
 
 | Image Tag | PHP | OS | Size | Architecture |
 |-----------|-----|----|----- |--------------|
+| `php-fpm-nginx:8.5-bookworm-slim` | 8.5 | Debian 12 | ~120MB | amd64, arm64 |
 | `php-fpm-nginx:8.4-bookworm-slim` | 8.4 | Debian 12 | ~120MB | amd64, arm64 |
 | `php-fpm-nginx:8.3-bookworm-slim` | 8.3 | Debian 12 | ~120MB | amd64, arm64 |
 | `php-fpm-nginx:8.2-bookworm-slim` | 8.2 | Debian 12 | ~120MB | amd64, arm64 |
@@ -54,19 +56,22 @@ Includes Chromium for Browsershot, Dusk, and PDF generation:
 
 | Image Tag | PHP | OS | Size | Architecture |
 |-----------|-----|----|----- |--------------|
+| `php-fpm-nginx:8.5-bookworm-full` | 8.5 | Debian 12 | ~700MB | amd64, arm64 |
 | `php-fpm-nginx:8.4-bookworm-full` | 8.4 | Debian 12 | ~700MB | amd64, arm64 |
 | `php-fpm-nginx:8.3-bookworm-full` | 8.3 | Debian 12 | ~700MB | amd64, arm64 |
 | `php-fpm-nginx:8.2-bookworm-full` | 8.2 | Debian 12 | ~700MB | amd64, arm64 |
 
 ### Rootless Variants
 
-All tiers support rootless execution (runs as `www-data` user):
+All tiers support rootless execution (runs as `www-data` user). Available for all PHP versions:
 
 | Image Tag | Tier | Description |
 |-----------|------|-------------|
-| `php-fpm-nginx:8.4-bookworm-rootless` | Standard | Default + rootless |
-| `php-fpm-nginx:8.4-bookworm-slim-rootless` | Slim | Slim + rootless |
-| `php-fpm-nginx:8.4-bookworm-full-rootless` | Full | Full + rootless |
+| `php-fpm-nginx:{version}-bookworm-rootless` | Standard | Default + rootless |
+| `php-fpm-nginx:{version}-bookworm-slim-rootless` | Slim | Slim + rootless |
+| `php-fpm-nginx:{version}-bookworm-full-rootless` | Full | Full + rootless |
+
+Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 
 ## Tag Format
 
@@ -145,11 +150,12 @@ PHPeek Base Images use Debian 12 (Bookworm) as the base operating system.
 
 | PHP Version | Status | Security Support Until |
 |-------------|--------|------------------------|
+| PHP 8.5 | Active | November 2029 |
 | PHP 8.4 | Active | November 2028 |
 | PHP 8.3 | Active | November 2027 |
 | PHP 8.2 | Active | December 2026 |
 
-**Recommendation**: Use PHP 8.4 for new projects, PHP 8.3 for production stability.
+**Recommendation**: Use PHP 8.4 for production stability, PHP 8.5 for latest features.
 
 ## Usage Examples
 

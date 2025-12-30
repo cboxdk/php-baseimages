@@ -7,9 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 PHPeek Base Images is a Docker image build system providing production-ready PHP containers with two architectural approaches:
 
 1. **Single-Process Containers**: Separate PHP-FPM, PHP-CLI, and Nginx containers (traditional microservices)
-2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with vanilla bash entrypoint (no S6 Overlay)
+2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with PHPeek PM process manager (no S6 Overlay)
 
-**Key Philosophy**: Vanilla approach with simple bash entrypoints, comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
+**Key Philosophy**: Lightweight Go-based process management (PHPeek PM), comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
 
 ## Architecture
 
@@ -45,20 +45,18 @@ PHPeek Base Images is a Docker image build system providing production-ready PHP
 
 **File**: `php-fpm-nginx/common/docker-entrypoint.sh`
 
-This entrypoint manages both PHP-FPM and Nginx with two operating modes:
+This entrypoint manages both PHP-FPM and Nginx using PHPeek PM:
 
 1. **Framework Detection**: Detects Laravel (`artisan`), Symfony (`bin/console`), WordPress (`wp-config.php`)
 2. **Permission Auto-Fix**: Creates and fixes permissions for framework directories
 3. **Laravel Features**: Scheduler, Horizon, Reverb, Queue workers
-4. **Process Management** (two modes):
-   - **Primary Mode (PHPeek PM)**: Go-based process manager with health checks, metrics, and structured logging
-   - **Fallback Mode (Vanilla Bash)**: PHP-FPM daemonized + Nginx foreground if PM unavailable
+4. **Process Management**: PHPeek PM orchestrates all processes with health checks, metrics, and structured logging
 5. **Graceful Shutdown**: Handles SIGTERM/SIGQUIT for clean shutdowns
 
 **Critical Design**:
-- **Primary**: PHPeek PM (lightweight Go binary) as PID 1 for production
-- **Fallback**: Vanilla bash mode (no S6 Overlay, supervisord) if PM not installed
-- Enable PHPeek PM with: `PHPEEK_PROCESS_MANAGER=phpeek-pm`
+- PHPeek PM (lightweight Go binary) runs as PID 1
+- No S6 Overlay or supervisord - simple, lightweight process management
+- All `php-fpm-nginx` images include PHPeek PM by default
 
 ### Shared Configuration Pattern
 

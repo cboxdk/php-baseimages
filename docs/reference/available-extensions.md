@@ -239,7 +239,7 @@ All Laravel requirements are satisfied by **Slim tier**:
 
 | Requirement | Extension | Status |
 |-------------|-----------|--------|
-| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4 |
+| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4, 8.5 |
 | Ctype | ctype | ✅ Built-in |
 | cURL | curl | ✅ Built-in |
 | DOM | dom | ✅ Built-in |
@@ -256,7 +256,7 @@ All Symfony requirements are satisfied by **Slim tier**:
 
 | Requirement | Extension | Status |
 |-------------|-----------|--------|
-| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4 |
+| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4, 8.5 |
 | Ctype | ctype | ✅ Built-in |
 | iconv | iconv | ✅ Built-in |
 | JSON | json | ✅ Built-in |

@@ -52,14 +52,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHP 8.2 (all variants)
 - PHP 8.3 (all variants)
 - PHP 8.4 (all variants)
+- PHP 8.5 (all variants)
 
 ### Process Management
-- Simple bash-based process management (default)
-- PHPeek PM v1.0.0 optional integration
+- PHPeek PM v1.0.0 built-in for all php-fpm-nginx images
   - Multi-process orchestration
   - Structured logging
-  - Health checks
+  - Health checks with auto-restart
   - Prometheus metrics
+  - Scheduled tasks with cron expressions
 
 ### Documentation
 - 5-minute quickstart guide

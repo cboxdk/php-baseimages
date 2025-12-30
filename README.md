@@ -9,15 +9,15 @@ Clean, minimal, and production-ready PHP Docker base images for modern PHP appli
 ## 🎯 Philosophy
 
 - **Three Tiers**: Slim (~120MB), Standard (~250MB), Full (~700MB) - choose your needs
-- **Flexible Process Management**: Choose simple bash OR production-grade [PHPeek PM](https://github.com/gophpeek/phpeek-pm)
+- **PHPeek Process Manager**: Production-grade Go-based process manager built-in
 - **Flexible Architecture**: Choose single-process OR multi-service containers
 - **Debian 12 (Bookworm)**: Stable, glibc-based images with excellent compatibility
 - **Framework Optimized**: Auto-detection for Laravel, Symfony, WordPress
 - **Production Ready**: Optimized configurations for real-world applications
 
-### 🚀 NEW: PHPeek Process Manager (v1.0.0)
+### 🔧 PHPeek Process Manager
 
-**Production-grade Go-based process manager** with structured logging, health checks, and Prometheus metrics.
+All `php-fpm-nginx` images include [PHPeek PM](https://github.com/gophpeek/phpeek-pm) - a production-grade Go-based process manager with:
 
 - ✅ Multi-process orchestration (PHP-FPM + Nginx + Horizon + Reverb + Queue Workers)
 - ✅ Structured JSON logging with process segmentation
@@ -25,8 +25,6 @@ Clean, minimal, and production-ready PHP Docker base images for modern PHP appli
 - ✅ Health checks (TCP, HTTP, exec) with auto-restart
 - ✅ Prometheus metrics for observability
 - ✅ Graceful shutdown with configurable timeouts
-
-**Enable with**: `PHPEEK_PROCESS_MANAGER=phpeek-pm`
 
 📖 **[PHPeek PM Documentation →](docs/phpeek-pm-integration.md)**
 
@@ -39,7 +37,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -188,7 +186,7 @@ Add `-dev` suffix for development images with Xdebug:
 ### Multi-Service Container
 Single container with both PHP-FPM and Nginx:
 
-- ✅ Vanilla bash entrypoint (no S6 complexity)
+- ✅ PHPeek PM process manager (lightweight Go binary)
 - ✅ Framework auto-detection (Laravel/Symfony/WordPress)
 - ✅ Laravel Scheduler with cron support
 - ✅ Auto-fixes permissions
@@ -295,7 +293,7 @@ environment:
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
 docker-compose up -d
 ```
 
@@ -509,7 +507,7 @@ We welcome contributions!
 
 ## 🗺️ Roadmap
 
-- [x] PHP 8.2, 8.3, 8.4 support
+- [x] PHP 8.2, 8.3, 8.4, 8.5 support
 - [x] Multi-service containers
 - [x] Weekly security rebuilds
 - [x] Laravel Scheduler support
@@ -518,7 +516,6 @@ We welcome contributions!
 - [x] Example applications library (12 production-ready setups)
 - [x] Image selection decision matrix
 - [x] Queue workers guide
-- [ ] PHP 8.5 stable release
 - [ ] Automated security scanning in docs
 - [ ] Performance benchmarking suite
 

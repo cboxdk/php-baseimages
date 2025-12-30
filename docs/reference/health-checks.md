@@ -319,15 +319,12 @@ location /health {
 
 ## PHPeek PM Health Checks
 
-When using PHPeek Process Manager, additional health checks are available:
+PHPeek Process Manager includes built-in health checks for all managed processes:
 
 ### Process Health Checks
 
 ```yaml
 environment:
-  # Enable PHPeek PM
-  PHPEEK_PROCESS_MANAGER: phpeek-pm
-
   # Health check configuration
   PHPEEK_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TYPE: tcp
   PHPEEK_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TARGET: "127.0.0.1:9000"

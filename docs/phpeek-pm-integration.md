@@ -4,55 +4,29 @@ description: "PHPeek Process Manager - advanced multi-process orchestration for 
 weight: 15
 ---
 
-# PHPeek Process Manager Integration
+# PHPeek Process Manager
 
-PHPeek PM is a Go-based process manager providing advanced multi-process orchestration for PHP containers. It offers structured logging, health checks, Prometheus metrics, and graceful lifecycle management.
+PHPeek PM is the built-in Go-based process manager for all `php-fpm-nginx` images. It provides multi-process orchestration, structured logging, health checks, Prometheus metrics, and graceful lifecycle management.
 
 ## Quick Start
 
-Enable PHPeek PM with a single environment variable:
+PHPeek PM is included and enabled by default. Just use the image:
 
 ```yaml
 services:
   app:
     image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-    environment:
-      PHPEEK_PROCESS_MANAGER: phpeek-pm
     ports:
       - "80:80"
       - "9090:9090"  # Prometheus metrics
 ```
 
-## Process Management Modes
+## Enable Laravel Services
 
-PHPeek base images support two process management modes:
-
-| Mode | Best For | Features |
-|------|----------|----------|
-| **Default (bash)** | Simple deployments, development | PHP-FPM + Nginx, framework detection, graceful shutdown |
-| **PHPeek PM** | Production, complex stacks | All default features + structured logging, health checks, metrics, multi-process |
-
-**Switch modes** with `PHPEEK_PROCESS_MANAGER=phpeek-pm`
-
-## Enable PHPeek PM
-
-```yaml
-services:
-  app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-    environment:
-      PHPEEK_PROCESS_MANAGER: phpeek-pm
-    ports:
-      - "80:80"
-      - "9090:9090"  # Prometheus metrics
-```
-
-### Enable Laravel Services
+Configure Laravel features via environment variables:
 
 ```yaml
 environment:
-  PHPEEK_PROCESS_MANAGER: phpeek-pm
-
   # Laravel optimizations
   LARAVEL_OPTIMIZE_CONFIG: "true"
   LARAVEL_OPTIMIZE_ROUTE: "true"
@@ -128,33 +102,16 @@ REST API on port 8080 (when enabled):
 
 ## Architecture
 
-### Process Management Modes
-
-PHPeek base images support two process management modes:
-
-1. **Default Mode** (simple)
-   - Direct PHP-FPM + Nginx startup
-   - Bash-based lifecycle management
-   - Good for: Simple deployments, development
-
-2. **PHPeek PM Mode** (phpeek-pm)
-   - Go-based production process manager
-   - Structured logging, health checks, metrics
-   - Good for: Production, complex stacks, observability
-
-**Switch modes** with `PHPEEK_PROCESS_MANAGER=phpeek-pm`
-
 ### Startup Sequence
 
-When `PHPEEK_PROCESS_MANAGER=phpeek-pm`:
+When the container starts:
 
-1. **docker-entrypoint.sh** detects PHPeek PM mode
-2. **docker-entrypoint-phpeek-pm.sh** executes:
+1. **docker-entrypoint.sh** runs:
    - Detects framework (Laravel, Symfony, WordPress)
    - Sets up critical directories and permissions
    - Validates PHP-FPM and Nginx configs
    - Generates runtime config from template + env vars
-3. **phpeek-pm binary** starts as PID 1:
+2. **phpeek-pm binary** starts as PID 1:
    - Executes pre-start hooks (Laravel optimizations, migrations)
    - Starts processes in priority order with dependency resolution
    - Monitors health checks
@@ -176,11 +133,10 @@ Processes start with environment-specific settings
 
 | File | Location | Purpose |
 |------|----------|---------|
-| Template config | `/etc/phpeek-pm/phpeek-pm.yaml.template` | Base config with env var placeholders |
+| Template config | `/etc/phpeek-pm/phpeek-pm.yaml` | Base config with env var placeholders |
 | Runtime config | `/tmp/phpeek-pm.yaml` | Generated config with actual values |
 | PHPeek PM binary | `/usr/local/bin/phpeek-pm` | Process manager executable |
-| Default entrypoint | `/usr/local/bin/docker-entrypoint.sh` | Mode selector |
-| PHPeek PM entrypoint | `/usr/local/bin/docker-entrypoint-phpeek-pm.sh` | PHPeek PM setup |
+| Entrypoint | `/usr/local/bin/docker-entrypoint.sh` | Container startup script |
 
 ## Examples
 
@@ -189,9 +145,9 @@ Processes start with environment-specific settings
 ```yaml
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-bookworm
-    environment:
-      PHPEEK_PROCESS_MANAGER: phpeek-pm
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    ports:
+      - "80:80"
 ```
 
 ### Laravel with Horizon
@@ -199,26 +155,26 @@ services:
 ```yaml
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      PHPEEK_PROCESS_MANAGER: phpeek-pm
       LARAVEL_OPTIMIZE_CONFIG: "true"
       LARAVEL_OPTIMIZE_ROUTE: "true"
       LARAVEL_MIGRATE_ENABLED: "true"
       PHPEEK_PM_PROCESS_HORIZON_ENABLED: "true"
+    ports:
+      - "80:80"
+      - "9090:9090"  # Prometheus metrics
 ```
 
 ### Full Laravel Stack
 
-A complete example configuration for Laravel with PHPeek PM:
+A complete example configuration for Laravel:
 
 ```yaml
 services:
   app:
     image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      PHPEEK_PROCESS_MANAGER: phpeek-pm
-
       # Laravel optimizations
       LARAVEL_OPTIMIZE_CONFIG: "true"
       LARAVEL_OPTIMIZE_ROUTE: "true"
@@ -262,7 +218,6 @@ Complete reference: [phpeek-pm-environment-variables.md](./phpeek-pm-environment
 
 | Category | Key Variables |
 |----------|---------------|
-| **Mode Selection** | `PHPEEK_PROCESS_MANAGER=phpeek-pm` |
 | **Laravel Hooks** | `LARAVEL_OPTIMIZE_*`, `LARAVEL_MIGRATE_ENABLED` |
 | **Process Control** | `PHPEEK_PM_PROCESS_*_ENABLED` |
 | **Scaling** | `PHPEEK_PM_PROCESS_QUEUE_*_SCALE` |
@@ -319,8 +274,6 @@ Enable scheduled tasks with standard cron expressions:
 
 ```yaml
 environment:
-  PHPEEK_PROCESS_MANAGER: phpeek-pm
-
   # Laravel scheduled command (every 15 minutes)
   PHPEEK_PM_PROCESS_CACHE_WARMUP_ENABLED: "true"
   PHPEEK_PM_PROCESS_CACHE_WARMUP_COMMAND: "php,artisan,cache:warm"
@@ -416,11 +369,9 @@ Replace Laravel's cron entry with PHPeek PM scheduled tasks:
 * * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-**New approach** (PHPeek PM v1.1.0+):
+**New approach** (PHPeek PM):
 ```yaml
 environment:
-  PHPEEK_PROCESS_MANAGER: phpeek-pm
-
   # Cache warmup every 15 minutes
   PHPEEK_PM_PROCESS_CACHE_WARMUP_ENABLED: "true"
   PHPEEK_PM_PROCESS_CACHE_WARMUP_COMMAND: "php,artisan,cache:warm"
@@ -537,9 +488,8 @@ Mount a custom `phpeek-pm.yaml`:
 ```yaml
 services:
   app:
-    image: phpeek/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      PHPEEK_PROCESS_MANAGER: phpeek-pm
       PHPEEK_PM_CONFIG: /app/config/phpeek-pm.yaml
     volumes:
       - ./custom-phpeek-pm.yaml:/app/config/phpeek-pm.yaml:ro
@@ -575,27 +525,9 @@ Each queue worker group is independently scalable and monitored.
 
 ## Migration Guide
 
-### From Default Mode
+### From Supervisor/S6-Overlay
 
-**Before**:
-```yaml
-environment:
-  PHPEEK_AUTORUN_ENABLED: "true"
-  LARAVEL_AUTO_OPTIMIZE: "true"
-  LARAVEL_AUTO_MIGRATE: "true"
-```
-
-**After**:
-```yaml
-environment:
-  PHPEEK_PROCESS_MANAGER: phpeek-pm
-  LARAVEL_OPTIMIZE_CONFIG: "true"
-  LARAVEL_OPTIMIZE_ROUTE: "true"
-  LARAVEL_OPTIMIZE_VIEW: "true"
-  LARAVEL_MIGRATE_ENABLED: "true"
-```
-
-### From Supervisor/s6-overlay
+If you're migrating from images using Supervisor or S6-Overlay, PHPeek PM offers a simpler, lighter alternative.
 
 **Benefits of switching**:
 - ✅ Structured JSON logging with process segmentation
@@ -643,28 +575,23 @@ environment:
   PHPEEK_PM_RESTART_BACKOFF: "10"
 ```
 
-## Roadmap
+## Features (v1.0.0)
 
-- [x] **Phase 1** - Core foundation with single process support
-- [ ] **Phase 2** - Multi-process orchestration with dependencies (current)
-  - DAG dependency resolver
-  - Health checks (TCP, HTTP, exec)
-  - Restart policies with exponential backoff
-- [ ] **Phase 3** - Lifecycle hooks
-  - Pre/post start/stop hooks
-  - Per-process hooks (Horizon terminate)
-- [ ] **Phase 4** - Prometheus metrics
-  - Process metrics (up, restarts, CPU, memory)
-  - Health check metrics
-  - Scaling metrics
-- [ ] **Phase 5** - Management API
-  - REST API with authentication
-  - Dynamic scaling endpoint
-  - Process control (start, stop, restart)
-- [ ] **Phase 6** - Testing & production readiness
-  - Comprehensive tests
-  - Documentation
-  - Grafana dashboards
+PHPeek PM v1.0.0 includes:
+
+- ✅ Multi-process orchestration with DAG dependency resolver
+- ✅ Health checks (TCP, HTTP, exec) with auto-restart
+- ✅ Restart policies with exponential backoff
+- ✅ Pre/post start/stop lifecycle hooks
+- ✅ Per-process hooks (Horizon terminate)
+- ✅ Prometheus metrics (process, health check, scaling)
+- ✅ Structured JSON logging with multiline support
+- ✅ Sensitive data redaction
+- ✅ Scheduled tasks with cron expressions
+
+**Coming soon:**
+- Management API for dynamic scaling
+- Grafana dashboard templates
 
 ## Resources
 

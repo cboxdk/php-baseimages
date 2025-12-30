@@ -12,13 +12,13 @@ PHPeek Base Images are production-ready PHP Docker containers designed for moder
 
 ### The Problem
 
-Setting up PHP containers for production is surprisingly complex:
+Setting up PHP containers for production requires decisions:
 
 1. **Official PHP images are minimal** - You need to install 20+ extensions yourself
-2. **Existing solutions are bloated** - 500MB+ images with unnecessary tools
-3. **Process management is fragile** - S6 Overlay adds complexity
-4. **Configuration is scattered** - Different approaches for each service
-5. **Security updates are manual** - You're responsible for rebuilding
+2. **Extension management is time-consuming** - Compiling extensions for each version
+3. **Process management choices** - Different approaches (S6 Overlay, supervisord, bash)
+4. **Configuration varies** - Each solution has different conventions
+5. **Security updates need attention** - Keeping base images current
 
 ### The PHPeek Solution
 
@@ -26,12 +26,12 @@ PHPeek provides production-ready containers with:
 
 - **Three Image Tiers** - Slim (~120MB), Standard (~250MB), Full (~700MB)
 - **25+ PHP extensions pre-installed** - Everything Laravel, Symfony, WordPress need
-- **Vanilla bash entrypoint** - Simple, debuggable process management (no S6 Overlay)
+- **PHPeek PM built-in** - Lightweight Go-based process manager (no S6 Overlay)
 - **50+ environment variables** - Runtime configuration without rebuilding
 - **Weekly security rebuilds** - Automatic CVE patching
 - **Framework auto-detection** - Laravel, Symfony, WordPress optimizations
 
-> **PHPeek PM**: A Go-based process manager for advanced multi-process orchestration. See [PHPeek PM Integration](../phpeek-pm-integration.md) for details.
+See [PHPeek PM Integration](../phpeek-pm-integration.md) for advanced configuration.
 
 ## Three Image Tiers
 
@@ -54,16 +54,17 @@ PHPeek images come in three tiers to match your exact needs:
 
 | Feature | PHPeek | ServerSideUp |
 |---------|--------|--------------|
-| Process Manager | Vanilla bash (simple) | S6 Overlay (complex) |
-| Image Tiers | 3 (Slim/Standard/Full) | 2 (Basic/Pro) |
-| Framework Support | Laravel/Symfony/WordPress | Laravel only |
-| Runtime Config | 50+ variables | ~30 variables |
-| PHP Versions | 8.2, 8.3, 8.4 | 8.1, 8.2, 8.3 |
-| Security Rebuilds | Weekly automated | Manual |
+| Process Manager | PHPeek PM (Go binary) | S6 Overlay |
+| Image Tiers | 3 (Slim/Standard/Full) | 2 (Base/Full) |
+| Framework Support | Laravel/Symfony/WordPress | Laravel-focused |
+| PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4 |
+| Community | Newer project | Established, active |
 
-**When to choose PHPeek**: You need Symfony/WordPress support, latest PHP, or prefer simple debuggable entrypoints.
+**When to choose PHPeek**: You need PHP 8.5, Symfony/WordPress support, or built-in Prometheus metrics.
 
-**When to choose ServerSideUp**: You need established community support or S6 Overlay features.
+**When to choose ServerSideUp**: You want established community support, proven S6 Overlay patterns, or Laravel-focused optimizations.
+
+Both are production-ready. See [PHPeek vs ServerSideUp](../guides/phpeek-vs-serversideup.md) for detailed comparison.
 
 ### vs Official PHP Images
 
@@ -94,26 +95,28 @@ PHPeek images come in three tiers to match your exact needs:
 
 ## Core Innovations
 
-### Vanilla Bash Entrypoint
+### PHPeek Process Manager
 
-PHPeek uses a simple, debuggable bash entrypoint instead of complex init systems:
+PHPeek uses a lightweight Go-based process manager:
 
 ```bash
 # What happens at container start:
 1. Detect framework (Laravel/Symfony/WordPress)
 2. Fix directory permissions automatically
-3. Start PHP-FPM (daemonized)
-4. Start Nginx (foreground, keeps container alive)
-5. Handle graceful shutdown on SIGTERM
+3. PHPeek PM starts as PID 1
+4. PHPeek PM orchestrates PHP-FPM, Nginx, and optional workers
+5. Health checks monitor all processes with auto-restart
+6. Graceful shutdown on SIGTERM
 ```
 
 **Benefits**:
-- Easy to debug (`docker exec` into container, read `/usr/local/bin/docker-entrypoint.sh`)
-- No S6 Overlay complexity or learning curve
-- Works with any debugging/profiling tools
+- Easy to debug (structured JSON logs, standard process inspection)
+- Single Go binary for process management
+- Built-in health checks and Prometheus metrics
+- Automatic process restart on failure
 - Custom scripts via `/docker-entrypoint-init.d/`
 
-> **PHPeek PM**: Go-based process manager available for advanced orchestration. Enable with `PHPEEK_PROCESS_MANAGER=phpeek-pm`.
+See [PHPeek PM Integration](../phpeek-pm-integration.md) for configuration options.
 
 ### Framework Auto-Detection
 

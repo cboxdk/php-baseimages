@@ -1,61 +1,80 @@
 ---
 title: "PHPeek vs ServerSideUp"
-description: "Side-by-side comparison of PHPeek and ServerSideUp PHP base images focusing on developer experience, documentation quality, and built-in features"
+description: "Honest comparison to help you choose the right PHP Docker images for your project"
 weight: 60
 ---
 
 # PHPeek vs ServerSideUp
 
-Objective comparison of PHPeek base images with ServerSideUp (SSUp) images across the three areas teams ask most about: developer experience (DX), documentation, and built-in features.
+Both PHPeek and ServerSideUp provide production-ready PHP Docker images. This guide helps you choose based on your specific needs.
 
-## TL;DR Scores
+## Quick Comparison
 
-| Category | PHPeek | ServerSideUp | Notes |
-|----------|:------:|:------------:|-------|
-| Developer Experience | **4.5 / 5** | 3.5 / 5 | PHPeek bundles framework-aware toggles and ready-to-run Compose stacks; SSUp expects more manual wiring |
-| Documentation | **4.5 / 5** | 3.0 / 5 | PHPeek ships per-framework guides, troubleshooting matrices, and copy-paste snippets; SSUp docs are thinner and scattered |
-| Features | **4.7 / 5** | 3.5 / 5 | PHPeek adds schedulers, queues, image tooling, and production hardening out of the box; SSUp focuses on hardened PHP images only |
+| Aspect | PHPeek | ServerSideUp |
+|--------|--------|--------------|
+| Process Manager | PHPeek PM (Go) | S6 Overlay |
+| Community | Newer project | Established, active community |
+| PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4 |
+| Image Tiers | Slim, Standard, Full | Base, Full |
+| Framework Focus | Laravel, Symfony, WordPress | Laravel-focused |
 
-## Developer Experience
+## When to Choose ServerSideUp
 
-- **PHPeek strengths**
-  - Framework toggles (`LARAVEL_SCHEDULER`, `LARAVEL_QUEUE`, `LARAVEL_HORIZON`, etc.) with default processes handled by PHPeek PM (`docs/reference/environment-variables.md`).
-  - Curated Compose stacks for Laravel, Symfony, WordPress, and queue workers with DB/Redis baked in (`docs/guides/laravel-guide.md`, `docs/guides/symfony-guide.md`, `docs/guides/queue-workers.md`).
-  - Dev vs prod image split (`-dev` with Xdebug/MailHog) plus “Common Mistakes” callouts to unblock juniors fast.
-- **ServerSideUp gaps**
-  - Provides great PHP runtimes, but devs must wire scheduler cron, queue processes, Redis, and DB containers manually.
-  - No built-in MailHog/Xdebug variants; requires Dockerfile layering.
-- **Actionable follow-ups**
-  1. Keep tightening PHPeek’s DX loops (e.g., ship `docker compose up` healthcheck templates + GitHub Actions starters).
-  2. Capture more framework-specific env presets (e.g., Drupal, Magento) to widen the lead.
+ServerSideUp is an excellent choice when:
 
-## Documentation Quality
+- **You want established community support** - ServerSideUp has a larger user base and more community resources
+- **You're comfortable with S6 Overlay** - Their S6-based process management is battle-tested
+- **You primarily use Laravel** - Their Laravel integration is mature and well-documented
+- **You prefer a proven solution** - They've been around longer with more production deployments
 
-- **PHPeek strengths**
-  - Dedicated guide per framework + workflow, complete with quick starts, production checklists, and verification commands (`docs/guides/laravel-guide.md:139-214`, `docs/guides/production-deployment.md:198-241`).
-  - Troubleshooting includes wrong/right patterns and ready-to-run commands (`docs/troubleshooting/common-issues.md:320-344`).
-  - Advanced content covers topics like image processing and testing, reducing the need for external blogs.
-- **ServerSideUp gaps**
-  - Documentation split between repo README and disparate blog posts; lacks per-framework structure or troubleshooting matrices.
-  - Minimal coverage for non-Laravel frameworks.
-- **Actionable follow-ups**
-  1. Publish this comparison prominently (Guides index + landing page) so evaluators see documentation depth instantly.
-  2. Add short video walkthroughs or GIFs to key guides to push the DX story even further.
+## When to Choose PHPeek
 
-## Feature Comparison
+PHPeek may be better when:
 
-- **PHPeek strengths**
-  - Built-in process manager enabling cron, queues, Horizon, Reverb, Octane, etc., via env toggles.
-  - First-class image tooling: GD, Imagick, libvips, Browsershot with working PHP examples (`docs/guides/image-processing.md`).
-  - Production deployment checklist covering secrets, OPcache tuning, health checks, monitoring, and zero-downtime strategies (`docs/guides/production-deployment.md`).
-  - Prebuilt stacks for Redis, MySQL/Postgres, MailHog, and workers.
-- **ServerSideUp gaps**
-  - Ships excellent base runtimes but leaves process orchestration, schedulers, and ancillary services to the user.
-  - Fewer turnkey recipes for monitoring/logging or zero-downtime rollouts.
-- **Actionable follow-ups**
-  1. Surface observability add-ons (Prometheus exporters, log forwarding) to reinforce PHPeek’s production story.
-  2. Offer Kubernetes/Helm blueprints to capture teams scaling beyond Compose.
+- **You need PHP 8.5** - We support the latest PHP versions quickly
+- **You want built-in Prometheus metrics** - PHPeek PM includes observability features
+- **You need Symfony or WordPress** - We have framework-specific optimizations
+- **You prefer a single-binary approach** - PHPeek PM is a single Go binary
 
-## Conclusion
+## Process Management Comparison
 
-PHPeek already leads ServerSideUp in DX, docs, and built-in features thanks to framework-specific guidance, strong troubleshooting content, and opinionated defaults. To widen the gap, double down on automated health checks, CI templates, and platform-specific examples (Kubernetes, ECS). This comparison page should be linked from marketing/README so prospects quickly understand why PHPeek is the higher-level choice.
+### ServerSideUp (S6 Overlay)
+- Mature, widely-used init system
+- More configuration options
+- Different learning path from traditional Docker
+- Well-documented in the S6 ecosystem
+
+### PHPeek (PHPeek PM)
+- Lightweight Go binary
+- Built-in Prometheus metrics
+- Simpler configuration
+- Newer, less battle-tested
+
+## Honest Assessment
+
+**ServerSideUp advantages:**
+- More mature project with proven track record
+- Larger community for support
+- More third-party tutorials and resources
+- S6 Overlay is a known quantity in the Docker ecosystem
+
+**PHPeek advantages:**
+- Newer PHP versions (8.5 support)
+- Built-in metrics and health checks
+- Simpler process management for basic use cases
+- Multi-framework support out of the box
+
+## Recommendation
+
+**Start with ServerSideUp if:**
+- This is your first time with PHP Docker images
+- You need community support and resources
+- You're building a Laravel application
+
+**Consider PHPeek if:**
+- You need the latest PHP versions
+- You want built-in observability
+- You're using Symfony or WordPress
+- You prefer simpler tooling
+
+Both are good choices. Pick based on your specific needs, not marketing claims.
