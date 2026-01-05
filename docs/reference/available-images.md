@@ -73,6 +73,92 @@ All tiers support rootless execution (runs as `www-data` user). Available for al
 
 Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 
+## High-Performance Images (Laravel Octane)
+
+Specialized images for high-performance PHP applications using Laravel Octane.
+
+### PHP Swoole
+
+Swoole extension for maximum performance with coroutines and task workers.
+
+| Image Tag | PHP | Swoole | Architecture |
+|-----------|-----|--------|--------------|
+| `php-swoole:8.4-bookworm` | 8.4 | Latest | amd64, arm64 |
+| `php-swoole:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
+| `php-swoole:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
+
+**Includes:** Swoole extension with OpenSSL, cURL, c-ares, all PHPeek extensions, Composer, Node.js, PHPeek PM.
+
+```yaml
+# Laravel Octane with Swoole
+services:
+  app:
+    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    ports:
+      - "8000:8000"
+```
+
+📖 **Guide:** [Swoole Guide](../guides/swoole-guide.md)
+
+### PHP OpenSwoole
+
+OpenSwoole fork with async I/O and similar features to Swoole.
+
+| Image Tag | PHP | OpenSwoole | Architecture |
+|-----------|-----|------------|--------------|
+| `php-openswoole:8.4-bookworm` | 8.4 | Latest | amd64, arm64 |
+| `php-openswoole:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
+| `php-openswoole:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
+
+**Includes:** OpenSwoole extension with OpenSSL, cURL, c-ares, all PHPeek extensions, Composer, Node.js, PHPeek PM.
+
+```yaml
+# Laravel Octane with OpenSwoole
+services:
+  app:
+    image: ghcr.io/gophpeek/baseimages/php-openswoole:8.4-bookworm
+    ports:
+      - "8000:8000"
+```
+
+### FrankenPHP
+
+Modern PHP application server built on Caddy with automatic HTTPS and HTTP/3.
+
+| Image Tag | PHP | FrankenPHP | Architecture |
+|-----------|-----|------------|--------------|
+| `frankenphp:8.4-bookworm` | 8.4 | Latest | amd64, arm64 |
+| `frankenphp:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
+| `frankenphp:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
+
+**Includes:** FrankenPHP binary, Caddy web server, all PHPeek extensions, Composer, Node.js, PHPeek PM.
+
+```yaml
+# Laravel Octane with FrankenPHP (auto HTTPS)
+services:
+  app:
+    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    ports:
+      - "80:80"
+      - "443:443"
+```
+
+📖 **Guide:** [FrankenPHP Guide](../guides/frankenphp-guide.md)
+
+### Server Comparison
+
+| Feature | Swoole | OpenSwoole | FrankenPHP |
+|---------|--------|------------|------------|
+| **Performance** | Fastest | Fast | Fast |
+| **Coroutines** | Yes | Yes | No |
+| **Task Workers** | Yes | Yes | No |
+| **HTTP/3** | No | No | Yes |
+| **Auto HTTPS** | No | No | Yes (Caddy) |
+| **Memory** | Lowest | Low | Medium |
+| **Best For** | Max performance | Async I/O | Easy HTTPS |
+
+📖 **Complete guide:** [Laravel Octane Guide](../guides/laravel-octane.md)
+
 ## Tag Format
 
 ```
@@ -240,4 +326,4 @@ docker-compose up -d --pull always
 
 ---
 
-**Need help choosing?** See [Choosing a Variant](../getting-started/choosing-variant.md) | [Image Tiers Comparison](editions-comparison.md)
+**Need help choosing?** See [Choosing a Variant](../getting-started/choosing-variant.md) | [Image Tiers Comparison](./editions-comparison.md)

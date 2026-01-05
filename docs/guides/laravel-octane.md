@@ -272,8 +272,8 @@ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
 
 ## See Also
 
-- [Examples: octane-swoole/](../../examples/octane-swoole/)
-- [Examples: octane-roadrunner/](../../examples/octane-roadrunner/)
-- [Examples: octane-frankenphp/](../../examples/octane-frankenphp/)
-- [Queue Workers Guide](queue-workers.md)
-- [PHPeek PM Integration](../phpeek-pm-integration.md)
+- [Swoole Guide](./swoole-guide.md) - Detailed Swoole configuration
+- [FrankenPHP Guide](./frankenphp-guide.md) - Detailed FrankenPHP configuration
+- [Queue Workers Guide](./queue-workers.md) - Background job processing
+- [PHPeek PM Integration](../phpeek-pm-integration.md) - Process manager details
+- [Available Images](../reference/available-images.md) - All image variants

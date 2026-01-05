@@ -2,8 +2,9 @@
 
 Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions on Debian 12 (Bookworm) and no unnecessary complexity.
 
-[![Build Status](https://github.com/gophpeek/baseimages/workflows/Build/badge.svg)](https://github.com/gophpeek/baseimages/actions)
-[![Security Scan](https://github.com/gophpeek/baseimages/workflows/Security/badge.svg)](https://github.com/gophpeek/baseimages/security)
+[![PHP-FPM-Nginx](https://github.com/gophpeek/baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/gophpeek/baseimages/actions/workflows/build-php-fpm-nginx.yml)
+[![Swoole](https://github.com/gophpeek/baseimages/actions/workflows/build-php-swoole.yml/badge.svg)](https://github.com/gophpeek/baseimages/actions/workflows/build-php-swoole.yml)
+[![FrankenPHP](https://github.com/gophpeek/baseimages/actions/workflows/build-frankenphp.yml/badge.svg)](https://github.com/gophpeek/baseimages/actions/workflows/build-frankenphp.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎯 Philosophy
@@ -66,20 +67,35 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 
 ### Image Matrix
 
-| Image Type | Available Tags |
-|------------|----------------|
-| **php-fpm-nginx** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` |
-| **php-fpm** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` |
-| **php-cli** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` |
-| **nginx** | `bookworm` |
+| Image Type | Available Tags | Use Case |
+|------------|----------------|----------|
+| **php-fpm-nginx** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | Multi-service container |
+| **php-fpm** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | Single-process PHP-FPM |
+| **php-cli** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | CLI workers, cron jobs |
+| **nginx** | `bookworm` | Standalone Nginx |
+
+### High-Performance Images (Laravel Octane)
+
+| Image Type | Available Tags | Server | Best For |
+|------------|----------------|--------|----------|
+| **php-swoole** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | Swoole | Maximum performance, coroutines |
+| **php-openswoole** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | OpenSwoole | Swoole fork with async I/O |
+| **frankenphp** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | FrankenPHP | Auto HTTPS, HTTP/3, worker mode |
+
+📖 **Laravel Octane guide:** [Laravel Octane →](docs/guides/laravel-octane.md)
 
 **Full image name:** `ghcr.io/gophpeek/baseimages/{type}:{tag}`
 
 ```bash
-# Examples
+# Standard images
 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
 ghcr.io/gophpeek/baseimages/php-cli:8.2-bookworm
+
+# High-performance images (Laravel Octane)
+ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+ghcr.io/gophpeek/baseimages/php-openswoole:8.4-bookworm
+ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
 ```
 
 ### Image Tiers: Slim / Standard / Full
@@ -156,6 +172,11 @@ Add `-dev` suffix for development images with Xdebug:
 - **[Queue Workers Guide](docs/guides/queue-workers.md)** - Background jobs, Horizon, scaling
 - [Development Workflow](docs/guides/development-workflow.md) - Local development + Xdebug
 - [Production Deployment](docs/guides/production-deployment.md) - Deploy to production
+
+### High-Performance (Laravel Octane)
+- **[Laravel Octane Guide](docs/guides/laravel-octane.md)** - Swoole, RoadRunner, FrankenPHP
+- [Swoole Guide](docs/guides/swoole-guide.md) - Coroutines, task workers, maximum performance
+- [FrankenPHP Guide](docs/guides/frankenphp-guide.md) - Auto HTTPS, HTTP/3, Caddy integration
 
 ### Advanced Topics
 - **[Extending Images](docs/advanced/extending-images.md)** - Add custom extensions and packages

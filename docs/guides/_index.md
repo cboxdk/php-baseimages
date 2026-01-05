@@ -50,6 +50,23 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Queue + scheduler toggles
   - Asset + Glide configuration
 
+### High-Performance (Laravel Octane)
+
+- **[Laravel Octane Guide](laravel-octane.md)** ⚡ Performance
+  - Swoole, RoadRunner, and FrankenPHP comparison
+  - Complete configuration reference
+  - Production considerations
+
+- **[Swoole Guide](swoole-guide.md)**
+  - Maximum performance with coroutines
+  - Task workers for background processing
+  - Memory management and scaling
+
+- **[FrankenPHP Guide](frankenphp-guide.md)**
+  - Automatic HTTPS with Let's Encrypt
+  - HTTP/3 and Early Hints support
+  - Caddy integration and custom Caddyfile
+
 ### Workflow Guides
 
 - **[Development Workflow](development-workflow.md)**

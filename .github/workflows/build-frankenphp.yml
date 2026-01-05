@@ -25,18 +25,24 @@ on:
   repository_dispatch:
     types: [php-base-updated]
   schedule:
-    # Weekly security rebuild - Monday 03:00 UTC (after php-base at 01:00)
-    - cron: '0 3 * * 1'
+    # Weekly security rebuild - Monday 04:00 UTC (staggered to avoid rate limits)
+    - cron: '0 4 * * 1'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/frankenphp
+
+# Prevent duplicate runs and rate-limit issues
+concurrency:
+  group: frankenphp-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-matrix:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 2  # Limit parallel builds to avoid registry rate limits
       matrix:
         php_version: ['8.2', '8.3', '8.4']
         os_variant: ['bookworm']
