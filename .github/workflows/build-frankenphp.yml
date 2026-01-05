@@ -105,8 +105,9 @@ jobs:
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
           echo "Testing $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE frankenphp version
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          # Use --entrypoint to bypass entrypoint script for version checks
+          docker run --rm --entrypoint php $IMAGE -v
+          docker run --rm --entrypoint frankenphp $IMAGE version
+          docker run --rm --entrypoint composer $IMAGE --version
+          docker run --rm --entrypoint node $IMAGE --version
+          docker run --rm --entrypoint phpeek-pm $IMAGE --version
