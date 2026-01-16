@@ -37,9 +37,9 @@ jobs:
         run: |
           mkdir -p cbox-pm/binaries
           VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
           chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
@@ -82,9 +82,9 @@ jobs:
         run: |
           mkdir -p cbox-pm/binaries
           VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
           chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
@@ -126,9 +126,9 @@ jobs:
         run: |
           mkdir -p cbox-pm/binaries
           VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
           chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build images for scanning (full chain)

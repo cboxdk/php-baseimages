@@ -171,7 +171,7 @@ fi
 
 # Cbox PM
 current=$(echo "$CURRENT" | jq -r ".tools.cbox_pm")
-latest=$(fetch_github_latest "cboxdk/cbox-pm")
+latest=$(fetch_github_latest "gophpeek/phpeek-pm")
 if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
     if [[ "$current" != "$latest" ]]; then
         UPDATE_COUNT=$((UPDATE_COUNT + 1))
