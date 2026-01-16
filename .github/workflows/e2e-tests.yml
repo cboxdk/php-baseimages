@@ -65,32 +65,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read Cbox PM version
+      - name: Read Cbox Init version
         id: versions
         run: |
-          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download and verify Cbox PM binaries
+      - name: Download and verify Cbox Init binaries
         run: |
-          mkdir -p cbox-pm/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-init/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
-          echo "Downloading Cbox PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
+          echo "Downloading Cbox Init v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
-          cd cbox-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-init/binaries
+          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
 
-          # Rename to cbox-pm for the build
-          mv phpeek-pm-linux-amd64 cbox-pm-linux-amd64
-          mv phpeek-pm-linux-arm64 cbox-pm-linux-arm64
           cd -
 
-          chmod +x cbox-pm/binaries/cbox-pm-*
+          chmod +x cbox-init/binaries/cbox-init-*
 
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
@@ -146,32 +143,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read Cbox PM version
+      - name: Read Cbox Init version
         id: versions
         run: |
-          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download and verify Cbox PM binaries
+      - name: Download and verify Cbox Init binaries
         run: |
-          mkdir -p cbox-pm/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-init/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
-          echo "Downloading Cbox PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
+          echo "Downloading Cbox Init v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
-          cd cbox-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-init/binaries
+          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
 
-          # Rename to cbox-pm for the build
-          mv phpeek-pm-linux-amd64 cbox-pm-linux-amd64
-          mv phpeek-pm-linux-arm64 cbox-pm-linux-arm64
           cd -
 
-          chmod +x cbox-pm/binaries/cbox-pm-*
+          chmod +x cbox-init/binaries/cbox-init-*
 
       - name: Determine Dockerfile paths
         id: paths

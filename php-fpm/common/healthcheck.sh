@@ -83,8 +83,8 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # Check 5: Cbox PM
 # ─────────────────────────────────────────────────────────────────────────────
-if command -v cbox-pm >/dev/null 2>&1; then
-    if cbox-pm --version >/dev/null 2>&1; then
+if command -v cbox-init >/dev/null 2>&1; then
+    if cbox-init --version >/dev/null 2>&1; then
         check_passed "Cbox PM available"
     else
         check_warning "Cbox PM installed but not responding"

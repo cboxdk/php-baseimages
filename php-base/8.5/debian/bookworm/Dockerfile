@@ -112,31 +112,31 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # ============================================================================
 # Cbox PM (Process Manager)
 # ============================================================================
-ARG CBOX_PM_VERSION=1.0.0
-ARG CBOX_PM_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
-ARG CBOX_PM_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
+ARG CBOX_INIT_VERSION=1.0.0
+ARG CBOX_INIT_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
+ARG CBOX_INIT_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
 ARG TARGETPLATFORM
 
-COPY cbox-pm/binaries/cbox-pm-linux-amd64 /tmp/cbox-pm-linux-amd64
-COPY cbox-pm/binaries/cbox-pm-linux-arm64 /tmp/cbox-pm-linux-arm64
+COPY cbox-init/binaries/cbox-init-linux-amd64 /tmp/cbox-init-linux-amd64
+COPY cbox-init/binaries/cbox-init-linux-arm64 /tmp/cbox-init-linux-arm64
 
 RUN set -eux; \
     case "${TARGETPLATFORM}" in \
         linux/amd64) \
-            CBOX_PM_ARCH="amd64"; \
-            CBOX_PM_CHECKSUM="${CBOX_PM_SHA256_AMD64}" ;; \
+            CBOX_INIT_ARCH="amd64"; \
+            CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_AMD64}" ;; \
         linux/arm64) \
-            CBOX_PM_ARCH="arm64"; \
-            CBOX_PM_CHECKSUM="${CBOX_PM_SHA256_ARM64}" ;; \
+            CBOX_INIT_ARCH="arm64"; \
+            CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_ARM64}" ;; \
         *) \
             echo "Unsupported platform: ${TARGETPLATFORM}"; \
             exit 1 ;; \
     esac; \
-    echo "${CBOX_PM_CHECKSUM}  /tmp/cbox-pm-linux-${CBOX_PM_ARCH}" | sha256sum -c -; \
-    mv /tmp/cbox-pm-linux-${CBOX_PM_ARCH} /usr/local/bin/cbox-pm; \
-    chmod +x /usr/local/bin/cbox-pm; \
-    rm -f /tmp/cbox-pm-linux-*; \
-    /usr/local/bin/cbox-pm --version
+    echo "${CBOX_INIT_CHECKSUM}  /tmp/cbox-init-linux-${CBOX_INIT_ARCH}" | sha256sum -c -; \
+    mv /tmp/cbox-init-linux-${CBOX_INIT_ARCH} /usr/local/bin/cbox-init; \
+    chmod +x /usr/local/bin/cbox-init; \
+    rm -f /tmp/cbox-init-linux-*; \
+    /usr/local/bin/cbox-init --version
 
 # ============================================================================
 # Base PHP Configuration

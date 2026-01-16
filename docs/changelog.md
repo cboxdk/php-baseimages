@@ -97,7 +97,7 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tie
 ### Added
 - **Cbox PM** - Go-based process manager replacing bash scripts
 - Laravel Horizon support (`LARAVEL_HORIZON=true`)
-- Queue worker scaling (`CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE`)
+- Queue worker scaling (`CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE`)
 - JSON structured logging
 - Graceful shutdown handling
 

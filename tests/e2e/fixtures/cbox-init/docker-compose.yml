@@ -1,0 +1,18 @@
+services:
+  app:
+    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm}
+    container_name: e2e-cbox-init-app
+    ports:
+      - "8094:80"
+      - "9094:9090"
+    volumes:
+      - ./app:/var/www/html
+    environment:
+      - PHP_MEMORY_LIMIT=256M
+      - CBOX_LOG_LEVEL=debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s

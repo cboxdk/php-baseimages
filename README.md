@@ -18,7 +18,7 @@ Clean, minimal, and production-ready PHP Docker base images for modern PHP appli
 
 ### 🔧 Cbox Process Manager
 
-All `php-fpm-nginx` images include [Cbox PM](https://github.com/cboxdk/cbox-pm) - a production-grade Go-based process manager with:
+All `php-fpm-nginx` images include [Cbox PM](https://github.com/cboxdk/init) - a production-grade Go-based process manager with:
 
 - ✅ Multi-process orchestration (PHP-FPM + Nginx + Horizon + Reverb + Queue Workers)
 - ✅ Structured JSON logging with process segmentation
@@ -27,7 +27,7 @@ All `php-fpm-nginx` images include [Cbox PM](https://github.com/cboxdk/cbox-pm) 
 - ✅ Prometheus metrics for observability
 - ✅ Graceful shutdown with configurable timeouts
 
-📖 **[Cbox PM Documentation →](docs/cbox-pm-integration.md)**
+📖 **[Cbox PM Documentation →](docs/cbox-init-integration.md)**
 
 ## 🚀 Quick Start (5 Minutes)
 
@@ -188,9 +188,9 @@ Add `-dev` suffix for development images with Xdebug:
 - **[Multi-Architecture Builds](docs/advanced/multi-architecture.md)** - AMD64 + ARM64 support
 
 ### Reference
-- **[Cbox PM Integration](docs/cbox-pm-integration.md)** - Process manager guide
-- **[Cbox PM Environment Variables](docs/cbox-pm-environment-variables.md)** - PM configuration
-- **[Cbox PM Architecture](docs/cbox-pm-architecture.md)** - Technical deep dive
+- **[Cbox PM Integration](docs/cbox-init-integration.md)** - Process manager guide
+- **[Cbox PM Environment Variables](docs/cbox-init-environment-variables.md)** - PM configuration
+- **[Cbox PM Architecture](docs/cbox-init-architecture.md)** - Technical deep dive
 - [Environment Variables](docs/reference/environment-variables.md) - All configuration options
 - [Configuration Options](docs/reference/configuration-options.md) - PHP/FPM/Nginx configs
 - [Available Extensions](docs/reference/available-extensions.md) - Complete extension list

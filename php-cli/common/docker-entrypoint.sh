@@ -59,8 +59,8 @@ if command -v composer >/dev/null 2>&1; then
 fi
 
 # Check Cbox PM
-if command -v cbox-pm >/dev/null 2>&1; then
-    log_info "Cbox PM $(cbox-pm --version 2>/dev/null | head -n1)"
+if command -v cbox-init >/dev/null 2>&1; then
+    log_info "Cbox PM $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
 # Setup proper permissions (skip in rootless mode)

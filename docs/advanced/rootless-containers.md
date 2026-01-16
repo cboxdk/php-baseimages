@@ -252,11 +252,11 @@ Cbox PM works seamlessly with rootless containers:
 ```yaml
 environment:
   # Cbox PM is already configured
-  CBOX_PM_PROCESS_PHP_FPM_ENABLED: "true"
-  CBOX_PM_PROCESS_NGINX_ENABLED: "true"
+  CBOX_INIT_PROCESS_PHP_FPM_ENABLED: "true"
+  CBOX_INIT_PROCESS_NGINX_ENABLED: "true"
 
   # Queue workers work as-is
-  CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
+  CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
 
   # Laravel features
   LARAVEL_SCHEDULER: "true"

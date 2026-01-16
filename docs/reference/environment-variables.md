@@ -31,11 +31,11 @@ These user-friendly variables are automatically mapped to Cbox PM process contro
 
 | Variable | Maps To | Description |
 |----------|---------|-------------|
-| `LARAVEL_SCHEDULER` | `CBOX_PM_PROCESS_SCHEDULER_ENABLED` | Enable `php artisan schedule:work` |
-| `LARAVEL_HORIZON` | `CBOX_PM_PROCESS_HORIZON_ENABLED` | Enable Laravel Horizon |
-| `LARAVEL_REVERB` | `CBOX_PM_PROCESS_REVERB_ENABLED` | Enable Laravel Reverb |
-| `LARAVEL_QUEUE` | `CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED` | Enable default queue worker |
-| `LARAVEL_QUEUE_HIGH` | `CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED` | Enable high priority queue |
+| `LARAVEL_SCHEDULER` | `CBOX_INIT_PROCESS_SCHEDULER_ENABLED` | Enable `php artisan schedule:work` |
+| `LARAVEL_HORIZON` | `CBOX_INIT_PROCESS_HORIZON_ENABLED` | Enable Laravel Horizon |
+| `LARAVEL_REVERB` | `CBOX_INIT_PROCESS_REVERB_ENABLED` | Enable Laravel Reverb |
+| `LARAVEL_QUEUE` | `CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED` | Enable default queue worker |
+| `LARAVEL_QUEUE_HIGH` | `CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED` | Enable high priority queue |
 
 ---
 
@@ -377,7 +377,7 @@ secrets:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `WORKDIR` | `/var/www/html` | Working directory |
-| `CBOX_PM_CONFIG` | `/etc/cbox-pm/cbox-pm.yaml` | Cbox PM config path |
+| `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Cbox PM config path |
 
 ---
 

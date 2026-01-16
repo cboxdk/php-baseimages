@@ -109,7 +109,7 @@ docker compose exec app vendor/bin/typo3 cache:flush
 
 ## Scheduler Tasks
 
-TYPO3 scheduler requires cron. Cbox’s scheduler runs `vendor/bin/typo3 scheduler:run` every minute when `LARAVEL_SCHEDULER=true` and `CBOX_PM_PROCESS_SCHEDULER_COMMAND` default is used.
+TYPO3 scheduler requires cron. Cbox’s scheduler runs `vendor/bin/typo3 scheduler:run` every minute when `LARAVEL_SCHEDULER=true` and `CBOX_INIT_PROCESS_SCHEDULER_COMMAND` default is used.
 
 Manual run:
 

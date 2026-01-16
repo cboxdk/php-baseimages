@@ -6,7 +6,7 @@ Pre-configured monitoring dashboards and configurations for Cbox Base Images.
 
 ### Cbox PM Process Manager Dashboard
 
-Import `grafana-cbox-pm-dashboard.json` into Grafana for comprehensive monitoring of:
+Import `grafana-cbox-init-dashboard.json` into Grafana for comprehensive monitoring of:
 
 - **Process Status**: PHP-FPM, Nginx, Horizon, Queue Workers
 - **Resource Usage**: Memory and CPU per process
@@ -17,7 +17,7 @@ Import `grafana-cbox-pm-dashboard.json` into Grafana for comprehensive monitorin
 ### Quick Import
 
 1. Open Grafana → Dashboards → Import
-2. Upload `grafana-cbox-pm-dashboard.json`
+2. Upload `grafana-cbox-init-dashboard.json`
 3. Select your Prometheus data source
 4. Click Import
 
@@ -33,7 +33,7 @@ Add this scrape config to your `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'cbox-pm'
+  - job_name: 'cbox-init'
     static_configs:
       - targets: ['your-app:9090']
     scrape_interval: 15s
@@ -44,18 +44,18 @@ scrape_configs:
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `cbox_pm_process_up` | Gauge | Process running status (0/1) |
-| `cbox_pm_process_restarts_total` | Counter | Total process restarts |
-| `cbox_pm_process_cpu_seconds_total` | Counter | CPU time consumed |
-| `cbox_pm_process_memory_bytes` | Gauge | Memory usage in bytes |
-| `cbox_pm_health_check_status` | Gauge | Health check result (0/1) |
-| `cbox_pm_process_desired_scale` | Gauge | Desired instance count |
-| `cbox_pm_process_current_scale` | Gauge | Running instance count |
-| `cbox_pm_scheduled_task_last_run_timestamp` | Gauge | Last execution timestamp |
-| `cbox_pm_scheduled_task_next_run_timestamp` | Gauge | Next scheduled timestamp |
-| `cbox_pm_scheduled_task_last_exit_code` | Gauge | Most recent exit code |
-| `cbox_pm_scheduled_task_duration_seconds` | Gauge | Execution duration |
-| `cbox_pm_scheduled_task_total` | Counter | Total runs by status |
+| `cbox_init_process_up` | Gauge | Process running status (0/1) |
+| `cbox_init_process_restarts_total` | Counter | Total process restarts |
+| `cbox_init_process_cpu_seconds_total` | Counter | CPU time consumed |
+| `cbox_init_process_memory_bytes` | Gauge | Memory usage in bytes |
+| `cbox_init_health_check_status` | Gauge | Health check result (0/1) |
+| `cbox_init_process_desired_scale` | Gauge | Desired instance count |
+| `cbox_init_process_current_scale` | Gauge | Running instance count |
+| `cbox_init_scheduled_task_last_run_timestamp` | Gauge | Last execution timestamp |
+| `cbox_init_scheduled_task_next_run_timestamp` | Gauge | Next scheduled timestamp |
+| `cbox_init_scheduled_task_last_exit_code` | Gauge | Most recent exit code |
+| `cbox_init_scheduled_task_duration_seconds` | Gauge | Execution duration |
+| `cbox_init_scheduled_task_total` | Counter | Total runs by status |
 
 ## Docker Compose Example
 
@@ -98,10 +98,10 @@ Example Prometheus alerting rules for Cbox PM:
 
 ```yaml
 groups:
-  - name: cbox-pm
+  - name: cbox-init
     rules:
       - alert: ProcessDown
-        expr: cbox_pm_process_up == 0
+        expr: cbox_init_process_up == 0
         for: 1m
         labels:
           severity: critical
@@ -110,7 +110,7 @@ groups:
           description: "Process {{ $labels.process }} on {{ $labels.instance }} has been down for more than 1 minute."
 
       - alert: HighRestartRate
-        expr: increase(cbox_pm_process_restarts_total[5m]) > 5
+        expr: increase(cbox_init_process_restarts_total[5m]) > 5
         for: 2m
         labels:
           severity: warning
@@ -119,7 +119,7 @@ groups:
           description: "Process {{ $labels.process }} has restarted more than 5 times in the last 5 minutes."
 
       - alert: ScheduledTaskFailed
-        expr: cbox_pm_scheduled_task_last_exit_code != 0
+        expr: cbox_init_scheduled_task_last_exit_code != 0
         for: 5m
         labels:
           severity: warning
@@ -128,7 +128,7 @@ groups:
           description: "Scheduled task {{ $labels.task }} has a non-zero exit code."
 
       - alert: HealthCheckFailing
-        expr: cbox_pm_health_check_status == 0
+        expr: cbox_init_health_check_status == 0
         for: 2m
         labels:
           severity: critical
@@ -140,5 +140,5 @@ groups:
 ## Support
 
 - [Cbox Documentation](https://cbox.com/docs)
-- [Cbox PM Integration Guide](../docs/cbox-pm-integration.md)
+- [Cbox PM Integration Guide](../docs/cbox-init-integration.md)
 - [GitHub Issues](https://github.com/cboxdk/baseimages/issues)

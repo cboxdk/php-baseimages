@@ -4,7 +4,7 @@ set -e
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  Cbox Base Image - Docker Entrypoint                                    ║
 # ║  Powered by Cbox PM (Process Manager)                                   ║
-# ║  https://github.com/cboxdk/cbox-pm                                      ║
+# ║  https://github.com/cboxdk/init                                      ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=bash
 
@@ -54,16 +54,16 @@ fi
 ###########################################
 # Signal Handling for Graceful Shutdown/Reload
 ###########################################
-CBOX_PM_PID=""
+CBOX_INIT_PID=""
 PHP_FPM_PID=""
 NGINX_PID=""
 
 cleanup() {
     log_info "Received shutdown signal, cleaning up..."
     # Forward signal to Cbox PM (it handles child processes)
-    if [ -n "$CBOX_PM_PID" ] && kill -0 "$CBOX_PM_PID" 2>/dev/null; then
-        kill -TERM "$CBOX_PM_PID" 2>/dev/null
-        wait "$CBOX_PM_PID" 2>/dev/null
+    if [ -n "$CBOX_INIT_PID" ] && kill -0 "$CBOX_INIT_PID" 2>/dev/null; then
+        kill -TERM "$CBOX_INIT_PID" 2>/dev/null
+        wait "$CBOX_INIT_PID" 2>/dev/null
     fi
     # Fallback mode cleanup
     if [ -n "$PHP_FPM_PID" ] && kill -0 "$PHP_FPM_PID" 2>/dev/null; then
@@ -85,9 +85,9 @@ graceful_reload() {
         log_info "Reloading Nginx..."
         kill -HUP "$NGINX_PID" 2>/dev/null
     fi
-    if [ -n "$CBOX_PM_PID" ] && kill -0 "$CBOX_PM_PID" 2>/dev/null; then
+    if [ -n "$CBOX_INIT_PID" ] && kill -0 "$CBOX_INIT_PID" 2>/dev/null; then
         log_info "Forwarding reload to Cbox PM..."
-        kill -HUP "$CBOX_PM_PID" 2>/dev/null
+        kill -HUP "$CBOX_INIT_PID" 2>/dev/null
     fi
 }
 
@@ -220,13 +220,13 @@ decrypt_laravel_env() {
 # Environment Variable Aliases (DX)
 ###########################################
 map_env_aliases() {
-    [ -n "$LARAVEL_HORIZON" ] && validate_boolean "$LARAVEL_HORIZON" && export CBOX_PM_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
-    [ -n "$LARAVEL_REVERB" ] && validate_boolean "$LARAVEL_REVERB" && export CBOX_PM_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"
-    [ -n "$LARAVEL_SCHEDULER" ] && validate_boolean "$LARAVEL_SCHEDULER" && export CBOX_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
-    [ -n "$LARAVEL_QUEUE" ] && validate_boolean "$LARAVEL_QUEUE" && export CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
-    [ -n "$LARAVEL_QUEUE_HIGH" ] && validate_boolean "$LARAVEL_QUEUE_HIGH" && export CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
+    [ -n "$LARAVEL_HORIZON" ] && validate_boolean "$LARAVEL_HORIZON" && export CBOX_INIT_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
+    [ -n "$LARAVEL_REVERB" ] && validate_boolean "$LARAVEL_REVERB" && export CBOX_INIT_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"
+    [ -n "$LARAVEL_SCHEDULER" ] && validate_boolean "$LARAVEL_SCHEDULER" && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
+    [ -n "$LARAVEL_QUEUE" ] && validate_boolean "$LARAVEL_QUEUE" && export CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
+    [ -n "$LARAVEL_QUEUE_HIGH" ] && validate_boolean "$LARAVEL_QUEUE_HIGH" && export CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
     # Backward compatibility
-    [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
+    [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
     [ -n "$LARAVEL_AUTO_MIGRATE" ] && export LARAVEL_MIGRATE_ENABLED="$LARAVEL_AUTO_MIGRATE"
     return 0
 }
@@ -487,23 +487,23 @@ EOF
 ###########################################
 # Cbox PM Validation
 ###########################################
-validate_cbox_pm_local() {
-    local config="${CBOX_PM_CONFIG:-/etc/cbox-pm/cbox-pm.yaml}"
+validate_cbox_init_local() {
+    local config="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 
-    if ! command -v cbox-pm >/dev/null 2>&1; then
+    if ! command -v cbox-init >/dev/null 2>&1; then
         log_error "Cbox PM binary not found"
         exit 1
     fi
 
     if [ ! -f "$config" ]; then
         log_warn "Cbox PM config not found, generating default..."
-        if ! cbox-pm scaffold --output "$config" 2>/dev/null; then
+        if ! cbox-init scaffold --output "$config" 2>/dev/null; then
             log_error "Could not generate Cbox PM config"
             exit 1
         fi
     fi
 
-    if ! cbox-pm check-config --config "$config" >/dev/null 2>&1; then
+    if ! cbox-init check-config --config "$config" >/dev/null 2>&1; then
         log_error "Cbox PM config validation failed"
         exit 1
     fi
@@ -522,14 +522,14 @@ preflight_checks() {
         log_info "Laravel application detected"
 
         # Check enabled services
-        if is_true "${CBOX_PM_PROCESS_HORIZON_ENABLED:-false}"; then
+        if is_true "${CBOX_INIT_PROCESS_HORIZON_ENABLED:-false}"; then
             [ -f "$workdir/composer.lock" ] && ! grep -q '"laravel/horizon"' "$workdir/composer.lock" 2>/dev/null && {
                 log_warn "LARAVEL_HORIZON=true but laravel/horizon not found"
                 warnings=$((warnings + 1))
             }
         fi
 
-        if is_true "${CBOX_PM_PROCESS_REVERB_ENABLED:-false}"; then
+        if is_true "${CBOX_INIT_PROCESS_REVERB_ENABLED:-false}"; then
             [ -f "$workdir/composer.lock" ] && ! grep -q '"laravel/reverb"' "$workdir/composer.lock" 2>/dev/null && {
                 log_warn "LARAVEL_REVERB=true but laravel/reverb not found"
                 warnings=$((warnings + 1))
@@ -548,7 +548,7 @@ preflight_checks() {
         fi
     fi
 
-    validate_cbox_pm_local
+    validate_cbox_init_local
 
     [ $warnings -gt 0 ] && log_info "Preflight completed with $warnings warnings"
     return 0
@@ -618,8 +618,8 @@ if is_true "${LARAVEL_OPTIMIZE_ENABLED:-false}"; then
 fi
 
 # Start Cbox PM
-CBOX_PM_CONFIG="${CBOX_PM_CONFIG:-/etc/cbox-pm/cbox-pm.yaml}"
+CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 log_info "Starting Cbox PM process manager"
-log_info "Config: $CBOX_PM_CONFIG"
+log_info "Config: $CBOX_INIT_CONFIG"
 
-exec /usr/local/bin/cbox-pm serve --config "$CBOX_PM_CONFIG" "$@"
+exec /usr/local/bin/cbox-init serve --config "$CBOX_INIT_CONFIG" "$@"

@@ -244,10 +244,10 @@ services:
 
 ```bash
 # Check Cbox PM status
-docker exec <container> cbox-pm status
+docker exec <container> cbox-init status
 
 # Check Octane logs
-docker exec <container> cbox-pm logs octane
+docker exec <container> cbox-init logs octane
 ```
 
 ### Memory Issues
@@ -275,5 +275,5 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 - [Swoole Guide](./swoole-guide.md) - Detailed Swoole configuration
 - [FrankenPHP Guide](./frankenphp-guide.md) - Detailed FrankenPHP configuration
 - [Queue Workers Guide](./queue-workers.md) - Background job processing
-- [Cbox PM Integration](../cbox-pm-integration.md) - Process manager details
+- [Cbox PM Integration](../cbox-init-integration.md) - Process manager details
 - [Available Images](../reference/available-images.md) - All image variants

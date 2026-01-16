@@ -162,7 +162,7 @@ Cbox PM provides built-in metrics:
 
 ```bash
 # Check process status
-docker exec myapp cbox-pm status
+docker exec myapp cbox-init status
 
 # View metrics (Prometheus format)
 curl http://localhost:9100/metrics

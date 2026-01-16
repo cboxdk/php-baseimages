@@ -161,7 +161,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_process_up{process=\"php-fpm\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_up{process=\"php-fpm\", instance=~\"$instance\"}",
           "legendFormat": "PHP-FPM",
           "refId": "A"
         }
@@ -238,7 +238,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_process_up{process=\"nginx\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_up{process=\"nginx\", instance=~\"$instance\"}",
           "legendFormat": "Nginx",
           "refId": "A"
         }
@@ -315,7 +315,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_process_up{process=\"horizon\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_up{process=\"horizon\", instance=~\"$instance\"}",
           "legendFormat": "Horizon",
           "refId": "A"
         }
@@ -381,7 +381,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(cbox_pm_process_restarts_total{instance=~\"$instance\"})",
+          "expr": "sum(cbox_init_process_restarts_total{instance=~\"$instance\"})",
           "legendFormat": "Total Restarts",
           "refId": "A"
         }
@@ -439,7 +439,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(cbox_pm_process_current_scale{instance=~\"$instance\"})",
+          "expr": "sum(cbox_init_process_current_scale{instance=~\"$instance\"})",
           "legendFormat": "Running Processes",
           "refId": "A"
         }
@@ -516,7 +516,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "min(cbox_pm_health_check_status{instance=~\"$instance\"})",
+          "expr": "min(cbox_init_health_check_status{instance=~\"$instance\"})",
           "legendFormat": "Health",
           "refId": "A"
         }
@@ -617,7 +617,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_process_memory_bytes{instance=~\"$instance\"}",
+          "expr": "cbox_init_process_memory_bytes{instance=~\"$instance\"}",
           "legendFormat": "{{ process }}",
           "refId": "A"
         }
@@ -705,7 +705,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(cbox_pm_process_cpu_seconds_total{instance=~\"$instance\"}[1m])",
+          "expr": "rate(cbox_init_process_cpu_seconds_total{instance=~\"$instance\"}[1m])",
           "legendFormat": "{{ process }}",
           "refId": "A"
         }
@@ -822,7 +822,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_process_current_scale{process=~\"queue.*\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_current_scale{process=~\"queue.*\", instance=~\"$instance\"}",
           "legendFormat": "{{ process }} (Current)",
           "refId": "A"
         },
@@ -831,7 +831,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_process_desired_scale{process=~\"queue.*\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_desired_scale{process=~\"queue.*\", instance=~\"$instance\"}",
           "legendFormat": "{{ process }} (Desired)",
           "refId": "B"
         }
@@ -919,7 +919,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "increase(cbox_pm_process_restarts_total{process=~\"queue.*\", instance=~\"$instance\"}[5m])",
+          "expr": "increase(cbox_init_process_restarts_total{process=~\"queue.*\", instance=~\"$instance\"}[5m])",
           "legendFormat": "{{ process }}",
           "refId": "A"
         }
@@ -1062,7 +1062,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_scheduled_task_last_run_timestamp{instance=~\"$instance\"} * 1000",
+          "expr": "cbox_init_scheduled_task_last_run_timestamp{instance=~\"$instance\"} * 1000",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1073,7 +1073,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_scheduled_task_next_run_timestamp{instance=~\"$instance\"} * 1000",
+          "expr": "cbox_init_scheduled_task_next_run_timestamp{instance=~\"$instance\"} * 1000",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1084,7 +1084,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_scheduled_task_last_exit_code{instance=~\"$instance\"}",
+          "expr": "cbox_init_scheduled_task_last_exit_code{instance=~\"$instance\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1095,7 +1095,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_scheduled_task_duration_seconds{instance=~\"$instance\"}",
+          "expr": "cbox_init_scheduled_task_duration_seconds{instance=~\"$instance\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "",
@@ -1259,7 +1259,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "increase(cbox_pm_scheduled_task_total{instance=~\"$instance\"}[1h])",
+          "expr": "increase(cbox_init_scheduled_task_total{instance=~\"$instance\"}[1h])",
           "legendFormat": "{{ task }} ({{ status }})",
           "refId": "A"
         }
@@ -1380,7 +1380,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_pm_health_check_status{instance=~\"$instance\"}",
+          "expr": "cbox_init_health_check_status{instance=~\"$instance\"}",
           "legendFormat": "{{ process }} ({{ check_type }})",
           "refId": "A"
         }
@@ -1405,7 +1405,7 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(cbox_pm_process_up, instance)",
+        "definition": "label_values(cbox_init_process_up, instance)",
         "hide": 0,
         "includeAll": true,
         "label": "Instance",
@@ -1413,7 +1413,7 @@
         "name": "instance",
         "options": [],
         "query": {
-          "query": "label_values(cbox_pm_process_up, instance)",
+          "query": "label_values(cbox_init_process_up, instance)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -1431,7 +1431,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "Cbox PM - Process Manager",
-  "uid": "cbox-pm-dashboard",
+  "uid": "cbox-init-dashboard",
   "version": 1,
   "weekStart": ""
 }

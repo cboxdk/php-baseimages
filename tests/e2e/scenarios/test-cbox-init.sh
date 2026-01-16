@@ -8,12 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib/test-utils.sh"
 
 E2E_ROOT="$(get_e2e_root)"
-PROJECT_NAME="e2e-cbox-pm"
-CONTAINER_NAME="e2e-cbox-pm-app"
+PROJECT_NAME="e2e-cbox-init"
+CONTAINER_NAME="e2e-cbox-init-app"
 BASE_URL="http://localhost:8094"
 
-# Use the cbox-pm fixture (basic php-fpm-nginx container)
-FIXTURE_DIR="$E2E_ROOT/fixtures/cbox-pm"
+# Use the cbox-init fixture (basic php-fpm-nginx container)
+FIXTURE_DIR="$E2E_ROOT/fixtures/cbox-init"
 
 # Simple cleanup function - called explicitly, not via trap
 # Always returns 0 regardless of docker compose result
@@ -30,7 +30,7 @@ cat > "$FIXTURE_DIR/docker-compose.yml" <<'EOF'
 services:
   app:
     image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine}
-    container_name: e2e-cbox-pm-app
+    container_name: e2e-cbox-init-app
     ports:
       - "8094:80"
       - "9094:9090"  # Cbox PM metrics port
@@ -63,7 +63,7 @@ cat > "$FIXTURE_DIR/docker-compose.yml" <<'EOF'
 services:
   app:
     image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine}
-    container_name: e2e-cbox-pm-app
+    container_name: e2e-cbox-init-app
     ports:
       - "8094:80"
       - "9094:9090"
@@ -90,12 +90,12 @@ wait_for_healthy "$CONTAINER_NAME" 60
 log_section "Cbox PM Binary Tests"
 
 # Test Cbox PM binary exists and is executable
-assert_exec_succeeds "$CONTAINER_NAME" "which cbox-pm" "Cbox PM binary found in PATH"
-assert_exec_succeeds "$CONTAINER_NAME" "cbox-pm --version" "Cbox PM version command works"
+assert_exec_succeeds "$CONTAINER_NAME" "which cbox-init" "Cbox PM binary found in PATH"
+assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox PM version command works"
 
 # Verify Cbox PM version format
-PM_VERSION=$(docker exec "$CONTAINER_NAME" cbox-pm --version 2>&1 || echo "unknown")
-if [[ "$PM_VERSION" =~ ^cbox-pm\ version\ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+PM_VERSION=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>&1 || echo "unknown")
+if [[ "$PM_VERSION" =~ ^cbox-init\ version\ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
     log_success "Cbox PM version format is correct: $PM_VERSION"
 else
     log_warning "Cbox PM version format unexpected: $PM_VERSION"
@@ -104,13 +104,13 @@ fi
 log_section "Cbox PM Configuration Tests"
 
 # Test config file exists
-assert_file_exists "$CONTAINER_NAME" "/etc/cbox-pm/cbox-pm.yaml" "Cbox PM config file exists"
+assert_file_exists "$CONTAINER_NAME" "/etc/cbox-init/cbox-init.yaml" "Cbox PM config file exists"
 
 # Test config validation
-assert_exec_succeeds "$CONTAINER_NAME" "cbox-pm check-config --config /etc/cbox-pm/cbox-pm.yaml" "Cbox PM config is valid"
+assert_exec_succeeds "$CONTAINER_NAME" "cbox-init check-config --config /etc/cbox-init/cbox-init.yaml" "Cbox PM config is valid"
 
 # Verify config contains expected sections
-CONFIG_CONTENT=$(docker exec "$CONTAINER_NAME" cat /etc/cbox-pm/cbox-pm.yaml 2>&1)
+CONFIG_CONTENT=$(docker exec "$CONTAINER_NAME" cat /etc/cbox-init/cbox-init.yaml 2>&1)
 if echo "$CONFIG_CONTENT" | grep -q "processes:"; then
     log_success "Cbox PM config has processes section"
 else
@@ -139,10 +139,10 @@ assert_process_running "$CONTAINER_NAME" "nginx" "Nginx running"
 
 # Verify Cbox PM is the parent process (PID 1)
 PID1_CMD=$(docker exec "$CONTAINER_NAME" cat /proc/1/comm 2>&1 || echo "unknown")
-if [[ "$PID1_CMD" == "cbox-pm" ]]; then
+if [[ "$PID1_CMD" == "cbox-init" ]]; then
     log_success "Cbox PM is PID 1 (init process)"
 else
-    log_warning "PID 1 is: $PID1_CMD (expected cbox-pm)"
+    log_warning "PID 1 is: $PID1_CMD (expected cbox-init)"
 fi
 
 log_section "Cbox PM Metrics Tests"
@@ -153,7 +153,7 @@ if [[ -n "$METRICS_OUTPUT" ]]; then
     log_success "Cbox PM metrics endpoint responds"
 
     # Check for expected metrics
-    if echo "$METRICS_OUTPUT" | grep -q "cbox_pm_"; then
+    if echo "$METRICS_OUTPUT" | grep -q "cbox_init_"; then
         log_success "Cbox PM exports custom metrics"
     else
         log_info "Cbox PM metrics format may vary"

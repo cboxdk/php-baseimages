@@ -33,11 +33,11 @@ environment:
   LARAVEL_MIGRATE_ENABLED: "true"
 
   # Enable Horizon
-  CBOX_PM_PROCESS_HORIZON_ENABLED: "true"
+  CBOX_INIT_PROCESS_HORIZON_ENABLED: "true"
 
   # Enable Queue Workers (with scaling)
-  CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
-  CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE: "3"
+  CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
+  CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "3"
 ```
 
 ### 3. Start Container
@@ -79,20 +79,20 @@ Per-process hooks:
 Exported on port 9090 at `/metrics`:
 
 **Process Metrics:**
-- `cbox_pm_process_up` - Process running status
-- `cbox_pm_process_restarts_total` - Restart counts
-- `cbox_pm_process_cpu_seconds_total` - CPU usage
-- `cbox_pm_process_memory_bytes` - Memory usage
-- `cbox_pm_health_check_status` - Health check results
-- `cbox_pm_process_desired_scale` - Desired instances
-- `cbox_pm_process_current_scale` - Running instances
+- `cbox_init_process_up` - Process running status
+- `cbox_init_process_restarts_total` - Restart counts
+- `cbox_init_process_cpu_seconds_total` - CPU usage
+- `cbox_init_process_memory_bytes` - Memory usage
+- `cbox_init_health_check_status` - Health check results
+- `cbox_init_process_desired_scale` - Desired instances
+- `cbox_init_process_current_scale` - Running instances
 
 **Scheduled Task Metrics (v1.1.0+):**
-- `cbox_pm_scheduled_task_last_run_timestamp` - Last execution time
-- `cbox_pm_scheduled_task_next_run_timestamp` - Next scheduled time
-- `cbox_pm_scheduled_task_last_exit_code` - Most recent exit code
-- `cbox_pm_scheduled_task_duration_seconds` - Execution duration
-- `cbox_pm_scheduled_task_total` - Total runs by status (success/failure)
+- `cbox_init_scheduled_task_last_run_timestamp` - Last execution time
+- `cbox_init_scheduled_task_next_run_timestamp` - Next scheduled time
+- `cbox_init_scheduled_task_last_exit_code` - Most recent exit code
+- `cbox_init_scheduled_task_duration_seconds` - Execution duration
+- `cbox_init_scheduled_task_total` - Total runs by status (success/failure)
 
 ### 🔌 Management API (Phase 5)
 REST API on port 8080 (when enabled):
@@ -111,7 +111,7 @@ When the container starts:
    - Sets up critical directories and permissions
    - Validates PHP-FPM and Nginx configs
    - Generates runtime config from template + env vars
-2. **cbox-pm binary** starts as PID 1:
+2. **cbox-init binary** starts as PID 1:
    - Executes pre-start hooks (Laravel optimizations, migrations)
    - Starts processes in priority order with dependency resolution
    - Monitors health checks
@@ -120,11 +120,11 @@ When the container starts:
 ### Configuration Flow
 
 ```
-cbox-pm.yaml (template)
+cbox-init.yaml (template)
     ↓ (environment variable substitution)
-/tmp/cbox-pm.yaml (runtime config)
+/tmp/cbox-init.yaml (runtime config)
     ↓
-cbox-pm binary reads config
+cbox-init binary reads config
     ↓
 Processes start with environment-specific settings
 ```
@@ -133,9 +133,9 @@ Processes start with environment-specific settings
 
 | File | Location | Purpose |
 |------|----------|---------|
-| Template config | `/etc/cbox-pm/cbox-pm.yaml` | Base config with env var placeholders |
-| Runtime config | `/tmp/cbox-pm.yaml` | Generated config with actual values |
-| Cbox PM binary | `/usr/local/bin/cbox-pm` | Process manager executable |
+| Template config | `/etc/cbox-init/cbox-init.yaml` | Base config with env var placeholders |
+| Runtime config | `/tmp/cbox-init.yaml` | Generated config with actual values |
+| Cbox PM binary | `/usr/local/bin/cbox-init` | Process manager executable |
 | Entrypoint | `/usr/local/bin/docker-entrypoint.sh` | Container startup script |
 
 ## Examples
@@ -160,7 +160,7 @@ services:
       LARAVEL_OPTIMIZE_CONFIG: "true"
       LARAVEL_OPTIMIZE_ROUTE: "true"
       LARAVEL_MIGRATE_ENABLED: "true"
-      CBOX_PM_PROCESS_HORIZON_ENABLED: "true"
+      CBOX_INIT_PROCESS_HORIZON_ENABLED: "true"
     ports:
       - "80:80"
       - "9090:9090"  # Prometheus metrics
@@ -182,16 +182,16 @@ services:
       LARAVEL_MIGRATE_ENABLED: "true"
 
       # Enable Horizon
-      CBOX_PM_PROCESS_HORIZON_ENABLED: "true"
+      CBOX_INIT_PROCESS_HORIZON_ENABLED: "true"
 
       # Enable Reverb (WebSockets)
-      CBOX_PM_PROCESS_REVERB_ENABLED: "true"
+      CBOX_INIT_PROCESS_REVERB_ENABLED: "true"
 
       # Enable Queue Workers (with scaling)
-      CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
-      CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE: "3"
-      CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED: "true"
-      CBOX_PM_PROCESS_QUEUE_HIGH_SCALE: "2"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "3"
+      CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED: "true"
+      CBOX_INIT_PROCESS_QUEUE_HIGH_SCALE: "2"
     ports:
       - "80:80"
       - "8080:8080"   # Reverb WebSocket
@@ -212,17 +212,17 @@ services:
 
 ## Environment Variables
 
-Complete reference: [cbox-pm-environment-variables.md](./cbox-pm-environment-variables.md)
+Complete reference: [cbox-init-environment-variables.md](./cbox-init-environment-variables.md)
 
 **Quick reference**:
 
 | Category | Key Variables |
 |----------|---------------|
 | **Laravel Hooks** | `LARAVEL_OPTIMIZE_*`, `LARAVEL_MIGRATE_ENABLED` |
-| **Process Control** | `CBOX_PM_PROCESS_*_ENABLED` |
-| **Scaling** | `CBOX_PM_PROCESS_QUEUE_*_SCALE` |
-| **Observability** | `CBOX_PM_METRICS_ENABLED`, `CBOX_PM_API_ENABLED` |
-| **Logging** | `CBOX_PM_LOG_LEVEL`, `CBOX_PM_LOG_FORMAT` |
+| **Process Control** | `CBOX_INIT_PROCESS_*_ENABLED` |
+| **Scaling** | `CBOX_INIT_PROCESS_QUEUE_*_SCALE` |
+| **Observability** | `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_API_ENABLED` |
+| **Logging** | `CBOX_INIT_LOG_LEVEL`, `CBOX_INIT_LOG_FORMAT` |
 
 ## Monitoring
 
@@ -232,7 +232,7 @@ Add to `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'cbox-pm'
+  - job_name: 'cbox-init'
     static_configs:
       - targets: ['app:9090']
 ```
@@ -275,14 +275,14 @@ Enable scheduled tasks with standard cron expressions:
 ```yaml
 environment:
   # Laravel scheduled command (every 15 minutes)
-  CBOX_PM_PROCESS_CACHE_WARMUP_ENABLED: "true"
-  CBOX_PM_PROCESS_CACHE_WARMUP_COMMAND: "php,artisan,cache:warm"
-  CBOX_PM_PROCESS_CACHE_WARMUP_SCHEDULE: "*/15 * * * *"
+  CBOX_INIT_PROCESS_CACHE_WARMUP_ENABLED: "true"
+  CBOX_INIT_PROCESS_CACHE_WARMUP_COMMAND: "php,artisan,cache:warm"
+  CBOX_INIT_PROCESS_CACHE_WARMUP_SCHEDULE: "*/15 * * * *"
 
   # Database backup (daily at 2 AM)
-  CBOX_PM_PROCESS_DB_BACKUP_ENABLED: "true"
-  CBOX_PM_PROCESS_DB_BACKUP_COMMAND: "php,artisan,backup:run"
-  CBOX_PM_PROCESS_DB_BACKUP_SCHEDULE: "0 2 * * *"
+  CBOX_INIT_PROCESS_DB_BACKUP_ENABLED: "true"
+  CBOX_INIT_PROCESS_DB_BACKUP_COMMAND: "php,artisan,backup:run"
+  CBOX_INIT_PROCESS_DB_BACKUP_SCHEDULE: "0 2 * * *"
 ```
 
 ### Cron Expression Format
@@ -330,11 +330,11 @@ Monitor critical scheduled tasks with external services:
 ```yaml
 environment:
   # Critical backup with external monitoring
-  CBOX_PM_PROCESS_CRITICAL_BACKUP_ENABLED: "true"
-  CBOX_PM_PROCESS_CRITICAL_BACKUP_COMMAND: "php,artisan,backup:critical"
-  CBOX_PM_PROCESS_CRITICAL_BACKUP_SCHEDULE: "0 3 * * *"
-  CBOX_PM_PROCESS_CRITICAL_BACKUP_HEARTBEAT_URL: "https://hc-ping.com/your-uuid-here"
-  CBOX_PM_PROCESS_CRITICAL_BACKUP_HEARTBEAT_TIMEOUT: "300"
+  CBOX_INIT_PROCESS_CRITICAL_BACKUP_ENABLED: "true"
+  CBOX_INIT_PROCESS_CRITICAL_BACKUP_COMMAND: "php,artisan,backup:critical"
+  CBOX_INIT_PROCESS_CRITICAL_BACKUP_SCHEDULE: "0 3 * * *"
+  CBOX_INIT_PROCESS_CRITICAL_BACKUP_HEARTBEAT_URL: "https://hc-ping.com/your-uuid-here"
+  CBOX_INIT_PROCESS_CRITICAL_BACKUP_HEARTBEAT_TIMEOUT: "300"
 ```
 
 **How it works:**
@@ -353,11 +353,11 @@ environment:
 Scheduled tasks receive additional context:
 
 ```bash
-CBOX_PM_PROCESS_NAME=backup-job
-CBOX_PM_INSTANCE_ID=backup-job-run-42
-CBOX_PM_SCHEDULED=true
-CBOX_PM_SCHEDULE="0 2 * * *"
-CBOX_PM_START_TIME=1732141200
+CBOX_INIT_PROCESS_NAME=backup-job
+CBOX_INIT_INSTANCE_ID=backup-job-run-42
+CBOX_INIT_SCHEDULED=true
+CBOX_INIT_SCHEDULE="0 2 * * *"
+CBOX_INIT_START_TIME=1732141200
 ```
 
 ### Laravel Scheduler Example
@@ -373,20 +373,20 @@ Replace Laravel's cron entry with Cbox PM scheduled tasks:
 ```yaml
 environment:
   # Cache warmup every 15 minutes
-  CBOX_PM_PROCESS_CACHE_WARMUP_ENABLED: "true"
-  CBOX_PM_PROCESS_CACHE_WARMUP_COMMAND: "php,artisan,cache:warm"
-  CBOX_PM_PROCESS_CACHE_WARMUP_SCHEDULE: "*/15 * * * *"
+  CBOX_INIT_PROCESS_CACHE_WARMUP_ENABLED: "true"
+  CBOX_INIT_PROCESS_CACHE_WARMUP_COMMAND: "php,artisan,cache:warm"
+  CBOX_INIT_PROCESS_CACHE_WARMUP_SCHEDULE: "*/15 * * * *"
 
   # Database backup daily at 2 AM
-  CBOX_PM_PROCESS_DB_BACKUP_ENABLED: "true"
-  CBOX_PM_PROCESS_DB_BACKUP_COMMAND: "php,artisan,backup:run"
-  CBOX_PM_PROCESS_DB_BACKUP_SCHEDULE: "0 2 * * *"
-  CBOX_PM_PROCESS_DB_BACKUP_HEARTBEAT_URL: "https://hc-ping.com/backup-uuid"
+  CBOX_INIT_PROCESS_DB_BACKUP_ENABLED: "true"
+  CBOX_INIT_PROCESS_DB_BACKUP_COMMAND: "php,artisan,backup:run"
+  CBOX_INIT_PROCESS_DB_BACKUP_SCHEDULE: "0 2 * * *"
+  CBOX_INIT_PROCESS_DB_BACKUP_HEARTBEAT_URL: "https://hc-ping.com/backup-uuid"
 
   # Report generation Monday-Friday at 8 AM
-  CBOX_PM_PROCESS_REPORTS_ENABLED: "true"
-  CBOX_PM_PROCESS_REPORTS_COMMAND: "php,artisan,reports:generate"
-  CBOX_PM_PROCESS_REPORTS_SCHEDULE: "0 8 * * 1-5"
+  CBOX_INIT_PROCESS_REPORTS_ENABLED: "true"
+  CBOX_INIT_PROCESS_REPORTS_COMMAND: "php,artisan,reports:generate"
+  CBOX_INIT_PROCESS_REPORTS_SCHEDULE: "0 8 * * 1-5"
 ```
 
 ### Metrics
@@ -395,13 +395,13 @@ Monitor scheduled tasks via Prometheus:
 
 ```promql
 # Last execution time
-cbox_pm_scheduled_task_last_run_timestamp{process="backup-job"}
+cbox_init_scheduled_task_last_run_timestamp{process="backup-job"}
 
 # Next scheduled execution
-cbox_pm_scheduled_task_next_run_timestamp{process="backup-job"}
+cbox_init_scheduled_task_next_run_timestamp{process="backup-job"}
 
 # Task success rate
-rate(cbox_pm_scheduled_task_total{status="success"}[1h])
+rate(cbox_init_scheduled_task_total{status="success"}[1h])
 ```
 
 ## Advanced Logging (v1.1.0+)
@@ -435,10 +435,10 @@ Stack traces and multi-line errors are automatically reassembled:
 **Enable multiline handling:**
 ```yaml
 environment:
-  CBOX_PM_LOG_MULTILINE_ENABLED: "true"
-  CBOX_PM_LOG_MULTILINE_PATTERN: '^\[|^\d{4}-|^{"'  # Regex for line starts
-  CBOX_PM_LOG_MULTILINE_TIMEOUT: "500"  # milliseconds
-  CBOX_PM_LOG_MULTILINE_MAX_LINES: "100"
+  CBOX_INIT_LOG_MULTILINE_ENABLED: "true"
+  CBOX_INIT_LOG_MULTILINE_PATTERN: '^\[|^\d{4}-|^{"'  # Regex for line starts
+  CBOX_INIT_LOG_MULTILINE_TIMEOUT: "500"  # milliseconds
+  CBOX_INIT_LOG_MULTILINE_MAX_LINES: "100"
 ```
 
 ### JSON Log Parsing
@@ -460,9 +460,9 @@ Automatically redacts credentials to prevent leaks:
 
 ```yaml
 environment:
-  CBOX_PM_LOG_REDACTION_ENABLED: "true"
-  CBOX_PM_LOG_REDACTION_PATTERNS: "password,api_key,secret,token"
-  CBOX_PM_LOG_REDACTION_PLACEHOLDER: "***REDACTED***"
+  CBOX_INIT_LOG_REDACTION_ENABLED: "true"
+  CBOX_INIT_LOG_REDACTION_PATTERNS: "password,api_key,secret,token"
+  CBOX_INIT_LOG_REDACTION_PLACEHOLDER: "***REDACTED***"
 ```
 
 **Redacted patterns:**
@@ -483,16 +483,16 @@ Perfect for PCI compliance and security audits.
 
 ### Custom Configuration
 
-Mount a custom `cbox-pm.yaml`:
+Mount a custom `cbox-init.yaml`:
 
 ```yaml
 services:
   app:
     image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      CBOX_PM_CONFIG: /app/config/cbox-pm.yaml
+      CBOX_INIT_CONFIG: /app/config/cbox-init.yaml
     volumes:
-      - ./custom-cbox-pm.yaml:/app/config/cbox-pm.yaml:ro
+      - ./custom-cbox-init.yaml:/app/config/cbox-init.yaml:ro
 ```
 
 ### Dynamic Scaling (Phase 5)
@@ -513,12 +513,12 @@ curl -X POST \
 ```yaml
 environment:
   # Default queue
-  CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
-  CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE: "3"
+  CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
+  CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "3"
 
   # High priority queue
-  CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED: "true"
-  CBOX_PM_PROCESS_QUEUE_HIGH_SCALE: "2"
+  CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED: "true"
+  CBOX_INIT_PROCESS_QUEUE_HIGH_SCALE: "2"
 ```
 
 Each queue worker group is independently scalable and monitored.
@@ -545,7 +545,7 @@ If you're migrating from images using Supervisor or S6-Overlay, Cbox PM offers a
 
 ```yaml
 environment:
-  CBOX_PM_LOG_LEVEL: debug
+  CBOX_INIT_LOG_LEVEL: debug
   CBOX_DEBUG: "true"
 ```
 
@@ -553,7 +553,7 @@ environment:
 
 ```bash
 # Via metrics
-curl http://localhost:9090/metrics | grep cbox_pm_process_up
+curl http://localhost:9090/metrics | grep cbox_init_process_up
 
 # Via logs
 docker logs app | jq 'select(.msg | contains("Process"))'
@@ -563,7 +563,7 @@ docker logs app | jq 'select(.msg | contains("Process"))'
 
 ```yaml
 environment:
-  CBOX_PM_PROCESS_HORIZON_ENABLED: "false"
+  CBOX_INIT_PROCESS_HORIZON_ENABLED: "false"
 ```
 
 ### Restart Issues
@@ -571,8 +571,8 @@ environment:
 Increase restart attempts and backoff:
 ```yaml
 environment:
-  CBOX_PM_MAX_RESTART_ATTEMPTS: "10"
-  CBOX_PM_RESTART_BACKOFF: "10"
+  CBOX_INIT_MAX_RESTART_ATTEMPTS: "10"
+  CBOX_INIT_RESTART_BACKOFF: "10"
 ```
 
 ## Features (v1.0.0)
@@ -595,12 +595,12 @@ Cbox PM v1.0.0 includes:
 
 ## Resources
 
-- **Cbox PM Repository**: https://github.com/cboxdk/cbox-pm
-- **Environment Variables**: See [cbox-pm-environment-variables.md](./cbox-pm-environment-variables.md)
+- **Cbox PM Repository**: https://github.com/cboxdk/init
+- **Environment Variables**: See [cbox-init-environment-variables.md](./cbox-init-environment-variables.md)
 - **Example Configs**: See examples throughout this documentation
 
 ## Support
 
 For issues and feature requests:
 - Cbox Base Images: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
-- Cbox PM: [GitHub Issues](https://github.com/cboxdk/cbox-pm/issues)
+- Cbox PM: [GitHub Issues](https://github.com/cboxdk/init/issues)

@@ -103,7 +103,7 @@ Enable with environment variables:
 ```yaml
 environment:
   - LARAVEL_QUEUE=true
-  - CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE=3  # 3 workers
+  - CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE=3  # 3 workers
 ```
 
 ### Scheduler

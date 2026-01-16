@@ -40,7 +40,7 @@ services:
       redis:
         condition: service_healthy
     # Cbox PM healthcheck - already built into image
-    # No need to override - uses /usr/local/bin/cbox-pm health
+    # No need to override - uses /usr/local/bin/cbox-init health
 
   postgres:
     image: postgres:16-alpine

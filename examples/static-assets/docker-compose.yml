@@ -23,7 +23,7 @@ services:
       CACHE_DRIVER: file
       SESSION_DRIVER: file
     # Cbox PM healthcheck - already built into image
-    # No need to override - uses /usr/local/bin/cbox-pm health
+    # No need to override - uses /usr/local/bin/cbox-init health
 
   # Build service (run once during CI/CD)
   # This is a Node.js build container, NOT PHP - command is fine here

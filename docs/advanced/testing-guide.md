@@ -58,7 +58,7 @@ Available test scenarios in `tests/e2e/scenarios/`:
 | `database` | MySQL, PostgreSQL, Redis connectivity |
 | `security` | Security headers, file permissions |
 | `image-formats` | GD, ImageMagick, libvips support |
-| `cbox-pm` | Process manager integration |
+| `cbox-init` | Process manager integration |
 | `pest` | Pest/PHPUnit test execution |
 | `browsershot` | Puppeteer/Browsershot capabilities |
 | `dusk-capabilities` | Laravel Dusk browser testing |
@@ -73,7 +73,7 @@ Available test scenarios in `tests/e2e/scenarios/`:
 ./tests/e2e/scenarios/test-symfony.sh
 
 # Cbox PM integration
-./tests/e2e/scenarios/test-cbox-pm.sh
+./tests/e2e/scenarios/test-cbox-init.sh
 ```
 
 ---
@@ -98,7 +98,7 @@ fixtures/
 ├── wordpress/        # Minimal WordPress setup
 ├── database/         # Database connectivity tests
 ├── security/         # Security validation tests
-└── cbox-pm/        # Process manager tests
+└── cbox-init/        # Process manager tests
 ```
 
 Each fixture contains a `docker-compose.yml` that uses the `IMAGE` environment variable:

@@ -51,8 +51,8 @@ COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy Cbox PM configuration
-RUN mkdir -p /etc/cbox-pm
-COPY php-fpm-nginx/common/cbox-pm.yaml /etc/cbox-pm/cbox-pm.yaml
+RUN mkdir -p /etc/cbox-init
+COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -73,7 +73,7 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["cbox-pm"]
+CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOTLESS: Minimal PHP-FPM + Nginx running as www-data
@@ -115,8 +115,8 @@ COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/n
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy Cbox PM configuration (rootless version with port 8080 health check)
-RUN mkdir -p /etc/cbox-pm && chown -R www-data:www-data /etc/cbox-pm
-COPY php-fpm-nginx/common/cbox-pm-rootless.yaml /etc/cbox-pm/cbox-pm.yaml
+RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
+COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -138,7 +138,7 @@ WORKDIR /var/www/html
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["cbox-pm"]
+CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, vips, Node.js
@@ -171,8 +171,8 @@ COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy Cbox PM configuration
-RUN mkdir -p /etc/cbox-pm
-COPY php-fpm-nginx/common/cbox-pm.yaml /etc/cbox-pm/cbox-pm.yaml
+RUN mkdir -p /etc/cbox-init
+COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -193,7 +193,7 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["cbox-pm"]
+CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ROOTLESS (STANDARD): Default rootless - PHP-FPM + Nginx
@@ -235,8 +235,8 @@ COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/n
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy Cbox PM configuration (rootless version with port 8080 health check)
-RUN mkdir -p /etc/cbox-pm && chown -R www-data:www-data /etc/cbox-pm
-COPY php-fpm-nginx/common/cbox-pm-rootless.yaml /etc/cbox-pm/cbox-pm.yaml
+RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
+COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -258,7 +258,7 @@ WORKDIR /var/www/html
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["cbox-pm"]
+CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # FULL-ROOT: Everything including Chromium for Browsershot/Dusk
@@ -291,8 +291,8 @@ COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy Cbox PM configuration
-RUN mkdir -p /etc/cbox-pm
-COPY php-fpm-nginx/common/cbox-pm.yaml /etc/cbox-pm/cbox-pm.yaml
+RUN mkdir -p /etc/cbox-init
+COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -313,7 +313,7 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["cbox-pm"]
+CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # FULL-ROOTLESS: Everything including Chromium, running as www-data
@@ -355,8 +355,8 @@ COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/n
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
 # Copy Cbox PM configuration (rootless version with port 8080 health check)
-RUN mkdir -p /etc/cbox-pm && chown -R www-data:www-data /etc/cbox-pm
-COPY php-fpm-nginx/common/cbox-pm-rootless.yaml /etc/cbox-pm/cbox-pm.yaml
+RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
+COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -378,4 +378,4 @@ WORKDIR /var/www/html
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["cbox-pm"]
+CMD ["cbox-init"]

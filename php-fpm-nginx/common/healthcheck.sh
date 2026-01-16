@@ -24,7 +24,7 @@ else
 fi
 
 # Configuration
-METRICS_PORT="${CBOX_PM_METRICS_PORT:-9090}"
+METRICS_PORT="${CBOX_INIT_METRICS_PORT:-9090}"
 # Default to 8080 for rootless containers, 80 for root
 if [ "${CBOX_ROOTLESS:-false}" = "true" ]; then
     NGINX_PORT="${NGINX_HTTP_PORT:-8080}"
@@ -44,7 +44,7 @@ _check_failed() {
 # ─────────────────────────────────────────────────────────────────────────────
 # Primary: Cbox PM Health Endpoint (if metrics enabled)
 # ─────────────────────────────────────────────────────────────────────────────
-if [ "${CBOX_PM_METRICS_ENABLED:-true}" = "true" ]; then
+if [ "${CBOX_INIT_METRICS_ENABLED:-true}" = "true" ]; then
     if wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${METRICS_PORT}/health" 2>/dev/null; then
         check_passed "Cbox PM healthy (metrics endpoint)"
     elif curl -sf --max-time 3 "http://127.0.0.1:${METRICS_PORT}/health" >/dev/null 2>&1; then
@@ -53,7 +53,7 @@ if [ "${CBOX_PM_METRICS_ENABLED:-true}" = "true" ]; then
         check_warning "Cbox PM metrics endpoint not responding (checking processes directly)"
 
         # Fallback: Check processes directly
-        if pgrep -x cbox-pm >/dev/null 2>&1; then
+        if pgrep -x cbox-init >/dev/null 2>&1; then
             check_passed "Cbox PM process running"
         else
             _check_failed "Cbox PM not running"
@@ -100,7 +100,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 # Optional: Laravel Horizon Check
 # ─────────────────────────────────────────────────────────────────────────────
-if [ "${CBOX_PM_PROCESS_HORIZON_ENABLED:-false}" = "true" ] || [ "${LARAVEL_HORIZON:-false}" = "true" ]; then
+if [ "${CBOX_INIT_PROCESS_HORIZON_ENABLED:-false}" = "true" ] || [ "${LARAVEL_HORIZON:-false}" = "true" ]; then
     if php /var/www/html/artisan horizon:status 2>/dev/null | grep -q "running"; then
         check_passed "Laravel Horizon running"
     else
@@ -112,7 +112,7 @@ fi
 # Optional: Laravel Reverb Check
 # ─────────────────────────────────────────────────────────────────────────────
 REVERB_PORT="${REVERB_PORT:-8080}"
-if [ "${CBOX_PM_PROCESS_REVERB_ENABLED:-false}" = "true" ] || [ "${LARAVEL_REVERB:-false}" = "true" ]; then
+if [ "${CBOX_INIT_PROCESS_REVERB_ENABLED:-false}" = "true" ] || [ "${LARAVEL_REVERB:-false}" = "true" ]; then
     if nc -z 127.0.0.1 ${REVERB_PORT} 2>/dev/null; then
         check_passed "Laravel Reverb listening on :${REVERB_PORT}"
     else

@@ -31,7 +31,7 @@ Cbox provides production-ready containers with:
 - **Weekly security rebuilds** - Automatic CVE patching
 - **Framework auto-detection** - Laravel, Symfony, WordPress optimizations
 
-See [Cbox PM Integration](../cbox-pm-integration.md) for advanced configuration.
+See [Cbox PM Integration](../cbox-init-integration.md) for advanced configuration.
 
 ## Three Image Tiers
 
@@ -116,7 +116,7 @@ Cbox uses a lightweight Go-based process manager:
 - Automatic process restart on failure
 - Custom scripts via `/docker-entrypoint-init.d/`
 
-See [Cbox PM Integration](../cbox-pm-integration.md) for configuration options.
+See [Cbox PM Integration](../cbox-init-integration.md) for configuration options.
 
 ### Framework Auto-Detection
 

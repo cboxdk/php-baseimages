@@ -225,23 +225,23 @@ _default_cleanup() {
 ###########################################
 # Cbox PM Validation
 ###########################################
-validate_cbox_pm() {
-    local config="${CBOX_PM_CONFIG:-/etc/cbox-pm/cbox-pm.yaml}"
+validate_cbox_init() {
+    local config="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 
-    if ! command -v cbox-pm >/dev/null 2>&1; then
+    if ! command -v cbox-init >/dev/null 2>&1; then
         log_error "Cbox PM binary not found"
         return 1
     fi
 
     if [ ! -f "$config" ]; then
         log_warn "Cbox PM config not found at $config, generating default..."
-        if ! cbox-pm scaffold --output "$config" 2>/dev/null; then
+        if ! cbox-init scaffold --output "$config" 2>/dev/null; then
             log_error "Could not generate Cbox PM config"
             return 1
         fi
     fi
 
-    if ! cbox-pm check-config --config "$config" >/dev/null 2>&1; then
+    if ! cbox-init check-config --config "$config" >/dev/null 2>&1; then
         log_error "Cbox PM config validation failed"
         return 1
     fi
@@ -357,14 +357,14 @@ laravel_optimize() {
 ###########################################
 # Map Laravel-style env vars to Cbox PM format
 map_laravel_env_vars() {
-    [ -n "$LARAVEL_HORIZON" ] && export CBOX_PM_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
-    [ -n "$LARAVEL_REVERB" ] && export CBOX_PM_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"
-    [ -n "$LARAVEL_SCHEDULER" ] && export CBOX_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
-    [ -n "$LARAVEL_QUEUE" ] && export CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
-    [ -n "$LARAVEL_QUEUE_HIGH" ] && export CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
+    [ -n "$LARAVEL_HORIZON" ] && export CBOX_INIT_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
+    [ -n "$LARAVEL_REVERB" ] && export CBOX_INIT_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"
+    [ -n "$LARAVEL_SCHEDULER" ] && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
+    [ -n "$LARAVEL_QUEUE" ] && export CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
+    [ -n "$LARAVEL_QUEUE_HIGH" ] && export CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
 
     # Backward compatibility
-    [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
+    [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
     [ -n "$LARAVEL_AUTO_MIGRATE" ] && export LARAVEL_MIGRATE_ENABLED="$LARAVEL_AUTO_MIGRATE"
     return 0
 }

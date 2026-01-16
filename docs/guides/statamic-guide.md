@@ -105,7 +105,7 @@ docker compose exec app chown -R www-data:www-data storage public/assets
 
 ```yaml
 environment:
-  - CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE=2
+  - CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE=2
 ```
 
 Scheduler handles `php artisan schedule:run` for static cache warming, sitemaps, etc.

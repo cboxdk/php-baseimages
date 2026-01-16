@@ -326,13 +326,13 @@ Cbox Process Manager includes built-in health checks for all managed processes:
 ```yaml
 environment:
   # Health check configuration
-  CBOX_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TYPE: tcp
-  CBOX_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TARGET: "127.0.0.1:9000"
-  CBOX_PM_PROCESS_PHP_FPM_HEALTH_CHECK_INTERVAL: 10
+  CBOX_INIT_PROCESS_PHP_FPM_HEALTH_CHECK_TYPE: tcp
+  CBOX_INIT_PROCESS_PHP_FPM_HEALTH_CHECK_TARGET: "127.0.0.1:9000"
+  CBOX_INIT_PROCESS_PHP_FPM_HEALTH_CHECK_INTERVAL: 10
 
-  CBOX_PM_PROCESS_NGINX_HEALTH_CHECK_TYPE: http
-  CBOX_PM_PROCESS_NGINX_HEALTH_CHECK_TARGET: "http://127.0.0.1/health"
-  CBOX_PM_PROCESS_NGINX_HEALTH_CHECK_INTERVAL: 10
+  CBOX_INIT_PROCESS_NGINX_HEALTH_CHECK_TYPE: http
+  CBOX_INIT_PROCESS_NGINX_HEALTH_CHECK_TARGET: "http://127.0.0.1/health"
+  CBOX_INIT_PROCESS_NGINX_HEALTH_CHECK_INTERVAL: 10
 ```
 
 ### Health Check Types
@@ -352,8 +352,8 @@ Cbox PM exposes health metrics on port 9090:
 curl http://localhost:9090/metrics | grep health
 
 # Example output:
-# cbox_pm_health_check_status{process="php-fpm",check_type="tcp"} 1
-# cbox_pm_health_check_status{process="nginx",check_type="http"} 1
+# cbox_init_health_check_status{process="php-fpm",check_type="tcp"} 1
+# cbox_init_health_check_status{process="nginx",check_type="http"} 1
 ```
 
 ## Troubleshooting
@@ -418,4 +418,4 @@ healthcheck:
 
 ---
 
-**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [Cbox PM Integration](../cbox-pm-integration.md)
+**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [Cbox PM Integration](../cbox-init-integration.md)

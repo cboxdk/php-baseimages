@@ -181,8 +181,8 @@ assert_exec_succeeds "$CONTAINER_NAME" "composer --version --no-ansi" "Composer 
 # ═══════════════════════════════════════════════════════════════════════════
 log_section "Test 9: Cbox PM Integration"
 
-if command -v cbox-pm >/dev/null 2>&1 || docker exec "$CONTAINER_NAME" which cbox-pm >/dev/null 2>&1; then
-    assert_exec_succeeds "$CONTAINER_NAME" "cbox-pm --version" "Cbox PM available"
+if command -v cbox-init >/dev/null 2>&1 || docker exec "$CONTAINER_NAME" which cbox-init >/dev/null 2>&1; then
+    assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox PM available"
 else
     log_info "Cbox PM not installed in this image"
 fi

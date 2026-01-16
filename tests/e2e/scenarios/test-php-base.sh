@@ -131,10 +131,10 @@ test_nodejs() {
 }
 
 # Test Cbox PM
-test_cbox_pm() {
+test_cbox_init() {
     log_info "Testing Cbox PM..."
     local pm_version
-    pm_version=$(docker exec "$CONTAINER_NAME" cbox-pm --version 2>/dev/null | head -1)
+    pm_version=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>/dev/null | head -1)
     if [ -n "$pm_version" ]; then
         log_success "Cbox PM: $pm_version"
     else
@@ -163,7 +163,7 @@ test_php_version || ((FAILED++))
 test_required_extensions || ((FAILED++))
 test_composer || ((FAILED++))
 test_nodejs || ((FAILED++))
-test_cbox_pm || ((FAILED++))
+test_cbox_init || ((FAILED++))
 test_directories || ((FAILED++))
 
 # Summary
