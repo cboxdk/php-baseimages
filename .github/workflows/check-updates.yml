@@ -96,7 +96,7 @@ jobs:
             - **PHP Extensions**: PECL (stable releases only)
             - **Swoole/OpenSwoole**: GitHub releases
             - **FrankenPHP**: GitHub releases
-            - **PHPeek PM**: GitHub releases
+            - **Cbox PM**: GitHub releases
             - **PHP Versions**: php.net official releases
             - **Node.js**: nodejs.org LTS releases
 

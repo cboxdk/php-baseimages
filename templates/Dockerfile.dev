@@ -1,7 +1,7 @@
-# PHPeek Development Template
+# Cbox Development Template
 # Includes Xdebug, SPX profiler, Node.js, and development tools
 
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Install development tools
 RUN apt-get update && apt-get install -y --no-install-recommends \

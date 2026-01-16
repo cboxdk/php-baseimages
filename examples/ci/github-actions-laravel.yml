@@ -1,4 +1,4 @@
-name: Laravel CI with PHPeek
+name: Laravel CI with Cbox
 
 on:
   push:
@@ -47,11 +47,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build PHPeek CI image
+      - name: Build Cbox CI image
         run: |
           docker build -f templates/Dockerfile.ci \
             --build-arg PHP_VERSION=${{ matrix.php }} \
-            -t phpeek-ci:${{ matrix.php }} .
+            -t cbox-ci:${{ matrix.php }} .
 
       - name: Create vendor cache directory
         run: mkdir -p vendor
@@ -67,7 +67,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             composer install --prefer-dist --no-interaction --no-progress
 
       - name: Cache npm dependencies
@@ -81,13 +81,13 @@ jobs:
       - name: Install npm dependencies
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             npm ci
 
       - name: Build frontend assets
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             npm run build
 
       - name: Prepare Laravel
@@ -95,7 +95,7 @@ jobs:
           docker run --rm -v $(pwd):/var/www/html \
             -e APP_ENV=testing \
             -e APP_KEY=base64:${{ secrets.APP_KEY }} \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             sh -c "
               cp .env.example .env &&
               php artisan key:generate &&
@@ -105,13 +105,13 @@ jobs:
       - name: Run PHPStan
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             vendor/bin/phpstan analyse --memory-limit=1G
 
       - name: Run PHP CS Fixer (dry-run)
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             vendor/bin/php-cs-fixer fix --dry-run --diff
 
       - name: Run Tests
@@ -126,7 +126,7 @@ jobs:
             -e DB_USERNAME=root \
             -e DB_PASSWORD=root \
             -e REDIS_HOST=127.0.0.1 \
-            phpeek-ci:${{ matrix.php }} \
+            cbox-ci:${{ matrix.php }} \
             php artisan test --parallel --coverage
 
       - name: Upload coverage to Codecov
@@ -148,7 +148,7 @@ jobs:
       - name: Run Psalm
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.5-bookworm \
+            ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.5-bookworm \
             vendor/bin/psalm --show-info=true
 
   deploy:

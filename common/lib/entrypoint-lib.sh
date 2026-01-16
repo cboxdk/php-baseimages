@@ -1,13 +1,13 @@
 #!/bin/sh
 # ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  PHPeek Base Images - Shared Entrypoint Library                           ║
+# ║  Cbox Base Images - Shared Entrypoint Library                           ║
 # ║  Common functions used across all entrypoint and healthcheck scripts      ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=sh
 
 # Prevent double-sourcing
-[ -n "$_PHPEEK_LIB_LOADED" ] && return 0
-_PHPEEK_LIB_LOADED=1
+[ -n "$_CBOX_LIB_LOADED" ] && return 0
+_CBOX_LIB_LOADED=1
 
 ###########################################
 # Logging Functions
@@ -74,7 +74,7 @@ is_true() {
 }
 
 is_rootless() {
-    [ "${PHPEEK_ROOTLESS:-false}" = "true" ]
+    [ "${CBOX_ROOTLESS:-false}" = "true" ]
 }
 
 ###########################################
@@ -223,30 +223,30 @@ _default_cleanup() {
 }
 
 ###########################################
-# PHPeek PM Validation
+# Cbox PM Validation
 ###########################################
-validate_phpeek_pm() {
-    local config="${PHPEEK_PM_CONFIG:-/etc/phpeek-pm/phpeek-pm.yaml}"
+validate_cbox_pm() {
+    local config="${CBOX_PM_CONFIG:-/etc/cbox-pm/cbox-pm.yaml}"
 
-    if ! command -v phpeek-pm >/dev/null 2>&1; then
-        log_error "PHPeek PM binary not found"
+    if ! command -v cbox-pm >/dev/null 2>&1; then
+        log_error "Cbox PM binary not found"
         return 1
     fi
 
     if [ ! -f "$config" ]; then
-        log_warn "PHPeek PM config not found at $config, generating default..."
-        if ! phpeek-pm scaffold --output "$config" 2>/dev/null; then
-            log_error "Could not generate PHPeek PM config"
+        log_warn "Cbox PM config not found at $config, generating default..."
+        if ! cbox-pm scaffold --output "$config" 2>/dev/null; then
+            log_error "Could not generate Cbox PM config"
             return 1
         fi
     fi
 
-    if ! phpeek-pm check-config --config "$config" >/dev/null 2>&1; then
-        log_error "PHPeek PM config validation failed"
+    if ! cbox-pm check-config --config "$config" >/dev/null 2>&1; then
+        log_error "Cbox PM config validation failed"
         return 1
     fi
 
-    log_info "PHPeek PM validated successfully"
+    log_info "Cbox PM validated successfully"
     return 0
 }
 
@@ -355,16 +355,16 @@ laravel_optimize() {
 ###########################################
 # Environment Variable Mapping
 ###########################################
-# Map Laravel-style env vars to PHPeek PM format
+# Map Laravel-style env vars to Cbox PM format
 map_laravel_env_vars() {
-    [ -n "$LARAVEL_HORIZON" ] && export PHPEEK_PM_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
-    [ -n "$LARAVEL_REVERB" ] && export PHPEEK_PM_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"
-    [ -n "$LARAVEL_SCHEDULER" ] && export PHPEEK_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
-    [ -n "$LARAVEL_QUEUE" ] && export PHPEEK_PM_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
-    [ -n "$LARAVEL_QUEUE_HIGH" ] && export PHPEEK_PM_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
+    [ -n "$LARAVEL_HORIZON" ] && export CBOX_PM_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
+    [ -n "$LARAVEL_REVERB" ] && export CBOX_PM_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"
+    [ -n "$LARAVEL_SCHEDULER" ] && export CBOX_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
+    [ -n "$LARAVEL_QUEUE" ] && export CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
+    [ -n "$LARAVEL_QUEUE_HIGH" ] && export CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
 
     # Backward compatibility
-    [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export PHPEEK_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
+    [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_PM_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
     [ -n "$LARAVEL_AUTO_MIGRATE" ] && export LARAVEL_MIGRATE_ENABLED="$LARAVEL_AUTO_MIGRATE"
     return 0
 }
@@ -373,7 +373,7 @@ map_laravel_env_vars() {
 # Banner
 ###########################################
 print_banner() {
-    local title="${1:-PHPeek Base Image}"
+    local title="${1:-Cbox Base Image}"
     printf '%s\n' "╔═══════════════════════════════════════════════════════════════════════════╗"
     printf '║  %-73s ║\n' "$title"
     printf '%s\n' "╚═══════════════════════════════════════════════════════════════════════════╝"

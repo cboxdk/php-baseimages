@@ -1,18 +1,18 @@
 #!/bin/sh
 # ============================================================================
-# PHPeek Base Images - Lifecycle Check (Runtime)
+# Cbox Base Images - Lifecycle Check (Runtime)
 # ============================================================================
 # Displays deprecation/preview warnings at container startup
 # Sourced by entrypoint scripts
 #
 # Environment variables (set at build time via labels):
-#   PHPEEK_LIFECYCLE       - stable|deprecated|eol|preview
-#   PHPEEK_WARNING_MESSAGE - Warning text to display
-#   PHPEEK_PHP_EOL        - PHP EOL date
-#   PHPEEK_REMOVAL_DATE   - Image removal date
+#   CBOX_LIFECYCLE       - stable|deprecated|eol|preview
+#   CBOX_WARNING_MESSAGE - Warning text to display
+#   CBOX_PHP_EOL        - PHP EOL date
+#   CBOX_REMOVAL_DATE   - Image removal date
 #
 # To suppress warnings:
-#   PHPEEK_SUPPRESS_WARNINGS=true
+#   CBOX_SUPPRESS_WARNINGS=true
 # ============================================================================
 # shellcheck shell=sh
 
@@ -30,11 +30,11 @@ else
     NC=''
 fi
 
-phpeek_lifecycle_check() {
+cbox_lifecycle_check() {
     # Skip if warnings are suppressed (POSIX compatible string comparison)
-    [ "${PHPEEK_SUPPRESS_WARNINGS:-false}" = "true" ] && return 0
+    [ "${CBOX_SUPPRESS_WARNINGS:-false}" = "true" ] && return 0
 
-    lifecycle="${PHPEEK_LIFECYCLE:-stable}"
+    lifecycle="${CBOX_LIFECYCLE:-stable}"
 
     case "$lifecycle" in
         stable)
@@ -48,13 +48,13 @@ phpeek_lifecycle_check() {
             echo "║  ⚠️   DEPRECATION WARNING                                         ║"
             echo "╠══════════════════════════════════════════════════════════════════╣"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "PHP ${PHPEEK_PHP_VERSION:-} reaches End-of-Life on ${PHPEEK_PHP_EOL:-unknown}"
-            printf "║  %-64s ║\n" "This image will be removed on ${PHPEEK_REMOVAL_DATE:-unknown}"
+            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} reaches End-of-Life on ${CBOX_PHP_EOL:-unknown}"
+            printf "║  %-64s ║\n" "This image will be removed on ${CBOX_REMOVAL_DATE:-unknown}"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "Please upgrade to PHP 8.3 or 8.4"
-            printf "║  %-64s ║\n" "Migration guide: https://phpeek.com/docs/migration"
+            printf "║  %-64s ║\n" "Migration guide: https://cbox.com/docs/migration"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "Suppress: PHPEEK_SUPPRESS_WARNINGS=true"
+            printf "║  %-64s ║\n" "Suppress: CBOX_SUPPRESS_WARNINGS=true"
             echo "╚══════════════════════════════════════════════════════════════════╝"
             echo -e "${NC}"
             ;;
@@ -65,16 +65,16 @@ phpeek_lifecycle_check() {
             echo "║  🚨  END-OF-LIFE WARNING                                         ║"
             echo "╠══════════════════════════════════════════════════════════════════╣"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "PHP ${PHPEEK_PHP_VERSION:-} has reached End-of-Life!"
-            printf "║  %-64s ║\n" "EOL Date: ${PHPEEK_PHP_EOL:-unknown}"
+            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} has reached End-of-Life!"
+            printf "║  %-64s ║\n" "EOL Date: ${CBOX_PHP_EOL:-unknown}"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "⚠️  No security updates are being provided"
-            printf "║  %-64s ║\n" "This image will be REMOVED on ${PHPEEK_REMOVAL_DATE:-unknown}"
+            printf "║  %-64s ║\n" "This image will be REMOVED on ${CBOX_REMOVAL_DATE:-unknown}"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "URGENT: Upgrade to PHP 8.3 or 8.4 immediately"
-            printf "║  %-64s ║\n" "Migration guide: https://phpeek.com/docs/migration"
+            printf "║  %-64s ║\n" "Migration guide: https://cbox.com/docs/migration"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "Suppress: PHPEEK_SUPPRESS_WARNINGS=true"
+            printf "║  %-64s ║\n" "Suppress: CBOX_SUPPRESS_WARNINGS=true"
             echo "╚══════════════════════════════════════════════════════════════════╝"
             echo -e "${NC}"
             ;;
@@ -85,14 +85,14 @@ phpeek_lifecycle_check() {
             echo "║  🧪  PREVIEW RELEASE                                             ║"
             echo "╠══════════════════════════════════════════════════════════════════╣"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "PHP ${PHPEEK_PHP_VERSION:-} ${PHPEEK_PREVIEW_STATUS:-beta}"
+            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} ${CBOX_PREVIEW_STATUS:-beta}"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "⚠️  This is a preview release for testing only"
             printf "║  %-64s ║\n" "NOT RECOMMENDED FOR PRODUCTION USE"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "Report issues: https://github.com/gophpeek/baseimages/issues"
+            printf "║  %-64s ║\n" "Report issues: https://github.com/cboxdk/baseimages/issues"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "Suppress: PHPEEK_SUPPRESS_WARNINGS=true"
+            printf "║  %-64s ║\n" "Suppress: CBOX_SUPPRESS_WARNINGS=true"
             echo "╚══════════════════════════════════════════════════════════════════╝"
             echo -e "${NC}"
             ;;

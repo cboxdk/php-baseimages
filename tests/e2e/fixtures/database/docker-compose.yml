@@ -1,7 +1,7 @@
 services:
   # PHP application
   app:
-    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-cbox/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-database-app
     ports:
       - "8100:80"

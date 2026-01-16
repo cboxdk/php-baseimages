@@ -1,6 +1,6 @@
 #!/bin/bash
 # E2E Test: Rootless Container Mode
-# Tests containers running as non-root user with PHPEEK_ROOTLESS=true
+# Tests containers running as non-root user with CBOX_ROOTLESS=true
 
 set -euo pipefail
 
@@ -50,12 +50,12 @@ else
     log_fail "Container should run as www-data, got: $USER_NAME"
 fi
 
-# Verify PHPEEK_ROOTLESS environment variable
-ROOTLESS_ENV=$(docker exec "$CONTAINER_NAME" printenv PHPEEK_ROOTLESS 2>/dev/null || echo "unset")
+# Verify CBOX_ROOTLESS environment variable
+ROOTLESS_ENV=$(docker exec "$CONTAINER_NAME" printenv CBOX_ROOTLESS 2>/dev/null || echo "unset")
 if [ "$ROOTLESS_ENV" = "true" ]; then
-    log_success "PHPEEK_ROOTLESS=true is set"
+    log_success "CBOX_ROOTLESS=true is set"
 else
-    log_fail "PHPEEK_ROOTLESS should be 'true', got: $ROOTLESS_ENV"
+    log_fail "CBOX_ROOTLESS should be 'true', got: $ROOTLESS_ENV"
 fi
 
 # Verify no processes run as root

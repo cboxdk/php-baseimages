@@ -1,4 +1,4 @@
-name: Laravel CI (PHPeek)
+name: Laravel CI (Cbox)
 
 on:
   push:

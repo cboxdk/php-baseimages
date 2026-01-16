@@ -1,24 +1,24 @@
-# PHPeek Base Images
+# Cbox Base Images
 
 Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions on Debian 12 (Bookworm) and no unnecessary complexity.
 
-[![PHP-FPM-Nginx](https://github.com/gophpeek/baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/gophpeek/baseimages/actions/workflows/build-php-fpm-nginx.yml)
-[![Swoole](https://github.com/gophpeek/baseimages/actions/workflows/build-php-swoole.yml/badge.svg)](https://github.com/gophpeek/baseimages/actions/workflows/build-php-swoole.yml)
-[![FrankenPHP](https://github.com/gophpeek/baseimages/actions/workflows/build-frankenphp.yml/badge.svg)](https://github.com/gophpeek/baseimages/actions/workflows/build-frankenphp.yml)
+[![PHP-FPM-Nginx](https://github.com/cboxdk/baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-php-fpm-nginx.yml)
+[![Swoole](https://github.com/cboxdk/baseimages/actions/workflows/build-php-swoole.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-php-swoole.yml)
+[![FrankenPHP](https://github.com/cboxdk/baseimages/actions/workflows/build-frankenphp.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-frankenphp.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎯 Philosophy
 
 - **Three Tiers**: Slim (~120MB), Standard (~250MB), Full (~700MB) - choose your needs
-- **PHPeek Process Manager**: Production-grade Go-based process manager built-in
+- **Cbox Process Manager**: Production-grade Go-based process manager built-in
 - **Flexible Architecture**: Choose single-process OR multi-service containers
 - **Debian 12 (Bookworm)**: Stable, glibc-based images with excellent compatibility
 - **Framework Optimized**: Auto-detection for Laravel, Symfony, WordPress
 - **Production Ready**: Optimized configurations for real-world applications
 
-### 🔧 PHPeek Process Manager
+### 🔧 Cbox Process Manager
 
-All `php-fpm-nginx` images include [PHPeek PM](https://github.com/gophpeek/phpeek-pm) - a production-grade Go-based process manager with:
+All `php-fpm-nginx` images include [Cbox PM](https://github.com/cboxdk/cbox-pm) - a production-grade Go-based process manager with:
 
 - ✅ Multi-process orchestration (PHP-FPM + Nginx + Horizon + Reverb + Queue Workers)
 - ✅ Structured JSON logging with process segmentation
@@ -27,7 +27,7 @@ All `php-fpm-nginx` images include [PHPeek PM](https://github.com/gophpeek/phpee
 - ✅ Prometheus metrics for observability
 - ✅ Graceful shutdown with configurable timeouts
 
-📖 **[PHPeek PM Documentation →](docs/phpeek-pm-integration.md)**
+📖 **[Cbox PM Documentation →](docs/cbox-pm-integration.md)**
 
 ## 🚀 Quick Start (5 Minutes)
 
@@ -38,7 +38,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -84,18 +84,18 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 
 📖 **Laravel Octane guide:** [Laravel Octane →](docs/guides/laravel-octane.md)
 
-**Full image name:** `ghcr.io/gophpeek/baseimages/{type}:{tag}`
+**Full image name:** `ghcr.io/cboxdk/baseimages/{type}:{tag}`
 
 ```bash
 # Standard images
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
-ghcr.io/gophpeek/baseimages/php-cli:8.2-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
+ghcr.io/cboxdk/baseimages/php-cli:8.2-bookworm
 
 # High-performance images (Laravel Octane)
-ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
-ghcr.io/gophpeek/baseimages/php-openswoole:8.4-bookworm
-ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
+ghcr.io/cboxdk/baseimages/php-openswoole:8.4-bookworm
+ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
 ```
 
 ### Image Tiers: Slim / Standard / Full
@@ -160,7 +160,7 @@ Add `-dev` suffix for development images with Xdebug:
 
 ### Getting Started
 - **[5-Minute Quickstart](docs/getting-started/quickstart.md)** - Get running in minutes
-- [Introduction](docs/getting-started/introduction.md) - Why PHPeek?
+- [Introduction](docs/getting-started/introduction.md) - Why Cbox?
 - [Installation](docs/getting-started/installation.md) - All installation methods
 - [Choosing a Variant](docs/getting-started/choosing-variant.md) - Image tier selection guide
 - **[Choosing an Image](docs/getting-started/choosing-an-image.md)** - Decision matrix for image selection
@@ -188,9 +188,9 @@ Add `-dev` suffix for development images with Xdebug:
 - **[Multi-Architecture Builds](docs/advanced/multi-architecture.md)** - AMD64 + ARM64 support
 
 ### Reference
-- **[PHPeek PM Integration](docs/phpeek-pm-integration.md)** - Process manager guide
-- **[PHPeek PM Environment Variables](docs/phpeek-pm-environment-variables.md)** - PM configuration
-- **[PHPeek PM Architecture](docs/phpeek-pm-architecture.md)** - Technical deep dive
+- **[Cbox PM Integration](docs/cbox-pm-integration.md)** - Process manager guide
+- **[Cbox PM Environment Variables](docs/cbox-pm-environment-variables.md)** - PM configuration
+- **[Cbox PM Architecture](docs/cbox-pm-architecture.md)** - Technical deep dive
 - [Environment Variables](docs/reference/environment-variables.md) - All configuration options
 - [Configuration Options](docs/reference/configuration-options.md) - PHP/FPM/Nginx configs
 - [Available Extensions](docs/reference/available-extensions.md) - Complete extension list
@@ -207,7 +207,7 @@ Add `-dev` suffix for development images with Xdebug:
 ### Multi-Service Container
 Single container with both PHP-FPM and Nginx:
 
-- ✅ PHPeek PM process manager (lightweight Go binary)
+- ✅ Cbox PM process manager (lightweight Go binary)
 - ✅ Framework auto-detection (Laravel/Symfony/WordPress)
 - ✅ Laravel Scheduler with cron support
 - ✅ Auto-fixes permissions
@@ -314,7 +314,7 @@ environment:
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 docker-compose up -d
 ```
 
@@ -334,7 +334,7 @@ docker-compose up -d
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     # ImageMagick, vips, Node.js included
 ```
 
@@ -342,7 +342,7 @@ services:
 ```yaml
 services:
   api:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
     # Minimal size (~120MB), core extensions only
 ```
 
@@ -350,7 +350,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
     # Includes Chromium for Browsershot/Dusk
 ```
 
@@ -358,7 +358,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
     # Runs as www-data user, not root
 ```
 
@@ -378,7 +378,7 @@ services:
 
 ```bash
 # Clone repository
-git clone https://github.com/gophpeek/baseimages.git
+git clone https://github.com/cboxdk/baseimages.git
 cd baseimages
 
 # Build multi-service image
@@ -410,7 +410,7 @@ docker run --rm -p 8000:80 my-image:8.3-bookworm
 ./tests/e2e/run-all-tests.sh --specific security
 
 # Run extension tests
-./tests/test-extensions.sh ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
+./tests/test-extensions.sh ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
 ```
 
 📖 **Test documentation:** [tests/README.md](tests/README.md)
@@ -443,7 +443,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -479,12 +479,12 @@ version: '3.8'
 
 services:
   php-fpm:
-    image: ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
     volumes:
       - ./:/var/www/html
 
   nginx:
-    image: ghcr.io/gophpeek/baseimages/nginx:bookworm
+    image: ghcr.io/cboxdk/baseimages/nginx:bookworm
     ports:
       - "80:80"
     volumes:
@@ -498,7 +498,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev
     volumes:
       - ./:/var/www/html
     environment:
@@ -546,15 +546,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Credits
 
-Built by [PHPeek](https://github.com/gophpeek) team.
+Built by [Cbox](https://github.com/cboxdk) team.
 
 Inspired by the PHP community's need for clean, no-nonsense base images without unnecessary complexity.
 
 ## 💬 Support
 
 - **Documentation:** [docs/](docs/)
-- **Issues:** [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Issues:** [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
 - **Security:** [SECURITY.md](SECURITY.md)
 
 ---

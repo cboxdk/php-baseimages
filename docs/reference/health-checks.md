@@ -1,16 +1,16 @@
 ---
 title: "Health Checks"
-description: "Configure Docker, Kubernetes, and custom health checks for PHPeek base images"
+description: "Configure Docker, Kubernetes, and custom health checks for Cbox base images"
 weight: 50
 ---
 
 # Health Checks
 
-PHPeek base images include comprehensive health checking for Docker and Kubernetes environments.
+Cbox base images include comprehensive health checking for Docker and Kubernetes environments.
 
 ## Built-in Health Check
 
-All PHPeek images include a deep health validation script at `/usr/local/bin/healthcheck.sh`.
+All Cbox images include a deep health validation script at `/usr/local/bin/healthcheck.sh`.
 
 ### What It Checks
 
@@ -44,7 +44,7 @@ docker exec myapp /usr/local/bin/healthcheck.sh
 
 ### Default Configuration
 
-PHPeek images include a Docker HEALTHCHECK instruction:
+Cbox images include a Docker HEALTHCHECK instruction:
 
 ```dockerfile
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
@@ -79,7 +79,7 @@ Override in docker-compose.yml:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 15s
@@ -91,7 +91,7 @@ services:
 Or in Dockerfile:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Custom health check
 HEALTHCHECK --interval=15s --timeout=10s --retries=5 \
@@ -105,7 +105,7 @@ For CI/CD or testing scenarios:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     healthcheck:
       disable: true
 ```
@@ -122,7 +122,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     livenessProbe:
       httpGet:
         path: /health
@@ -143,7 +143,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     readinessProbe:
       httpGet:
         path: /health
@@ -165,7 +165,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     startupProbe:
       httpGet:
         path: /health
@@ -182,20 +182,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: phpeek-app
+  name: cbox-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: phpeek
+      app: cbox
   template:
     metadata:
       labels:
-        app: phpeek
+        app: cbox
     spec:
       containers:
       - name: app
-        image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+        image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
         ports:
         - containerPort: 80
 
@@ -288,7 +288,7 @@ public function health(
 
 ## Nginx Health Endpoint
 
-PHPeek images include a built-in `/health` endpoint in Nginx:
+Cbox images include a built-in `/health` endpoint in Nginx:
 
 ```nginx
 # Included in default.conf
@@ -317,22 +317,22 @@ location /health {
 }
 ```
 
-## PHPeek PM Health Checks
+## Cbox PM Health Checks
 
-PHPeek Process Manager includes built-in health checks for all managed processes:
+Cbox Process Manager includes built-in health checks for all managed processes:
 
 ### Process Health Checks
 
 ```yaml
 environment:
   # Health check configuration
-  PHPEEK_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TYPE: tcp
-  PHPEEK_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TARGET: "127.0.0.1:9000"
-  PHPEEK_PM_PROCESS_PHP_FPM_HEALTH_CHECK_INTERVAL: 10
+  CBOX_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TYPE: tcp
+  CBOX_PM_PROCESS_PHP_FPM_HEALTH_CHECK_TARGET: "127.0.0.1:9000"
+  CBOX_PM_PROCESS_PHP_FPM_HEALTH_CHECK_INTERVAL: 10
 
-  PHPEEK_PM_PROCESS_NGINX_HEALTH_CHECK_TYPE: http
-  PHPEEK_PM_PROCESS_NGINX_HEALTH_CHECK_TARGET: "http://127.0.0.1/health"
-  PHPEEK_PM_PROCESS_NGINX_HEALTH_CHECK_INTERVAL: 10
+  CBOX_PM_PROCESS_NGINX_HEALTH_CHECK_TYPE: http
+  CBOX_PM_PROCESS_NGINX_HEALTH_CHECK_TARGET: "http://127.0.0.1/health"
+  CBOX_PM_PROCESS_NGINX_HEALTH_CHECK_INTERVAL: 10
 ```
 
 ### Health Check Types
@@ -345,15 +345,15 @@ environment:
 
 ### Prometheus Metrics
 
-PHPeek PM exposes health metrics on port 9090:
+Cbox PM exposes health metrics on port 9090:
 
 ```bash
 # Get health metrics
 curl http://localhost:9090/metrics | grep health
 
 # Example output:
-# phpeek_pm_health_check_status{process="php-fpm",check_type="tcp"} 1
-# phpeek_pm_health_check_status{process="nginx",check_type="http"} 1
+# cbox_pm_health_check_status{process="php-fpm",check_type="tcp"} 1
+# cbox_pm_health_check_status{process="nginx",check_type="http"} 1
 ```
 
 ## Troubleshooting
@@ -418,4 +418,4 @@ healthcheck:
 
 ---
 
-**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [PHPeek PM Integration](../phpeek-pm-integration.md)
+**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [Cbox PM Integration](../cbox-pm-integration.md)

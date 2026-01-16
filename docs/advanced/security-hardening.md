@@ -1,16 +1,16 @@
 ---
 title: "Security Hardening Guide"
-description: "Comprehensive security best practices for PHPeek containers including CVE management, secrets handling, and production hardening"
+description: "Comprehensive security best practices for Cbox containers including CVE management, secrets handling, and production hardening"
 weight: 23
 ---
 
 # Security Hardening Guide
 
-Complete security hardening guide for PHPeek containers in production environments.
+Complete security hardening guide for Cbox containers in production environments.
 
 ## Built-in Security Features
 
-PHPeek base images come with enterprise-grade security features enabled by default:
+Cbox base images come with enterprise-grade security features enabled by default:
 
 ### Nginx Security (Default Configuration)
 
@@ -171,7 +171,7 @@ CSP is **disabled by default** because it's too application-specific. Enable it 
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Recommended for Laravel with Livewire, Vite, and Google Fonts
       - NGINX_HEADER_CSP=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.bunny.net; font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net; img-src 'self' data: https:; connect-src 'self' wss: https:; frame-ancestors 'self'
@@ -351,7 +351,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     secrets:
       - app_key
       - db_password
@@ -439,7 +439,7 @@ spec:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       - VAULT_ADDR=https://vault.example.com
       - VAULT_TOKEN=${VAULT_TOKEN}
@@ -462,7 +462,7 @@ $dbPassword = $secret['data']['db_password'];
 
 ### Run as Non-Root User
 
-PHPeek images already run as non-root by default:
+Cbox images already run as non-root by default:
 
 ```bash
 # Verify non-root
@@ -479,7 +479,7 @@ docker exec <container> id
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     read_only: true
     tmpfs:
       - /tmp
@@ -510,13 +510,13 @@ services:
 
 ```bash
 # Scan image for vulnerabilities
-trivy image ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+trivy image ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Scan with severity filter
-trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Fail CI on vulnerabilities
-trivy image --exit-code 1 --severity CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+trivy image --exit-code 1 --severity CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 **Integrate in CI/CD:**
@@ -540,7 +540,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm'
+          image-ref: 'ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -682,7 +682,7 @@ docker-compose run --rm certbot certonly --webroot \
 
 ### Weekly Security Updates
 
-PHPeek images are automatically rebuilt weekly (Mondays 03:00 UTC) to include:
+Cbox images are automatically rebuilt weekly (Mondays 03:00 UTC) to include:
 - Latest upstream base image patches
 - PHP security updates
 - OS security updates
@@ -691,7 +691,7 @@ PHPeek images are automatically rebuilt weekly (Mondays 03:00 UTC) to include:
 
 ```bash
 # Pull latest image
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Rebuild and restart
 docker-compose build --pull
@@ -726,37 +726,37 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:lates
 **Scan your images:**
 
 ```bash
-# Scan PHPeek image
-trivy image ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+# Scan Cbox image
+trivy image ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Scan with severity filter (only HIGH and CRITICAL)
-trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Scan and exit with error if vulnerabilities found
-trivy image --exit-code 1 --severity CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+trivy image --exit-code 1 --severity CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Scan your custom image
 docker build -t my-app:latest .
 trivy image --severity HIGH,CRITICAL my-app:latest
 
 # Generate JSON report
-trivy image --format json --output trivy-report.json ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+trivy image --format json --output trivy-report.json ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Generate HTML report (requires template)
-trivy image --format template --template "@contrib/html.tpl" --output trivy-report.html ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+trivy image --format template --template "@contrib/html.tpl" --output trivy-report.html ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 **Scan different tiers:**
 
 ```bash
 # Standard tier
-trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Slim tier
-trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Full tier
-trivy image --severity HIGH,CRITICAL ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 #### CI/CD Integration
@@ -847,14 +847,14 @@ jobs:
 
       - name: Build ${{ matrix.tier }} image
         run: |
-          docker build -t phpeek-test:${{ matrix.tier }} \
+          docker build -t cbox-test:${{ matrix.tier }} \
             --target ${{ matrix.tier }} \
             -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run Trivy scan - ${{ matrix.tier }}
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'phpeek-test:${{ matrix.tier }}'
+          image-ref: 'cbox-test:${{ matrix.tier }}'
           format: 'json'
           output: 'trivy-${{ matrix.tier }}.json'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
@@ -882,7 +882,7 @@ jobs:
           if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
             echo "## Critical & High Vulnerabilities" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-test:${{ matrix.os }} >> $GITHUB_STEP_SUMMARY || true
+            docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table cbox-test:${{ matrix.os }} >> $GITHUB_STEP_SUMMARY || true
           fi
 
       - name: Upload scan results
@@ -936,7 +936,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "phpeek-app"
+        IMAGE_NAME = "cbox-app"
         IMAGE_TAG = "${env.BUILD_ID}"
     }
 
@@ -984,7 +984,7 @@ Create `scripts/security-check.sh`:
 #!/bin/bash
 set -e
 
-IMAGE="${1:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm}"
+IMAGE="${1:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}"
 
 echo "🔍 Running security scan on: $IMAGE"
 
@@ -1094,7 +1094,7 @@ jobs:
 
 ```bash
 # Example Trivy table output
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm (debian 12 bookworm)
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm (debian 12 bookworm)
 ================================================================================
 Total: 5 (HIGH: 2, CRITICAL: 3)
 
@@ -1338,4 +1338,4 @@ groups:
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

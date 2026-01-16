@@ -1,12 +1,12 @@
 ---
 title: "Production Deployment Guide"
-description: "Deploy PHPeek containers to production with security hardening, performance optimization, and zero-downtime deployment strategies"
+description: "Deploy Cbox containers to production with security hardening, performance optimization, and zero-downtime deployment strategies"
 weight: 14
 ---
 
 # Production Deployment Guide
 
-Complete guide for deploying PHPeek containers to production environments with security, performance, and reliability.
+Complete guide for deploying Cbox containers to production environments with security, performance, and reliability.
 
 ## Table of Contents
 
@@ -57,7 +57,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     secrets:
       - app_key
       - db_password
@@ -108,7 +108,7 @@ allow_url_include = Off
 
 ### 5. Run as Non-Root User
 
-PHPeek images already run as non-root, but verify:
+Cbox images already run as non-root, but verify:
 
 ```bash
 docker exec <container> whoami
@@ -195,7 +195,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     restart: unless-stopped
     volumes:
       - ./:/var/www/html:ro  # Read-only for security
@@ -378,7 +378,7 @@ MAIL_ENCRYPTION=tls
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: phpeek-app
+  name: cbox-app
   namespace: production
 spec:
   replicas: 3
@@ -389,15 +389,15 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: phpeek-app
+      app: cbox-app
   template:
     metadata:
       labels:
-        app: phpeek-app
+        app: cbox-app
     spec:
       containers:
       - name: app
-        image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+        image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
         ports:
         - containerPort: 80
           name: http
@@ -458,7 +458,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: phpeek-app-service
+  name: cbox-app-service
   namespace: production
 spec:
   type: LoadBalancer
@@ -467,7 +467,7 @@ spec:
     targetPort: 80
     protocol: TCP
   selector:
-    app: phpeek-app
+    app: cbox-app
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -502,13 +502,13 @@ kubectl create secret generic db-secrets \
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: phpeek-app-hpa
+  name: cbox-app-hpa
   namespace: production
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: phpeek-app
+    name: cbox-app
   minReplicas: 3
   maxReplicas: 10
   metrics:
@@ -624,7 +624,7 @@ deploy_production:
 
 ### Health Check Endpoint
 
-PHPeek includes built-in health checks:
+Cbox includes built-in health checks:
 
 ```bash
 # Check health
@@ -660,7 +660,7 @@ services:
       driver: "fluentd"
       options:
         fluentd-address: localhost:24224
-        tag: phpeek.app
+        tag: cbox.app
 
   fluentd:
     image: fluent/fluentd:latest
@@ -836,7 +836,7 @@ fi
 ### Automated Backup with Cron
 
 ```bash
-# /etc/cron.d/phpeek-backup
+# /etc/cron.d/cbox-backup
 0 2 * * * root /opt/myapp/backup-db.sh >> /var/log/backup.log 2>&1
 0 3 * * * root /opt/myapp/backup-storage.sh >> /var/log/backup.log 2>&1
 ```
@@ -886,4 +886,4 @@ Before going live:
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

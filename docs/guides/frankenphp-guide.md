@@ -13,7 +13,7 @@ FrankenPHP is a modern PHP application server built on Caddy. It provides automa
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     ports:
       - "80:80"
       - "443:443"
@@ -36,7 +36,7 @@ FrankenPHP is a PHP application server created by Kévin Dunglas (creator of API
 - **Worker Mode** - Keep PHP in memory like Swoole/RoadRunner
 - **No PHP-FPM** - Direct PHP execution for better performance
 
-## PHPeek FrankenPHP Images
+## Cbox FrankenPHP Images
 
 | Image | PHP | FrankenPHP | Architecture |
 |-------|-----|------------|--------------|
@@ -46,8 +46,8 @@ FrankenPHP is a PHP application server created by Kévin Dunglas (creator of API
 
 All images include:
 - FrankenPHP binary with Caddy integration
-- All standard PHPeek extensions (Redis, MongoDB, etc.)
-- Composer, Node.js, PHPeek PM
+- All standard Cbox extensions (Redis, MongoDB, etc.)
+- Composer, Node.js, Cbox PM
 - Automatic Caddyfile generation
 
 ## Laravel Octane Setup
@@ -64,7 +64,7 @@ php artisan octane:install --server=frankenphp
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     ports:
       - "80:80"
       - "443:443"
@@ -129,7 +129,7 @@ The entrypoint automatically detects Laravel Octane and starts it with FrankenPH
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     ports:
       - "443:443"
     environment:
@@ -145,7 +145,7 @@ Access: `https://localhost` (accept self-signed certificate)
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     ports:
       - "80:80"
       - "443:443"
@@ -165,7 +165,7 @@ For advanced configuration, mount a custom Caddyfile:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./:/var/www/html
@@ -207,7 +207,7 @@ example.com {
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     ports:
       - "80:80"
       - "443:443"
@@ -270,7 +270,7 @@ For non-Laravel applications:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     volumes:
       - ./:/var/www/html
     environment:
@@ -286,7 +286,7 @@ Built-in health check endpoint at `/health`:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
@@ -299,7 +299,7 @@ services:
 ### FrankenPHP Version
 
 ```bash
-docker run --rm ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm frankenphp version
+docker run --rm ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm frankenphp version
 ```
 
 ### Certificate Issues

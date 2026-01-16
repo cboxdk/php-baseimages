@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-symfony-app
     ports:
       - "8095:80"

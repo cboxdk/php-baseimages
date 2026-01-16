@@ -7,7 +7,7 @@ declare(strict_types=1);
 | Pest v4 Configuration
 |--------------------------------------------------------------------------
 |
-| PHPeek Base Images E2E Test Suite using Pest v4 with native browser testing.
+| Cbox Base Images E2E Test Suite using Pest v4 with native browser testing.
 | Features: Playwright-powered browser tests, architecture testing, parallel execution.
 |
 | @see https://pestphp.com/docs

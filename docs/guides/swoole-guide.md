@@ -13,7 +13,7 @@ Run high-performance PHP applications with the Swoole extension. Perfect for Lar
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
     ports:
       - "8000:8000"
     volumes:
@@ -34,7 +34,7 @@ Swoole is a high-performance coroutine-based PHP extension written in C. It prov
 - **Built-in servers** - HTTP, WebSocket, TCP, UDP servers
 - **Connection pooling** - Efficient database and Redis connections
 
-## PHPeek Swoole Images
+## Cbox Swoole Images
 
 | Image | PHP | Swoole | Architecture |
 |-------|-----|--------|--------------|
@@ -44,8 +44,8 @@ Swoole is a high-performance coroutine-based PHP extension written in C. It prov
 
 All images include:
 - Swoole extension with OpenSSL, cURL, c-ares support
-- All standard PHPeek extensions (Redis, MongoDB, etc.)
-- Composer, Node.js, PHPeek PM
+- All standard Cbox extensions (Redis, MongoDB, etc.)
+- Composer, Node.js, Cbox PM
 - `swoole.use_shortname = Off` for Laravel compatibility
 
 ## Laravel Octane Setup
@@ -62,7 +62,7 @@ php artisan octane:install --server=swoole
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
     ports:
       - "8000:8000"
     volumes:
@@ -115,7 +115,7 @@ The entrypoint automatically detects Laravel Octane and starts it with Swoole.
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
     ports:
       - "8000:8000"
     volumes:
@@ -189,14 +189,14 @@ For non-Laravel Swoole apps, pass a custom command:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
     command: php /var/www/html/server.php
 ```
 
 Or use the entrypoint for setup, then custom command:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
 
 COPY . /var/www/html
 
@@ -210,7 +210,7 @@ The image includes a built-in health check. For custom endpoints:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -224,7 +224,7 @@ services:
 
 ```bash
 # Verify Swoole is loaded
-docker run --rm ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm php -m | grep swoole
+docker run --rm ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm php -m | grep swoole
 ```
 
 ### Octane Not Starting

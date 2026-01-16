@@ -1,6 +1,6 @@
 ---
 title: "Quick Reference"
-description: "Copy-paste ready snippets for PHPeek base images"
+description: "Copy-paste ready snippets for Cbox base images"
 weight: 1
 ---
 
@@ -14,7 +14,7 @@ Copy-paste ready snippets. No configuration needed.
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -31,7 +31,7 @@ docker compose up
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -71,7 +71,7 @@ REDIS_CLIENT=phpredis
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -99,7 +99,7 @@ volumes:
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -203,18 +203,18 @@ docker compose exec app php artisan test
 
 ```
 # Standard tier (DEFAULT)
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
 
 # Slim tier (APIs, microservices)
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Full tier (Browsershot, Dusk)
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 
 # Development (with Xdebug)
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-dev
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev
 ```
 
 ---
@@ -237,7 +237,7 @@ Verify: `docker compose exec app php -m`
 ## Add Custom Extension
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
     && pecl install swoole \

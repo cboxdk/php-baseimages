@@ -1,12 +1,12 @@
 ---
 title: "Changelog"
-description: "What's new in PHPeek base images - features, improvements, and security updates"
+description: "What's new in Cbox base images - features, improvements, and security updates"
 weight: 99
 ---
 
 # Changelog
 
-All notable changes to PHPeek base images.
+All notable changes to Cbox base images.
 
 ## [Unreleased]
 
@@ -22,10 +22,10 @@ All notable changes to PHPeek base images.
 **Tag changes:**
 ```yaml
 # OLD (Alpine)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine
 
 # NEW (Bookworm)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 **Why this change?**
@@ -74,13 +74,13 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 **Tag format changes:**
 ```yaml
 # OLD (2024.11)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm           # Full edition
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-minimal   # Minimal edition
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm           # Full edition
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-minimal   # Minimal edition
 
 # NEW (2024.12)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm           # Standard tier (default)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim      # Slim tier
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tier (with Chromium)
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm           # Standard tier (default)
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim      # Slim tier
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tier (with Chromium)
 ```
 
 **Tier selection guide:**
@@ -95,9 +95,9 @@ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full t
 ## [2024.11] - November 2024
 
 ### Added
-- **PHPeek PM** - Go-based process manager replacing bash scripts
+- **Cbox PM** - Go-based process manager replacing bash scripts
 - Laravel Horizon support (`LARAVEL_HORIZON=true`)
-- Queue worker scaling (`PHPEEK_PM_PROCESS_QUEUE_DEFAULT_SCALE`)
+- Queue worker scaling (`CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE`)
 - JSON structured logging
 - Graceful shutdown handling
 
@@ -158,16 +158,16 @@ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full t
 
 ```yaml
 # Most apps - no change needed!
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # For Browsershot/Dusk users - use Full tier
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 
 # For API/microservices - use Slim tier
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
-### From bash-based entrypoint to PHPeek PM
+### From bash-based entrypoint to Cbox PM
 
 **Before (v2024.09)**:
 ```yaml
@@ -193,7 +193,7 @@ environment:
 
 ## Security Updates
 
-PHPeek images are rebuilt weekly (Mondays 03:00 UTC) with latest security patches.
+Cbox images are rebuilt weekly (Mondays 03:00 UTC) with latest security patches.
 
 **To get updates**:
 ```bash
@@ -203,13 +203,13 @@ docker compose up -d
 
 **Check current version**:
 ```bash
-docker compose exec app cat /etc/phpeek-version
+docker compose exec app cat /etc/cbox-version
 ```
 
 ---
 
 ## Reporting Issues
 
-- **Bugs**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
-- **Security**: See [SECURITY.md](https://github.com/gophpeek/baseimages/blob/main/SECURITY.md)
-- **Questions**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Bugs**: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
+- **Security**: See [SECURITY.md](https://github.com/cboxdk/baseimages/blob/main/SECURITY.md)
+- **Questions**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)

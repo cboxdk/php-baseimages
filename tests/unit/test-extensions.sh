@@ -1,5 +1,5 @@
 #!/bin/bash
-# PHPeek Base Images - Extension Unit Tests
+# Cbox Base Images - Extension Unit Tests
 # Tests PHP extensions are properly installed and functional in baseimages
 #
 # Usage:

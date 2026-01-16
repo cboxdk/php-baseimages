@@ -1,12 +1,12 @@
 ---
 title: "Magento Guide"
-description: "Deploy Magento 2 with PHPeek including MySQL, OpenSearch, Redis, and cron"
+description: "Deploy Magento 2 with Cbox including MySQL, OpenSearch, Redis, and cron"
 weight: 30
 ---
 
 # Magento Guide
 
-Run Magento 2 with PHPeek base images plus the required search, cache, and cron services.
+Run Magento 2 with Cbox base images plus the required search, cache, and cron services.
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8080:80"
     volumes:
@@ -144,7 +144,7 @@ Enable Redis for cache + sessions in `app/etc/env.php`:
 
 ## Cron & Queue
 
-Magento requires cron every minute. PHPeek handles that when `LARAVEL_SCHEDULER=true`:
+Magento requires cron every minute. Cbox handles that when `LARAVEL_SCHEDULER=true`:
 
 ```bash
 docker compose exec app bin/magento cron:install
@@ -153,7 +153,7 @@ docker compose exec app bin/magento cron:run
 
 ## Development Tips
 
-- Use `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
+- Use `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
 - Disable static content deployment for faster dev: `bin/magento deploy:mode:set developer`.
 - Flush caches quickly: `bin/magento cache:flush`.
 
@@ -162,7 +162,7 @@ docker compose exec app bin/magento cron:run
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html:ro
       - ./var:/var/www/html/var

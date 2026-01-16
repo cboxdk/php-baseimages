@@ -1,16 +1,16 @@
 ---
 title: "Reference Documentation"
-description: "Complete technical reference for PHPeek base images including image tiers, environment variables, and available extensions"
+description: "Complete technical reference for Cbox base images including image tiers, environment variables, and available extensions"
 weight: 30
 ---
 
 # Reference Documentation
 
-Complete technical reference materials for PHPeek base images.
+Complete technical reference materials for Cbox base images.
 
 ## Image Tiers
 
-PHPeek images come in three tiers:
+Cbox images come in three tiers:
 
 | Tier | Tag Suffix | Size | Best For |
 |------|------------|------|----------|
@@ -79,16 +79,16 @@ PHPeek images come in three tiers:
 
 ```yaml
 # Standard tier (DEFAULT) - Most Laravel/PHP apps
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Slim tier - APIs, microservices
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Full tier - Browsershot, Dusk, PDF generation
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 
 # Rootless variants (add -rootless suffix)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 ```
 
 ## How to Use This Section
@@ -110,7 +110,7 @@ Most reference pages include copy-paste ready examples:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Reference: docs/reference/environment-variables.md
       PHP_MEMORY_LIMIT: "512M"
@@ -129,7 +129,7 @@ Reference documentation links to:
 
 Found an undocumented variable or option?
 
-1. Check existing issues: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+1. Check existing issues: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
 2. Submit a pull request with documentation
 3. Include example usage and expected behavior
 

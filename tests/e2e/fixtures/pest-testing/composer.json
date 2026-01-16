@@ -1,5 +1,5 @@
 {
-    "name": "phpeek/pest-testing",
+    "name": "cbox/pest-testing",
     "description": "E2E test for Pest PHP v4 testing framework with browser testing",
     "type": "project",
     "require": {

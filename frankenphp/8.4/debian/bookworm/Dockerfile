@@ -1,16 +1,16 @@
 # ============================================================================
-# PHPeek FrankenPHP Image - Debian 8.4 (Bookworm)
+# Cbox FrankenPHP Image - Debian 8.4 (Bookworm)
 # ============================================================================
 # FrankenPHP is a modern PHP application server built on Caddy
 # Supports HTTP/3, automatic HTTPS, and worker mode for performance
 # ============================================================================
 
-FROM ghcr.io/gophpeek/baseimages/php-base:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-base:8.4-bookworm
 
-LABEL org.opencontainers.image.title="PHPeek FrankenPHP 8.4 Debian"
-LABEL org.opencontainers.image.description="FrankenPHP with all extensions, Composer, Node.js, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox FrankenPHP 8.4 Debian"
+LABEL org.opencontainers.image.description="FrankenPHP with all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
 # Install FrankenPHP dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \

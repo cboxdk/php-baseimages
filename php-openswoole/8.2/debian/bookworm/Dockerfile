@@ -1,13 +1,13 @@
 # ============================================================================
-# PHPeek OpenSwoole Image - Debian 8.2 (Bookworm)
+# Cbox OpenSwoole Image - Debian 8.2 (Bookworm)
 # ============================================================================
 
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm
 
-LABEL org.opencontainers.image.title="PHPeek OpenSwoole 8.2 Debian"
-LABEL org.opencontainers.image.description="PHP with OpenSwoole, all extensions, Composer, Node.js, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox OpenSwoole 8.2 Debian"
+LABEL org.opencontainers.image.description="PHP with OpenSwoole, all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         $PHPIZE_DEPS libssl-dev libcurl4-openssl-dev libc-ares-dev libpq-dev \

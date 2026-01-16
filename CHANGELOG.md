@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to PHPeek Base Images will be documented in this file.
+All notable changes to Cbox Base Images will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHP 8.5 test profiles in docker-compose.yml (`--profile php85`)
 
 ### Documentation
-- PHPeek PM v1.1.0 features documented
+- Cbox PM v1.1.0 features documented
   - Scheduled Tasks (cron-like) implementation
   - Heartbeat monitoring integration (healthchecks.io, Cronitor, Better Uptime)
   - Advanced logging (level detection, multiline, JSON parsing, sensitive data redaction)
@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multi-service images (PHP-FPM + Nginx)
 - Minimal and Full editions
 - Alpine, Debian, and Ubuntu variants
-- PHPeek PM v1.0.0 integration
+- Cbox PM v1.0.0 integration
 - Comprehensive documentation structure
 - Weekly security rebuilds via GitHub Actions
 - Multi-architecture support (amd64, arm64)
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHP 8.5 (all variants)
 
 ### Process Management
-- PHPeek PM v1.0.0 built-in for all php-fpm-nginx images
+- Cbox PM v1.0.0 built-in for all php-fpm-nginx images
   - Multi-process orchestration
   - Structured logging
   - Health checks with auto-restart
@@ -73,5 +73,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security hardening guide
 - Troubleshooting guides
 
-[Unreleased]: https://github.com/gophpeek/baseimages/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/gophpeek/baseimages/releases/tag/v1.0.0
+[Unreleased]: https://github.com/cboxdk/baseimages/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/cboxdk/baseimages/releases/tag/v1.0.0

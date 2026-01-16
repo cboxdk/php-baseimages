@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHPeek Base Images - Test Page</title>
+    <title>Cbox Base Images - Test Page</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
@@ -32,7 +32,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🐘 PHPeek Base Images - Test Page</h1>
+        <h1>🐘 Cbox Base Images - Test Page</h1>
 
         <div class="info">
             <strong>PHP Version:</strong> <?php echo PHP_VERSION; ?><br>
@@ -91,7 +91,7 @@
                 <td>MySQL</td>
                 <td class="<?php
                     try {
-                        $pdo = new PDO('mysql:host=mysql;dbname=phpeek_test', 'phpeek', 'secret');
+                        $pdo = new PDO('mysql:host=mysql;dbname=cbox_test', 'cbox', 'secret');
                         echo 'success">✓ Connected';
                     } catch (PDOException $e) {
                         echo 'error">✗ ' . $e->getMessage();
@@ -103,7 +103,7 @@
                 <td>PostgreSQL</td>
                 <td class="<?php
                     try {
-                        $pdo = new PDO('pgsql:host=postgres;dbname=phpeek_test', 'phpeek', 'secret');
+                        $pdo = new PDO('pgsql:host=postgres;dbname=cbox_test', 'cbox', 'secret');
                         echo 'success">✓ Connected';
                     } catch (PDOException $e) {
                         echo 'error">✗ ' . $e->getMessage();

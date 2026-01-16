@@ -110,4 +110,4 @@ jobs:
           docker run --rm $IMAGE php -r "echo 'OpenSwoole version: ' . OPENSWOOLE_VERSION . PHP_EOL;"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version

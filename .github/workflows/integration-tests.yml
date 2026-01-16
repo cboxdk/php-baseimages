@@ -28,26 +28,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read PHPeek PM version
+      - name: Read Cbox PM version
         id: versions
         run: |
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download PHPeek PM binaries
+      - name: Download Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run Docker integration tests
         run: |
@@ -73,26 +73,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read PHPeek PM version
+      - name: Read Cbox PM version
         id: versions
         run: |
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download PHPeek PM binaries
+      - name: Download Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t phpeek-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t cbox-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run performance benchmarks
         run: |
@@ -117,31 +117,31 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read PHPeek PM version
+      - name: Read Cbox PM version
         id: versions
         run: |
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download PHPeek PM binaries
+      - name: Download Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build images for scanning (full chain)
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t phpeek-scan:bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t cbox-scan:bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'phpeek-scan:bookworm'
+          image-ref: 'cbox-scan:bookworm'
           format: 'sarif'
           output: 'trivy-bookworm-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -159,4 +159,4 @@ jobs:
           echo "# Security Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Debian 12 (Bookworm)" >> $GITHUB_STEP_SUMMARY
-          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table phpeek-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
+          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table cbox-scan:bookworm >> $GITHUB_STEP_SUMMARY || true

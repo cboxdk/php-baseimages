@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# PHPeek Base Images - Complete E2E Test Suite
+# Cbox Base Images - Complete E2E Test Suite
 # Runs all test scenarios and provides a summary
 #
 # Usage:
@@ -53,7 +53,7 @@ COMPREHENSIVE_TESTS=(
 print_header() {
     echo ""
     echo -e "${CYAN}╔══════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║${NC}  ${BLUE}PHPeek Base Images - E2E Test Suite${NC}                                         ${CYAN}║${NC}"
+    echo -e "${CYAN}║${NC}  ${BLUE}Cbox Base Images - E2E Test Suite${NC}                                         ${CYAN}║${NC}"
     echo -e "${CYAN}╚══════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -189,7 +189,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help)
-            echo "PHPeek E2E Test Runner"
+            echo "Cbox E2E Test Runner"
             echo ""
             echo "Usage: $0 [OPTIONS]"
             echo ""

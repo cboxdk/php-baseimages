@@ -110,4 +110,4 @@ jobs:
           docker run --rm --entrypoint frankenphp $IMAGE version
           docker run --rm --entrypoint composer $IMAGE --version
           docker run --rm --entrypoint node $IMAGE --version
-          docker run --rm --entrypoint phpeek-pm $IMAGE --version
+          docker run --rm --entrypoint cbox-pm $IMAGE --version

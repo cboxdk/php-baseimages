@@ -1,14 +1,14 @@
 #!/bin/sh
 # ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  PHPeek PHP-FPM Health Check                                              ║
-# ║  Validates PHP-FPM process, port, extensions, and PHPeek PM               ║
+# ║  Cbox PHP-FPM Health Check                                              ║
+# ║  Validates PHP-FPM process, port, extensions, and Cbox PM               ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=sh
 
 set -e
 
 # Source shared library
-LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+LIB_PATH="${CBOX_LIB_PATH:-/usr/local/lib/cbox/entrypoint-lib.sh}"
 if [ -f "$LIB_PATH" ]; then
     # shellcheck source=/dev/null
     . "$LIB_PATH"
@@ -81,13 +81,13 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Check 5: PHPeek PM
+# Check 5: Cbox PM
 # ─────────────────────────────────────────────────────────────────────────────
-if command -v phpeek-pm >/dev/null 2>&1; then
-    if phpeek-pm --version >/dev/null 2>&1; then
-        check_passed "PHPeek PM available"
+if command -v cbox-pm >/dev/null 2>&1; then
+    if cbox-pm --version >/dev/null 2>&1; then
+        check_passed "Cbox PM available"
     else
-        check_warning "PHPeek PM installed but not responding"
+        check_warning "Cbox PM installed but not responding"
     fi
 fi
 

@@ -1,12 +1,12 @@
 ---
 title: "Development Workflow Guide"
-description: "Optimize your local development workflow with PHPeek including Xdebug setup, hot-reload, testing, and debugging strategies"
+description: "Optimize your local development workflow with Cbox including Xdebug setup, hot-reload, testing, and debugging strategies"
 weight: 15
 ---
 
 # Development Workflow Guide
 
-Optimize your local development experience with PHPeek base images including Xdebug, hot-reload, testing, and efficient debugging.
+Optimize your local development experience with Cbox base images including Xdebug, hot-reload, testing, and efficient debugging.
 
 ## Table of Contents
 
@@ -23,12 +23,12 @@ Optimize your local development experience with PHPeek base images including Xde
 
 ### Using Pre-built Development Images (Recommended)
 
-PHPeek provides **pre-built development images** with Xdebug already installed and configured. These are the easiest way to get started with debugging.
+Cbox provides **pre-built development images** with Xdebug already installed and configured. These are the easiest way to get started with debugging.
 
 **Available dev images:**
-- `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-dev`
-- `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-dev`
-- `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm-dev`
+- `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev`
+- `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev`
+- `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-dev`
 - Also available: `-debian-dev` variant
 
 ### Development docker-compose.yml
@@ -39,7 +39,7 @@ version: '3.8'
 services:
   app:
     # Use the pre-built dev image with Xdebug included!
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-dev
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev
     ports:
       - "8000:80"
       - "9003:9003"  # Xdebug port
@@ -249,7 +249,7 @@ XDEBUG_MODE=off docker-compose up -d
 
 ### macOS/Windows Performance Boost (Optional)
 
-Bind mounts on Docker Desktop can feel sluggish with large projects. Use a file-sync helper (Mutagen or Docker Desktop VirtioFS) to keep DX fast without touching your PHPeek stack.
+Bind mounts on Docker Desktop can feel sluggish with large projects. Use a file-sync helper (Mutagen or Docker Desktop VirtioFS) to keep DX fast without touching your Cbox stack.
 
 **Mutagen workflow:**
 
@@ -260,10 +260,10 @@ brew install mutagen-io/mutagen/mutagen
 docker compose up -d
 
 # Sync host source to the container webroot
-mutagen sync create ./ app://phpeek-app/var/www/html
+mutagen sync create ./ app://cbox-app/var/www/html
 ```
 
-> Replace `phpeek-app` with the container name from `docker compose ps`. Mutagen mirrors files quickly while PHPeek still sees a bind mount.
+> Replace `cbox-app` with the container name from `docker compose ps`. Mutagen mirrors files quickly while Cbox still sees a bind mount.
 
 Prefer native tooling? Enable **VirtioFS** under Docker Desktop → Settings → Resources → File Sharing for a big speed-up on macOS/Windows.
 
@@ -290,7 +290,7 @@ services:
 **Install Node.js in container (Dockerfile.dev):**
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install Node.js
 RUN apt-get update && apt-get install -y nodejs npm
@@ -689,7 +689,7 @@ docker-compose build
 
 ```dockerfile
 # Cache composer dependencies
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 COPY composer.json composer.lock ./
 RUN composer install --no-scripts --no-autoloader
@@ -703,7 +703,7 @@ RUN composer dump-autoload --optimize
 **Dockerfile.dev:**
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install Xdebug
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -720,7 +720,7 @@ RUN apt-get update && apt-get install -y git vim
 **Dockerfile.prod:**
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Production optimizations only
 COPY --chown=www-data:www-data . /var/www/html
@@ -844,4 +844,4 @@ volumes:
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

@@ -1,7 +1,7 @@
 services:
   # Test 1: With all environment variables set
   app-full-env:
-    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-cbox/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-env-full
     ports:
       - "8096:80"
@@ -63,7 +63,7 @@ services:
 
   # Test 2: With minimal environment variables (test graceful handling)
   app-minimal-env:
-    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-cbox/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-env-minimal
     ports:
       - "8097:80"
@@ -82,7 +82,7 @@ services:
 
   # Test 3: No environment variables at all
   app-no-env:
-    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-cbox/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-env-none
     ports:
       - "8098:80"

@@ -1,6 +1,6 @@
-# Bitbucket Pipelines for Laravel with PHPeek
+# Bitbucket Pipelines for Laravel with Cbox
 
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 definitions:
   services:

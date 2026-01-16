@@ -49,7 +49,7 @@ on:
           - 'image-formats'
 
 env:
-  REGISTRY: ghcr.io/gophpeek/baseimages
+  REGISTRY: ghcr.io/cboxdk/baseimages
 
 jobs:
   # Quick smoke test on every push - builds entire chain locally
@@ -65,31 +65,31 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read PHPeek PM version
+      - name: Read Cbox PM version
         id: versions
         run: |
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download PHPeek PM binaries
+      - name: Download Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building php-base:8.3-bookworm ==="
           docker build --target root \
             -f php-base/8.3/debian/bookworm/Dockerfile \
-            -t ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm .
+            -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm .
 
           echo "=== Building php-fpm:8.3-bookworm ==="
           docker build --target root \
             -f php-fpm/8.3/debian/bookworm/Dockerfile \
-            -t ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm .
+            -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm .
 
           echo "=== Building php-fpm-nginx:8.3-bookworm ==="
           docker build --target root \
@@ -133,19 +133,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Read PHPeek PM version
+      - name: Read Cbox PM version
         id: versions
         run: |
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download PHPeek PM binaries
+      - name: Download Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Determine Dockerfile paths
         id: paths
@@ -163,12 +163,12 @@ jobs:
           echo "=== Building php-base:${PHP}-${OS} ==="
           docker build --target root \
             -f ${{ steps.paths.outputs.base }} \
-            -t ghcr.io/gophpeek/baseimages/php-base:${PHP}-${OS} .
+            -t ghcr.io/cboxdk/baseimages/php-base:${PHP}-${OS} .
 
           echo "=== Building php-fpm:${PHP}-${OS} ==="
           docker build --target root \
             -f ${{ steps.paths.outputs.fpm }} \
-            -t ghcr.io/gophpeek/baseimages/php-fpm:${PHP}-${OS} .
+            -t ghcr.io/cboxdk/baseimages/php-fpm:${PHP}-${OS} .
 
           echo "=== Building php-fpm-nginx:${PHP}-${OS} ==="
           docker build --target root \

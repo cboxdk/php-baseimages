@@ -1,12 +1,12 @@
-# PHPeek Observability
+# Cbox Observability
 
-Pre-configured monitoring dashboards and configurations for PHPeek Base Images.
+Pre-configured monitoring dashboards and configurations for Cbox Base Images.
 
 ## Grafana Dashboard
 
-### PHPeek PM Process Manager Dashboard
+### Cbox PM Process Manager Dashboard
 
-Import `grafana-phpeek-pm-dashboard.json` into Grafana for comprehensive monitoring of:
+Import `grafana-cbox-pm-dashboard.json` into Grafana for comprehensive monitoring of:
 
 - **Process Status**: PHP-FPM, Nginx, Horizon, Queue Workers
 - **Resource Usage**: Memory and CPU per process
@@ -17,7 +17,7 @@ Import `grafana-phpeek-pm-dashboard.json` into Grafana for comprehensive monitor
 ### Quick Import
 
 1. Open Grafana → Dashboards → Import
-2. Upload `grafana-phpeek-pm-dashboard.json`
+2. Upload `grafana-cbox-pm-dashboard.json`
 3. Select your Prometheus data source
 4. Click Import
 
@@ -25,7 +25,7 @@ Import `grafana-phpeek-pm-dashboard.json` into Grafana for comprehensive monitor
 
 - Grafana 10.0+
 - Prometheus data source
-- PHPeek PM metrics exposed on port 9090
+- Cbox PM metrics exposed on port 9090
 
 ## Prometheus Configuration
 
@@ -33,7 +33,7 @@ Add this scrape config to your `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'phpeek-pm'
+  - job_name: 'cbox-pm'
     static_configs:
       - targets: ['your-app:9090']
     scrape_interval: 15s
@@ -44,18 +44,18 @@ scrape_configs:
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `phpeek_pm_process_up` | Gauge | Process running status (0/1) |
-| `phpeek_pm_process_restarts_total` | Counter | Total process restarts |
-| `phpeek_pm_process_cpu_seconds_total` | Counter | CPU time consumed |
-| `phpeek_pm_process_memory_bytes` | Gauge | Memory usage in bytes |
-| `phpeek_pm_health_check_status` | Gauge | Health check result (0/1) |
-| `phpeek_pm_process_desired_scale` | Gauge | Desired instance count |
-| `phpeek_pm_process_current_scale` | Gauge | Running instance count |
-| `phpeek_pm_scheduled_task_last_run_timestamp` | Gauge | Last execution timestamp |
-| `phpeek_pm_scheduled_task_next_run_timestamp` | Gauge | Next scheduled timestamp |
-| `phpeek_pm_scheduled_task_last_exit_code` | Gauge | Most recent exit code |
-| `phpeek_pm_scheduled_task_duration_seconds` | Gauge | Execution duration |
-| `phpeek_pm_scheduled_task_total` | Counter | Total runs by status |
+| `cbox_pm_process_up` | Gauge | Process running status (0/1) |
+| `cbox_pm_process_restarts_total` | Counter | Total process restarts |
+| `cbox_pm_process_cpu_seconds_total` | Counter | CPU time consumed |
+| `cbox_pm_process_memory_bytes` | Gauge | Memory usage in bytes |
+| `cbox_pm_health_check_status` | Gauge | Health check result (0/1) |
+| `cbox_pm_process_desired_scale` | Gauge | Desired instance count |
+| `cbox_pm_process_current_scale` | Gauge | Running instance count |
+| `cbox_pm_scheduled_task_last_run_timestamp` | Gauge | Last execution timestamp |
+| `cbox_pm_scheduled_task_next_run_timestamp` | Gauge | Next scheduled timestamp |
+| `cbox_pm_scheduled_task_last_exit_code` | Gauge | Most recent exit code |
+| `cbox_pm_scheduled_task_duration_seconds` | Gauge | Execution duration |
+| `cbox_pm_scheduled_task_total` | Counter | Total runs by status |
 
 ## Docker Compose Example
 
@@ -64,10 +64,10 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "80:80"
-      - "9090:9090"  # PHPeek PM metrics
+      - "9090:9090"  # Cbox PM metrics
     environment:
       LARAVEL_HORIZON: "true"
       LARAVEL_QUEUE: "true"
@@ -94,14 +94,14 @@ volumes:
 
 ## Alerting Rules
 
-Example Prometheus alerting rules for PHPeek PM:
+Example Prometheus alerting rules for Cbox PM:
 
 ```yaml
 groups:
-  - name: phpeek-pm
+  - name: cbox-pm
     rules:
       - alert: ProcessDown
-        expr: phpeek_pm_process_up == 0
+        expr: cbox_pm_process_up == 0
         for: 1m
         labels:
           severity: critical
@@ -110,7 +110,7 @@ groups:
           description: "Process {{ $labels.process }} on {{ $labels.instance }} has been down for more than 1 minute."
 
       - alert: HighRestartRate
-        expr: increase(phpeek_pm_process_restarts_total[5m]) > 5
+        expr: increase(cbox_pm_process_restarts_total[5m]) > 5
         for: 2m
         labels:
           severity: warning
@@ -119,7 +119,7 @@ groups:
           description: "Process {{ $labels.process }} has restarted more than 5 times in the last 5 minutes."
 
       - alert: ScheduledTaskFailed
-        expr: phpeek_pm_scheduled_task_last_exit_code != 0
+        expr: cbox_pm_scheduled_task_last_exit_code != 0
         for: 5m
         labels:
           severity: warning
@@ -128,7 +128,7 @@ groups:
           description: "Scheduled task {{ $labels.task }} has a non-zero exit code."
 
       - alert: HealthCheckFailing
-        expr: phpeek_pm_health_check_status == 0
+        expr: cbox_pm_health_check_status == 0
         for: 2m
         labels:
           severity: critical
@@ -139,6 +139,6 @@ groups:
 
 ## Support
 
-- [PHPeek Documentation](https://phpeek.com/docs)
-- [PHPeek PM Integration Guide](../docs/phpeek-pm-integration.md)
-- [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
+- [Cbox Documentation](https://cbox.com/docs)
+- [Cbox PM Integration Guide](../docs/cbox-pm-integration.md)
+- [GitHub Issues](https://github.com/cboxdk/baseimages/issues)

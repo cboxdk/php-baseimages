@@ -1,12 +1,12 @@
 ---
 title: "Image Tagging Strategy"
-description: "Comprehensive guide to PHPeek image tagging, versioning, and deprecation policies"
+description: "Comprehensive guide to Cbox image tagging, versioning, and deprecation policies"
 weight: 40
 ---
 
 # Image Tagging Strategy
 
-PHPeek Base Images follow a clear, predictable tagging strategy with three image tiers and rootless variants.
+Cbox Base Images follow a clear, predictable tagging strategy with three image tiers and rootless variants.
 
 ## Tag Format
 
@@ -29,9 +29,9 @@ PHPeek Base Images follow a clear, predictable tagging strategy with three image
 Most applications should use standard tier:
 
 ```
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
 ```
 
 ### Slim Tier
@@ -39,9 +39,9 @@ ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm
 For APIs and microservices with minimal footprint:
 
 ```
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-slim
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm-slim
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-slim
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-slim
 ```
 
 ### Full Tier
@@ -49,9 +49,9 @@ ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm-slim
 For Browsershot, Dusk, Puppeteer, and PDF generation:
 
 ```
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-full
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm-full
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-full
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-full
 ```
 
 ### Rootless Variants
@@ -60,13 +60,13 @@ All tiers support rootless execution (runs as `www-data` user):
 
 ```
 # Standard + rootless
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Slim + rootless
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim-rootless
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim-rootless
 
 # Full + rootless
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full-rootless
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full-rootless
 ```
 
 ## Version Matrix
@@ -91,7 +91,7 @@ All variants also available with `-rootless` suffix.
 
 ## Deprecation Policy
 
-PHPeek follows a predictable deprecation schedule based on upstream EOL dates.
+Cbox follows a predictable deprecation schedule based on upstream EOL dates.
 
 ### Timeline
 
@@ -151,28 +151,28 @@ When a version is deprecated, migration guides are published at:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### API/Microservice (Slim Tier)
 ```yaml
 services:
   api:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ### PDF Generation (Full Tier)
 ```yaml
 services:
   pdf:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 ### Kubernetes (Rootless)
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 ```
 
 ## See Also

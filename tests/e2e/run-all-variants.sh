@@ -1,5 +1,5 @@
 #!/bin/bash
-# PHPeek Base Images - Multi-Variant E2E Test Runner
+# Cbox Base Images - Multi-Variant E2E Test Runner
 # Tests all image variants (Alpine, Debian, Ubuntu) across PHP versions
 
 set -euo pipefail
@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/test-utils.sh"
 
 # Configuration
-REGISTRY="${REGISTRY:-ghcr.io/gophpeek/baseimages}"
+REGISTRY="${REGISTRY:-ghcr.io/cboxdk/baseimages}"
 PHP_VERSIONS="${PHP_VERSIONS:-8.3}"
 OS_VARIANTS="${OS_VARIANTS:-alpine debian ubuntu}"
 SCENARIO="${1:-plain-php}"  # Default to quick test
@@ -20,7 +20,7 @@ usage() {
     echo "  SCENARIO  Test scenario: plain-php, laravel, wordpress, health-checks, all"
     echo ""
     echo "Environment variables:"
-    echo "  REGISTRY=ghcr.io/gophpeek/baseimages   Image registry"
+    echo "  REGISTRY=ghcr.io/cboxdk/baseimages   Image registry"
     echo "  PHP_VERSIONS='8.2 8.3 8.4'           Space-separated PHP versions"
     echo "  OS_VARIANTS='alpine debian ubuntu'   Space-separated OS variants"
     echo ""
@@ -35,7 +35,7 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
     usage
 fi
 
-log_section "PHPeek Multi-Variant E2E Test Suite"
+log_section "Cbox Multi-Variant E2E Test Suite"
 echo ""
 echo "  Registry:     $REGISTRY"
 echo "  PHP Versions: $PHP_VERSIONS"

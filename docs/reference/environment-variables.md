@@ -1,12 +1,12 @@
 ---
 title: "Environment Variables Reference"
-description: "Complete reference for all PHPeek environment variables"
+description: "Complete reference for all Cbox environment variables"
 weight: 1
 ---
 
 # Environment Variables Reference
 
-Complete reference for all environment variables supported by PHPeek base images powered by PHPeek PM.
+Complete reference for all environment variables supported by Cbox base images powered by Cbox PM.
 
 ## Quick Start Variables
 
@@ -25,17 +25,17 @@ These are the most commonly used variables. Just set what you need!
 
 ## Laravel Shorthand Variables
 
-These user-friendly variables are automatically mapped to PHPeek PM process controls by the entrypoint script.
+These user-friendly variables are automatically mapped to Cbox PM process controls by the entrypoint script.
 
 ### Process Control
 
 | Variable | Maps To | Description |
 |----------|---------|-------------|
-| `LARAVEL_SCHEDULER` | `PHPEEK_PM_PROCESS_SCHEDULER_ENABLED` | Enable `php artisan schedule:work` |
-| `LARAVEL_HORIZON` | `PHPEEK_PM_PROCESS_HORIZON_ENABLED` | Enable Laravel Horizon |
-| `LARAVEL_REVERB` | `PHPEEK_PM_PROCESS_REVERB_ENABLED` | Enable Laravel Reverb |
-| `LARAVEL_QUEUE` | `PHPEEK_PM_PROCESS_QUEUE_DEFAULT_ENABLED` | Enable default queue worker |
-| `LARAVEL_QUEUE_HIGH` | `PHPEEK_PM_PROCESS_QUEUE_HIGH_ENABLED` | Enable high priority queue |
+| `LARAVEL_SCHEDULER` | `CBOX_PM_PROCESS_SCHEDULER_ENABLED` | Enable `php artisan schedule:work` |
+| `LARAVEL_HORIZON` | `CBOX_PM_PROCESS_HORIZON_ENABLED` | Enable Laravel Horizon |
+| `LARAVEL_REVERB` | `CBOX_PM_PROCESS_REVERB_ENABLED` | Enable Laravel Reverb |
+| `LARAVEL_QUEUE` | `CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED` | Enable default queue worker |
+| `LARAVEL_QUEUE_HIGH` | `CBOX_PM_PROCESS_QUEUE_HIGH_ENABLED` | Enable high priority queue |
 
 ---
 
@@ -218,7 +218,7 @@ environment:
 
 ## Reverse Proxy Configuration
 
-Configure PHPeek to run behind Cloudflare, HAProxy, Traefik, Nginx, Fastly, Tailscale, or other reverse proxies.
+Configure Cbox to run behind Cloudflare, HAProxy, Traefik, Nginx, Fastly, Tailscale, or other reverse proxies.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -264,8 +264,8 @@ See [Reverse Proxy & mTLS Guide](../advanced/reverse-proxy-mtls.md) for detailed
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `SSL_MODE` | `off` | SSL mode: `off`, `on`, `full` |
-| `SSL_CERTIFICATE_FILE` | `/etc/ssl/certs/phpeek-selfsigned.crt` | Certificate path |
-| `SSL_PRIVATE_KEY_FILE` | `/etc/ssl/private/phpeek-selfsigned.key` | Private key path |
+| `SSL_CERTIFICATE_FILE` | `/etc/ssl/certs/cbox-selfsigned.crt` | Certificate path |
+| `SSL_PRIVATE_KEY_FILE` | `/etc/ssl/private/cbox-selfsigned.key` | Private key path |
 | `SSL_PROTOCOLS` | `TLSv1.2 TLSv1.3` | SSL protocols |
 | `SSL_CIPHERS` | `HIGH:!aNULL:!MD5` | SSL ciphers |
 | `SSL_HSTS_HEADER` | `max-age=31536000; includeSubDomains` | HSTS header value |
@@ -306,15 +306,15 @@ When mTLS is enabled, client certificate details are available:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"
       MTLS_VERIFY_CLIENT: "optional"
     volumes:
       - ./certs/client-ca.crt:/etc/ssl/certs/client-ca.crt:ro
-      - ./certs/server.crt:/etc/ssl/certs/phpeek-selfsigned.crt:ro
-      - ./certs/server.key:/etc/ssl/private/phpeek-selfsigned.key:ro
+      - ./certs/server.crt:/etc/ssl/certs/cbox-selfsigned.crt:ro
+      - ./certs/server.key:/etc/ssl/private/cbox-selfsigned.key:ro
 ```
 
 See [Reverse Proxy & mTLS Guide](../advanced/reverse-proxy-mtls#mtls-mutual-tls-client-authentication) for complete setup.
@@ -377,7 +377,7 @@ secrets:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `WORKDIR` | `/var/www/html` | Working directory |
-| `PHPEEK_PM_CONFIG` | `/etc/phpeek-pm/phpeek-pm.yaml` | PHPeek PM config path |
+| `CBOX_PM_CONFIG` | `/etc/cbox-pm/cbox-pm.yaml` | Cbox PM config path |
 
 ---
 

@@ -1,8 +1,8 @@
-# GitLab CI for Symfony with PHPeek Base Images
+# GitLab CI for Symfony with Cbox Base Images
 
 variables:
   DOCKER_DRIVER: overlay2
-  PHP_IMAGE: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+  PHP_IMAGE: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
   MYSQL_DATABASE: symfony_test
   MYSQL_ROOT_PASSWORD: root
 

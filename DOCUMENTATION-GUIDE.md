@@ -1,24 +1,24 @@
-# PHPeek Documentation Guide
+# Cbox Documentation Guide
 
-This guide explains how to structure documentation for PHPeek packages to ensure optimal display and navigation on phpeek.com.
+This guide explains how to structure documentation for Cbox packages to ensure optimal display and navigation on cbox.com.
 
 ## Core Concepts
 
 ### Major Version Management
-- PHPeek displays ONE entry per major version (v1, v2, v3)
+- Cbox displays ONE entry per major version (v1, v2, v3)
 - System automatically tracks the latest release within each major version
 - URLs use major version: `/docs/{package}/v1`, `/docs/{package}/v2`
 - When you release v1.2.1 after v1.2.0, the website updates automatically
 
-### Files NOT Used on PHPeek.com
+### Files NOT Used on Cbox.com
 
 **README.md - GitHub Only**
-- ⚠️ README.md is **NEVER** displayed on PHPeek.com
+- ⚠️ README.md is **NEVER** displayed on Cbox.com
 - README.md is only for GitHub repository display
 - All documentation must be in the `/docs` folder
 - Do NOT reference README.md in your docs
 
-**Files Used on PHPeek.com**
+**Files Used on Cbox.com**
 - All `.md` files in the `/docs` folder
 - All image/asset files within `/docs`
 - `_index.md` files for directory landing pages (optional but recommended)
@@ -234,7 +234,7 @@ Always specify the language after the opening fence:
 
 ````markdown
 ```php
-use PHPeek\SystemMetrics\SystemMetrics;
+use Cbox\SystemMetrics\SystemMetrics;
 
 $cpu = SystemMetrics::cpu()->get();
 echo "Cores: {$cpu->cores}\n";
@@ -314,7 +314,7 @@ Monitor CPU usage and performance with real-time metrics.
 ## Getting CPU Statistics
 
 ```php
-use PHPeek\SystemMetrics\SystemMetrics;
+use Cbox\SystemMetrics\SystemMetrics;
 
 $cpu = SystemMetrics::cpu()->get();
 
@@ -412,7 +412,7 @@ Before publishing, verify:
 Your documentation will be available at:
 
 ```
-https://phpeek.com/docs/{package}/{major_version}/{page_path}
+https://cbox.com/docs/{package}/{major_version}/{page_path}
 
 Examples:
 /docs/system-metrics/v1/introduction

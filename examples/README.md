@@ -8,7 +8,7 @@ weight: 1
 
 Copy-paste ready Docker Compose configurations for common use cases.
 
-**All processes managed by PHPeek PM** - NO command overrides!
+**All processes managed by Cbox PM** - NO command overrides!
 
 ## Quick Reference
 
@@ -35,7 +35,7 @@ Copy-paste ready Docker Compose configurations for common use cases.
 | Template | Description |
 |----------|-------------|
 | [Health Checks](healthchecks/) | Docker Compose override with built-in health checks for app/MySQL/Redis |
-| [GitHub Actions](github-actions/laravel-ci.yml) | Workflow file that pulls PHPeek images, waits for health checks, and runs `php artisan test` |
+| [GitHub Actions](github-actions/laravel-ci.yml) | Workflow file that pulls Cbox images, waits for health checks, and runs `php artisan test` |
 
 ## How to Use
 
@@ -49,7 +49,7 @@ cp -r examples/laravel-basic/* ./
 docker compose up -d
 ```
 
-## PHPeek PM Process Management
+## Cbox PM Process Management
 
 All examples use environment variables to control processes - **NEVER override `command:`** for PHP containers!
 
@@ -57,7 +57,7 @@ All examples use environment variables to control processes - **NEVER override `
 # Correct - Use environment variables
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       LARAVEL_QUEUE: "true"       # Enables queue workers
       LARAVEL_SCHEDULER: "true"   # Enables scheduler
@@ -68,20 +68,20 @@ services:
 # WRONG - Don't override command
 services:
   worker:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     command: php artisan queue:work  # DON'T DO THIS!
 ```
 
 ## Webroot Configuration
 
-PHPeek images default to `/var/www/html/public` for frameworks like Laravel/Symfony.
+Cbox images default to `/var/www/html/public` for frameworks like Laravel/Symfony.
 
 For apps without `public/` folder (WordPress, plain PHP), set `WEBROOT`:
 
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       WEBROOT: /var/www/html  # Serve from root, not public/
 ```
@@ -93,7 +93,7 @@ services:
 
 ## Octane Server Options
 
-PHPeek PM supports all three Laravel Octane servers:
+Cbox PM supports all three Laravel Octane servers:
 
 | Server | Image | Environment Variable |
 |--------|-------|---------------------|
@@ -160,7 +160,7 @@ volumes:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       LARAVEL_QUEUE: "true"
       REDIS_HOST: redis
@@ -172,7 +172,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       LARAVEL_HORIZON: "true"     # Use instead of LARAVEL_QUEUE
       REDIS_HOST: redis
@@ -183,7 +183,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       LARAVEL_SCHEDULER: "true"
 ```
@@ -193,7 +193,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.3-bookworm
     environment:
       LARAVEL_OCTANE: "true"
       OCTANE_SERVER: swoole
@@ -205,7 +205,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8080:80"
       - "8085:8085"
@@ -217,15 +217,15 @@ services:
 
 ## Customization
 
-All examples use PHPeek images. Swap versions as needed:
+All examples use Cbox images. Swap versions as needed:
 
 ```yaml
 # Use different PHP version
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Use different tier
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 ## Need Help?

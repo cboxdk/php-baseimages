@@ -1,16 +1,16 @@
 ---
 title: "Testing Guide"
-description: "Comprehensive guide to testing PHPeek Base Images with E2E and unit tests"
+description: "Comprehensive guide to testing Cbox Base Images with E2E and unit tests"
 weight: 50
 ---
 
 # Testing Guide
 
-This guide covers how to test PHPeek Base Images locally during development.
+This guide covers how to test Cbox Base Images locally during development.
 
 ## Test Infrastructure Overview
 
-PHPeek uses a layered testing approach:
+Cbox uses a layered testing approach:
 
 | Test Type | Location | Purpose |
 |-----------|----------|---------|
@@ -33,13 +33,13 @@ cd tests/unit
 
 ```bash
 cd tests/e2e
-./run-e2e-tests.sh ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+./run-e2e-tests.sh ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ### Run Specific Scenario
 
 ```bash
-./run-e2e-tests.sh ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm laravel
+./run-e2e-tests.sh ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm laravel
 ```
 
 ---
@@ -58,7 +58,7 @@ Available test scenarios in `tests/e2e/scenarios/`:
 | `database` | MySQL, PostgreSQL, Redis connectivity |
 | `security` | Security headers, file permissions |
 | `image-formats` | GD, ImageMagick, libvips support |
-| `phpeek-pm` | Process manager integration |
+| `cbox-pm` | Process manager integration |
 | `pest` | Pest/PHPUnit test execution |
 | `browsershot` | Puppeteer/Browsershot capabilities |
 | `dusk-capabilities` | Laravel Dusk browser testing |
@@ -72,8 +72,8 @@ Available test scenarios in `tests/e2e/scenarios/`:
 # Symfony E2E test
 ./tests/e2e/scenarios/test-symfony.sh
 
-# PHPeek PM integration
-./tests/e2e/scenarios/test-phpeek-pm.sh
+# Cbox PM integration
+./tests/e2e/scenarios/test-cbox-pm.sh
 ```
 
 ---
@@ -98,7 +98,7 @@ fixtures/
 ├── wordpress/        # Minimal WordPress setup
 ├── database/         # Database connectivity tests
 ├── security/         # Security validation tests
-└── phpeek-pm/        # Process manager tests
+└── cbox-pm/        # Process manager tests
 ```
 
 Each fixture contains a `docker-compose.yml` that uses the `IMAGE` environment variable:
@@ -106,7 +106,7 @@ Each fixture contains a `docker-compose.yml` that uses the `IMAGE` environment v
 ```yaml
 services:
   app:
-    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}
     # ...
 ```
 
@@ -224,7 +224,7 @@ mkdir -p tests/e2e/fixtures/{name}/app
 ```yaml
 services:
   app:
-    image: ${IMAGE:-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-{name}-app
     ports:
       - "{port}:80"

@@ -141,7 +141,7 @@ jobs:
 
           docker exec test-slim curl -sf http://127.0.0.1/health || { docker logs test-slim && exit 1; }
           docker exec test-slim php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-slim phpeek-pm --version || exit 1
+          docker exec test-slim cbox-pm --version || exit 1
           docker exec test-slim composer --version || exit 1
           # Slim tier should NOT have imagick or node
           ! docker exec test-slim php -m | grep -q imagick || echo "Warning: imagick found in slim tier"
@@ -401,7 +401,7 @@ jobs:
           echo "=== Container status ===" && docker ps -a --filter name=test-multi || true
           docker exec test-multi curl -sf http://127.0.0.1/health || { echo "=== Health check failed, container logs ===" && docker logs test-multi && exit 1; }
           docker exec test-multi php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-multi phpeek-pm --version || exit 1
+          docker exec test-multi cbox-pm --version || exit 1
           docker exec test-multi composer --version || exit 1
           docker exec test-multi node --version || exit 1
           docker stop test-multi && docker rm test-multi
@@ -543,7 +543,7 @@ jobs:
           docker exec test-rootless id -u | grep -E "^(33|82)$"
           docker exec test-rootless curl -sf http://127.0.0.1:8080/health || { echo "=== Health check failed, container logs ===" && docker logs test-rootless && exit 1; }
           docker exec test-rootless php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-rootless phpeek-pm --version || exit 1
+          docker exec test-rootless cbox-pm --version || exit 1
           docker exec test-rootless composer --version || exit 1
           docker exec test-rootless node --version || exit 1
           docker stop test-rootless && docker rm test-rootless
@@ -675,7 +675,7 @@ jobs:
 
           docker exec test-full curl -sf http://127.0.0.1/health || { docker logs test-full && exit 1; }
           docker exec test-full php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-full phpeek-pm --version || exit 1
+          docker exec test-full cbox-pm --version || exit 1
           docker exec test-full composer --version || exit 1
           docker exec test-full node --version || exit 1
           # Full tier should have chromium
@@ -810,7 +810,7 @@ jobs:
           docker exec test-full-rootless id -u | grep -E "^(33|82)$"
           docker exec test-full-rootless curl -sf http://127.0.0.1:8080/health || { docker logs test-full-rootless && exit 1; }
           docker exec test-full-rootless php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-full-rootless phpeek-pm --version || exit 1
+          docker exec test-full-rootless cbox-pm --version || exit 1
           docker exec test-full-rootless composer --version || exit 1
           docker exec test-full-rootless node --version || exit 1
           # Chromium check

@@ -177,14 +177,14 @@ assert_exec_succeeds "$CONTAINER_NAME" "which composer" "Composer is installed"
 assert_exec_succeeds "$CONTAINER_NAME" "composer --version --no-ansi" "Composer works"
 
 # ═══════════════════════════════════════════════════════════════════════════
-# TEST 9: PHPeek PM Integration
+# TEST 9: Cbox PM Integration
 # ═══════════════════════════════════════════════════════════════════════════
-log_section "Test 9: PHPeek PM Integration"
+log_section "Test 9: Cbox PM Integration"
 
-if command -v phpeek-pm >/dev/null 2>&1 || docker exec "$CONTAINER_NAME" which phpeek-pm >/dev/null 2>&1; then
-    assert_exec_succeeds "$CONTAINER_NAME" "phpeek-pm --version" "PHPeek PM available"
+if command -v cbox-pm >/dev/null 2>&1 || docker exec "$CONTAINER_NAME" which cbox-pm >/dev/null 2>&1; then
+    assert_exec_succeeds "$CONTAINER_NAME" "cbox-pm --version" "Cbox PM available"
 else
-    log_info "PHPeek PM not installed in this image"
+    log_info "Cbox PM not installed in this image"
 fi
 
 # Store test results before any cleanup that might affect shell state

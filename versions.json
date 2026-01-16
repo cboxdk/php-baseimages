@@ -65,7 +65,7 @@
   "tools": {
     "composer": "2",
     "frankenphp": "1.3.6",
-    "phpeek_pm": "1.2.0"
+    "cbox_pm": "1.2.0"
   },
   "deprecation_policy": {
     "php_removal_after_eol_months": 6,

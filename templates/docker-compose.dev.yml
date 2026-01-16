@@ -1,6 +1,6 @@
 version: '3.8'
 
-# PHPeek Development Environment Template
+# Cbox Development Environment Template
 # Includes: PHP + Nginx, MySQL, Redis, Mailpit, Node.js dev server
 
 services:
@@ -8,7 +8,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: phpeek-dev
+    container_name: cbox-dev
     ports:
       - "8000:80"      # Web server
       - "5173:5173"    # Vite HMR
@@ -53,12 +53,12 @@ services:
       - redis
       - mailpit
     networks:
-      - phpeek-dev
+      - cbox-dev
 
   # MySQL Database
   mysql:
     image: mysql:8.3
-    container_name: phpeek-mysql
+    container_name: cbox-mysql
     ports:
       - "3306:3306"
     environment:
@@ -69,7 +69,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - phpeek-dev
+      - cbox-dev
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -79,13 +79,13 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: phpeek-redis
+    container_name: cbox-redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
-      - phpeek-dev
+      - cbox-dev
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -95,18 +95,18 @@ services:
   # Mailpit (Email testing)
   mailpit:
     image: axllent/mailpit:latest
-    container_name: phpeek-mailpit
+    container_name: cbox-mailpit
     ports:
       - "1025:1025"  # SMTP
       - "8025:8025"  # Web UI
     networks:
-      - phpeek-dev
+      - cbox-dev
 
   # Node.js Dev Server (alternative to installing in app container)
   # Uncomment if you prefer separate Node.js container
   # node:
   #   image: node:20-alpine
-  #   container_name: phpeek-node
+  #   container_name: cbox-node
   #   working_dir: /app
   #   volumes:
   #     - ./:/app
@@ -114,7 +114,7 @@ services:
   #   ports:
   #     - "5173:5173"
   #   networks:
-  #     - phpeek-dev
+  #     - cbox-dev
 
 volumes:
   mysql-data:
@@ -123,7 +123,7 @@ volumes:
   node-modules:
 
 networks:
-  phpeek-dev:
+  cbox-dev:
     driver: bridge
 
 # Usage:

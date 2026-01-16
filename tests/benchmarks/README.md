@@ -1,6 +1,6 @@
-# PHPeek Performance Benchmarks
+# Cbox Performance Benchmarks
 
-Performance benchmarking suite for PHPeek base images.
+Performance benchmarking suite for Cbox base images.
 
 ## Benchmark Suite
 
@@ -46,9 +46,9 @@ Benchmarks:
 ### Build Images First
 ```bash
 # Build all tiers
-docker build --target root -t phpeek-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-docker build --target slim -t phpeek-slim -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-docker build --target full -t phpeek-full -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+docker build --target root -t cbox-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+docker build --target slim -t cbox-slim -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+docker build --target full -t cbox-full -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 ```
 
 ### Run All Benchmarks
@@ -75,7 +75,7 @@ tests/benchmarks/results/
 ### Example Summary Output
 
 ```markdown
-# PHPeek Performance Benchmark Summary
+# Cbox Performance Benchmark Summary
 
 ## Image Size Comparison
 
@@ -195,7 +195,7 @@ benchmark_your_test() {
     echo "" >> "$RESULTS_DIR/your-test-$TIMESTAMP.md"
 
     for tier in slim standard full; do
-        IMAGE="phpeek-${tier}"
+        IMAGE="cbox-${tier}"
 
         # Your test logic here
         RESULT="your_measurement"
@@ -255,7 +255,7 @@ apt-get install apache2-utils
 ### Images Not Found
 Make sure to build images first:
 ```bash
-docker build --target root -t phpeek-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+docker build --target root -t cbox-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 ```
 
 ## Related Documentation

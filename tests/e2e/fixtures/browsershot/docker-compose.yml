@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-phpeek/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-cbox/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-browsershot
     ports:
       - "8095:80"

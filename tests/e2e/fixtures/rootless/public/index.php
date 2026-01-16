@@ -14,7 +14,7 @@ $response = [
 
     // Rootless-specific information
     'rootless' => [
-        'env_var' => getenv('PHPEEK_ROOTLESS') ?: 'unset',
+        'env_var' => getenv('CBOX_ROOTLESS') ?: 'unset',
         'user_id' => posix_getuid(),
         'user_name' => posix_getpwuid(posix_getuid())['name'] ?? 'unknown',
         'group_id' => posix_getgid(),
@@ -42,7 +42,7 @@ $response = [
 ];
 
 // Test file write (permissions check)
-$testFile = '/tmp/phpeek-rootless-test-' . uniqid() . '.txt';
+$testFile = '/tmp/cbox-rootless-test-' . uniqid() . '.txt';
 $writeTest = @file_put_contents($testFile, 'test');
 $response['filesystem'] = [
     'write_test' => $writeTest !== false,

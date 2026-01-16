@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# PHPeek Base Images - Build State Generator
+# Cbox Base Images - Build State Generator
 # ============================================================================
 # Determines lifecycle state for each image variant based on EOL dates
 # Used by CI to set appropriate labels, tags, and warnings
@@ -87,9 +87,9 @@ if [[ -n "$PREVIEW_STATUS" ]] || [[ "$IS_PREVIEW" == true ]]; then
   "note": "$PREVIEW_NOTE",
   "labels": {
     "org.opencontainers.image.version": "${PHP_VERSION}-${OS_VARIANT}-${PREVIEW_STATUS:-beta}",
-    "io.phpeek.lifecycle": "preview",
-    "io.phpeek.preview.status": "${PREVIEW_STATUS:-beta}",
-    "io.phpeek.preview.warning": "This is a preview release. Not recommended for production use."
+    "io.cbox.lifecycle": "preview",
+    "io.cbox.preview.status": "${PREVIEW_STATUS:-beta}",
+    "io.cbox.preview.warning": "This is a preview release. Not recommended for production use."
   },
   "warning_message": "⚠️  WARNING: This is a ${PREVIEW_STATUS:-beta} preview of PHP $PHP_VERSION. Not recommended for production.",
   "tags_suffix": "-${PREVIEW_STATUS:-beta}",
@@ -149,13 +149,13 @@ cat <<EOF
   "days_to_removal": $DAYS_TO_REMOVAL,
   "labels": {
     "org.opencontainers.image.version": "${PHP_VERSION}-${OS_VARIANT}",
-    "io.phpeek.lifecycle": "$LIFECYCLE",
-    "io.phpeek.php.version": "$PHP_VERSION",
-    "io.phpeek.php.eol": "$PHP_EOL",
-    "io.phpeek.os.variant": "$OS_VARIANT"$(if [[ "$LIFECYCLE" != "stable" ]]; then echo ",
-    \"io.phpeek.deprecated\": \"true\",
-    \"io.phpeek.deprecated.message\": \"$WARNING_MESSAGE\",
-    \"io.phpeek.removal.date\": \"$PHP_REMOVAL_DATE\""; fi)
+    "io.cbox.lifecycle": "$LIFECYCLE",
+    "io.cbox.php.version": "$PHP_VERSION",
+    "io.cbox.php.eol": "$PHP_EOL",
+    "io.cbox.os.variant": "$OS_VARIANT"$(if [[ "$LIFECYCLE" != "stable" ]]; then echo ",
+    \"io.cbox.deprecated\": \"true\",
+    \"io.cbox.deprecated.message\": \"$WARNING_MESSAGE\",
+    \"io.cbox.removal.date\": \"$PHP_REMOVAL_DATE\""; fi)
   },
   "warning_message": $(echo "$WARNING_MESSAGE" | jq -R .),
   "tags_suffix": "$TAGS_SUFFIX",

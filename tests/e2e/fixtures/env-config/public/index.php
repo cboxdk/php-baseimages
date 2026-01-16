@@ -1,6 +1,6 @@
 <?php
 /**
- * PHPeek Base Image - Environment Variable Configuration Test
+ * Cbox Base Image - Environment Variable Configuration Test
  *
  * Tests:
  * 1. Environment variables are passed to PHP correctly

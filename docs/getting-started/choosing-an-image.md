@@ -1,12 +1,12 @@
 ---
 title: "Choosing an Image"
-description: "Decision matrix to help you select the right PHPeek image for your use case"
+description: "Decision matrix to help you select the right Cbox image for your use case"
 weight: 2
 ---
 
 # Choosing an Image
 
-Quick reference to select the right PHPeek image for your needs.
+Quick reference to select the right Cbox image for your needs.
 
 ## Quick Decision Tree
 
@@ -38,7 +38,7 @@ What are you building?
 
 ## OS Base
 
-PHPeek Base Images use **Debian 12 (Bookworm)** for maximum compatibility and stability.
+Cbox Base Images use **Debian 12 (Bookworm)** for maximum compatibility and stability.
 
 | Feature | Debian 12 (Bookworm) |
 |---------|----------------------|
@@ -121,16 +121,16 @@ PHPeek Base Images use **Debian 12 (Bookworm)** for maximum compatibility and st
 
 ```
 # Multi-service (PHP-FPM + Nginx)
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
 
 # Single-process images (legacy)
-ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
-ghcr.io/gophpeek/baseimages/php-cli:8.3-bookworm
-ghcr.io/gophpeek/baseimages/nginx:bookworm
+ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
+ghcr.io/cboxdk/baseimages/php-cli:8.3-bookworm
+ghcr.io/cboxdk/baseimages/nginx:bookworm
 ```
 
 ## Migration Guide
@@ -141,8 +141,8 @@ ghcr.io/gophpeek/baseimages/nginx:bookworm
 # Before (official)
 image: php:8.3-fpm
 
-# After (PHPeek)
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+# After (Cbox)
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ### From ServersideUp
@@ -151,19 +151,19 @@ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
 # Before (ServersideUp)
 image: serversideup/php:8.3-fpm-nginx
 
-# After (PHPeek) - nearly identical API
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+# After (Cbox) - nearly identical API
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ### From Custom Dockerfiles
 
 If you're building custom PHP images, you can likely:
-1. Use PHPeek as base
+1. Use Cbox as base
 2. Add only your custom extensions
 3. Benefit from weekly security updates
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Add custom extension (Debian uses apt-get)
 RUN apt-get update && apt-get install -y php8.3-custom-extension && rm -rf /var/lib/apt/lists/*

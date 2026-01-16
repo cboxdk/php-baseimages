@@ -1,19 +1,19 @@
 ---
 title: "Available Images"
-description: "Complete matrix of all PHPeek base image tags, variants, and architectures"
+description: "Complete matrix of all Cbox base image tags, variants, and architectures"
 weight: 40
 ---
 
 # Available Images
 
-Complete reference of all available PHPeek base image tags and variants.
+Complete reference of all available Cbox base image tags and variants.
 
 ## Image Registry
 
 All images are published to GitHub Container Registry:
 
 ```
-ghcr.io/gophpeek/baseimages/{image-type}:{tag}
+ghcr.io/cboxdk/baseimages/{image-type}:{tag}
 ```
 
 ## Image Tiers
@@ -87,13 +87,13 @@ Swoole extension for maximum performance with coroutines and task workers.
 | `php-swoole:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
 | `php-swoole:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
 
-**Includes:** Swoole extension with OpenSSL, cURL, c-ares, all PHPeek extensions, Composer, Node.js, PHPeek PM.
+**Includes:** Swoole extension with OpenSSL, cURL, c-ares, all Cbox extensions, Composer, Node.js, Cbox PM.
 
 ```yaml
 # Laravel Octane with Swoole
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
     ports:
       - "8000:8000"
 ```
@@ -110,13 +110,13 @@ OpenSwoole fork with async I/O and similar features to Swoole.
 | `php-openswoole:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
 | `php-openswoole:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
 
-**Includes:** OpenSwoole extension with OpenSSL, cURL, c-ares, all PHPeek extensions, Composer, Node.js, PHPeek PM.
+**Includes:** OpenSwoole extension with OpenSSL, cURL, c-ares, all Cbox extensions, Composer, Node.js, Cbox PM.
 
 ```yaml
 # Laravel Octane with OpenSwoole
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-openswoole:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-openswoole:8.4-bookworm
     ports:
       - "8000:8000"
 ```
@@ -131,13 +131,13 @@ Modern PHP application server built on Caddy with automatic HTTPS and HTTP/3.
 | `frankenphp:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
 | `frankenphp:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
 
-**Includes:** FrankenPHP binary, Caddy web server, all PHPeek extensions, Composer, Node.js, PHPeek PM.
+**Includes:** FrankenPHP binary, Caddy web server, all Cbox extensions, Composer, Node.js, Cbox PM.
 
 ```yaml
 # Laravel Octane with FrankenPHP (auto HTTPS)
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/frankenphp:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
     ports:
       - "80:80"
       - "443:443"
@@ -179,7 +179,7 @@ Rolling tags receive weekly security updates:
 
 ```yaml
 # Automatically gets security patches every Monday
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Immutable SHA Tags
@@ -188,7 +188,7 @@ For reproducible builds, use SHA-pinned tags:
 
 ```yaml
 # Locked to specific build
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
 ```
 
 ## Architecture Support
@@ -204,12 +204,12 @@ Docker automatically pulls the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## OS Information
 
-PHPeek Base Images use Debian 12 (Bookworm) as the base operating system.
+Cbox Base Images use Debian 12 (Bookworm) as the base operating system.
 
 | Feature | Debian 12 (Bookworm) |
 |---------|----------------------|
@@ -249,17 +249,17 @@ PHPeek Base Images use Debian 12 (Bookworm) as the base operating system.
 
 ```bash
 # Pull standard tier (most Laravel/PHP apps)
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Pull slim tier (APIs, microservices)
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Pull full tier (Browsershot, Dusk)
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 
 # Run with volume mount
 docker run -p 8000:80 -v $(pwd):/var/www/html \
-  ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Docker Compose
@@ -268,7 +268,7 @@ docker run -p 8000:80 -v $(pwd):/var/www/html \
 services:
   # Standard tier - most Laravel apps
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -276,13 +276,13 @@ services:
 
   # Slim tier - API service
   api:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
     ports:
       - "8001:80"
 
   # Full tier - PDF generation service
   pdf:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -291,7 +291,7 @@ services:
 
 ```dockerfile
 # Standard tier for most apps
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -300,7 +300,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 ```dockerfile
 # Full tier for Browsershot
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -320,7 +320,7 @@ All images are automatically rebuilt every Monday at 03:00 UTC:
 
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 docker-compose up -d --pull always
 ```
 

@@ -1,12 +1,12 @@
 ---
 title: "Configuration Options Reference"
-description: "Complete reference for customizing PHP.ini, PHP-FPM pools, and Nginx server blocks in PHPeek base images"
+description: "Complete reference for customizing PHP.ini, PHP-FPM pools, and Nginx server blocks in Cbox base images"
 weight: 32
 ---
 
 # Configuration Options Reference
 
-Complete reference for advanced PHP, PHP-FPM, and Nginx configuration in PHPeek base images.
+Complete reference for advanced PHP, PHP-FPM, and Nginx configuration in Cbox base images.
 
 ## Table of Contents
 
@@ -87,7 +87,7 @@ apc.gc_ttl = 3600
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
@@ -103,7 +103,7 @@ services:
 For permanent custom configuration in your image:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Copy custom PHP configuration
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/zz-custom.ini
@@ -765,4 +765,4 @@ pm.process_idle_timeout = 10s
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

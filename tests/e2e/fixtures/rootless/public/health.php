@@ -26,7 +26,7 @@ $checks = [
     'php' => true,
     'opcache' => function_exists('opcache_get_status') && opcache_get_status() !== false,
     'memory' => $memoryUsage < ($memoryLimit * 0.9),
-    'rootless' => getenv('PHPEEK_ROOTLESS') === 'true',
+    'rootless' => getenv('CBOX_ROOTLESS') === 'true',
     'non_root_user' => posix_getuid() !== 0,
 ];
 

@@ -1,17 +1,17 @@
 ---
 title: "Getting Started"
-description: "Get started with PHPeek base images - installation, quickstart guides, and choosing the right tier for your project"
+description: "Get started with Cbox base images - installation, quickstart guides, and choosing the right tier for your project"
 weight: 1
 ---
 
-# Getting Started with PHPeek
+# Getting Started with Cbox
 
-New to PHPeek? This section will help you get up and running quickly.
+New to Cbox? This section will help you get up and running quickly.
 
 ## Start Here
 
 1. **[5-Minute Quickstart](quickstart.md)** - Get your first PHP application running in just 5 minutes
-2. **[Introduction](introduction.md)** - Learn why PHPeek exists and how it compares to alternatives
+2. **[Introduction](introduction.md)** - Learn why Cbox exists and how it compares to alternatives
 3. **[Installation](installation.md)** - Detailed installation instructions for all platforms
 4. **[Choosing a Variant](choosing-variant.md)** - Slim vs Standard vs Full - which tier is right for you?
 
@@ -32,7 +32,7 @@ What do you need?
 
 ## What You'll Learn
 
-- How to run PHPeek containers with Docker Compose
+- How to run Cbox containers with Docker Compose
 - Differences between Slim, Standard, and Full tiers
 - When to use multi-service vs single-process containers
 - Basic configuration and environment variables
@@ -53,4 +53,4 @@ Once you've completed the getting started guides:
 
 ---
 
-**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues.md) or [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues.md) or [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

@@ -1,11 +1,11 @@
 <?php
 /**
- * PHPeek Base Image - Complete Feature Verification
+ * Cbox Base Image - Complete Feature Verification
  * Tests all extensions, format support, and tools
  */
 
 echo "╔══════════════════════════════════════════════════════════════╗\n";
-echo "║     PHPeek Base Image - Complete Feature Verification        ║\n";
+echo "║     Cbox Base Image - Complete Feature Verification        ║\n";
 echo "╚══════════════════════════════════════════════════════════════╝\n\n";
 
 $passed = 0;
@@ -103,10 +103,10 @@ echo "\n═══ 7. COMPOSER ═══\n";
 $composerVersion = trim(shell_exec("composer --version 2>&1") ?? "");
 test(strpos($composerVersion, "Composer") !== false, substr($composerVersion, 0, 50), "Composer NOT working");
 
-// === 8. PHPeek PM ===
+// === 8. Cbox PM ===
 echo "\n═══ 8. PHPEEK PM ═══\n";
-$pmVersion = trim(shell_exec("/usr/local/bin/phpeek-pm --version 2>&1") ?? "");
-test(strpos($pmVersion, "phpeek-pm") !== false || preg_match("/\d+\.\d+/", $pmVersion), "PHPeek PM: $pmVersion", "PHPeek PM NOT working: $pmVersion");
+$pmVersion = trim(shell_exec("/usr/local/bin/cbox-pm --version 2>&1") ?? "");
+test(strpos($pmVersion, "cbox-pm") !== false || preg_match("/\d+\.\d+/", $pmVersion), "Cbox PM: $pmVersion", "Cbox PM NOT working: $pmVersion");
 
 // === 9. Chromium (for Browsershot) ===
 echo "\n═══ 9. CHROMIUM (BROWSERSHOT) ═══\n";

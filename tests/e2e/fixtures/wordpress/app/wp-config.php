@@ -1,7 +1,7 @@
 <?php
 /**
  * WordPress configuration stub for framework detection
- * PHPeek entrypoint detects WordPress by checking for this file
+ * Cbox entrypoint detects WordPress by checking for this file
  */
 
 define('DB_NAME', getenv('WORDPRESS_DB_NAME') ?: 'wordpress');

@@ -1,14 +1,14 @@
 #!/bin/bash
-# PHPeek Base Images - PHP Base Image Test
-# Tests that all required extensions, tools, and PHPeek PM are present
+# Cbox Base Images - PHP Base Image Test
+# Tests that all required extensions, tools, and Cbox PM are present
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib/test-utils.sh"
 
-IMAGE="${IMAGE:-ghcr.io/gophpeek/baseimages/php-base:8.4-alpine}"
-CONTAINER_NAME="phpeek-base-test-$$"
+IMAGE="${IMAGE:-ghcr.io/cboxdk/baseimages/php-base:8.4-alpine}"
+CONTAINER_NAME="cbox-base-test-$$"
 
 log_section "PHP Base Image Tests"
 log_info "Testing image: $IMAGE"
@@ -130,15 +130,15 @@ test_nodejs() {
     fi
 }
 
-# Test PHPeek PM
-test_phpeek_pm() {
-    log_info "Testing PHPeek PM..."
+# Test Cbox PM
+test_cbox_pm() {
+    log_info "Testing Cbox PM..."
     local pm_version
-    pm_version=$(docker exec "$CONTAINER_NAME" phpeek-pm --version 2>/dev/null | head -1)
+    pm_version=$(docker exec "$CONTAINER_NAME" cbox-pm --version 2>/dev/null | head -1)
     if [ -n "$pm_version" ]; then
-        log_success "PHPeek PM: $pm_version"
+        log_success "Cbox PM: $pm_version"
     else
-        log_fail "PHPeek PM not found"
+        log_fail "Cbox PM not found"
         return 1
     fi
 }
@@ -163,7 +163,7 @@ test_php_version || ((FAILED++))
 test_required_extensions || ((FAILED++))
 test_composer || ((FAILED++))
 test_nodejs || ((FAILED++))
-test_phpeek_pm || ((FAILED++))
+test_cbox_pm || ((FAILED++))
 test_directories || ((FAILED++))
 
 # Summary

@@ -1,16 +1,16 @@
 ---
-title: "PHPeek Base Images Documentation"
-description: "Comprehensive documentation for PHPeek base images - clean, minimal, production-ready PHP Docker containers"
+title: "Cbox Base Images Documentation"
+description: "Comprehensive documentation for Cbox base images - clean, minimal, production-ready PHP Docker containers"
 weight: 1
 ---
 
-# PHPeek Base Images Documentation
+# Cbox Base Images Documentation
 
-Welcome to the comprehensive documentation for PHPeek base images! This documentation is designed to help developers of all levels get started quickly and master advanced usage.
+Welcome to the comprehensive documentation for Cbox base images! This documentation is designed to help developers of all levels get started quickly and master advanced usage.
 
 ## 🎯 Start Here
 
-**New to PHPeek?** Start with these guides:
+**New to Cbox?** Start with these guides:
 
 1. **[5-Minute Quickstart](getting-started/quickstart.md)** - Get running in 5 minutes
 2. **[Complete Laravel Guide](guides/laravel-guide.md)** - Full Laravel setup (most popular)
@@ -18,7 +18,7 @@ Welcome to the comprehensive documentation for PHPeek base images! This document
 
 ## Quick Tier Selection
 
-PHPeek images come in three tiers:
+Cbox images come in three tiers:
 
 | Tier | Tag | Size | Best For |
 |------|-----|------|----------|
@@ -28,23 +28,23 @@ PHPeek images come in three tiers:
 
 ```yaml
 # Standard tier (DEFAULT) - Most Laravel/PHP apps
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Slim tier - APIs, microservices
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Full tier - Browsershot, Dusk, PDF generation
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 ## 📚 Documentation Structure
 
 ### Getting Started
 
-Perfect for beginners and those evaluating PHPeek.
+Perfect for beginners and those evaluating Cbox.
 
 - **[5-Minute Quickstart](getting-started/quickstart.md)** ⭐ Start here!
-- [Introduction](getting-started/introduction.md) - Why PHPeek? Comparisons
+- [Introduction](getting-started/introduction.md) - Why Cbox? Comparisons
 - [Installation](getting-started/installation.md) - All installation methods
 - [Choosing a Variant](getting-started/choosing-variant.md) - Slim vs Standard vs Full
 
@@ -79,7 +79,7 @@ Step-by-step guides for popular PHP frameworks.
 
 ### Advanced Topics
 
-Deep dives for experienced users customizing PHPeek.
+Deep dives for experienced users customizing Cbox.
 
 - **[Extending Images](advanced/extending-images.md)** ⭐ Most requested
   - Add custom PHP extensions
@@ -241,7 +241,7 @@ Solutions to common issues and systematic debugging.
 - ✅ Troubleshooting Index
 
 **Phase 5 - Extended Reference**
-- ✅ Introduction (Why PHPeek?)
+- ✅ Introduction (Why Cbox?)
 - ✅ Installation Guide
 - ✅ Choosing a Tier (Slim vs Standard vs Full)
 - ✅ Custom Extensions Guide
@@ -281,9 +281,9 @@ Inspired by ServerSideUp's excellent documentation standards.
 
 ## 💬 Get Help
 
-- **Documentation Issues:** [GitHub Issues](https://github.com/gophpeek/baseimages/issues) (label: documentation)
-- **General Questions:** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
-- **Security Issues:** [GitHub Security Advisories](https://github.com/gophpeek/baseimages/security)
+- **Documentation Issues:** [GitHub Issues](https://github.com/cboxdk/baseimages/issues) (label: documentation)
+- **General Questions:** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Security Issues:** [GitHub Security Advisories](https://github.com/cboxdk/baseimages/security)
 
 ---
 

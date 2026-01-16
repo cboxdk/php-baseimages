@@ -41,7 +41,7 @@ wait_for_healthy "$CONTAINER_NAME" 60
 
 log_section "Internal Health Check Script Tests"
 
-# Test PHP-FPM is responding on its port (healthcheck.sh requires PHPeek PM in production)
+# Test PHP-FPM is responding on its port (healthcheck.sh requires Cbox PM in production)
 # Use ss (iproute2) as primary, fall back to checking /proc/net/tcp for port 2328 (hex 9000)
 assert_exec_succeeds "$CONTAINER_NAME" "ss -tlnp 2>/dev/null | grep -q ':9000' || grep -q ':2328' /proc/net/tcp 2>/dev/null" "PHP-FPM listening on port 9000"
 

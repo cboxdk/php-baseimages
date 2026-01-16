@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# PHPeek Base Images - Version Update Script
+# Cbox Base Images - Version Update Script
 # ============================================================================
 # Fetches latest versions from official sources and updates versions.json
 #
@@ -169,20 +169,20 @@ else
     log_error "Failed to fetch frankenphp, keeping $current"
 fi
 
-# PHPeek PM
-current=$(echo "$CURRENT" | jq -r ".tools.phpeek_pm")
-latest=$(fetch_github_latest "gophpeek/phpeek-pm")
+# Cbox PM
+current=$(echo "$CURRENT" | jq -r ".tools.cbox_pm")
+latest=$(fetch_github_latest "cboxdk/cbox-pm")
 if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
     if [[ "$current" != "$latest" ]]; then
         UPDATE_COUNT=$((UPDATE_COUNT + 1))
-        UPDATE_LIST="${UPDATE_LIST}  - tools.phpeek_pm: $current -> $latest\n"
-        log_update "tools.phpeek_pm: $current -> $latest"
-        UPDATED=$(echo "$UPDATED" | jq ".tools.phpeek_pm = \"$latest\"")
+        UPDATE_LIST="${UPDATE_LIST}  - tools.cbox_pm: $current -> $latest\n"
+        log_update "tools.cbox_pm: $current -> $latest"
+        UPDATED=$(echo "$UPDATED" | jq ".tools.cbox_pm = \"$latest\"")
     else
-        log_success "tools.phpeek_pm: $current (up to date)"
+        log_success "tools.cbox_pm: $current (up to date)"
     fi
 else
-    log_error "Failed to fetch phpeek_pm, keeping $current"
+    log_error "Failed to fetch cbox_pm, keeping $current"
 fi
 
 echo ""

@@ -2,7 +2,7 @@
 set -e
 
 # ============================================================================
-# PHPeek FrankenPHP Image - Docker Entrypoint
+# Cbox FrankenPHP Image - Docker Entrypoint
 # ============================================================================
 # FrankenPHP is a modern PHP application server built on Caddy
 # Supports HTTP/3, automatic HTTPS, and worker mode for performance
@@ -10,7 +10,7 @@ set -e
 # shellcheck shell=bash
 
 # Source shared library
-LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+LIB_PATH="${CBOX_LIB_PATH:-/usr/local/lib/cbox/entrypoint-lib.sh}"
 if [ -f "$LIB_PATH" ]; then
     # shellcheck source=/dev/null
     . "$LIB_PATH"
@@ -37,18 +37,18 @@ cleanup() {
 trap cleanup TERM INT QUIT
 
 # Display environment information
-print_banner "PHPeek FrankenPHP Image" 2>/dev/null || {
+print_banner "Cbox FrankenPHP Image" 2>/dev/null || {
     echo "╔═══════════════════════════════════════════════════════════════════════════╗"
-    echo "║  PHPeek FrankenPHP Image                                                  ║"
+    echo "║  Cbox FrankenPHP Image                                                  ║"
     echo "╚═══════════════════════════════════════════════════════════════════════════╝"
 }
 
 log_info "PHP Version: $(php -r 'echo PHP_VERSION;')"
 log_info "FrankenPHP: $(frankenphp version 2>/dev/null | head -n1 || echo 'available')"
 
-# Check PHPeek PM
-if command -v phpeek-pm >/dev/null 2>&1; then
-    log_info "PHPeek PM $(phpeek-pm --version 2>/dev/null | head -n1)"
+# Check Cbox PM
+if command -v cbox-pm >/dev/null 2>&1; then
+    log_info "Cbox PM $(cbox-pm --version 2>/dev/null | head -n1)"
 fi
 
 # Working directory

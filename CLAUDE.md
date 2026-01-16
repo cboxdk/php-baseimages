@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PHPeek Base Images is a Docker image build system providing production-ready PHP containers with two architectural approaches:
+Cbox Base Images is a Docker image build system providing production-ready PHP containers with two architectural approaches:
 
 1. **Single-Process Containers**: Separate PHP-FPM, PHP-CLI, and Nginx containers (traditional microservices)
-2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with PHPeek PM process manager (no S6 Overlay)
+2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with Cbox PM process manager (no S6 Overlay)
 
-**Key Philosophy**: Lightweight Go-based process management (PHPeek PM), comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
+**Key Philosophy**: Lightweight Go-based process management (Cbox PM), comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
 
 ## Architecture
 
@@ -45,18 +45,18 @@ PHPeek Base Images is a Docker image build system providing production-ready PHP
 
 **File**: `php-fpm-nginx/common/docker-entrypoint.sh`
 
-This entrypoint manages both PHP-FPM and Nginx using PHPeek PM:
+This entrypoint manages both PHP-FPM and Nginx using Cbox PM:
 
 1. **Framework Detection**: Detects Laravel (`artisan`), Symfony (`bin/console`), WordPress (`wp-config.php`)
 2. **Permission Auto-Fix**: Creates and fixes permissions for framework directories
 3. **Laravel Features**: Scheduler, Horizon, Reverb, Queue workers
-4. **Process Management**: PHPeek PM orchestrates all processes with health checks, metrics, and structured logging
+4. **Process Management**: Cbox PM orchestrates all processes with health checks, metrics, and structured logging
 5. **Graceful Shutdown**: Handles SIGTERM/SIGQUIT for clean shutdowns
 
 **Critical Design**:
-- PHPeek PM (lightweight Go binary) runs as PID 1
+- Cbox PM (lightweight Go binary) runs as PID 1
 - No S6 Overlay or supervisord - simple, lightweight process management
-- All `php-fpm-nginx` images include PHPeek PM by default
+- All `php-fpm-nginx` images include Cbox PM by default
 
 ### Shared Configuration Pattern
 
@@ -112,8 +112,8 @@ docker-compose --profile multi up -d php-fpm-nginx
 open http://localhost:8081
 
 # Run extension tests
-./tests/test-extensions.sh phpeek-fpm
-./tests/test-extensions.sh ghcr.io/gophpeek/baseimages/php-fpm:8.3-bookworm
+./tests/test-extensions.sh cbox-fpm
+./tests/test-extensions.sh ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
 
 # Check logs for entrypoint behavior
 docker-compose logs -f php-fpm-nginx
@@ -222,7 +222,7 @@ docker-compose exec php-fpm-nginx /usr/local/bin/healthcheck.sh
 docker-compose ps
 
 # Watch health check logs
-docker inspect phpeek-fpm-nginx --format='{{json .State.Health}}' | jq
+docker inspect cbox-fpm-nginx --format='{{json .State.Health}}' | jq
 ```
 
 ## Critical Files
@@ -325,7 +325,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 
 ## Image Publishing
 
-Images published to GitHub Container Registry: `ghcr.io/gophpeek/baseimages/`
+Images published to GitHub Container Registry: `ghcr.io/cboxdk/baseimages/`
 
 **Naming convention**:
 - `php-fpm:8.3-bookworm`
@@ -340,31 +340,31 @@ echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
 ---
 
-# PHPeek Documentation Standards
+# Cbox Documentation Standards
 
-This repository follows the PHPeek.com documentation standards for consistent display across the platform.
+This repository follows the Cbox.com documentation standards for consistent display across the platform.
 
 ## Documentation Structure Requirements
 
-This guide explains how to structure documentation for PHPeek packages to ensure optimal display and navigation on phpeek.com.
+This guide explains how to structure documentation for Cbox packages to ensure optimal display and navigation on cbox.com.
 
 ## Core Concepts
 
 ### Major Version Management
-- PHPeek displays ONE entry per major version (v1, v2, v3)
+- Cbox displays ONE entry per major version (v1, v2, v3)
 - System automatically tracks the latest release within each major version
 - URLs use major version: `/docs/{package}/v1`, `/docs/{package}/v2`
 - When you release v1.2.1 after v1.2.0, the website updates automatically
 
-### Files NOT Used on PHPeek.com
+### Files NOT Used on Cbox.com
 
 **README.md - GitHub Only**
-- ⚠️ README.md is **NEVER** displayed on PHPeek.com
+- ⚠️ README.md is **NEVER** displayed on Cbox.com
 - README.md is only for GitHub repository display
 - All documentation must be in the `/docs` folder
 - Do NOT reference README.md in your docs
 
-**Files Used on PHPeek.com**
+**Files Used on Cbox.com**
 - All `.md` files in the `/docs` folder
 - All image/asset files within `/docs`
 - `_index.md` files for directory landing pages (optional but recommended)
@@ -580,7 +580,7 @@ Always specify the language after the opening fence:
 
 ````markdown
 ```php
-use PHPeek\SystemMetrics\SystemMetrics;
+use Cbox\SystemMetrics\SystemMetrics;
 
 $cpu = SystemMetrics::cpu()->get();
 echo "Cores: {$cpu->cores}\n";
@@ -660,7 +660,7 @@ Monitor CPU usage and performance with real-time metrics.
 ## Getting CPU Statistics
 
 ```php
-use PHPeek\SystemMetrics\SystemMetrics;
+use Cbox\SystemMetrics\SystemMetrics;
 
 $cpu = SystemMetrics::cpu()->get();
 
@@ -758,7 +758,7 @@ Before publishing, verify:
 Your documentation will be available at:
 
 ```
-https://phpeek.com/docs/{package}/{major_version}/{page_path}
+https://cbox.com/docs/{package}/{major_version}/{page_path}
 
 Examples:
 /docs/system-metrics/v1/introduction

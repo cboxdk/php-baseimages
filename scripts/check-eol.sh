@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# PHPeek Base Images - EOL & Deprecation Check Script
+# Cbox Base Images - EOL & Deprecation Check Script
 # ============================================================================
 # Checks all components for upcoming EOL dates and generates warnings/actions
 #
@@ -124,7 +124,7 @@ check_eol() {
 
 if [[ "$JSON_OUTPUT" != true ]]; then
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}  PHPeek Base Images - EOL & Deprecation Report${NC}"
+    echo -e "${BLUE}  Cbox Base Images - EOL & Deprecation Report${NC}"
     echo -e "${BLUE}  Date: $TODAY${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
     echo ""

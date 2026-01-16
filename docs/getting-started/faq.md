@@ -1,6 +1,6 @@
 ---
 title: "Frequently Asked Questions"
-description: "Common questions and answers about PHPeek Base Images, troubleshooting, and best practices"
+description: "Common questions and answers about Cbox Base Images, troubleshooting, and best practices"
 weight: 10
 ---
 
@@ -8,9 +8,9 @@ weight: 10
 
 ## General Questions
 
-### What is PHPeek Base Images?
+### What is Cbox Base Images?
 
-PHPeek Base Images is a collection of production-ready Docker images for PHP applications. We provide:
+Cbox Base Images is a collection of production-ready Docker images for PHP applications. We provide:
 
 - **40+ PHP extensions** pre-installed and optimized
 - **Three tiers**: Slim (APIs), Standard (most apps), Full (Browsershot/Dusk)
@@ -19,18 +19,18 @@ PHPeek Base Images is a collection of production-ready Docker images for PHP app
 - **Development variants** with Xdebug pre-configured
 - **Framework auto-detection** for Laravel, Symfony, and WordPress
 
-### How is PHPeek different from other PHP Docker images?
+### How is Cbox different from other PHP Docker images?
 
-| Feature | PHPeek | php:official | serversideup |
+| Feature | Cbox | php:official | serversideup |
 |---------|--------|--------------|--------------|
 | Extensions pre-installed | 40+ | ~10 | 30+ |
 | Multi-service containers | Yes | No | Yes (S6) |
-| Process manager | PHPeek PM (Go) | None | S6 Overlay |
+| Process manager | Cbox PM (Go) | None | S6 Overlay |
 | Framework detection | Yes | No | Yes |
 | Development variants | Yes | No | Yes |
 | Weekly security rebuilds | Yes | Varies | Yes |
 
-**Key differentiator**: PHPeek uses PHPeek PM, a lightweight Go-based process manager instead of S6 Overlay, resulting in simpler debugging, smaller image sizes, and built-in Prometheus metrics.
+**Key differentiator**: Cbox uses Cbox PM, a lightweight Go-based process manager instead of S6 Overlay, resulting in simpler debugging, smaller image sizes, and built-in Prometheus metrics.
 
 ### Which image should I use?
 
@@ -53,13 +53,13 @@ PHPeek Base Images is a collection of production-ready Docker images for PHP app
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Run with your Laravel project
 docker run -d \
   -p 8080:80 \
   -v $(pwd):/var/www/html \
-  ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### How do I use the development image with Xdebug?
@@ -68,7 +68,7 @@ docker run -d \
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-dev
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev
     ports:
       - "8080:80"
       - "9003:9003"  # Xdebug port
@@ -107,7 +107,7 @@ environment:
 
 **Option 2**: Custom php.ini (build time)
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 COPY custom.ini /usr/local/etc/php/conf.d/99-custom.ini
 ```
 
@@ -115,7 +115,7 @@ COPY custom.ini /usr/local/etc/php/conf.d/99-custom.ini
 
 **Replace the default config**:
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 ```
 
@@ -158,11 +158,11 @@ This automatically sets up cron to run `php artisan schedule:run` every minute. 
 
 ### How do I monitor performance?
 
-PHPeek PM provides built-in metrics:
+Cbox PM provides built-in metrics:
 
 ```bash
 # Check process status
-docker exec myapp phpeek-pm status
+docker exec myapp cbox-pm status
 
 # View metrics (Prometheus format)
 curl http://localhost:9100/metrics
@@ -251,7 +251,7 @@ docker exec myapp netstat -tlnp | grep 9000
 
 **Cause**: `storage/` and `bootstrap/cache/` aren't writable.
 
-**Fix**: PHPeek auto-fixes this, but if it persists:
+**Fix**: Cbox auto-fixes this, but if it persists:
 ```bash
 docker exec myapp chown -R www-data:www-data /var/www/html/storage
 docker exec myapp chmod -R 775 /var/www/html/storage
@@ -283,7 +283,7 @@ kill -USR2 1  # Graceful reload
 
 **Fix**: Specify platform:
 ```bash
-docker pull --platform linux/amd64 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull --platform linux/amd64 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Updates & Maintenance
@@ -298,7 +298,7 @@ docker pull --platform linux/amd64 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4
 
 ```bash
 # Pull latest
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Rebuild your image
 docker-compose build --pull
@@ -311,7 +311,7 @@ docker-compose up -d
 
 Use SHA-based tags for reproducibility:
 ```yaml
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
 ```
 
 Rolling tags (`8.4-bookworm`) get weekly security updates automatically.
@@ -332,7 +332,7 @@ Rolling tags (`8.4-bookworm`) get weekly security updates automatically.
 
 ### Migrating from official PHP images?
 
-PHPeek includes everything from official images plus:
+Cbox includes everything from official images plus:
 - 40+ extensions pre-installed
 - Nginx bundled (multi-service)
 - Framework auto-detection
@@ -344,14 +344,14 @@ PHPeek includes everything from official images plus:
 FROM php:8.4-fpm-bookworm
 
 # After
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Getting Help
 
 ### Where can I report issues?
 
-GitHub Issues: [github.com/gophpeek/baseimages/issues](https://github.com/gophpeek/baseimages/issues)
+GitHub Issues: [github.com/cboxdk/baseimages/issues](https://github.com/cboxdk/baseimages/issues)
 
 ### How do I contribute?
 

@@ -1,12 +1,12 @@
 ---
 title: "Systematic Debugging Guide"
-description: "Step-by-step systematic debugging process for PHPeek containers including log analysis and performance profiling"
+description: "Step-by-step systematic debugging process for Cbox containers including log analysis and performance profiling"
 weight: 42
 ---
 
 # Systematic Debugging Guide
 
-Methodical approach to debugging issues with PHPeek containers.
+Methodical approach to debugging issues with Cbox containers.
 
 ## Debugging Process
 
@@ -299,4 +299,4 @@ When debugging an issue:
 
 ---
 
-**Need more help?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Need more help?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

@@ -1,12 +1,12 @@
 ---
 title: "Performance Tuning Guide"
-description: "Optimize PHP-FPM, OPcache, and Nginx for maximum performance in PHPeek base images"
+description: "Optimize PHP-FPM, OPcache, and Nginx for maximum performance in Cbox base images"
 weight: 22
 ---
 
 # Performance Tuning Guide
 
-Comprehensive guide to optimizing PHPeek containers for maximum performance in production environments.
+Comprehensive guide to optimizing Cbox containers for maximum performance in production environments.
 
 ## Table of Contents
 
@@ -668,7 +668,7 @@ services:
 **New Relic:**
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN curl -L https://download.newrelic.com/php_agent/release/newrelic-php5-10.x-linux.tar.gz | tar -C /tmp -zx \
     && export NR_INSTALL_USE_CP_NOT_LN=1 \
@@ -735,4 +735,4 @@ services:
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

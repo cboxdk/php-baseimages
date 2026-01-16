@@ -6,7 +6,7 @@ weight: 30
 
 # Image Tiers Comparison
 
-PHPeek Base Images come in three tiers optimized for different use cases.
+Cbox Base Images come in three tiers optimized for different use cases.
 
 ## Quick Decision Guide
 
@@ -79,7 +79,7 @@ php-fpm-nginx:8.4-bookworm-full-rootless  # Full + rootless
 
 **Tools:**
 - Composer 2
-- PHPeek PM (process manager)
+- Cbox PM (process manager)
 - curl, wget, git, unzip
 
 ### Standard Tier (Slim + Image Processing + Node.js)
@@ -162,12 +162,12 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 ```yaml
 # From Slim to Standard
-- image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
-+ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+- image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
++ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # From Standard to Full
-- image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-+ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+- image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
++ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 ### Downgrading to a Smaller Tier
@@ -180,8 +180,8 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 ```yaml
 # From Standard to Slim (if no ImageMagick/Node needed)
-- image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
-+ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+- image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
++ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ## Rootless Variants
@@ -222,7 +222,7 @@ environment:
 ```yaml
 services:
   api:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
     ports:
       - "8000:80"
     environment:
@@ -234,7 +234,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     environment:
@@ -246,7 +246,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
     ports:
       - "8000:80"
     environment:

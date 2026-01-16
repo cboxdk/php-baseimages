@@ -130,7 +130,7 @@ jobs:
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
           docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
           # Slim tier should NOT have imagick or node
           ! docker run --rm $IMAGE php -m | grep -q imagick || echo "Warning: imagick found in slim tier"
           ! docker run --rm $IMAGE node --version 2>/dev/null || echo "Warning: node found in slim tier"
@@ -334,7 +334,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   # ─────────────────────────────────────────────────────────────────────────────
   # STANDARD ROOTLESS
@@ -439,7 +439,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   # ═══════════════════════════════════════════════════════════════════════════
   # FULL TIER - + Chromium for Browsershot/Dusk/Puppeteer (Alpine only)
@@ -538,7 +538,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
           # Full tier should have chromium
           docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
 

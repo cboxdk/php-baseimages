@@ -1,6 +1,6 @@
 #!/bin/sh
 # ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  PHPeek Nginx Health Check                                                ║
+# ║  Cbox Nginx Health Check                                                ║
 # ║  Validates Nginx process, ports, configuration, and upstream connectivity ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=sh
@@ -8,7 +8,7 @@
 set -e
 
 # Source shared library
-LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+LIB_PATH="${CBOX_LIB_PATH:-/usr/local/lib/cbox/entrypoint-lib.sh}"
 if [ -f "$LIB_PATH" ]; then
     # shellcheck source=/dev/null
     . "$LIB_PATH"

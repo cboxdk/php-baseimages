@@ -1,11 +1,11 @@
 # Static Assets Setup
 # PHP backend with compiled frontend assets (no Node in production)
-# All processes managed by PHPeek PM - NO command overrides!
+# All processes managed by Cbox PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     container_name: static-app
     restart: unless-stopped
     ports:
@@ -22,8 +22,8 @@ services:
       DB_DATABASE: /var/www/html/database/database.sqlite
       CACHE_DRIVER: file
       SESSION_DRIVER: file
-    # PHPeek PM healthcheck - already built into image
-    # No need to override - uses /usr/local/bin/phpeek-pm health
+    # Cbox PM healthcheck - already built into image
+    # No need to override - uses /usr/local/bin/cbox-pm health
 
   # Build service (run once during CI/CD)
   # This is a Node.js build container, NOT PHP - command is fine here

@@ -4,22 +4,22 @@ services:
     build:
       context: .
       dockerfile: ./php-fpm/8.3/debian/bookworm/Dockerfile
-    container_name: phpeek-fpm
+    container_name: cbox-fpm
     volumes:
       - ./test-app:/var/www/html
     networks:
-      - phpeek-network
+      - cbox-network
 
   # PHP-FPM Dev Service (Debian Bookworm with Xdebug)
   php-fpm-dev:
     build:
       context: .
       dockerfile: ./php-fpm/8.3/debian/bookworm/Dockerfile.dev
-    container_name: phpeek-fpm-dev
+    container_name: cbox-fpm-dev
     volumes:
       - ./test-app:/var/www/html
     networks:
-      - phpeek-network
+      - cbox-network
     environment:
       - XDEBUG_MODE=debug
       - XDEBUG_CONFIG=client_host=host.docker.internal client_port=9003
@@ -31,11 +31,11 @@ services:
     build:
       context: .
       dockerfile: ./php-cli/8.3/debian/bookworm/Dockerfile
-    container_name: phpeek-cli
+    container_name: cbox-cli
     volumes:
       - ./test-app:/var/www/html
     networks:
-      - phpeek-network
+      - cbox-network
     command: tail -f /dev/null
 
   # Nginx Service (Debian Bookworm)
@@ -43,13 +43,13 @@ services:
     build:
       context: .
       dockerfile: ./nginx/debian/bookworm/Dockerfile
-    container_name: phpeek-nginx
+    container_name: cbox-nginx
     ports:
       - "8080:80"
     volumes:
       - ./test-app:/var/www/html:ro
     networks:
-      - phpeek-network
+      - cbox-network
     depends_on:
       - php-fpm
 
@@ -58,13 +58,13 @@ services:
     build:
       context: .
       dockerfile: ./php-fpm-nginx/8.3/debian/bookworm/Dockerfile
-    container_name: phpeek-fpm-nginx
+    container_name: cbox-fpm-nginx
     ports:
       - "8081:80"
     volumes:
       - ./test-app:/var/www/html
     networks:
-      - phpeek-network
+      - cbox-network
     environment:
       - LARAVEL_SCHEDULER=true
       - LARAVEL_AUTO_OPTIMIZE=false
@@ -72,5 +72,5 @@ services:
       - multi
 
 networks:
-  phpeek-network:
+  cbox-network:
     driver: bridge

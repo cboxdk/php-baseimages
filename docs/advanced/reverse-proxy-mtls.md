@@ -1,12 +1,12 @@
 ---
 title: "Reverse Proxy & mTLS"
-description: "Configure PHPeek behind Cloudflare, HAProxy, Traefik, Tailscale, Nginx, or Fastly with optional mTLS client certificate authentication"
+description: "Configure Cbox behind Cloudflare, HAProxy, Traefik, Tailscale, Nginx, or Fastly with optional mTLS client certificate authentication"
 weight: 15
 ---
 
 # Reverse Proxy & mTLS Configuration
 
-Production PHP applications typically run behind reverse proxies, load balancers, or CDNs. PHPeek includes built-in support for:
+Production PHP applications typically run behind reverse proxies, load balancers, or CDNs. Cbox includes built-in support for:
 
 - **Reverse Proxy Headers**: Cloudflare, HAProxy, Traefik, Nginx, Fastly, AWS ALB/ELB
 - **VPN/Tunnel**: Tailscale, Cloudflare Tunnel, WireGuard
@@ -20,13 +20,13 @@ Production PHP applications typically run behind reverse proxies, load balancers
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Trust private network ranges (Docker, Kubernetes)
       NGINX_TRUSTED_PROXIES: "10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
 ```
 
-That's it! PHPeek will now:
+That's it! Cbox will now:
 - Extract the real client IP from `X-Forwarded-For` header
 - Pass proxy headers to PHP (`$_SERVER['HTTP_X_FORWARDED_FOR']`, etc.)
 - Enable Laravel `TrustProxies` and Symfony `trusted_proxies` to work correctly
@@ -40,7 +40,7 @@ Cloudflare uses `CF-Connecting-IP` for the real client IP:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Cloudflare IP ranges (updated January 2025)
       NGINX_TRUSTED_PROXIES: >-
@@ -76,7 +76,7 @@ For Cloudflare Tunnel, trust private networks since the tunnel runs locally:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
       NGINX_REAL_IP_HEADER: CF-Connecting-IP
@@ -93,7 +93,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Trust Traefik container network
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
@@ -118,7 +118,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
       # HAProxy typically uses X-Forwarded-For (default)
@@ -143,7 +143,7 @@ Tailscale uses the `100.64.0.0/10` CGNAT range:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       NGINX_TRUSTED_PROXIES: "100.64.0.0/10"
     network_mode: service:tailscale
@@ -165,7 +165,7 @@ volumes:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       NGINX_TRUSTED_PROXIES: "172.16.0.0/12"
 ```
@@ -196,7 +196,7 @@ server {
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Fastly publishes IP ranges at https://api.fastly.com/public-ip-list
       NGINX_TRUSTED_PROXIES: "23.235.32.0/20 43.249.72.0/22 ..."
@@ -208,7 +208,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Trust VPC CIDR range
       NGINX_TRUSTED_PROXIES: "10.0.0.0/8"
@@ -225,7 +225,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+          image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
           env:
             - name: NGINX_TRUSTED_PROXIES
               value: "10.0.0.0/8"  # Pod network CIDR
@@ -281,7 +281,7 @@ mTLS adds client certificate verification for zero-trust security:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"
@@ -290,8 +290,8 @@ services:
       MTLS_VERIFY_DEPTH: "2"
     volumes:
       - ./certs/client-ca.crt:/etc/ssl/certs/client-ca.crt:ro
-      - ./certs/server.crt:/etc/ssl/certs/phpeek-selfsigned.crt:ro
-      - ./certs/server.key:/etc/ssl/private/phpeek-selfsigned.key:ro
+      - ./certs/server.crt:/etc/ssl/certs/cbox-selfsigned.crt:ro
+      - ./certs/server.key:/etc/ssl/private/cbox-selfsigned.key:ro
 ```
 
 ### mTLS Environment Variables
@@ -364,7 +364,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+          image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
           env:
             # Istio handles TLS termination
             - name: NGINX_TRUSTED_PROXIES
@@ -389,7 +389,7 @@ use Illuminate\Http\Request;
 
 class TrustProxies extends Middleware
 {
-    // Trust all proxies (PHPeek handles IP validation at Nginx level)
+    // Trust all proxies (Cbox handles IP validation at Nginx level)
     protected $proxies = '*';
 
     // Standard proxy headers
@@ -421,7 +421,7 @@ framework:
 services:
   app:
     environment:
-      TRUSTED_PROXIES: "REMOTE_ADDR"  # Trust immediate proxy (PHPeek validated)
+      TRUSTED_PROXIES: "REMOTE_ADDR"  # Trust immediate proxy (Cbox validated)
 ```
 
 ---
@@ -522,7 +522,7 @@ docker exec app cat /etc/nginx/conf.d/default.conf | grep ssl_client
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Cloudflare for public traffic
       NGINX_TRUSTED_PROXIES: "173.245.48.0/20 103.21.244.0/22 ..."
@@ -541,7 +541,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Trust Istio sidecar
       NGINX_TRUSTED_PROXIES: "127.0.0.6"
@@ -553,7 +553,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       NGINX_TRUSTED_PROXIES: "100.64.0.0/10"
     network_mode: service:tailscale

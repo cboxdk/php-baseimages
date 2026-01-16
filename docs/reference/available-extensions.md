@@ -6,11 +6,11 @@ weight: 30
 
 # Available Extensions
 
-Complete reference of all PHP extensions included in PHPeek base images by tier.
+Complete reference of all PHP extensions included in Cbox base images by tier.
 
 ## Extension Overview by Tier
 
-PHPeek images come in three tiers with different extension sets:
+Cbox images come in three tiers with different extension sets:
 
 | Tier | Extensions | Best For |
 |------|-----------|----------|
@@ -61,7 +61,7 @@ The Slim tier includes all core extensions needed for most PHP applications.
 | Tool | Purpose |
 |------|---------|
 | Composer 2 | PHP package manager |
-| PHPeek PM | Process manager |
+| Cbox PM | Process manager |
 | curl, wget | HTTP clients |
 | git | Version control |
 | unzip | Archive extraction |
@@ -176,7 +176,7 @@ All PECL extensions use pinned versions for reproducibility:
 docker exec myapp php -m
 
 # One-liner
-docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm php -m
+docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm php -m
 ```
 
 ### Check Specific Extension
@@ -201,7 +201,7 @@ docker exec myapp php -i | grep -A 10 "redis"
 ### PECL Extensions
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Install PECL extension
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
@@ -213,7 +213,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
 ### Core Extensions
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Enable a disabled core extension
 RUN docker-php-ext-install shmop
@@ -224,7 +224,7 @@ RUN docker-php-ext-install shmop
 Some extensions require system packages:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Example: Adding additional libraries
 RUN apt-get update && apt-get install -y some-package-dev && \

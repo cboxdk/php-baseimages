@@ -1,17 +1,17 @@
 # ============================================================================
-# PHPeek OpenSwoole Image - Debian 8.4 (Bookworm)
+# Cbox OpenSwoole Image - Debian 8.4 (Bookworm)
 # ============================================================================
 # Extends php-base with OpenSwoole extension for async/coroutine PHP
 # OpenSwoole is a fork of Swoole with some different features
 # Used with Laravel Octane, Hyperf, and other async frameworks
 # ============================================================================
 
-FROM ghcr.io/gophpeek/baseimages/php-base:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-base:8.4-bookworm
 
-LABEL org.opencontainers.image.title="PHPeek OpenSwoole 8.4 Debian"
-LABEL org.opencontainers.image.description="PHP with OpenSwoole, all extensions, Composer, Node.js, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox OpenSwoole 8.4 Debian"
+LABEL org.opencontainers.image.description="PHP with OpenSwoole, all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
 # Install OpenSwoole build dependencies and compile
 RUN apt-get update && apt-get install -y --no-install-recommends \

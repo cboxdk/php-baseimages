@@ -1,16 +1,16 @@
 # ============================================================================
-# PHPeek Swoole Image - Debian 8.3 (Bookworm)
+# Cbox Swoole Image - Debian 8.3 (Bookworm)
 # ============================================================================
 # Extends php-base with Swoole extension for async/coroutine PHP
 # Used with Laravel Octane, Hyperf, and other Swoole-based frameworks
 # ============================================================================
 
-FROM ghcr.io/gophpeek/baseimages/php-base:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm
 
-LABEL org.opencontainers.image.title="PHPeek Swoole 8.3 Debian"
-LABEL org.opencontainers.image.description="PHP with Swoole, all extensions, Composer, Node.js, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox Swoole 8.3 Debian"
+LABEL org.opencontainers.image.description="PHP with Swoole, all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
 # Install Swoole build dependencies and compile
 # Note: libbrotli-dev is required for Swoole's brotli compression support

@@ -1,5 +1,5 @@
 {
-    "name": "phpeek/e2e-symfony-test",
+    "name": "cbox/e2e-symfony-test",
     "description": "Minimal Symfony-like application for E2E testing",
     "type": "project",
     "license": "MIT",

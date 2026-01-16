@@ -1,12 +1,12 @@
 ---
 title: "TYPO3 Guide"
-description: "TYPO3 CMS with PHPeek, MySQL, Redis, and scheduler"
+description: "TYPO3 CMS with Cbox, MySQL, Redis, and scheduler"
 weight: 32
 ---
 
 # TYPO3 Guide
 
-Deploy TYPO3 v12 with PHPeek base images.
+Deploy TYPO3 v12 with Cbox base images.
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8082:80"
     volumes:
@@ -109,7 +109,7 @@ docker compose exec app vendor/bin/typo3 cache:flush
 
 ## Scheduler Tasks
 
-TYPO3 scheduler requires cron. PHPeek’s scheduler runs `vendor/bin/typo3 scheduler:run` every minute when `LARAVEL_SCHEDULER=true` and `PHPEEK_PM_PROCESS_SCHEDULER_COMMAND` default is used.
+TYPO3 scheduler requires cron. Cbox’s scheduler runs `vendor/bin/typo3 scheduler:run` every minute when `LARAVEL_SCHEDULER=true` and `CBOX_PM_PROCESS_SCHEDULER_COMMAND` default is used.
 
 Manual run:
 
@@ -128,7 +128,7 @@ docker compose exec app vendor/bin/typo3 scheduler:run
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       - APP_ENV=production
       - PHP_DISPLAY_ERRORS=Off

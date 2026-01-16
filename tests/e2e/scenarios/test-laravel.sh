@@ -76,19 +76,19 @@ assert_http_contains "$BASE_URL/scheduler/test" '"scheduler_env":"true"' "LARAVE
 assert_file_exists "$CONTAINER_NAME" "/var/www/html/artisan" "Artisan file exists"
 assert_exec_succeeds "$CONTAINER_NAME" "php /var/www/html/artisan --version" "Artisan is executable"
 
-# Verify PHPeek PM is managing the scheduler process
-# When LARAVEL_SCHEDULER=true, PHPeek PM should enable the scheduler process
-log_info "Checking PHPeek PM scheduler integration..."
-assert_exec_succeeds "$CONTAINER_NAME" "phpeek-pm --version" "PHPeek PM is available"
+# Verify Cbox PM is managing the scheduler process
+# When LARAVEL_SCHEDULER=true, Cbox PM should enable the scheduler process
+log_info "Checking Cbox PM scheduler integration..."
+assert_exec_succeeds "$CONTAINER_NAME" "cbox-pm --version" "Cbox PM is available"
 
-# Check if scheduler process is managed by PHPeek PM (via metrics or status)
-# The scheduler runs as 'php artisan schedule:work' under PHPeek PM
+# Check if scheduler process is managed by Cbox PM (via metrics or status)
+# The scheduler runs as 'php artisan schedule:work' under Cbox PM
 if docker exec "$CONTAINER_NAME" pgrep -f "schedule:work" >/dev/null 2>&1; then
     log_success "Scheduler process is running (schedule:work)"
 else
-    # If not running, check if PHPeek PM config has scheduler enabled
-    log_info "Scheduler process not found - checking PHPeek PM config"
-    assert_file_exists "$CONTAINER_NAME" "/etc/phpeek-pm/phpeek-pm.yaml" "PHPeek PM config exists"
+    # If not running, check if Cbox PM config has scheduler enabled
+    log_info "Scheduler process not found - checking Cbox PM config"
+    assert_file_exists "$CONTAINER_NAME" "/etc/cbox-pm/cbox-pm.yaml" "Cbox PM config exists"
 fi
 
 log_section "Process Tests"

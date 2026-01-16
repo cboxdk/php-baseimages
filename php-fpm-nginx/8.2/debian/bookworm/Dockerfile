@@ -1,8 +1,8 @@
 # ============================================================================
-# PHPeek PHP-FPM + Nginx Image - Debian 8.2 (Bookworm)
+# Cbox PHP-FPM + Nginx Image - Debian 8.2 (Bookworm)
 # ============================================================================
 # LAYER 4: Extends php-fpm with Nginx for single-container deployment
-#          Uses PHPeek PM as process manager
+#          Uses Cbox PM as process manager
 #
 # IMAGE TIERS (inherited from php-fpm):
 # - slim:     Minimal PHP + essential extensions - API/microservices
@@ -13,24 +13,24 @@
 # ============================================================================
 # Import base images for each tier from php-fpm
 # ============================================================================
-FROM ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm-slim AS base-slim
-FROM ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm-slim-rootless AS base-slim-rootless
-FROM ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm AS base-standard
-FROM ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm-full AS base-full
-FROM ghcr.io/gophpeek/baseimages/php-fpm:8.2-bookworm-full-rootless AS base-full-rootless
+FROM ghcr.io/cboxdk/baseimages/php-fpm:8.2-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/baseimages/php-fpm:8.2-bookworm-slim-rootless AS base-slim-rootless
+FROM ghcr.io/cboxdk/baseimages/php-fpm:8.2-bookworm AS base-standard
+FROM ghcr.io/cboxdk/baseimages/php-fpm:8.2-bookworm-rootless AS base-standard-rootless
+FROM ghcr.io/cboxdk/baseimages/php-fpm:8.2-bookworm-full AS base-full
+FROM ghcr.io/cboxdk/baseimages/php-fpm:8.2-bookworm-full-rootless AS base-full-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim AS slim-root
 
-LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.2 Bookworm (Slim)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.2 Bookworm (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM + Nginx with essential extensions"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=slim
+ENV CBOX_IMAGE_TIER=slim
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -50,9 +50,9 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy PHPeek PM configuration
-RUN mkdir -p /etc/phpeek-pm
-COPY php-fpm-nginx/common/phpeek-pm.yaml /etc/phpeek-pm/phpeek-pm.yaml
+# Copy Cbox PM configuration
+RUN mkdir -p /etc/cbox-pm
+COPY php-fpm-nginx/common/cbox-pm.yaml /etc/cbox-pm/cbox-pm.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -73,19 +73,19 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["phpeek-pm"]
+CMD ["cbox-pm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOTLESS: Minimal PHP-FPM + Nginx running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim-rootless AS slim-rootless
 
-LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.2 Bookworm (Slim Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.2 Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM + Nginx with essential extensions - Rootless"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=slim
+ENV CBOX_IMAGE_TIER=slim
 
 # Switch to root temporarily for setup
 USER root
@@ -114,9 +114,9 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy PHPeek PM configuration (rootless version with port 8080 health check)
-RUN mkdir -p /etc/phpeek-pm && chown -R www-data:www-data /etc/phpeek-pm
-COPY php-fpm-nginx/common/phpeek-pm-rootless.yaml /etc/phpeek-pm/phpeek-pm.yaml
+# Copy Cbox PM configuration (rootless version with port 8080 health check)
+RUN mkdir -p /etc/cbox-pm && chown -R www-data:www-data /etc/cbox-pm
+COPY php-fpm-nginx/common/cbox-pm-rootless.yaml /etc/cbox-pm/cbox-pm.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -124,8 +124,8 @@ COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 # Create public directory with www-data ownership
-RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/phpeek && \
-    chown -R www-data:www-data /var/www /tmp/phpeek
+RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && \
+    chown -R www-data:www-data /var/www /tmp/cbox
 
 # Health check (checks both nginx and php-fpm)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -138,19 +138,19 @@ WORKDIR /var/www/html
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["phpeek-pm"]
+CMD ["cbox-pm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, vips, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
 
-LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.2 Bookworm"
-LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.2 Bookworm"
+LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=standard
+ENV CBOX_IMAGE_TIER=standard
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -170,9 +170,9 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy PHPeek PM configuration
-RUN mkdir -p /etc/phpeek-pm
-COPY php-fpm-nginx/common/phpeek-pm.yaml /etc/phpeek-pm/phpeek-pm.yaml
+# Copy Cbox PM configuration
+RUN mkdir -p /etc/cbox-pm
+COPY php-fpm-nginx/common/cbox-pm.yaml /etc/cbox-pm/cbox-pm.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -193,19 +193,19 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["phpeek-pm"]
+CMD ["cbox-pm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ROOTLESS (STANDARD): Default rootless - PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
 
-LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.2 Bookworm (Rootless)"
-LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and PHPeek PM - Rootless"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.2 Bookworm (Rootless)"
+LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox PM - Rootless"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=standard
+ENV CBOX_IMAGE_TIER=standard
 
 # Switch to root temporarily for setup
 USER root
@@ -234,9 +234,9 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy PHPeek PM configuration (rootless version with port 8080 health check)
-RUN mkdir -p /etc/phpeek-pm && chown -R www-data:www-data /etc/phpeek-pm
-COPY php-fpm-nginx/common/phpeek-pm-rootless.yaml /etc/phpeek-pm/phpeek-pm.yaml
+# Copy Cbox PM configuration (rootless version with port 8080 health check)
+RUN mkdir -p /etc/cbox-pm && chown -R www-data:www-data /etc/cbox-pm
+COPY php-fpm-nginx/common/cbox-pm-rootless.yaml /etc/cbox-pm/cbox-pm.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -244,8 +244,8 @@ COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 # Create public directory with www-data ownership
-RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/phpeek && \
-    chown -R www-data:www-data /var/www /tmp/phpeek
+RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && \
+    chown -R www-data:www-data /var/www /tmp/cbox
 
 # Health check (checks both nginx and php-fpm)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -258,19 +258,19 @@ WORKDIR /var/www/html
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["phpeek-pm"]
+CMD ["cbox-pm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # FULL-ROOT: Everything including Chromium for Browsershot/Dusk
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-full AS full-root
 
-LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.2 Bookworm (Full)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.2 Bookworm (Full)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Chromium for Browsershot/Dusk"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=full
+ENV CBOX_IMAGE_TIER=full
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -290,9 +290,9 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy PHPeek PM configuration
-RUN mkdir -p /etc/phpeek-pm
-COPY php-fpm-nginx/common/phpeek-pm.yaml /etc/phpeek-pm/phpeek-pm.yaml
+# Copy Cbox PM configuration
+RUN mkdir -p /etc/cbox-pm
+COPY php-fpm-nginx/common/cbox-pm.yaml /etc/cbox-pm/cbox-pm.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -313,19 +313,19 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["phpeek-pm"]
+CMD ["cbox-pm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
 # FULL-ROOTLESS: Everything including Chromium, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-full-rootless AS full-rootless
 
-LABEL org.opencontainers.image.title="PHPeek PHP-FPM + Nginx 8.2 Bookworm (Full Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.2 Bookworm (Full Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Chromium - Rootless"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=full
+ENV CBOX_IMAGE_TIER=full
 
 # Switch to root temporarily for setup
 USER root
@@ -354,9 +354,9 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy PHPeek PM configuration (rootless version with port 8080 health check)
-RUN mkdir -p /etc/phpeek-pm && chown -R www-data:www-data /etc/phpeek-pm
-COPY php-fpm-nginx/common/phpeek-pm-rootless.yaml /etc/phpeek-pm/phpeek-pm.yaml
+# Copy Cbox PM configuration (rootless version with port 8080 health check)
+RUN mkdir -p /etc/cbox-pm && chown -R www-data:www-data /etc/cbox-pm
+COPY php-fpm-nginx/common/cbox-pm-rootless.yaml /etc/cbox-pm/cbox-pm.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -364,8 +364,8 @@ COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 # Create public directory with www-data ownership
-RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/phpeek && \
-    chown -R www-data:www-data /var/www /tmp/phpeek
+RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && \
+    chown -R www-data:www-data /var/www /tmp/cbox
 
 # Health check (checks both nginx and php-fpm)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -378,4 +378,4 @@ WORKDIR /var/www/html
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["phpeek-pm"]
+CMD ["cbox-pm"]

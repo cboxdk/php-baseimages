@@ -2,12 +2,12 @@
 set -e
 
 # ============================================================================
-# PHPeek PHP-FPM Entrypoint
+# Cbox PHP-FPM Entrypoint
 # ============================================================================
 # shellcheck shell=sh
 
 # Source shared library
-LIB_PATH="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek/entrypoint-lib.sh}"
+LIB_PATH="${CBOX_LIB_PATH:-/usr/local/lib/cbox/entrypoint-lib.sh}"
 if [ -f "$LIB_PATH" ]; then
     # shellcheck source=/dev/null
     . "$LIB_PATH"
@@ -17,7 +17,7 @@ else
     log_warn()  { echo "[WARN] $1"; }
     log_error() { echo "[ERROR] $1" >&2; }
     is_rootless() {
-        [ "${PHPEEK_ROOTLESS:-false}" = "true" ]
+        [ "${CBOX_ROOTLESS:-false}" = "true" ]
     }
 fi
 
@@ -82,11 +82,11 @@ trap graceful_shutdown TERM INT QUIT
 # ============================================================================
 # Lifecycle Warning (deprecation/preview notices)
 # ============================================================================
-LIFECYCLE_CHECK="${PHPEEK_LIB_PATH:-/usr/local/lib/phpeek}/lifecycle-check.sh"
+LIFECYCLE_CHECK="${CBOX_LIB_PATH:-/usr/local/lib/cbox}/lifecycle-check.sh"
 if [ -f "$LIFECYCLE_CHECK" ]; then
     # shellcheck source=/dev/null
     . "$LIFECYCLE_CHECK"
-    phpeek_lifecycle_check
+    cbox_lifecycle_check
 fi
 
 # Display environment information
@@ -99,9 +99,9 @@ if [ -n "$XDEBUG_MODE" ]; then
     log_warn "This should NOT be used in production!"
 fi
 
-# Check PHPeek PM
-if command -v phpeek-pm >/dev/null 2>&1; then
-    log_info "PHPeek PM $(phpeek-pm --version 2>/dev/null | head -n1)"
+# Check Cbox PM
+if command -v cbox-pm >/dev/null 2>&1; then
+    log_info "Cbox PM $(cbox-pm --version 2>/dev/null | head -n1)"
 fi
 
 # Run startup checks

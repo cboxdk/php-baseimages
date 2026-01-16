@@ -1,12 +1,12 @@
 ---
 title: "Advanced Topics"
-description: "Deep dives into customization, extensions, performance tuning, and security hardening for PHPeek base images"
+description: "Deep dives into customization, extensions, performance tuning, and security hardening for Cbox base images"
 weight: 20
 ---
 
 # Advanced Topics
 
-Deep dives for experienced users who need to customize and optimize PHPeek images for their specific requirements.
+Deep dives for experienced users who need to customize and optimize Cbox images for their specific requirements.
 
 ## Available Topics
 
@@ -80,7 +80,7 @@ Deep dives for experienced users who need to customize and optimize PHPeek image
 
 ## What You'll Learn
 
-- How to create custom Docker images based on PHPeek
+- How to create custom Docker images based on Cbox
 - Advanced PHP and Nginx configuration techniques
 - Performance optimization strategies
 - Security hardening for production deployments
@@ -92,7 +92,7 @@ Before diving into advanced topics:
 
 1. Comfortable with Docker and Dockerfiles
 2. Completed at least one [framework guide](../guides/_index.md)
-3. Running PHPeek in development successfully
+3. Running Cbox in development successfully
 4. Basic understanding of PHP-FPM and Nginx
 
 ## When to Use Advanced Topics
@@ -157,8 +157,8 @@ Document all customizations in your repository:
 - **Quick Answers**: [Common Issues](../troubleshooting/common-issues.md)
 - **Debugging**: [Debugging Guide](../troubleshooting/debugging-guide.md)
 - **Reference**: [Environment Variables](../reference/environment-variables.md)
-- **Community**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Community**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
 
 ---
 
-**Want to contribute?** Share your customization patterns in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions/categories/show-and-tell)!
+**Want to contribute?** Share your customization patterns in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions/categories/show-and-tell)!

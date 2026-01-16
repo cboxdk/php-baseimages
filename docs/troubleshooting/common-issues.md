@@ -1,12 +1,12 @@
 ---
 title: "Common Issues & Solutions"
-description: "Quick solutions to common problems with PHPeek base images including connection errors, permission issues, and configuration problems"
+description: "Quick solutions to common problems with Cbox base images including connection errors, permission issues, and configuration problems"
 weight: 41
 ---
 
 # Common Issues & Solutions
 
-Quick copy-paste solutions to the most common problems with PHPeek containers.
+Quick copy-paste solutions to the most common problems with Cbox containers.
 
 ## Container Problems
 
@@ -387,4 +387,4 @@ When something isn't working:
 
 ---
 
-**Still stuck?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Still stuck?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

@@ -1,5 +1,5 @@
 # ============================================================================
-# PHPeek PHP CLI Image - Debian 8.2 (Bookworm)
+# Cbox PHP CLI Image - Debian 8.2 (Bookworm)
 # ============================================================================
 # LAYER 3: Extends php-base with CLI-specific entrypoint and healthcheck
 #
@@ -12,24 +12,24 @@
 # ============================================================================
 # Import base images for each tier
 # ============================================================================
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm-slim AS base-slim
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm-slim-rootless AS base-slim-rootless
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm AS base-standard
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm-full AS base-full
-FROM ghcr.io/gophpeek/baseimages/php-base:8.2-bookworm-full-rootless AS base-full-rootless
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-slim-rootless AS base-slim-rootless
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm AS base-standard
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-rootless AS base-standard-rootless
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-full AS base-full
+FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-full-rootless AS base-full-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP CLI with essential extensions
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim AS slim-root
 
-LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.2 Bookworm (Slim)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.2 Bookworm (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP CLI with essential extensions"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=slim
+ENV CBOX_IMAGE_TIER=slim
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
@@ -46,12 +46,12 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim-rootless AS slim-rootless
 
-LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.2 Bookworm (Slim Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.2 Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP CLI with essential extensions - Rootless"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=slim
+ENV CBOX_IMAGE_TIER=slim
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -71,12 +71,12 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
 
-LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.2 Bookworm"
-LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.2 Bookworm"
+LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=standard
+ENV CBOX_IMAGE_TIER=standard
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
@@ -93,12 +93,12 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
 
-LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.2 Bookworm (Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.2 Bookworm (Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js - Rootless"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=standard
+ENV CBOX_IMAGE_TIER=standard
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -118,12 +118,12 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-full AS full-root
 
-LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.2 Bookworm (Full)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.2 Bookworm (Full)"
 LABEL org.opencontainers.image.description="PHP CLI with all features including Chromium for Browsershot/Dusk"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=full
+ENV CBOX_IMAGE_TIER=full
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
@@ -140,12 +140,12 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-full-rootless AS full-rootless
 
-LABEL org.opencontainers.image.title="PHPeek PHP CLI 8.2 Bookworm (Full Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.2 Bookworm (Full Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with all features including Chromium - Rootless"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
-ENV PHPEEK_IMAGE_TIER=full
+ENV CBOX_IMAGE_TIER=full
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

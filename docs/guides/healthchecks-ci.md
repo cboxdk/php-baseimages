@@ -1,12 +1,12 @@
 ---
 title: "Health Checks & CI Templates"
-description: "Add PHPeek-ready Docker health checks and GitHub Actions workflows to keep deployments and pull requests stable"
+description: "Add Cbox-ready Docker health checks and GitHub Actions workflows to keep deployments and pull requests stable"
 weight: 55
 ---
 
 # Health Checks & CI Templates
 
-Ready-to-copy snippets for wiring health checks into Docker Compose and running PHPeek stacks inside GitHub Actions.
+Ready-to-copy snippets for wiring health checks into Docker Compose and running Cbox stacks inside GitHub Actions.
 
 ## Docker Compose Health Checks
 
@@ -18,7 +18,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       - APP_ENV=local
       - DB_HOST=mysql
@@ -64,7 +64,7 @@ volumes:
 
 **Why it matters**
 
-- `php-fpm-healthcheck` ships with PHPeek and fails if PHP-FPM/Nginx are down.
+- `php-fpm-healthcheck` ships with Cbox and fails if PHP-FPM/Nginx are down.
 - MySQL/Redis health checks allow `docker compose up -d --wait` to block until services are ready.
 - `depends_on.condition: service_healthy` ensures Laravel boot doesn't run migrations before MySQL is up.
 
@@ -76,11 +76,11 @@ volumes:
 
 ## GitHub Actions Template
 
-The workflow below runs Composer install and `php artisan test` using your existing PHPeek Compose stack.
+The workflow below runs Composer install and `php artisan test` using your existing Cbox Compose stack.
 
 ```yaml
 # examples/github-actions/laravel-ci.yml
-name: Laravel CI (PHPeek)
+name: Laravel CI (Cbox)
 
 on:
   push:

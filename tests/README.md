@@ -1,6 +1,6 @@
-# PHPeek Base Images - Test Suite
+# Cbox Base Images - Test Suite
 
-Comprehensive test coverage for PHPeek Docker images.
+Comprehensive test coverage for Cbox Docker images.
 
 ## Test Summary
 
@@ -145,10 +145,10 @@ jobs:
 
 ```bash
 # Build test image
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t phpeek-test:local .
+docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t cbox-test:local .
 
 # Run with custom image
-IMAGE=phpeek-test:local ./tests/e2e/scenarios/test-database.sh
+IMAGE=cbox-test:local ./tests/e2e/scenarios/test-database.sh
 ```
 
 ## Writing New Tests

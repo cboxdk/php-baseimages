@@ -1,6 +1,6 @@
 ---
 title: "Framework Guides"
-description: "Complete setup guides for Laravel, Symfony, WordPress, and other popular PHP frameworks using PHPeek base images"
+description: "Complete setup guides for Laravel, Symfony, WordPress, and other popular PHP frameworks using Cbox base images"
 weight: 10
 ---
 
@@ -89,7 +89,7 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - CI/CD integration
   - Zero-downtime deployments
 
-- **[PHPeek vs ServerSideUp](phpeek-vs-serversideup.md)** ✨ New
+- **[Cbox vs ServerSideUp](cbox-vs-serversideup.md)** ✨ New
   - DX, docs, and feature scorecard
   - Actionable follow-ups to widen the gap
   - Talking points for stakeholders
@@ -133,8 +133,8 @@ All framework guides follow these principles:
 - **Quick answers**: Check [Common Issues](../troubleshooting/common-issues.md)
 - **Debugging**: Use our [Debugging Guide](../troubleshooting/debugging-guide.md)
 - **Migration**: See our [Migration Guide](../troubleshooting/migration-guide.md)
-- **Community**: Join [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Community**: Join [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
 
 ---
 
-**Can't find your framework?** Check the [Community Guides](https://github.com/gophpeek/baseimages/discussions/categories/guides) or create one and share it!
+**Can't find your framework?** Check the [Community Guides](https://github.com/cboxdk/baseimages/discussions/categories/guides) or create one and share it!

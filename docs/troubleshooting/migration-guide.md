@@ -1,12 +1,12 @@
 ---
 title: "Migration Guide"
-description: "Migrate to PHPeek base images from ServerSideUp, Bitnami, or custom images with step-by-step instructions"
+description: "Migrate to Cbox base images from ServerSideUp, Bitnami, or custom images with step-by-step instructions"
 weight: 43
 ---
 
 # Migration Guide
 
-Complete guide for migrating to PHPeek from other PHP Docker solutions.
+Complete guide for migrating to Cbox from other PHP Docker solutions.
 
 ## Quick Migration Matrix
 
@@ -21,9 +21,9 @@ Complete guide for migrating to PHPeek from other PHP Docker solutions.
 
 ### Key Differences
 
-| Aspect | ServerSideUp | PHPeek |
+| Aspect | ServerSideUp | Cbox |
 |--------|-------------|--------|
-| Process Manager | S6 Overlay | PHPeek PM (Go) |
+| Process Manager | S6 Overlay | Cbox PM (Go) |
 | User | www-data (fixed) | www-data/nginx (OS-dependent) |
 | Env Prefix | `PHP_` | `PHP_`, `NGINX_` |
 | Health Checks | Built-in | Built-in |
@@ -38,10 +38,10 @@ services:
   app:
     image: serversideup/php:8.3-fpm-nginx
 
-# After (PHPeek)
+# After (Cbox)
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 **2. Update environment variables:**
@@ -53,7 +53,7 @@ services:
 AUTORUN_ENABLED=true
 AUTORUN_LARAVEL_STORAGE_LINK=true
 
-# PHPeek
+# Cbox
 LARAVEL_AUTO_OPTIMIZE=true
 # (storage link runs automatically)
 ```
@@ -74,9 +74,9 @@ docker-compose up -d
 docker-compose logs -f app
 ```
 
-### ServerSideUp → PHPeek Env Mapping
+### ServerSideUp → Cbox Env Mapping
 
-| ServerSideUp | PHPeek | Notes |
+| ServerSideUp | Cbox | Notes |
 |--------------|--------|-------|
 | `PHP_MEMORY_LIMIT` | `PHP_MEMORY_LIMIT` | Same |
 | `PHP_OPCACHE_ENABLE` | `PHP_OPCACHE_ENABLE` | Same |
@@ -87,12 +87,12 @@ docker-compose logs -f app
 
 ### Key Differences
 
-| Aspect | Bitnami | PHPeek |
+| Aspect | Bitnami | Cbox |
 |--------|---------|--------|
 | User | `1001` | www-data (82/33) |
 | Install Path | `/opt/bitnami` | `/var/www/html` |
 | Config Location | `/opt/bitnami/php/etc` | `/usr/local/etc/php` |
-| Process Manager | Custom scripts | PHPeek PM (Go) |
+| Process Manager | Custom scripts | Cbox PM (Go) |
 
 ### Migration Steps
 
@@ -106,10 +106,10 @@ services:
     volumes:
       - ./:/app
 
-# After (PHPeek)
+# After (Cbox)
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html
 ```
@@ -118,7 +118,7 @@ services:
 
 ```bash
 # Bitnami uses UID 1001
-# PHPeek uses www-data (UID 33 on Debian)
+# Cbox uses www-data (UID 33 on Debian)
 
 # Update file ownership
 chown -R 33:33 .  # www-data on Debian
@@ -131,7 +131,7 @@ chown -R 33:33 .  # www-data on Debian
 volumes:
   - ./php.ini:/opt/bitnami/php/etc/php.ini
 
-# After (PHPeek)
+# After (Cbox)
 volumes:
   - ./php.ini:/usr/local/etc/php/conf.d/zz-custom.ini
 ```
@@ -142,7 +142,7 @@ volumes:
 # Before (Bitnami often uses specific service names)
 DB_HOST=mariadb
 
-# After (PHPeek - use your service name)
+# After (Cbox - use your service name)
 DB_HOST=mysql
 ```
 
@@ -150,7 +150,7 @@ DB_HOST=mysql
 
 ### Key Differences
 
-| Aspect | Official PHP | PHPeek |
+| Aspect | Official PHP | Cbox |
 |--------|-------------|--------|
 | Web Server | None (FPM only) | Nginx included |
 | Extensions | Minimal | 40+ pre-installed |
@@ -175,10 +175,10 @@ services:
       - ./:/var/www/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
 
-# After (PHPeek - combined)
+# After (Cbox - combined)
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -193,7 +193,7 @@ FROM php:8.3-fpm
 RUN docker-php-ext-install pdo_mysql redis opcache gd
 
 # After - Extensions pre-installed, no Dockerfile needed!
-# Just use: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+# Just use: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 **3. Update configuration method:**
@@ -228,21 +228,21 @@ Evaluate your custom image:
 
 ### Migration Strategy
 
-**Option 1: Use PHPeek Directly (if possible)**
+**Option 1: Use Cbox Directly (if possible)**
 
-Check if PHPeek includes everything you need:
+Check if Cbox includes everything you need:
 
 ```bash
 # Check included extensions
-docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm php -m
+docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm php -m
 ```
 
-**Option 2: Extend PHPeek Image**
+**Option 2: Extend Cbox Image**
 
 For additional requirements:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 
 # Add your custom extensions
 RUN apt-get update && apt-get install -y ffmpeg
@@ -335,8 +335,8 @@ docker-compose exec app php -m | grep extension_name
 Need help with migration?
 
 1. **Check examples:** See [guides section](../guides/_index.md) for your framework
-2. **Search issues:** [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
-3. **Ask community:** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+2. **Search issues:** [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
+3. **Ask community:** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
 
 ## Related Documentation
 
@@ -347,4 +347,4 @@ Need help with migration?
 
 ---
 
-**Migration questions?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Migration questions?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

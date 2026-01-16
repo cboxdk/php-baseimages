@@ -1,7 +1,7 @@
 # PHP Basic Setup
 # Minimal PHP application without framework
 # Works with apps that have index.php in root OR public/
-# All processes managed by PHPeek PM - NO command overrides!
+# All processes managed by Cbox PM - NO command overrides!
 # Usage: docker compose up -d
 #
 # Webroot Strategy:
@@ -14,7 +14,7 @@
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     container_name: php-basic-app
     restart: unless-stopped
     ports:
@@ -30,7 +30,7 @@ services:
       # PHP Configuration (optional)
       APP_ENV: local
       APP_DEBUG: "true"
-    # PHPeek PM healthcheck - already built into image
+    # Cbox PM healthcheck - already built into image
 
 # No database by default - add as needed:
 #

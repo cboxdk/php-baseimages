@@ -29,7 +29,7 @@ $response = [
 ];
 
 // Test file write (permissions check)
-$testFile = '/tmp/phpeek-test-' . uniqid() . '.txt';
+$testFile = '/tmp/cbox-test-' . uniqid() . '.txt';
 $writeTest = @file_put_contents($testFile, 'test');
 $response['filesystem'] = [
     'write_test' => $writeTest !== false,

@@ -52,8 +52,8 @@ test_laravel_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/laravel:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine \
-        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/laravel-test.log 2>&1 || true
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-alpine \
+        -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/laravel-test.log 2>&1 || true
 
     # Debug: show full log content
     echo "DEBUG: Laravel test log content:"
@@ -90,8 +90,8 @@ test_symfony_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/symfony:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm \
-        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/symfony-test.log 2>&1 || true
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm \
+        -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/symfony-test.log 2>&1 || true
 
     # Debug: show full log content
     echo "DEBUG: Symfony test log content:"
@@ -125,8 +125,8 @@ test_wordpress_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/wordpress:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-trixie \
-        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/wordpress-test.log 2>&1 || true
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-trixie \
+        -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/wordpress-test.log 2>&1 || true
 
     # Debug: show full log content
     echo "DEBUG: WordPress test log content:"
@@ -159,8 +159,8 @@ test_generic_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/generic:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine \
-        -c ". /usr/local/lib/phpeek/entrypoint-lib.sh && detect_framework" > /tmp/generic-test.log 2>&1 || true
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-alpine \
+        -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/generic-test.log 2>&1 || true
 
     # Debug: show full log content
     echo "DEBUG: Generic test log content:"

@@ -1,5 +1,5 @@
 {
-    "name": "phpeek/dusk-testing",
+    "name": "cbox/dusk-testing",
     "description": "E2E test for Laravel Dusk browser testing",
     "type": "project",
     "require": {

@@ -1,25 +1,25 @@
 ---
 title: "Laravel Octane"
-description: "High-performance Laravel with Swoole, RoadRunner, or FrankenPHP using PHPeek PM"
+description: "High-performance Laravel with Swoole, RoadRunner, or FrankenPHP using Cbox PM"
 weight: 15
 ---
 
 # Laravel Octane
 
-Run Laravel Octane with PHPeek PM for high-performance applications. PHPeek PM supports all three Octane servers: **Swoole**, **RoadRunner**, and **FrankenPHP**.
+Run Laravel Octane with Cbox PM for high-performance applications. Cbox PM supports all three Octane servers: **Swoole**, **RoadRunner**, and **FrankenPHP**.
 
 ## Quick Start
 
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.3-bookworm
     environment:
       LARAVEL_OCTANE: "true"
       OCTANE_SERVER: swoole
 ```
 
-That's it. PHPeek PM handles everything else.
+That's it. Cbox PM handles everything else.
 
 ## Server Comparison
 
@@ -34,7 +34,7 @@ That's it. PHPeek PM handles everything else.
 | **Coroutines** | ✅ | ❌ | ❌ |
 | **Memory** | Lower | Medium | Medium |
 | **Setup** | Extension required | Binary download | Binary download |
-| **PHPeek Image** | `php-swoole` | `php-fpm-nginx` | `php-frankenphp` |
+| **Cbox Image** | `php-swoole` | `php-fpm-nginx` | `php-frankenphp` |
 
 ## Configuration Reference
 
@@ -78,7 +78,7 @@ That's it. PHPeek PM handles everything else.
 # examples/octane-swoole/docker-compose.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.3-bookworm
     ports:
       - "8080:8000"
     environment:
@@ -107,7 +107,7 @@ services:
 # examples/octane-roadrunner/docker-compose.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8080:8000"
     environment:
@@ -135,7 +135,7 @@ services:
 # examples/octane-frankenphp/docker-compose.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-frankenphp:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-frankenphp:8.3-bookworm
     ports:
       - "8080:8000"
       - "8443:443"
@@ -180,11 +180,11 @@ php artisan octane:install --server=frankenphp
 
 ### 3. Configure Environment
 
-PHPeek PM reads these from your container environment:
+Cbox PM reads these from your container environment:
 
 ```bash
 # .env is NOT needed - use docker-compose environment instead
-# PHPeek PM passes all env vars to Octane
+# Cbox PM passes all env vars to Octane
 ```
 
 ## Production Considerations
@@ -222,13 +222,13 @@ environment:
 
 ### Health Checks
 
-PHPeek PM includes built-in health checks for Octane. No configuration needed.
+Cbox PM includes built-in health checks for Octane. No configuration needed.
 
 ```yaml
 # ✅ Correct - use built-in health check
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-swoole:8.3-bookworm
     # No healthcheck override needed
 
 # ❌ Wrong - don't override
@@ -243,11 +243,11 @@ services:
 ### Octane Not Starting
 
 ```bash
-# Check PHPeek PM status
-docker exec <container> phpeek-pm status
+# Check Cbox PM status
+docker exec <container> cbox-pm status
 
 # Check Octane logs
-docker exec <container> phpeek-pm logs octane
+docker exec <container> cbox-pm logs octane
 ```
 
 ### Memory Issues
@@ -264,10 +264,10 @@ Ensure you're using the correct image:
 
 ```yaml
 # ✅ Correct for Swoole
-image: ghcr.io/gophpeek/baseimages/php-swoole:8.3-bookworm
+image: ghcr.io/cboxdk/baseimages/php-swoole:8.3-bookworm
 
 # ❌ Wrong - doesn't have Swoole extension
-image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ## See Also
@@ -275,5 +275,5 @@ image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
 - [Swoole Guide](./swoole-guide.md) - Detailed Swoole configuration
 - [FrankenPHP Guide](./frankenphp-guide.md) - Detailed FrankenPHP configuration
 - [Queue Workers Guide](./queue-workers.md) - Background job processing
-- [PHPeek PM Integration](../phpeek-pm-integration.md) - Process manager details
+- [Cbox PM Integration](../cbox-pm-integration.md) - Process manager details
 - [Available Images](../reference/available-images.md) - All image variants

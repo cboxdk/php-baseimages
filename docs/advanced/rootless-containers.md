@@ -1,16 +1,16 @@
 ---
 title: "Rootless Containers"
-description: "Run PHPeek Base Images as non-root containers for OpenShift, Kubernetes Pod Security, and enterprise compliance"
+description: "Run Cbox Base Images as non-root containers for OpenShift, Kubernetes Pod Security, and enterprise compliance"
 weight: 60
 ---
 
 # Rootless Containers
 
-Guide for running PHPeek Base Images as non-root containers for enhanced security and compliance.
+Guide for running Cbox Base Images as non-root containers for enhanced security and compliance.
 
 ## Available Image Variants
 
-PHPeek Base Images provide **official rootless variants** for all images:
+Cbox Base Images provide **official rootless variants** for all images:
 
 | Image Type | Root (Default) | Rootless |
 |------------|----------------|----------|
@@ -27,10 +27,10 @@ All tiers (slim, standard, full) have corresponding rootless versions.
 
 ```bash
 # Pull rootless image
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Run with port mapping (rootless uses port 8080)
-docker run -d -p 80:8080 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker run -d -p 80:8080 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 ```
 
 ### Docker Compose
@@ -40,7 +40,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
     ports:
       - "80:8080"  # Map host 80 to container 8080
     volumes:
@@ -55,7 +55,7 @@ services:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: phpeek-app
+  name: cbox-app
 spec:
   securityContext:
     runAsNonRoot: true
@@ -67,7 +67,7 @@ spec:
 
   containers:
   - name: app
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
     ports:
     - containerPort: 8080
 
@@ -93,7 +93,7 @@ spec:
 - No root privileges at any point
 - No PUID/PGID mapping (not needed)
 - Uses unprivileged port 8080
-- `PHPEEK_ROOTLESS=true` environment variable set
+- `CBOX_ROOTLESS=true` environment variable set
 
 ## When to Use Rootless
 
@@ -135,7 +135,7 @@ spec:
 Rootless images require correct file ownership at build time:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Copy application with correct ownership
 COPY --chown=www-data:www-data . /var/www/html
@@ -147,7 +147,7 @@ RUN mkdir -p /var/www/html/storage/logs && \
 
 ### PUID/PGID Not Available
 
-The `PUID` and `PGID` environment variables are ignored in rootless mode. The entrypoint automatically skips user mapping when `PHPEEK_ROOTLESS=true`.
+The `PUID` and `PGID` environment variables are ignored in rootless mode. The entrypoint automatically skips user mapping when `CBOX_ROOTLESS=true`.
 
 ## Laravel with Rootless Images
 
@@ -156,7 +156,7 @@ The `PUID` and `PGID` environment variables are ignored in rootless mode. The en
 Run Laravel optimizations during image build:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -176,7 +176,7 @@ For database migrations, use Kubernetes init containers:
 ```yaml
 initContainers:
 - name: laravel-migrate
-  image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+  image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
   command: ["/bin/sh", "-c"]
   args:
     - |
@@ -214,23 +214,23 @@ OpenShift assigns random UIDs. The rootless images are compatible:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: phpeek-app
+  name: cbox-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: phpeek
+      app: cbox
   template:
     metadata:
       labels:
-        app: phpeek
+        app: cbox
     spec:
       securityContext:
         fsGroup: 82
 
       containers:
       - name: app
-        image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+        image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -245,18 +245,18 @@ spec:
           claimName: app-storage
 ```
 
-## PHPeek PM with Rootless
+## Cbox PM with Rootless
 
-PHPeek PM works seamlessly with rootless containers:
+Cbox PM works seamlessly with rootless containers:
 
 ```yaml
 environment:
-  # PHPeek PM is already configured
-  PHPEEK_PM_PROCESS_PHP_FPM_ENABLED: "true"
-  PHPEEK_PM_PROCESS_NGINX_ENABLED: "true"
+  # Cbox PM is already configured
+  CBOX_PM_PROCESS_PHP_FPM_ENABLED: "true"
+  CBOX_PM_PROCESS_NGINX_ENABLED: "true"
 
   # Queue workers work as-is
-  PHPEEK_PM_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
+  CBOX_PM_PROCESS_QUEUE_DEFAULT_ENABLED: "true"
 
   # Laravel features
   LARAVEL_SCHEDULER: "true"
@@ -269,16 +269,16 @@ environment:
 
 ```bash
 # Check container user
-docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless id
+docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless id
 # Output: uid=82(www-data) gid=82(www-data)
 
-# Verify PHPEEK_ROOTLESS is set
-docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
-  printenv PHPEEK_ROOTLESS
+# Verify CBOX_ROOTLESS is set
+docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
+  printenv CBOX_ROOTLESS
 # Output: true
 
 # Verify processes
-docker run -d --name test ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker run -d --name test ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 docker exec test ps aux
 # All processes should run as www-data, not root
 docker stop test && docker rm test
@@ -290,10 +290,10 @@ docker stop test && docker rm test
 # Scan for vulnerabilities
 docker run --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+  aquasec/trivy image ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Check user configuration
-docker inspect ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
+docker inspect ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
   | jq '.[0].Config.User'
 # Should output: "www-data"
 ```
@@ -303,7 +303,7 @@ docker inspect ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
 ```bash
 # Verify Pod Security Standards compliance
 kubectl run test \
-  --image=ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
+  --image=ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
   --dry-run=server -o yaml
 ```
 
@@ -377,10 +377,10 @@ livenessProbe:
 
 ## Building Custom Rootless Images
 
-To build your own rootless image from PHPeek base:
+To build your own rootless image from Cbox base:
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Copy application (ownership already correct as www-data runs the build)
 COPY --chown=www-data:www-data . /var/www/html
@@ -411,4 +411,4 @@ docker build -t myapp:rootless .
 
 ---
 
-**Need help?** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions) | [Security Guide](security-hardening.md)
+**Need help?** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions) | [Security Guide](security-hardening.md)

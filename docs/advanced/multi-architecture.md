@@ -1,16 +1,16 @@
 ---
 title: "Multi-Architecture Builds"
-description: "Build and deploy PHPeek images for AMD64 and ARM64 platforms including Apple Silicon and AWS Graviton"
+description: "Build and deploy Cbox images for AMD64 and ARM64 platforms including Apple Silicon and AWS Graviton"
 weight: 50
 ---
 
 # Multi-Architecture Builds
 
-Guide for building and deploying PHPeek images across AMD64 (x86_64) and ARM64 (aarch64) platforms.
+Guide for building and deploying Cbox images across AMD64 (x86_64) and ARM64 (aarch64) platforms.
 
 ## Platform Support
 
-PHPeek Base Images are built for both architectures:
+Cbox Base Images are built for both architectures:
 
 | Platform | Architecture | Examples |
 |----------|--------------|----------|
@@ -25,7 +25,7 @@ Docker automatically selects the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Build Multi-Platform Images
@@ -47,7 +47,7 @@ docker buildx build \
 
 ### Apple Silicon (M1/M2/M3) Development
 
-PHPeek images run natively on Apple Silicon without emulation:
+Cbox images run natively on Apple Silicon without emulation:
 
 ```yaml
 # docker-compose.yml for Apple Silicon
@@ -55,7 +55,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     platform: linux/arm64  # Native ARM64
     ports:
       - "8000:80"
@@ -72,7 +72,7 @@ For cost-effective AWS deployments on Graviton instances:
 ```yaml
 # ECS Task Definition
 {
-  "family": "phpeek-app",
+  "family": "cbox-app",
   "runtimePlatform": {
     "cpuArchitecture": "ARM64",
     "operatingSystemFamily": "LINUX"
@@ -80,7 +80,7 @@ For cost-effective AWS deployments on Graviton instances:
   "containerDefinitions": [
     {
       "name": "app",
-      "image": "ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm",
+      "image": "ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm",
       "portMappings": [
         { "containerPort": 80, "protocol": "tcp" }
       ]
@@ -173,7 +173,7 @@ build:
 
 ### Extension Compatibility
 
-All PHPeek extensions are available on both architectures:
+All Cbox extensions are available on both architectures:
 
 | Extension | AMD64 | ARM64 | Notes |
 |-----------|-------|-------|-------|
@@ -210,7 +210,7 @@ If you see slow performance on Apple Silicon:
 
 ```bash
 # Check if running under emulation
-docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm uname -m
+docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm uname -m
 # Should output: aarch64 (not x86_64)
 ```
 
@@ -218,7 +218,7 @@ docker run --rm ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm uname -m
 
 ```bash
 # Force ARM64 architecture
-docker pull --platform linux/arm64 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull --platform linux/arm64 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Build Failures on ARM64
@@ -227,7 +227,7 @@ Some PECL extensions may need source compilation on ARM64:
 
 ```dockerfile
 # Example: Building custom extension for ARM64
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Ensure build tools are available
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS
@@ -272,7 +272,7 @@ For reproducibility in production:
 # docker-compose.prod.yml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     platform: linux/amd64  # Pin to specific architecture
 ```
 
@@ -314,7 +314,7 @@ For clusters with both AMD64 and ARM64 nodes:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: phpeek-app
+  name: cbox-app
 spec:
   template:
     spec:
@@ -331,7 +331,7 @@ spec:
                       - arm64
       containers:
         - name: app
-          image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+          image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Architecture-Specific Scheduling
@@ -354,4 +354,4 @@ spec:
 
 ---
 
-**Need help?** [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions) | [Performance Tuning](performance-tuning.md)
+**Need help?** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions) | [Performance Tuning](performance-tuning.md)

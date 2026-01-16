@@ -1,12 +1,12 @@
 # Microservices Setup
 # Multiple PHP services communicating via HTTP/message queue
-# All processes managed by PHPeek PM - NO command overrides!
+# All processes managed by Cbox PM - NO command overrides!
 # Usage: docker compose up -d
 
 services:
   # API Gateway - routes requests to services
   gateway:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-gateway
     restart: unless-stopped
     ports:
@@ -24,17 +24,17 @@ services:
     depends_on:
       - user-service
       - order-service
-    # PHPeek PM healthcheck - already built into image
+    # Cbox PM healthcheck - already built into image
 
   # User Service - handles authentication and user data
   user-service:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-user
     restart: unless-stopped
     volumes:
       - ./user-service:/var/www/html
     environment:
-      # PHPeek PM manages ALL processes via env vars
+      # Cbox PM manages ALL processes via env vars
       LARAVEL_QUEUE: "true"             # Enables queue workers
 
       # Application
@@ -56,17 +56,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # PHPeek PM healthcheck - already built into image
+    # Cbox PM healthcheck - already built into image
 
   # Order Service - handles orders and inventory
   order-service:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-order
     restart: unless-stopped
     volumes:
       - ./order-service:/var/www/html
     environment:
-      # PHPeek PM manages ALL processes via env vars
+      # Cbox PM manages ALL processes via env vars
       LARAVEL_QUEUE: "true"             # Enables queue workers
 
       # Application
@@ -89,17 +89,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # PHPeek PM healthcheck - already built into image
+    # Cbox PM healthcheck - already built into image
 
   # Notification Service - handles emails, SMS, push
   notification-service:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-notification
     restart: unless-stopped
     volumes:
       - ./notification-service:/var/www/html
     environment:
-      # PHPeek PM manages ALL processes via env vars
+      # Cbox PM manages ALL processes via env vars
       LARAVEL_QUEUE: "true"             # Enables queue workers for notifications
 
       # Application
@@ -112,9 +112,9 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    # PHPeek PM healthcheck - already built into image
+    # Cbox PM healthcheck - already built into image
     # NOTE: No separate worker container needed!
-    # PHPeek PM runs queue workers inside the same container
+    # Cbox PM runs queue workers inside the same container
 
   # User Service Database
   mysql-users:

@@ -63,7 +63,7 @@ docker compose exec app php artisan octane:start --watch
 ```
 
 ### Swoole Extensions
-The PHPeek image includes Swoole. Verify with:
+The Cbox image includes Swoole. Verify with:
 ```bash
 docker compose exec app php -m | grep swoole
 ```

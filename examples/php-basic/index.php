@@ -1,6 +1,6 @@
 <?php
 /**
- * PHPeek Base Image Test
+ * Cbox Base Image Test
  *
  * Simple PHP file to verify your container is working.
  * Place this in your webroot (public/ or root depending on your app).
@@ -23,7 +23,7 @@ $checks = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHPeek Container Test</title>
+    <title>Cbox Container Test</title>
     <style>
         body { font-family: system-ui, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
         h1 { color: #2563eb; }
@@ -37,7 +37,7 @@ $checks = [
     </style>
 </head>
 <body>
-    <h1>PHPeek Container Test</h1>
+    <h1>Cbox Container Test</h1>
     <p class="success">Container is working correctly.</p>
 
     <div class="card">

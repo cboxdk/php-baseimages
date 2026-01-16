@@ -120,7 +120,7 @@ jobs:
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
           docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   # ─────────────────────────────────────────────────────────────────────────────
   # SLIM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
@@ -311,7 +311,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   # ─────────────────────────────────────────────────────────────────────────────
   # STANDARD ROOTLESS
@@ -416,7 +416,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   # ═══════════════════════════════════════════════════════════════════════════
   # FULL TIER - With Chromium for Browsershot/Dusk (Alpine only)
@@ -507,7 +507,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
           # Verify Chromium is installed
           docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
 

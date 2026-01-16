@@ -1,14 +1,14 @@
 ---
 title: "Introduction"
-description: "Why PHPeek? Features, comparisons with ServerSideUp, Bitnami, and official PHP images"
+description: "Why Cbox? Features, comparisons with ServerSideUp, Bitnami, and official PHP images"
 weight: 1
 ---
 
-# Introduction to PHPeek Base Images
+# Introduction to Cbox Base Images
 
-PHPeek Base Images are production-ready PHP Docker containers designed for modern PHP applications. Built with a "batteries included" philosophy while maintaining clean, optimized images.
+Cbox Base Images are production-ready PHP Docker containers designed for modern PHP applications. Built with a "batteries included" philosophy while maintaining clean, optimized images.
 
-## Why PHPeek?
+## Why Cbox?
 
 ### The Problem
 
@@ -20,22 +20,22 @@ Setting up PHP containers for production requires decisions:
 4. **Configuration varies** - Each solution has different conventions
 5. **Security updates need attention** - Keeping base images current
 
-### The PHPeek Solution
+### The Cbox Solution
 
-PHPeek provides production-ready containers with:
+Cbox provides production-ready containers with:
 
 - **Three Image Tiers** - Slim (~120MB), Standard (~250MB), Full (~700MB)
 - **25+ PHP extensions pre-installed** - Everything Laravel, Symfony, WordPress need
-- **PHPeek PM built-in** - Lightweight Go-based process manager (no S6 Overlay)
+- **Cbox PM built-in** - Lightweight Go-based process manager (no S6 Overlay)
 - **50+ environment variables** - Runtime configuration without rebuilding
 - **Weekly security rebuilds** - Automatic CVE patching
 - **Framework auto-detection** - Laravel, Symfony, WordPress optimizations
 
-See [PHPeek PM Integration](../phpeek-pm-integration.md) for advanced configuration.
+See [Cbox PM Integration](../cbox-pm-integration.md) for advanced configuration.
 
 ## Three Image Tiers
 
-PHPeek images come in three tiers to match your exact needs:
+Cbox images come in three tiers to match your exact needs:
 
 | Tier | Size | Use Case |
 |------|------|----------|
@@ -48,27 +48,27 @@ PHPeek images come in three tiers to match your exact needs:
 - Building a standard Laravel/PHP app? → **Standard** (default)
 - Building APIs or microservices? → **Slim**
 
-## PHPeek vs Alternatives
+## Cbox vs Alternatives
 
 ### vs ServerSideUp/docker-php
 
-| Feature | PHPeek | ServerSideUp |
+| Feature | Cbox | ServerSideUp |
 |---------|--------|--------------|
-| Process Manager | PHPeek PM (Go binary) | S6 Overlay |
+| Process Manager | Cbox PM (Go binary) | S6 Overlay |
 | Image Tiers | 3 (Slim/Standard/Full) | 2 (Base/Full) |
 | Framework Support | Laravel/Symfony/WordPress | Laravel-focused |
 | PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
 | Community | Newer project | Established, active |
 
-**When to choose PHPeek**: You need Symfony/WordPress support, built-in Prometheus metrics, or prefer a single-binary process manager.
+**When to choose Cbox**: You need Symfony/WordPress support, built-in Prometheus metrics, or prefer a single-binary process manager.
 
 **When to choose ServerSideUp**: You want established community support, proven S6 Overlay patterns, or Laravel-focused optimizations.
 
-Both are production-ready. See [PHPeek vs ServerSideUp](../guides/phpeek-vs-serversideup.md) for detailed comparison.
+Both are production-ready. See [Cbox vs ServerSideUp](../guides/cbox-vs-serversideup.md) for detailed comparison.
 
 ### vs Official PHP Images
 
-| Feature | PHPeek | Official PHP |
+| Feature | Cbox | Official PHP |
 |---------|--------|--------------|
 | Extensions | 25+ included | ~10 basic |
 | Production Ready | Yes | No (minimal) |
@@ -76,35 +76,35 @@ Both are production-ready. See [PHPeek vs ServerSideUp](../guides/phpeek-vs-serv
 | Framework Support | Auto-detection | None |
 | Image Size | 120-700MB | 120MB+ (with extensions) |
 
-**When to choose PHPeek**: Production applications, rapid development, team standardization.
+**When to choose Cbox**: Production applications, rapid development, team standardization.
 
 **When to choose Official**: Maximum control, learning Docker, custom requirements.
 
 ### vs Bitnami
 
-| Feature | PHPeek | Bitnami |
+| Feature | Cbox | Bitnami |
 |---------|--------|---------|
 | Image Size | 120-700MB | 400-600MB |
 | Customization | Easy | Complex |
 | Configuration | Environment vars | Config files |
 | Updates | Weekly | Bitnami schedule |
 
-**When to choose PHPeek**: Smaller images, simpler customization.
+**When to choose Cbox**: Smaller images, simpler customization.
 
 **When to choose Bitnami**: VMware ecosystem, Helm charts.
 
 ## Core Innovations
 
-### PHPeek Process Manager
+### Cbox Process Manager
 
-PHPeek uses a lightweight Go-based process manager:
+Cbox uses a lightweight Go-based process manager:
 
 ```bash
 # What happens at container start:
 1. Detect framework (Laravel/Symfony/WordPress)
 2. Fix directory permissions automatically
-3. PHPeek PM starts as PID 1
-4. PHPeek PM orchestrates PHP-FPM, Nginx, and optional workers
+3. Cbox PM starts as PID 1
+4. Cbox PM orchestrates PHP-FPM, Nginx, and optional workers
 5. Health checks monitor all processes with auto-restart
 6. Graceful shutdown on SIGTERM
 ```
@@ -116,11 +116,11 @@ PHPeek uses a lightweight Go-based process manager:
 - Automatic process restart on failure
 - Custom scripts via `/docker-entrypoint-init.d/`
 
-See [PHPeek PM Integration](../phpeek-pm-integration.md) for configuration options.
+See [Cbox PM Integration](../cbox-pm-integration.md) for configuration options.
 
 ### Framework Auto-Detection
 
-PHPeek automatically detects and configures:
+Cbox automatically detects and configures:
 
 ```bash
 # Laravel detected (artisan file exists)
@@ -144,7 +144,7 @@ Configure everything via environment variables:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # PHP
       PHP_MEMORY_LIMIT: 512M
@@ -188,7 +188,7 @@ All tiers support rootless execution:
 
 ## Getting Started
 
-Ready to try PHPeek?
+Ready to try Cbox?
 
 1. **[5-Minute Quickstart](quickstart.md)** - Get running immediately
 2. **[Laravel Guide](../guides/laravel-guide.md)** - Complete Laravel setup
@@ -203,5 +203,5 @@ Ready to try PHPeek?
 ## Support
 
 - **Documentation**: You're reading it!
-- **Issues**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
+- **Issues**: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)

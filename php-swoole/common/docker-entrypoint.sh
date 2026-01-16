@@ -2,7 +2,7 @@
 set -e
 
 # ============================================================================
-# PHPeek Swoole Image - Docker Entrypoint
+# Cbox Swoole Image - Docker Entrypoint
 # ============================================================================
 
 # Colors for output
@@ -38,14 +38,14 @@ trap cleanup TERM INT QUIT
 
 # Display environment information
 echo "╔═══════════════════════════════════════════════════════════════════════════╗"
-echo "║  PHPeek Swoole Image                                                      ║"
+echo "║  Cbox Swoole Image                                                      ║"
 echo "╚═══════════════════════════════════════════════════════════════════════════╝"
 log_info "PHP Version: $(php -r 'echo PHP_VERSION;')"
 log_info "Swoole Version: $(php -r 'echo swoole_version();')"
 
-# Check PHPeek PM
-if command -v phpeek-pm >/dev/null 2>&1; then
-    log_info "PHPeek PM $(phpeek-pm --version 2>/dev/null | head -n1)"
+# Check Cbox PM
+if command -v cbox-pm >/dev/null 2>&1; then
+    log_info "Cbox PM $(cbox-pm --version 2>/dev/null | head -n1)"
 fi
 
 # Working directory

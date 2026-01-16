@@ -1,5 +1,5 @@
 #!/bin/bash
-# PHPeek Base Images - Matrix Test Runner
+# Cbox Base Images - Matrix Test Runner
 # Builds and tests all PHP versions and OS variants
 #
 # Usage:
@@ -226,7 +226,7 @@ test_image() {
 
 # Main test matrix
 run_matrix() {
-    log_header "PHPeek Base Images - Matrix Test Runner"
+    log_header "Cbox Base Images - Matrix Test Runner"
 
     echo ""
     echo "Configuration:"

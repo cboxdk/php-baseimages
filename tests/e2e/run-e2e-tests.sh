@@ -1,5 +1,5 @@
 #!/bin/bash
-# PHPeek Base Images - E2E Test Runner
+# Cbox Base Images - E2E Test Runner
 # Runs all E2E test scenarios across specified image variants
 
 set -euo pipefail
@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/test-utils.sh"
 
 # Default configuration
-DEFAULT_IMAGE="ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-alpine"
+DEFAULT_IMAGE="ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-alpine"
 SCENARIOS_DIR="$SCRIPT_DIR/scenarios"
 PARALLEL=${PARALLEL:-false}
 VERBOSE=${VERBOSE:-false}
@@ -30,8 +30,8 @@ usage() {
     echo ""
     echo "Examples:"
     echo "  $0                                              # Test default image, all scenarios"
-    echo "  $0 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-alpine"
-    echo "  $0 ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-debian laravel"
+    echo "  $0 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine"
+    echo "  $0 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-debian laravel"
     echo "  $0 local-test-image:latest plain-php"
     exit 1
 }
@@ -43,7 +43,7 @@ fi
 # Export image for docker-compose files
 export IMAGE="$IMAGE"
 
-log_section "PHPeek E2E Test Suite"
+log_section "Cbox E2E Test Suite"
 echo ""
 echo "  Image:    $IMAGE"
 echo "  Scenario: $SCENARIO"

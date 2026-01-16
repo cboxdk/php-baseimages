@@ -41,8 +41,8 @@ RUN pecl install igbinary-3.2.15 && \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# NOTE: PHPeek PM skipped for E2E tests (binaries not yet released)
-# Production images will include PHPeek PM once released
+# NOTE: Cbox PM skipped for E2E tests (binaries not yet released)
+# Production images will include Cbox PM once released
 
 # Copy PHP configurations
 COPY php-fpm/common/php.ini /usr/local/etc/php/conf.d/99-custom.ini

@@ -1,7 +1,7 @@
-# PHPeek CI/CD Template
+# Cbox CI/CD Template
 # Optimized for continuous integration and testing
 
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Install CI/CD tools
 RUN apt-get update && apt-get install -y --no-install-recommends \

@@ -1,12 +1,12 @@
 ---
 title: "Help & Troubleshooting"
-description: "Get help with PHPeek base images - common issues, systematic debugging, and migration guides"
+description: "Get help with Cbox base images - common issues, systematic debugging, and migration guides"
 weight: 40
 ---
 
 # Help & Troubleshooting
 
-Solutions to common issues and systematic approaches to debugging PHPeek containers.
+Solutions to common issues and systematic approaches to debugging Cbox containers.
 
 ## Available Resources
 
@@ -105,15 +105,15 @@ docker-compose exec app nc -zv mysql 3306
 1. **Check logs**: `docker-compose logs -f app`
 2. **Search common issues**: Read [Common Issues](common-issues.md)
 3. **Try debugging guide**: Follow [Debugging Guide](debugging-guide.md)
-4. **Search GitHub**: Check [existing issues](https://github.com/gophpeek/baseimages/issues)
+4. **Search GitHub**: Check [existing issues](https://github.com/cboxdk/baseimages/issues)
 
 ### When Asking for Help
 
 Include this information:
 
 ```bash
-# PHPeek version
-docker inspect ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm | grep Created
+# Cbox version
+docker inspect ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm | grep Created
 
 # Docker version
 docker version
@@ -133,10 +133,10 @@ docker-compose logs app > logs.txt
 
 ### Support Channels
 
-- **Documentation Issues**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues) (label: documentation)
-- **Bug Reports**: [GitHub Issues](https://github.com/gophpeek/baseimages/issues) (label: bug)
-- **Questions**: [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions)
-- **Security Issues**: [GitHub Security Advisories](https://github.com/gophpeek/baseimages/security)
+- **Documentation Issues**: [GitHub Issues](https://github.com/cboxdk/baseimages/issues) (label: documentation)
+- **Bug Reports**: [GitHub Issues](https://github.com/cboxdk/baseimages/issues) (label: bug)
+- **Questions**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Security Issues**: [GitHub Security Advisories](https://github.com/cboxdk/baseimages/security)
 
 ## Common Problem Categories
 
@@ -212,8 +212,8 @@ Found a solution not documented here?
 
 1. Check [Contributing Guide](../../CONTRIBUTING.md)
 2. Submit documentation PR
-3. Share in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions/categories/show-and-tell)
+3. Share in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions/categories/show-and-tell)
 
 ---
 
-**Can't find what you're looking for?** Ask in [GitHub Discussions](https://github.com/gophpeek/baseimages/discussions).
+**Can't find what you're looking for?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).

@@ -1,12 +1,12 @@
 ---
 title: "Drupal Guide"
-description: "Deploy Drupal with PHPeek using PostgreSQL/MySQL, Redis, and cron"
+description: "Deploy Drupal with Cbox using PostgreSQL/MySQL, Redis, and cron"
 weight: 31
 ---
 
 # Drupal Guide
 
-Spin up Drupal 10 with PHPeek images, PostgreSQL (or MySQL), Redis cache, and cron.
+Spin up Drupal 10 with Cbox images, PostgreSQL (or MySQL), Redis cache, and cron.
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8081:80"
     volumes:
@@ -110,7 +110,7 @@ $settings['cache_prefix'] = 'drupal_';
 
 ## Cron & Queue
 
-Drupal's internal cron can run via PHPeek’s scheduler:
+Drupal's internal cron can run via Cbox’s scheduler:
 
 ```bash
 docker compose exec app drush cron
@@ -125,7 +125,7 @@ environment:
 
 ## Development Setup
 
-- Switch to `ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
+- Switch to `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
 - Mount `web/sites` read/write for config export/import.
 - Use `drush uli` to generate one-time login links.
 
@@ -134,7 +134,7 @@ environment:
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html:ro
       - ./web/sites/default/files:/var/www/html/web/sites/default/files

@@ -1,12 +1,12 @@
 ---
 title: "Statamic Guide"
-description: "Deploy Statamic (Laravel) on PHPeek with Redis, queues, and image handling"
+description: "Deploy Statamic (Laravel) on Cbox with Redis, queues, and image handling"
 weight: 33
 ---
 
 # Statamic Guide
 
-Statamic runs on Laravel, so PHPeek’s Laravel defaults apply. This guide highlights Statamic-specific steps.
+Statamic runs on Laravel, so Cbox’s Laravel defaults apply. This guide highlights Statamic-specific steps.
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8083:80"
     volumes:
@@ -93,7 +93,7 @@ Run `php artisan storage:link` once inside the container.
 
 ## Image Manipulation
 
-Statamic uses Glide (Intervention Image). PHPeek images already include GD + Imagick. Ensure the cache directory is writable:
+Statamic uses Glide (Intervention Image). Cbox images already include GD + Imagick. Ensure the cache directory is writable:
 
 ```bash
 docker compose exec app chown -R www-data:www-data storage public/assets
@@ -105,7 +105,7 @@ docker compose exec app chown -R www-data:www-data storage public/assets
 
 ```yaml
 environment:
-  - PHPEEK_PM_PROCESS_QUEUE_DEFAULT_SCALE=2
+  - CBOX_PM_PROCESS_QUEUE_DEFAULT_SCALE=2
 ```
 
 Scheduler handles `php artisan schedule:run` for static cache warming, sitemaps, etc.
@@ -121,7 +121,7 @@ Scheduler handles `php artisan schedule:run` for static cache warming, sitemaps,
 ```yaml
 services:
   app:
-    image: ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       - APP_ENV=production
       - APP_URL=https://example.com

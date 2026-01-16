@@ -71,7 +71,7 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -84,24 +84,24 @@ jobs:
           echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
           echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
 
-      - name: Download and verify PHPeek PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
 
-          echo "Downloading PHPeek PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+          echo "Downloading Cbox PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
-          cd phpeek-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-pm/binaries
+          grep -E "cbox-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
           cd -
 
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
-          ls -la phpeek-pm/binaries/
+          chmod +x cbox-pm/binaries/cbox-pm-*
+          ls -la cbox-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -154,11 +154,11 @@ jobs:
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
-            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            CBOX_PHP_VERSION=${{ matrix.php_version }}
+            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
       - name: Test slim image
         if: github.event_name != 'pull_request'
@@ -198,7 +198,7 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -211,24 +211,24 @@ jobs:
           echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
           echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
 
-      - name: Download and verify PHPeek PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
 
-          echo "Downloading PHPeek PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+          echo "Downloading Cbox PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
-          cd phpeek-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-pm/binaries
+          grep -E "cbox-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
           cd -
 
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
-          ls -la phpeek-pm/binaries/
+          chmod +x cbox-pm/binaries/cbox-pm-*
+          ls -la cbox-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -281,11 +281,11 @@ jobs:
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
-            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            CBOX_PHP_VERSION=${{ matrix.php_version }}
+            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
       - name: Test slim-rootless image
         if: github.event_name != 'pull_request'
@@ -326,7 +326,7 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -341,24 +341,24 @@ jobs:
           echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }}:"
           echo "$BUILD_STATE" | jq .
 
-      - name: Download and verify PHPeek PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
 
-          echo "Downloading PHPeek PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+          echo "Downloading Cbox PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
-          cd phpeek-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-pm/binaries
+          grep -E "cbox-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
           cd -
 
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
-          ls -la phpeek-pm/binaries/
+          chmod +x cbox-pm/binaries/cbox-pm-*
+          ls -la cbox-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -414,11 +414,11 @@ jobs:
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
-            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            CBOX_PHP_VERSION=${{ matrix.php_version }}
+            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
       - name: Test image
         if: github.event_name != 'pull_request'
@@ -429,7 +429,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   build-rootless-matrix:
     runs-on: ubuntu-latest
@@ -459,7 +459,7 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -474,24 +474,24 @@ jobs:
           echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (rootless):"
           echo "$BUILD_STATE" | jq .
 
-      - name: Download and verify PHPeek PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
 
-          echo "Downloading PHPeek PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+          echo "Downloading Cbox PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
-          cd phpeek-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-pm/binaries
+          grep -E "cbox-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
           cd -
 
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
-          ls -la phpeek-pm/binaries/
+          chmod +x cbox-pm/binaries/cbox-pm-*
+          ls -la cbox-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -547,11 +547,11 @@ jobs:
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
-            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            CBOX_PHP_VERSION=${{ matrix.php_version }}
+            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
       - name: Test rootless image
         if: github.event_name != 'pull_request'
@@ -563,7 +563,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
 
   # ═══════════════════════════════════════════════════════════════════════════
   # FULL TIER - Includes Chromium for Browsershot/Dusk
@@ -597,7 +597,7 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -610,24 +610,24 @@ jobs:
           echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
           echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
 
-      - name: Download and verify PHPeek PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
 
-          echo "Downloading PHPeek PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+          echo "Downloading Cbox PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
-          cd phpeek-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-pm/binaries
+          grep -E "cbox-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
           cd -
 
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
-          ls -la phpeek-pm/binaries/
+          chmod +x cbox-pm/binaries/cbox-pm-*
+          ls -la cbox-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -680,11 +680,11 @@ jobs:
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
-            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            CBOX_PHP_VERSION=${{ matrix.php_version }}
+            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
       - name: Test full image
         if: github.event_name != 'pull_request'
@@ -695,7 +695,7 @@ jobs:
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE phpeek-pm --version
+          docker run --rm $IMAGE cbox-pm --version
           # Verify Chromium is installed
           docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
 
@@ -727,7 +727,7 @@ jobs:
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "PHPEEK_PM_VERSION=$(jq -r '.tools.phpeek_pm' versions.json)" >> $GITHUB_OUTPUT
+          echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -740,24 +740,24 @@ jobs:
           echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
           echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
 
-      - name: Download and verify PHPeek PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
-          mkdir -p phpeek-pm/binaries
-          VERSION="${{ steps.versions.outputs.PHPEEK_PM_VERSION }}"
-          BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+          mkdir -p cbox-pm/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/cbox-pm/releases/download/v${VERSION}"
 
-          echo "Downloading PHPeek PM v${VERSION}..."
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o phpeek-pm/binaries/phpeek-pm-linux-amd64
-          curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o phpeek-pm/binaries/phpeek-pm-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o phpeek-pm/binaries/checksums.txt
+          echo "Downloading Cbox PM v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-amd64" -o cbox-pm/binaries/cbox-pm-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-pm-linux-arm64" -o cbox-pm/binaries/cbox-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
-          cd phpeek-pm/binaries
-          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+          cd cbox-pm/binaries
+          grep -E "cbox-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
           cd -
 
-          chmod +x phpeek-pm/binaries/phpeek-pm-*
-          ls -la phpeek-pm/binaries/
+          chmod +x cbox-pm/binaries/cbox-pm-*
+          ls -la cbox-pm/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile
@@ -810,11 +810,11 @@ jobs:
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            PHPEEK_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            PHPEEK_PHP_VERSION=${{ matrix.php_version }}
-            PHPEEK_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            PHPEEK_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            PHPEEK_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+            CBOX_PHP_VERSION=${{ matrix.php_version }}
+            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
       - name: Test full-rootless image
         if: github.event_name != 'pull_request'

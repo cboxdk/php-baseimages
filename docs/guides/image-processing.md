@@ -1,12 +1,12 @@
 ---
 title: "Image Processing Guide"
-description: "Complete guide to image manipulation with GD, ImageMagick, libvips, and Browsershot in PHPeek"
+description: "Complete guide to image manipulation with GD, ImageMagick, libvips, and Browsershot in Cbox"
 weight: 50
 ---
 
 # Image Processing Guide
 
-PHPeek images include three powerful image processing libraries plus Browsershot support for PDF generation.
+Cbox images include three powerful image processing libraries plus Browsershot support for PDF generation.
 
 ## Quick Start
 
@@ -244,7 +244,7 @@ if (extension_loaded('vips')) {
 
 ## Browsershot (PDF Generation)
 
-PHPeek includes Chromium for Browsershot PDF/screenshot generation.
+Cbox includes Chromium for Browsershot PDF/screenshot generation.
 
 ### Installation
 
@@ -297,7 +297,7 @@ Browsershot::url('https://example.com')
 
 ### Browsershot Configuration
 
-PHPeek sets these environment variables automatically:
+Cbox sets these environment variables automatically:
 
 ```bash
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true

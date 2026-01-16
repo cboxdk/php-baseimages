@@ -1,12 +1,12 @@
 ---
 title: "Custom Extensions"
-description: "Add PECL extensions, compile from source, and manage extension versions in PHPeek images"
+description: "Add PECL extensions, compile from source, and manage extension versions in Cbox images"
 weight: 5
 ---
 
 # Custom PHP Extensions
 
-PHPeek includes 40+ extensions, but you may need others. This guide covers adding extensions via PECL, compiling from source, and version management.
+Cbox includes 40+ extensions, but you may need others. This guide covers adding extensions via PECL, compiling from source, and version management.
 
 ## Quick Reference
 
@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y dependency-package \
 ### Basic Installation
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Install build dependencies, extension, enable, cleanup
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
 ### With Version Pinning
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Pin specific version for reproducibility
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -66,7 +66,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS libssl-dev libcurl4-openss
 #### gRPC + Protobuf
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 RUN apt-get update && apt-get install -y \
     libgrpc-dev libprotobuf-dev protobuf-compiler \
@@ -133,7 +133,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 
 ### Available Core Extensions
 
-Already included in PHPeek:
+Already included in Cbox:
 - bcmath, calendar, exif, gettext, intl, opcache, pcntl, pdo_mysql, pdo_pgsql, sockets, zip
 
 Can be added if needed:
@@ -146,7 +146,7 @@ For extensions not on PECL or needing custom options:
 ### Example: OpenSwoole with Custom Options
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS git libssl-dev libcurl4-openssl-dev \
     && git clone https://github.com/openswoole/swoole-src.git \
@@ -269,7 +269,7 @@ HEALTHCHECK --interval=30s --timeout=3s \
 docker build --progress=plain -t test .
 
 # Interactive debugging
-docker run --rm -it ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm sh
+docker run --rm -it ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm sh
 apt-get update && apt-get install -y build-essential
 pecl install extension-name
 ```
@@ -314,7 +314,7 @@ RUN pecl install igbinary \
 ### Laravel with Swoole + Redis
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 # Build dependencies
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS libssl-dev libcurl4-openssl-dev \
@@ -331,7 +331,7 @@ RUN composer install --no-dev --optimize-autoloader
 ### API with gRPC + Protobuf
 
 ```dockerfile
-FROM ghcr.io/gophpeek/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 
 RUN apt-get update && apt-get install -y \
     libgrpc-dev libprotobuf-dev protobuf-compiler \

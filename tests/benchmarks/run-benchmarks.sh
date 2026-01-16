@@ -36,7 +36,7 @@ benchmark_image_size() {
     echo "|------------|------------|-----------------|" >> "$RESULTS_DIR/image-size-$TIMESTAMP.md"
 
     for variant in alpine debian ubuntu; do
-        IMAGE="phpeek-${variant}"
+        IMAGE="cbox-${variant}"
         SIZE=$(docker images --format "{{.Size}}" "$IMAGE" 2>/dev/null || echo "N/A")
 
         # Get compressed size by saving to tar and checking size
@@ -64,7 +64,7 @@ benchmark_startup_time() {
     echo "|------------|-------------------------------|---------|" >> "$RESULTS_DIR/startup-time-$TIMESTAMP.md"
 
     for variant in alpine debian ubuntu; do
-        IMAGE="phpeek-${variant}"
+        IMAGE="cbox-${variant}"
         TIMES=()
 
         info "Testing $variant startup time (5 runs)..."
@@ -136,7 +136,7 @@ echo json_encode([
 EOF
 
     for variant in alpine debian ubuntu; do
-        IMAGE="phpeek-${variant}"
+        IMAGE="cbox-${variant}"
 
         CONTAINER_ID=$(docker run -d -v /tmp/bench.php:/tmp/bench.php "$IMAGE" tail -f /dev/null 2>/dev/null || echo "")
 
@@ -181,7 +181,7 @@ echo json_encode(['status' => 'ok', 'timestamp' => microtime(true)]);
 EOF
 
     for variant in alpine debian ubuntu; do
-        IMAGE="phpeek-${variant}"
+        IMAGE="cbox-${variant}"
 
         CONTAINER_ID=$(docker run -d -p 8080:80 -v /tmp/index.php:/var/www/html/index.php "$IMAGE" 2>/dev/null || echo "")
 
@@ -226,7 +226,7 @@ generate_summary() {
     info "Generating summary report..."
 
     cat > "$RESULTS_DIR/summary-$TIMESTAMP.md" << EOF
-# PHPeek Performance Benchmark Summary
+# Cbox Performance Benchmark Summary
 
 **Date:** $(date '+%Y-%m-%d %H:%M:%S')
 **OS Variants Tested:** Alpine, Debian, Ubuntu
@@ -274,9 +274,9 @@ Performance is generally similar across variants. Choose based on:
 
 \`\`\`bash
 # Build all images
-docker build -t phpeek-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
-docker build -t phpeek-debian -f php-fpm-nginx/8.3/debian/Dockerfile .
-docker build -t phpeek-ubuntu -f php-fpm-nginx/8.3/ubuntu/Dockerfile .
+docker build -t cbox-alpine -f php-fpm-nginx/8.3/alpine/Dockerfile .
+docker build -t cbox-debian -f php-fpm-nginx/8.3/debian/Dockerfile .
+docker build -t cbox-ubuntu -f php-fpm-nginx/8.3/ubuntu/Dockerfile .
 
 # Run benchmarks
 ./tests/benchmarks/run-benchmarks.sh
@@ -291,7 +291,7 @@ EOF
 # Main execution
 main() {
     echo "=========================================="
-    echo "PHPeek Performance Benchmarks"
+    echo "Cbox Performance Benchmarks"
     echo "=========================================="
     echo ""
 

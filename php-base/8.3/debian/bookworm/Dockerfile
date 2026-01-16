@@ -1,7 +1,7 @@
 # ============================================================================
-# PHPeek PHP Base Image - Debian 8.3 (Bookworm)
+# Cbox PHP Base Image - Debian 8.3 (Bookworm)
 # ============================================================================
-# LAYER 2: Single source of truth for all PHP extensions, Composer, Node, PHPeek PM
+# LAYER 2: Single source of truth for all PHP extensions, Composer, Node, Cbox PM
 # All other images (php-cli, php-fpm, php-fpm-nginx, php-swoole, etc.) extend this
 #
 # IMAGE TIERS:
@@ -30,10 +30,10 @@ FROM node:${NODE_VERSION}-bookworm-slim AS node
 # ============================================================================
 FROM php:8.3-cli-bookworm AS slim-base
 
-LABEL org.opencontainers.image.title="PHPeek PHP Base 8.3 Debian"
-LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and PHPeek PM"
-LABEL org.opencontainers.image.vendor="PHPeek"
-LABEL org.opencontainers.image.source="https://github.com/gophpeek/baseimages"
+LABEL org.opencontainers.image.title="Cbox PHP Base 8.3 Debian"
+LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox PM"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
 # Re-declare ARGs after FROM (they don't persist)
 ARG REDIS_VERSION
@@ -109,61 +109,61 @@ RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # ============================================================================
-# PHPeek PM (Process Manager)
+# Cbox PM (Process Manager)
 # ============================================================================
-ARG PHPEEK_PM_VERSION=1.0.0
-ARG PHPEEK_PM_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
-ARG PHPEEK_PM_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
+ARG CBOX_PM_VERSION=1.0.0
+ARG CBOX_PM_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
+ARG CBOX_PM_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
 ARG TARGETPLATFORM
 
-COPY phpeek-pm/binaries/phpeek-pm-linux-amd64 /tmp/phpeek-pm-linux-amd64
-COPY phpeek-pm/binaries/phpeek-pm-linux-arm64 /tmp/phpeek-pm-linux-arm64
+COPY cbox-pm/binaries/cbox-pm-linux-amd64 /tmp/cbox-pm-linux-amd64
+COPY cbox-pm/binaries/cbox-pm-linux-arm64 /tmp/cbox-pm-linux-arm64
 
 RUN set -eux; \
     case "${TARGETPLATFORM}" in \
         linux/amd64) \
-            PHPEEK_PM_ARCH="amd64"; \
-            PHPEEK_PM_CHECKSUM="${PHPEEK_PM_SHA256_AMD64}" ;; \
+            CBOX_PM_ARCH="amd64"; \
+            CBOX_PM_CHECKSUM="${CBOX_PM_SHA256_AMD64}" ;; \
         linux/arm64) \
-            PHPEEK_PM_ARCH="arm64"; \
-            PHPEEK_PM_CHECKSUM="${PHPEEK_PM_SHA256_ARM64}" ;; \
+            CBOX_PM_ARCH="arm64"; \
+            CBOX_PM_CHECKSUM="${CBOX_PM_SHA256_ARM64}" ;; \
         *) \
             echo "Unsupported platform: ${TARGETPLATFORM}"; \
             exit 1 ;; \
     esac; \
-    echo "${PHPEEK_PM_CHECKSUM}  /tmp/phpeek-pm-linux-${PHPEEK_PM_ARCH}" | sha256sum -c -; \
-    mv /tmp/phpeek-pm-linux-${PHPEEK_PM_ARCH} /usr/local/bin/phpeek-pm; \
-    chmod +x /usr/local/bin/phpeek-pm; \
-    rm -f /tmp/phpeek-pm-linux-*; \
-    /usr/local/bin/phpeek-pm --version
+    echo "${CBOX_PM_CHECKSUM}  /tmp/cbox-pm-linux-${CBOX_PM_ARCH}" | sha256sum -c -; \
+    mv /tmp/cbox-pm-linux-${CBOX_PM_ARCH} /usr/local/bin/cbox-pm; \
+    chmod +x /usr/local/bin/cbox-pm; \
+    rm -f /tmp/cbox-pm-linux-*; \
+    /usr/local/bin/cbox-pm --version
 
 # ============================================================================
 # Base PHP Configuration
 # ============================================================================
-COPY php-base/common/php.ini /usr/local/etc/php/conf.d/99-phpeek.ini
+COPY php-base/common/php.ini /usr/local/etc/php/conf.d/99-cbox.ini
 
 # ============================================================================
-# PHPeek Shared Libraries (entrypoint helpers, lifecycle checks)
+# Cbox Shared Libraries (entrypoint helpers, lifecycle checks)
 # ============================================================================
-RUN mkdir -p /usr/local/lib/phpeek
-COPY common/lib/entrypoint-lib.sh /usr/local/lib/phpeek/
-COPY common/lib/lifecycle-check.sh /usr/local/lib/phpeek/
-RUN chmod +x /usr/local/lib/phpeek/*.sh
+RUN mkdir -p /usr/local/lib/cbox
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/
+COPY common/lib/lifecycle-check.sh /usr/local/lib/cbox/
+RUN chmod +x /usr/local/lib/cbox/*.sh
 
 # ============================================================================
 # Lifecycle State (set at build time via CI)
 # ============================================================================
-ARG PHPEEK_LIFECYCLE=stable
-ARG PHPEEK_PHP_VERSION=8.3
-ARG PHPEEK_PHP_EOL=
-ARG PHPEEK_REMOVAL_DATE=
-ARG PHPEEK_PREVIEW_STATUS=
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=8.3
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
 
-ENV PHPEEK_LIFECYCLE=${PHPEEK_LIFECYCLE} \
-    PHPEEK_PHP_VERSION=${PHPEEK_PHP_VERSION} \
-    PHPEEK_PHP_EOL=${PHPEEK_PHP_EOL} \
-    PHPEEK_REMOVAL_DATE=${PHPEEK_REMOVAL_DATE} \
-    PHPEEK_PREVIEW_STATUS=${PHPEEK_PREVIEW_STATUS}
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
 # ============================================================================
 # Working Directory Setup
@@ -273,17 +273,17 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 # SLIM VARIANTS (root + rootless)
 # ═══════════════════════════════════════════════════════════════════════════
 FROM slim-base AS slim-root
-ENV PHPEEK_ROOTLESS=false \
-    PHPEEK_IMAGE_TIER=slim
+ENV CBOX_ROOTLESS=false \
+    CBOX_IMAGE_TIER=slim
 
 FROM slim-base AS slim-rootless
 RUN mkdir -p \
     /var/www/html /var/www/.composer /var/www/.npm \
-    /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
+    /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d && \
     chown -R www-data:www-data \
-        /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
-ENV PHPEEK_ROOTLESS=true \
-    PHPEEK_IMAGE_TIER=slim \
+        /var/www /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d
+ENV CBOX_ROOTLESS=true \
+    CBOX_IMAGE_TIER=slim \
     HOME=/var/www
 USER www-data
 WORKDIR /var/www/html
@@ -292,17 +292,17 @@ WORKDIR /var/www/html
 # STANDARD VARIANTS (root + rootless) - DEFAULT
 # ═══════════════════════════════════════════════════════════════════════════
 FROM standard-base AS root
-ENV PHPEEK_ROOTLESS=false \
-    PHPEEK_IMAGE_TIER=standard
+ENV CBOX_ROOTLESS=false \
+    CBOX_IMAGE_TIER=standard
 
 FROM standard-base AS rootless
 RUN mkdir -p \
     /var/www/html /var/www/.composer /var/www/.npm \
-    /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
+    /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d && \
     chown -R www-data:www-data \
-        /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
-ENV PHPEEK_ROOTLESS=true \
-    PHPEEK_IMAGE_TIER=standard \
+        /var/www /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d
+ENV CBOX_ROOTLESS=true \
+    CBOX_IMAGE_TIER=standard \
     HOME=/var/www
 USER www-data
 WORKDIR /var/www/html
@@ -311,17 +311,17 @@ WORKDIR /var/www/html
 # FULL VARIANTS (root + rootless)
 # ═══════════════════════════════════════════════════════════════════════════
 FROM full-base AS full-root
-ENV PHPEEK_ROOTLESS=false \
-    PHPEEK_IMAGE_TIER=full
+ENV CBOX_ROOTLESS=false \
+    CBOX_IMAGE_TIER=full
 
 FROM full-base AS full-rootless
 RUN mkdir -p \
     /var/www/html /var/www/.composer /var/www/.npm \
-    /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d && \
+    /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d && \
     chown -R www-data:www-data \
-        /var/www /var/lib/php/sessions /tmp/phpeek /docker-entrypoint-init.d
-ENV PHPEEK_ROOTLESS=true \
-    PHPEEK_IMAGE_TIER=full \
+        /var/www /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d
+ENV CBOX_ROOTLESS=true \
+    CBOX_IMAGE_TIER=full \
     HOME=/var/www
 USER www-data
 WORKDIR /var/www/html

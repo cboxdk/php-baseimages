@@ -1,5 +1,5 @@
 #!/bin/bash
-# E2E Test Utilities for PHPeek Base Images
+# E2E Test Utilities for Cbox Base Images
 # Shared functions for all E2E test scenarios
 #
 # NOTE: This is a library file - do NOT set -euo pipefail here
