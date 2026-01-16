@@ -1,12 +1,12 @@
 ---
 title: "Laravel Octane"
-description: "High-performance Laravel with Swoole, RoadRunner, or FrankenPHP using Cbox PM"
+description: "High-performance Laravel with Swoole, RoadRunner, or FrankenPHP using Cbox Init"
 weight: 15
 ---
 
 # Laravel Octane
 
-Run Laravel Octane with Cbox PM for high-performance applications. Cbox PM supports all three Octane servers: **Swoole**, **RoadRunner**, and **FrankenPHP**.
+Run Laravel Octane with Cbox Init for high-performance applications. Cbox Init supports all three Octane servers: **Swoole**, **RoadRunner**, and **FrankenPHP**.
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ services:
       OCTANE_SERVER: swoole
 ```
 
-That's it. Cbox PM handles everything else.
+That's it. Cbox Init handles everything else.
 
 ## Server Comparison
 
@@ -180,11 +180,11 @@ php artisan octane:install --server=frankenphp
 
 ### 3. Configure Environment
 
-Cbox PM reads these from your container environment:
+Cbox Init reads these from your container environment:
 
 ```bash
 # .env is NOT needed - use docker-compose environment instead
-# Cbox PM passes all env vars to Octane
+# Cbox Init passes all env vars to Octane
 ```
 
 ## Production Considerations
@@ -222,7 +222,7 @@ environment:
 
 ### Health Checks
 
-Cbox PM includes built-in health checks for Octane. No configuration needed.
+Cbox Init includes built-in health checks for Octane. No configuration needed.
 
 ```yaml
 # ✅ Correct - use built-in health check
@@ -243,7 +243,7 @@ services:
 ### Octane Not Starting
 
 ```bash
-# Check Cbox PM status
+# Check Cbox Init status
 docker exec <container> cbox-init status
 
 # Check Octane logs
@@ -275,5 +275,5 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 - [Swoole Guide](./swoole-guide.md) - Detailed Swoole configuration
 - [FrankenPHP Guide](./frankenphp-guide.md) - Detailed FrankenPHP configuration
 - [Queue Workers Guide](./queue-workers.md) - Background job processing
-- [Cbox PM Integration](../cbox-init-integration.md) - Process manager details
+- [Cbox Init Integration](../cbox-init-integration.md) - Process manager details
 - [Available Images](../reference/available-images.md) - All image variants

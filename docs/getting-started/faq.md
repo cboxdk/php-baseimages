@@ -25,12 +25,12 @@ Cbox Base Images is a collection of production-ready Docker images for PHP appli
 |---------|--------|--------------|--------------|
 | Extensions pre-installed | 40+ | ~10 | 30+ |
 | Multi-service containers | Yes | No | Yes (S6) |
-| Process manager | Cbox PM (Go) | None | S6 Overlay |
+| Process manager | Cbox Init (Go) | None | S6 Overlay |
 | Framework detection | Yes | No | Yes |
 | Development variants | Yes | No | Yes |
 | Weekly security rebuilds | Yes | Varies | Yes |
 
-**Key differentiator**: Cbox uses Cbox PM, a lightweight Go-based process manager instead of S6 Overlay, resulting in simpler debugging, smaller image sizes, and built-in Prometheus metrics.
+**Key differentiator**: Cbox uses Cbox Init, a lightweight Go-based process manager instead of S6 Overlay, resulting in simpler debugging, smaller image sizes, and built-in Prometheus metrics.
 
 ### Which image should I use?
 
@@ -158,7 +158,7 @@ This automatically sets up cron to run `php artisan schedule:run` every minute. 
 
 ### How do I monitor performance?
 
-Cbox PM provides built-in metrics:
+Cbox Init provides built-in metrics:
 
 ```bash
 # Check process status

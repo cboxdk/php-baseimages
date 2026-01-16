@@ -1,7 +1,7 @@
 # PHP Basic Setup
 # Minimal PHP application without framework
 # Works with apps that have index.php in root OR public/
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 #
 # Webroot Strategy:
@@ -30,7 +30,7 @@ services:
       # PHP Configuration (optional)
       APP_ENV: local
       APP_DEBUG: "true"
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
 
 # No database by default - add as needed:
 #

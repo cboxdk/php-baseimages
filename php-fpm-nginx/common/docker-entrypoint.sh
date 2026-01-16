@@ -3,7 +3,7 @@ set -e
 
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  Cbox Base Image - Docker Entrypoint                                    ║
-# ║  Powered by Cbox PM (Process Manager)                                   ║
+# ║  Powered by Cbox Init (Process Manager)                                   ║
 # ║  https://github.com/cboxdk/init                                      ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=bash
@@ -60,7 +60,7 @@ NGINX_PID=""
 
 cleanup() {
     log_info "Received shutdown signal, cleaning up..."
-    # Forward signal to Cbox PM (it handles child processes)
+    # Forward signal to Cbox Init (it handles child processes)
     if [ -n "$CBOX_INIT_PID" ] && kill -0 "$CBOX_INIT_PID" 2>/dev/null; then
         kill -TERM "$CBOX_INIT_PID" 2>/dev/null
         wait "$CBOX_INIT_PID" 2>/dev/null
@@ -86,7 +86,7 @@ graceful_reload() {
         kill -HUP "$NGINX_PID" 2>/dev/null
     fi
     if [ -n "$CBOX_INIT_PID" ] && kill -0 "$CBOX_INIT_PID" 2>/dev/null; then
-        log_info "Forwarding reload to Cbox PM..."
+        log_info "Forwarding reload to Cbox Init..."
         kill -HUP "$CBOX_INIT_PID" 2>/dev/null
     fi
 }
@@ -485,30 +485,30 @@ EOF
 }
 
 ###########################################
-# Cbox PM Validation
+# Cbox Init Validation
 ###########################################
 validate_cbox_init_local() {
     local config="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 
     if ! command -v cbox-init >/dev/null 2>&1; then
-        log_error "Cbox PM binary not found"
+        log_error "Cbox Init binary not found"
         exit 1
     fi
 
     if [ ! -f "$config" ]; then
-        log_warn "Cbox PM config not found, generating default..."
+        log_warn "Cbox Init config not found, generating default..."
         if ! cbox-init scaffold --output "$config" 2>/dev/null; then
-            log_error "Could not generate Cbox PM config"
+            log_error "Could not generate Cbox Init config"
             exit 1
         fi
     fi
 
     if ! cbox-init check-config --config "$config" >/dev/null 2>&1; then
-        log_error "Cbox PM config validation failed"
+        log_error "Cbox Init config validation failed"
         exit 1
     fi
 
-    log_info "Cbox PM validated successfully"
+    log_info "Cbox Init validated successfully"
 }
 
 ###########################################
@@ -617,9 +617,9 @@ if is_true "${LARAVEL_OPTIMIZE_ENABLED:-false}"; then
     }
 fi
 
-# Start Cbox PM
+# Start Cbox Init
 CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
-log_info "Starting Cbox PM process manager"
+log_info "Starting Cbox Init process manager"
 log_info "Config: $CBOX_INIT_CONFIG"
 
 exec /usr/local/bin/cbox-init serve --config "$CBOX_INIT_CONFIG" "$@"

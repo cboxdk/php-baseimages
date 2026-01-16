@@ -1,6 +1,6 @@
 #!/bin/bash
 # Cbox Base Images - PHP Base Image Test
-# Tests that all required extensions, tools, and Cbox PM are present
+# Tests that all required extensions, tools, and Cbox Init are present
 
 set -euo pipefail
 
@@ -130,15 +130,15 @@ test_nodejs() {
     fi
 }
 
-# Test Cbox PM
+# Test Cbox Init
 test_cbox_init() {
-    log_info "Testing Cbox PM..."
+    log_info "Testing Cbox Init..."
     local pm_version
     pm_version=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>/dev/null | head -1)
     if [ -n "$pm_version" ]; then
-        log_success "Cbox PM: $pm_version"
+        log_success "Cbox Init: $pm_version"
     else
-        log_fail "Cbox PM not found"
+        log_fail "Cbox Init not found"
         return 1
     fi
 }

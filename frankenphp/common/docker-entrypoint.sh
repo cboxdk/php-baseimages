@@ -46,9 +46,9 @@ print_banner "Cbox FrankenPHP Image" 2>/dev/null || {
 log_info "PHP Version: $(php -r 'echo PHP_VERSION;')"
 log_info "FrankenPHP: $(frankenphp version 2>/dev/null | head -n1 || echo 'available')"
 
-# Check Cbox PM
+# Check Cbox Init
 if command -v cbox-init >/dev/null 2>&1; then
-    log_info "Cbox PM $(cbox-init --version 2>/dev/null | head -n1)"
+    log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
 # Working directory

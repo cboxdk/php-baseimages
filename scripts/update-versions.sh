@@ -169,7 +169,7 @@ else
     log_error "Failed to fetch frankenphp, keeping $current"
 fi
 
-# Cbox PM
+# Cbox Init
 current=$(echo "$CURRENT" | jq -r ".tools.cbox_init")
 latest=$(fetch_github_latest "gophpeek/phpeek-pm")
 if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then

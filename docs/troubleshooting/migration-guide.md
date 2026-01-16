@@ -23,7 +23,7 @@ Complete guide for migrating to Cbox from other PHP Docker solutions.
 
 | Aspect | ServerSideUp | Cbox |
 |--------|-------------|--------|
-| Process Manager | S6 Overlay | Cbox PM (Go) |
+| Process Manager | S6 Overlay | Cbox Init (Go) |
 | User | www-data (fixed) | www-data/nginx (OS-dependent) |
 | Env Prefix | `PHP_` | `PHP_`, `NGINX_` |
 | Health Checks | Built-in | Built-in |
@@ -92,7 +92,7 @@ docker-compose logs -f app
 | User | `1001` | www-data (82/33) |
 | Install Path | `/opt/bitnami` | `/var/www/html` |
 | Config Location | `/opt/bitnami/php/etc` | `/usr/local/etc/php` |
-| Process Manager | Custom scripts | Cbox PM (Go) |
+| Process Manager | Custom scripts | Cbox Init (Go) |
 
 ### Migration Steps
 

@@ -1,6 +1,6 @@
 # Symfony Basic Setup
 # Symfony with PostgreSQL database
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 
 services:
@@ -13,7 +13,7 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      # Cbox PM manages ALL processes via env vars
+      # Cbox Init manages ALL processes via env vars
       SYMFONY_MESSENGER: "true"         # Enables Symfony Messenger consumer
       SYMFONY_SCHEDULER: "true"         # Enables Symfony Scheduler (if used)
 
@@ -29,7 +29,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
     # No need to override - uses /usr/local/bin/cbox-init health
 
   postgres:

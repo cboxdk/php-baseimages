@@ -79,7 +79,7 @@ ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 - 25+ core PHP extensions
 - opcache, pdo_mysql, pdo_pgsql, redis, mongodb
 - grpc, intl, bcmath, gd (WebP), zip
-- Composer 2, Cbox PM
+- Composer 2, Cbox Init
 
 **Best for**:
 - REST APIs

@@ -12,7 +12,7 @@ Both Cbox and ServerSideUp provide production-ready PHP Docker images. This guid
 
 | Aspect | Cbox | ServerSideUp |
 |--------|--------|--------------|
-| Process Manager | Cbox PM (Go) | S6 Overlay |
+| Process Manager | Cbox Init (Go) | S6 Overlay |
 | Community | Newer project | Established, active community |
 | PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
 | Image Tiers | Slim, Standard, Full | Base, Full |
@@ -31,9 +31,9 @@ ServerSideUp is an excellent choice when:
 
 Cbox may be better when:
 
-- **You want built-in Prometheus metrics** - Cbox PM includes observability features
+- **You want built-in Prometheus metrics** - Cbox Init includes observability features
 - **You need Symfony or WordPress** - We have framework-specific optimizations
-- **You prefer a single-binary approach** - Cbox PM is a single Go binary
+- **You prefer a single-binary approach** - Cbox Init is a single Go binary
 - **You want three image tiers** - Slim, Standard, and Full for different use cases
 
 ## Process Management Comparison
@@ -44,7 +44,7 @@ Cbox may be better when:
 - Different learning path from traditional Docker
 - Well-documented in the S6 ecosystem
 
-### Cbox (Cbox PM)
+### Cbox (Cbox Init)
 - Lightweight Go binary
 - Built-in Prometheus metrics
 - Simpler configuration

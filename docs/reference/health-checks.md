@@ -317,7 +317,7 @@ location /health {
 }
 ```
 
-## Cbox PM Health Checks
+## Cbox Init Health Checks
 
 Cbox Process Manager includes built-in health checks for all managed processes:
 
@@ -345,7 +345,7 @@ environment:
 
 ### Prometheus Metrics
 
-Cbox PM exposes health metrics on port 9090:
+Cbox Init exposes health metrics on port 9090:
 
 ```bash
 # Get health metrics
@@ -418,4 +418,4 @@ healthcheck:
 
 ---
 
-**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [Cbox PM Integration](../cbox-init-integration.md)
+**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [Cbox Init Integration](../cbox-init-integration.md)

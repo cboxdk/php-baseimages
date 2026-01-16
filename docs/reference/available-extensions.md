@@ -61,7 +61,7 @@ The Slim tier includes all core extensions needed for most PHP applications.
 | Tool | Purpose |
 |------|---------|
 | Composer 2 | PHP package manager |
-| Cbox PM | Process manager |
+| Cbox Init | Process manager |
 | curl, wget | HTTP clients |
 | git | Version control |
 | unzip | Archive extraction |

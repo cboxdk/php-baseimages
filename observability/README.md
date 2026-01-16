@@ -4,7 +4,7 @@ Pre-configured monitoring dashboards and configurations for Cbox Base Images.
 
 ## Grafana Dashboard
 
-### Cbox PM Process Manager Dashboard
+### Cbox Init Process Manager Dashboard
 
 Import `grafana-cbox-init-dashboard.json` into Grafana for comprehensive monitoring of:
 
@@ -25,7 +25,7 @@ Import `grafana-cbox-init-dashboard.json` into Grafana for comprehensive monitor
 
 - Grafana 10.0+
 - Prometheus data source
-- Cbox PM metrics exposed on port 9090
+- Cbox Init metrics exposed on port 9090
 
 ## Prometheus Configuration
 
@@ -67,7 +67,7 @@ services:
     image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "80:80"
-      - "9090:9090"  # Cbox PM metrics
+      - "9090:9090"  # Cbox Init metrics
     environment:
       LARAVEL_HORIZON: "true"
       LARAVEL_QUEUE: "true"
@@ -94,7 +94,7 @@ volumes:
 
 ## Alerting Rules
 
-Example Prometheus alerting rules for Cbox PM:
+Example Prometheus alerting rules for Cbox Init:
 
 ```yaml
 groups:
@@ -140,5 +140,5 @@ groups:
 ## Support
 
 - [Cbox Documentation](https://cbox.com/docs)
-- [Cbox PM Integration Guide](../docs/cbox-init-integration.md)
+- [Cbox Init Integration Guide](../docs/cbox-init-integration.md)
 - [GitHub Issues](https://github.com/cboxdk/baseimages/issues)

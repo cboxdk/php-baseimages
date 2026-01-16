@@ -76,19 +76,19 @@ assert_http_contains "$BASE_URL/scheduler/test" '"scheduler_env":"true"' "LARAVE
 assert_file_exists "$CONTAINER_NAME" "/var/www/html/artisan" "Artisan file exists"
 assert_exec_succeeds "$CONTAINER_NAME" "php /var/www/html/artisan --version" "Artisan is executable"
 
-# Verify Cbox PM is managing the scheduler process
-# When LARAVEL_SCHEDULER=true, Cbox PM should enable the scheduler process
-log_info "Checking Cbox PM scheduler integration..."
-assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox PM is available"
+# Verify Cbox Init is managing the scheduler process
+# When LARAVEL_SCHEDULER=true, Cbox Init should enable the scheduler process
+log_info "Checking Cbox Init scheduler integration..."
+assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox Init is available"
 
-# Check if scheduler process is managed by Cbox PM (via metrics or status)
-# The scheduler runs as 'php artisan schedule:work' under Cbox PM
+# Check if scheduler process is managed by Cbox Init (via metrics or status)
+# The scheduler runs as 'php artisan schedule:work' under Cbox Init
 if docker exec "$CONTAINER_NAME" pgrep -f "schedule:work" >/dev/null 2>&1; then
     log_success "Scheduler process is running (schedule:work)"
 else
-    # If not running, check if Cbox PM config has scheduler enabled
-    log_info "Scheduler process not found - checking Cbox PM config"
-    assert_file_exists "$CONTAINER_NAME" "/etc/cbox-init/cbox-init.yaml" "Cbox PM config exists"
+    # If not running, check if Cbox Init config has scheduler enabled
+    log_info "Scheduler process not found - checking Cbox Init config"
+    assert_file_exists "$CONTAINER_NAME" "/etc/cbox-init/cbox-init.yaml" "Cbox Init config exists"
 fi
 
 log_section "Process Tests"

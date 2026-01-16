@@ -3,7 +3,7 @@
     {
       "name": "DS_PROMETHEUS",
       "label": "Prometheus",
-      "description": "Prometheus data source for Cbox PM metrics",
+      "description": "Prometheus data source for Cbox Init metrics",
       "type": "datasource",
       "pluginId": "prometheus",
       "pluginName": "Prometheus"
@@ -58,7 +58,7 @@
       }
     ]
   },
-  "description": "Cbox PM Process Manager Dashboard - Monitor PHP-FPM, Nginx, Horizon, Queue Workers, and Scheduled Tasks",
+  "description": "Cbox Init Process Manager Dashboard - Monitor PHP-FPM, Nginx, Horizon, Queue Workers, and Scheduled Tasks",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -1430,7 +1430,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Cbox PM - Process Manager",
+  "title": "Cbox Init - Process Manager",
   "uid": "cbox-init-dashboard",
   "version": 1,
   "weekStart": ""

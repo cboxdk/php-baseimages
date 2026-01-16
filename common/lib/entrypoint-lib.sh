@@ -223,30 +223,30 @@ _default_cleanup() {
 }
 
 ###########################################
-# Cbox PM Validation
+# Cbox Init Validation
 ###########################################
 validate_cbox_init() {
     local config="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 
     if ! command -v cbox-init >/dev/null 2>&1; then
-        log_error "Cbox PM binary not found"
+        log_error "Cbox Init binary not found"
         return 1
     fi
 
     if [ ! -f "$config" ]; then
-        log_warn "Cbox PM config not found at $config, generating default..."
+        log_warn "Cbox Init config not found at $config, generating default..."
         if ! cbox-init scaffold --output "$config" 2>/dev/null; then
-            log_error "Could not generate Cbox PM config"
+            log_error "Could not generate Cbox Init config"
             return 1
         fi
     fi
 
     if ! cbox-init check-config --config "$config" >/dev/null 2>&1; then
-        log_error "Cbox PM config validation failed"
+        log_error "Cbox Init config validation failed"
         return 1
     fi
 
-    log_info "Cbox PM validated successfully"
+    log_info "Cbox Init validated successfully"
     return 0
 }
 
@@ -355,7 +355,7 @@ laravel_optimize() {
 ###########################################
 # Environment Variable Mapping
 ###########################################
-# Map Laravel-style env vars to Cbox PM format
+# Map Laravel-style env vars to Cbox Init format
 map_laravel_env_vars() {
     [ -n "$LARAVEL_HORIZON" ] && export CBOX_INIT_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
     [ -n "$LARAVEL_REVERB" ] && export CBOX_INIT_PROCESS_REVERB_ENABLED="$LARAVEL_REVERB"

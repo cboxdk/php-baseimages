@@ -8,7 +8,7 @@ weight: 1
 
 Copy-paste ready Docker Compose configurations for common use cases.
 
-**All processes managed by Cbox PM** - NO command overrides!
+**All processes managed by Cbox Init** - NO command overrides!
 
 ## Quick Reference
 
@@ -49,7 +49,7 @@ cp -r examples/laravel-basic/* ./
 docker compose up -d
 ```
 
-## Cbox PM Process Management
+## Cbox Init Process Management
 
 All examples use environment variables to control processes - **NEVER override `command:`** for PHP containers!
 
@@ -93,7 +93,7 @@ services:
 
 ## Octane Server Options
 
-Cbox PM supports all three Laravel Octane servers:
+Cbox Init supports all three Laravel Octane servers:
 
 | Server | Image | Environment Variable |
 |--------|-------|---------------------|

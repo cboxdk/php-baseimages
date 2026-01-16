@@ -26,12 +26,12 @@ Cbox provides production-ready containers with:
 
 - **Three Image Tiers** - Slim (~120MB), Standard (~250MB), Full (~700MB)
 - **25+ PHP extensions pre-installed** - Everything Laravel, Symfony, WordPress need
-- **Cbox PM built-in** - Lightweight Go-based process manager (no S6 Overlay)
+- **Cbox Init built-in** - Lightweight Go-based process manager (no S6 Overlay)
 - **50+ environment variables** - Runtime configuration without rebuilding
 - **Weekly security rebuilds** - Automatic CVE patching
 - **Framework auto-detection** - Laravel, Symfony, WordPress optimizations
 
-See [Cbox PM Integration](../cbox-init-integration.md) for advanced configuration.
+See [Cbox Init Integration](../cbox-init-integration.md) for advanced configuration.
 
 ## Three Image Tiers
 
@@ -54,7 +54,7 @@ Cbox images come in three tiers to match your exact needs:
 
 | Feature | Cbox | ServerSideUp |
 |---------|--------|--------------|
-| Process Manager | Cbox PM (Go binary) | S6 Overlay |
+| Process Manager | Cbox Init (Go binary) | S6 Overlay |
 | Image Tiers | 3 (Slim/Standard/Full) | 2 (Base/Full) |
 | Framework Support | Laravel/Symfony/WordPress | Laravel-focused |
 | PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
@@ -103,8 +103,8 @@ Cbox uses a lightweight Go-based process manager:
 # What happens at container start:
 1. Detect framework (Laravel/Symfony/WordPress)
 2. Fix directory permissions automatically
-3. Cbox PM starts as PID 1
-4. Cbox PM orchestrates PHP-FPM, Nginx, and optional workers
+3. Cbox Init starts as PID 1
+4. Cbox Init orchestrates PHP-FPM, Nginx, and optional workers
 5. Health checks monitor all processes with auto-restart
 6. Graceful shutdown on SIGTERM
 ```
@@ -116,7 +116,7 @@ Cbox uses a lightweight Go-based process manager:
 - Automatic process restart on failure
 - Custom scripts via `/docker-entrypoint-init.d/`
 
-See [Cbox PM Integration](../cbox-init-integration.md) for configuration options.
+See [Cbox Init Integration](../cbox-init-integration.md) for configuration options.
 
 ### Framework Auto-Detection
 

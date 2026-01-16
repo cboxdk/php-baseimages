@@ -8,7 +8,7 @@
 FROM ghcr.io/cboxdk/baseimages/php-base:8.4-bookworm
 
 LABEL org.opencontainers.image.title="Cbox FrankenPHP 8.4 Debian"
-LABEL org.opencontainers.image.description="FrankenPHP with all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.description="FrankenPHP with all extensions, Composer, Node.js, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 

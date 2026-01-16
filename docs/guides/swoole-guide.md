@@ -45,7 +45,7 @@ Swoole is a high-performance coroutine-based PHP extension written in C. It prov
 All images include:
 - Swoole extension with OpenSSL, cURL, c-ares support
 - All standard Cbox extensions (Redis, MongoDB, etc.)
-- Composer, Node.js, Cbox PM
+- Composer, Node.js, Cbox Init
 - `swoole.use_shortname = Off` for Laravel compatibility
 
 ## Laravel Octane Setup

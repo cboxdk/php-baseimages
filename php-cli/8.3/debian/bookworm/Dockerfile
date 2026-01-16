@@ -72,7 +72,7 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 FROM base-standard AS root
 
 LABEL org.opencontainers.image.title="Cbox PHP CLI 8.3 Bookworm"
-LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and Cbox PM"
+LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 

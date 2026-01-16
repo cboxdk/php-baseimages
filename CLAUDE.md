@@ -7,9 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Cbox Base Images is a Docker image build system providing production-ready PHP containers with two architectural approaches:
 
 1. **Single-Process Containers**: Separate PHP-FPM, PHP-CLI, and Nginx containers (traditional microservices)
-2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with Cbox PM process manager (no S6 Overlay)
+2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with Cbox Init process manager (no S6 Overlay)
 
-**Key Philosophy**: Lightweight Go-based process management (Cbox PM), comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
+**Key Philosophy**: Lightweight Go-based process management (Cbox Init), comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
 
 ## Architecture
 
@@ -45,18 +45,18 @@ Cbox Base Images is a Docker image build system providing production-ready PHP c
 
 **File**: `php-fpm-nginx/common/docker-entrypoint.sh`
 
-This entrypoint manages both PHP-FPM and Nginx using Cbox PM:
+This entrypoint manages both PHP-FPM and Nginx using Cbox Init:
 
 1. **Framework Detection**: Detects Laravel (`artisan`), Symfony (`bin/console`), WordPress (`wp-config.php`)
 2. **Permission Auto-Fix**: Creates and fixes permissions for framework directories
 3. **Laravel Features**: Scheduler, Horizon, Reverb, Queue workers
-4. **Process Management**: Cbox PM orchestrates all processes with health checks, metrics, and structured logging
+4. **Process Management**: Cbox Init orchestrates all processes with health checks, metrics, and structured logging
 5. **Graceful Shutdown**: Handles SIGTERM/SIGQUIT for clean shutdowns
 
 **Critical Design**:
-- Cbox PM (lightweight Go binary) runs as PID 1
+- Cbox Init (lightweight Go binary) runs as PID 1
 - No S6 Overlay or supervisord - simple, lightweight process management
-- All `php-fpm-nginx` images include Cbox PM by default
+- All `php-fpm-nginx` images include Cbox Init by default
 
 ### Shared Configuration Pattern
 

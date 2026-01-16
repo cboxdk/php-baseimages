@@ -6,7 +6,7 @@ weight: 1
 
 # Environment Variables Reference
 
-Complete reference for all environment variables supported by Cbox base images powered by Cbox PM.
+Complete reference for all environment variables supported by Cbox base images powered by Cbox Init.
 
 ## Quick Start Variables
 
@@ -25,7 +25,7 @@ These are the most commonly used variables. Just set what you need!
 
 ## Laravel Shorthand Variables
 
-These user-friendly variables are automatically mapped to Cbox PM process controls by the entrypoint script.
+These user-friendly variables are automatically mapped to Cbox Init process controls by the entrypoint script.
 
 ### Process Control
 
@@ -377,7 +377,7 @@ secrets:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `WORKDIR` | `/var/www/html` | Working directory |
-| `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Cbox PM config path |
+| `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Cbox Init config path |
 
 ---
 

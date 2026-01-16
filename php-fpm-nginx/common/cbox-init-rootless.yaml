@@ -1,5 +1,5 @@
 # ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  Cbox PM Configuration (Rootless)                                       ║
+# ║  Cbox Init Configuration (Rootless)                                       ║
 # ║  Process Manager for PHP Docker Containers - Unprivileged Port 8080       ║
 # ║  https://github.com/cboxdk/init                                    ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝

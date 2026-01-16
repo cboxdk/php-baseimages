@@ -2,7 +2,7 @@
 # Cbox PHP-FPM + Nginx Image - Debian 8.3 (Bookworm)
 # ============================================================================
 # LAYER 4: Extends php-fpm with Nginx for single-container deployment
-#          Uses Cbox PM as process manager
+#          Uses Cbox Init as process manager
 #
 # IMAGE TIERS (inherited from php-fpm):
 # - slim:     Minimal PHP + essential extensions - API/microservices
@@ -50,7 +50,7 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy Cbox PM configuration
+# Copy Cbox Init configuration
 RUN mkdir -p /etc/cbox-init
 COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
@@ -114,7 +114,7 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy Cbox PM configuration (rootless version with port 8080 health check)
+# Copy Cbox Init configuration (rootless version with port 8080 health check)
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
@@ -146,7 +146,7 @@ CMD ["cbox-init"]
 FROM base-standard AS root
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm"
-LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
@@ -170,7 +170,7 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy Cbox PM configuration
+# Copy Cbox Init configuration
 RUN mkdir -p /etc/cbox-init
 COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
@@ -201,7 +201,7 @@ CMD ["cbox-init"]
 FROM base-standard-rootless AS rootless
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Rootless)"
-LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox PM - Rootless"
+LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox Init - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
@@ -234,7 +234,7 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy Cbox PM configuration (rootless version with port 8080 health check)
+# Copy Cbox Init configuration (rootless version with port 8080 health check)
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
@@ -290,7 +290,7 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY php-fpm-nginx/common/default.conf /etc/nginx/conf.d/default.conf
 COPY php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy Cbox PM configuration
+# Copy Cbox Init configuration
 RUN mkdir -p /etc/cbox-init
 COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
@@ -354,7 +354,7 @@ RUN sed -i 's/user nginx;/user www-data;/' /etc/nginx/nginx.conf 2>/dev/null || 
 COPY --chown=www-data:www-data php-fpm-nginx/common/default-rootless.conf /etc/nginx/conf.d/default.conf
 COPY --chown=www-data:www-data php-fpm-nginx/common/default.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copy Cbox PM configuration (rootless version with port 8080 health check)
+# Copy Cbox Init configuration (rootless version with port 8080 health check)
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 

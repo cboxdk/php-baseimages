@@ -1,7 +1,7 @@
 #!/bin/sh
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  Cbox Swoole Health Check                                               ║
-# ║  Validates Swoole extension, HTTP server, and Cbox PM                   ║
+# ║  Validates Swoole extension, HTTP server, and Cbox Init                   ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=sh
 
@@ -75,13 +75,13 @@ else
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Check 4: Cbox PM
+# Check 4: Cbox Init
 # ─────────────────────────────────────────────────────────────────────────────
 if command -v cbox-init >/dev/null 2>&1; then
     if cbox-init --version >/dev/null 2>&1; then
-        check_passed "Cbox PM available"
+        check_passed "Cbox Init available"
     else
-        check_warning "Cbox PM installed but not responding"
+        check_warning "Cbox Init installed but not responding"
     fi
 fi
 

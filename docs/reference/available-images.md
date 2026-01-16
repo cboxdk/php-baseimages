@@ -87,7 +87,7 @@ Swoole extension for maximum performance with coroutines and task workers.
 | `php-swoole:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
 | `php-swoole:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
 
-**Includes:** Swoole extension with OpenSSL, cURL, c-ares, all Cbox extensions, Composer, Node.js, Cbox PM.
+**Includes:** Swoole extension with OpenSSL, cURL, c-ares, all Cbox extensions, Composer, Node.js, Cbox Init.
 
 ```yaml
 # Laravel Octane with Swoole
@@ -110,7 +110,7 @@ OpenSwoole fork with async I/O and similar features to Swoole.
 | `php-openswoole:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
 | `php-openswoole:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
 
-**Includes:** OpenSwoole extension with OpenSSL, cURL, c-ares, all Cbox extensions, Composer, Node.js, Cbox PM.
+**Includes:** OpenSwoole extension with OpenSSL, cURL, c-ares, all Cbox extensions, Composer, Node.js, Cbox Init.
 
 ```yaml
 # Laravel Octane with OpenSwoole
@@ -131,7 +131,7 @@ Modern PHP application server built on Caddy with automatic HTTPS and HTTP/3.
 | `frankenphp:8.3-bookworm` | 8.3 | Latest | amd64, arm64 |
 | `frankenphp:8.2-bookworm` | 8.2 | Latest | amd64, arm64 |
 
-**Includes:** FrankenPHP binary, Caddy web server, all Cbox extensions, Composer, Node.js, Cbox PM.
+**Includes:** FrankenPHP binary, Caddy web server, all Cbox extensions, Composer, Node.js, Cbox Init.
 
 ```yaml
 # Laravel Octane with FrankenPHP (auto HTTPS)

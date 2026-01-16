@@ -1,7 +1,7 @@
 # ============================================================================
 # Cbox PHP Base Image - Debian 8.4 (Bookworm)
 # ============================================================================
-# LAYER 2: Single source of truth for all PHP extensions, Composer, Node, Cbox PM
+# LAYER 2: Single source of truth for all PHP extensions, Composer, Node, Cbox Init
 # All other images (php-cli, php-fpm, php-fpm-nginx, php-swoole, etc.) extend this
 #
 # IMAGE TIERS:
@@ -31,7 +31,7 @@ FROM node:${NODE_VERSION}-bookworm-slim AS node
 FROM php:8.4-cli-bookworm AS slim-base
 
 LABEL org.opencontainers.image.title="Cbox PHP Base 8.4 Debian"
-LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox PM"
+LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
@@ -109,11 +109,11 @@ RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # ============================================================================
-# Cbox PM (Process Manager)
+# Cbox Init (Process Manager)
 # ============================================================================
-ARG CBOX_INIT_VERSION=1.0.0
-ARG CBOX_INIT_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
-ARG CBOX_INIT_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
+ARG CBOX_INIT_VERSION=2.0.1
+ARG CBOX_INIT_SHA256_AMD64=6625a7792680f334d91b85dcb6276024c2f596d8cd0bfa51579552ddbcdee6a8
+ARG CBOX_INIT_SHA256_ARM64=3515550de3a4ba5de9838e38d69578f1d4d2cc2a67683eae7d8dd810bb7f2b80
 ARG TARGETPLATFORM
 
 COPY cbox-init/binaries/cbox-init-linux-amd64 /tmp/cbox-init-linux-amd64

@@ -1,16 +1,16 @@
 ---
-title: "Cbox PM Integration"
+title: "Cbox Init Integration"
 description: "Cbox Process Manager - advanced multi-process orchestration for PHP containers"
 weight: 15
 ---
 
 # Cbox Process Manager
 
-Cbox PM is the built-in Go-based process manager for all `php-fpm-nginx` images. It provides multi-process orchestration, structured logging, health checks, Prometheus metrics, and graceful lifecycle management.
+Cbox Init is the built-in Go-based process manager for all `php-fpm-nginx` images. It provides multi-process orchestration, structured logging, health checks, Prometheus metrics, and graceful lifecycle management.
 
 ## Quick Start
 
-Cbox PM is included and enabled by default. Just use the image:
+Cbox Init is included and enabled by default. Just use the image:
 
 ```yaml
 services:
@@ -135,7 +135,7 @@ Processes start with environment-specific settings
 |------|----------|---------|
 | Template config | `/etc/cbox-init/cbox-init.yaml` | Base config with env var placeholders |
 | Runtime config | `/tmp/cbox-init.yaml` | Generated config with actual values |
-| Cbox PM binary | `/usr/local/bin/cbox-init` | Process manager executable |
+| Cbox Init binary | `/usr/local/bin/cbox-init` | Process manager executable |
 | Entrypoint | `/usr/local/bin/docker-entrypoint.sh` | Container startup script |
 
 ## Examples
@@ -239,7 +239,7 @@ scrape_configs:
 
 ### Grafana Dashboard
 
-Import dashboard from Cbox PM repository (coming in Phase 4).
+Import dashboard from Cbox Init repository (coming in Phase 4).
 
 ### Health Check Endpoint
 
@@ -266,7 +266,7 @@ Example output:
 
 ## Scheduled Tasks (v1.1.0+)
 
-Cbox PM includes a built-in cron-like scheduler for running periodic tasks **without requiring a separate cron daemon**. Perfect for Laravel scheduled commands, backups, cleanups, and maintenance tasks.
+Cbox Init includes a built-in cron-like scheduler for running periodic tasks **without requiring a separate cron daemon**. Perfect for Laravel scheduled commands, backups, cleanups, and maintenance tasks.
 
 ### Quick Start
 
@@ -362,14 +362,14 @@ CBOX_INIT_START_TIME=1732141200
 
 ### Laravel Scheduler Example
 
-Replace Laravel's cron entry with Cbox PM scheduled tasks:
+Replace Laravel's cron entry with Cbox Init scheduled tasks:
 
 **Old approach** (requires cron):
 ```cron
 * * * * * cd /var/www && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-**New approach** (Cbox PM):
+**New approach** (Cbox Init):
 ```yaml
 environment:
   # Cache warmup every 15 minutes
@@ -406,7 +406,7 @@ rate(cbox_init_scheduled_task_total{status="success"}[1h])
 
 ## Advanced Logging (v1.1.0+)
 
-Cbox PM provides enterprise-grade log processing with intelligent parsing and security features.
+Cbox Init provides enterprise-grade log processing with intelligent parsing and security features.
 
 ### Automatic Log Level Detection
 
@@ -527,7 +527,7 @@ Each queue worker group is independently scalable and monitored.
 
 ### From Supervisor/S6-Overlay
 
-If you're migrating from images using Supervisor or S6-Overlay, Cbox PM offers a simpler, lighter alternative.
+If you're migrating from images using Supervisor or S6-Overlay, Cbox Init offers a simpler, lighter alternative.
 
 **Benefits of switching**:
 - ✅ Structured JSON logging with process segmentation
@@ -537,7 +537,7 @@ If you're migrating from images using Supervisor or S6-Overlay, Cbox PM offers a
 - ✅ Dynamic scaling via API (Phase 5)
 - ✅ Dependency management (DAG-based startup order)
 
-**No breaking changes** - Cbox PM is a drop-in replacement.
+**No breaking changes** - Cbox Init is a drop-in replacement.
 
 ## Troubleshooting
 
@@ -577,7 +577,7 @@ environment:
 
 ## Features (v1.0.0)
 
-Cbox PM v1.0.0 includes:
+Cbox Init v1.0.0 includes:
 
 - ✅ Multi-process orchestration with DAG dependency resolver
 - ✅ Health checks (TCP, HTTP, exec) with auto-restart
@@ -595,7 +595,7 @@ Cbox PM v1.0.0 includes:
 
 ## Resources
 
-- **Cbox PM Repository**: https://github.com/cboxdk/init
+- **Cbox Init Repository**: https://github.com/cboxdk/init
 - **Environment Variables**: See [cbox-init-environment-variables.md](./cbox-init-environment-variables.md)
 - **Example Configs**: See examples throughout this documentation
 
@@ -603,4 +603,4 @@ Cbox PM v1.0.0 includes:
 
 For issues and feature requests:
 - Cbox Base Images: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
-- Cbox PM: [GitHub Issues](https://github.com/cboxdk/init/issues)
+- Cbox Init: [GitHub Issues](https://github.com/cboxdk/init/issues)

@@ -47,7 +47,7 @@ COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 # Copy Composer from base image
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
 
-# Copy Cbox PM from base image
+# Copy Cbox Init from base image
 COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 
 # Copy Cbox shared libraries from base image
@@ -126,7 +126,7 @@ CMD ["php-fpm"]
 FROM php:8.4-fpm-bookworm AS root
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.4 Bookworm"
-LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox PM"
+LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 
@@ -160,7 +160,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
 # Copy Composer from base image
 COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 
-# Copy Cbox PM from base image
+# Copy Cbox Init from base image
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 
 # Copy ImageMagick policy from base image (Debian uses ImageMagick-6)

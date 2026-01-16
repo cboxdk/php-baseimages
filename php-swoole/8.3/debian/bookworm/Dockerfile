@@ -8,7 +8,7 @@
 FROM ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm
 
 LABEL org.opencontainers.image.title="Cbox Swoole 8.3 Debian"
-LABEL org.opencontainers.image.description="PHP with Swoole, all extensions, Composer, Node.js, and Cbox PM"
+LABEL org.opencontainers.image.description="PHP with Swoole, all extensions, Composer, Node.js, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
 

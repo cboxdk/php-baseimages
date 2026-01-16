@@ -1,6 +1,6 @@
 # Laravel Octane with FrankenPHP
 # High-performance Laravel with FrankenPHP (Caddy-based server)
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 #
 # Requirements:
@@ -30,7 +30,7 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      # Cbox PM manages ALL processes via env vars
+      # Cbox Init manages ALL processes via env vars
       LARAVEL_OCTANE: "true"            # Enables Octane server
       LARAVEL_QUEUE: "true"             # Enables queue workers
       LARAVEL_SCHEDULER: "true"         # Enables scheduler
@@ -68,7 +68,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
     # No need to override - uses /usr/local/bin/cbox-init health
 
   mysql:

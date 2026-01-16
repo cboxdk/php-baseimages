@@ -47,7 +47,7 @@ FrankenPHP is a PHP application server created by Kévin Dunglas (creator of API
 All images include:
 - FrankenPHP binary with Caddy integration
 - All standard Cbox extensions (Redis, MongoDB, etc.)
-- Composer, Node.js, Cbox PM
+- Composer, Node.js, Cbox Init
 - Automatic Caddyfile generation
 
 ## Laravel Octane Setup

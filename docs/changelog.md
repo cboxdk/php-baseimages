@@ -95,7 +95,7 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tie
 ## [2024.11] - November 2024
 
 ### Added
-- **Cbox PM** - Go-based process manager replacing bash scripts
+- **Cbox Init** - Go-based process manager replacing bash scripts
 - Laravel Horizon support (`LARAVEL_HORIZON=true`)
 - Queue worker scaling (`CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE`)
 - JSON structured logging
@@ -167,7 +167,7 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
-### From bash-based entrypoint to Cbox PM
+### From bash-based entrypoint to Cbox Init
 
 **Before (v2024.09)**:
 ```yaml

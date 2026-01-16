@@ -1,7 +1,7 @@
 #!/bin/sh
 # ╔═══════════════════════════════════════════════════════════════════════════╗
 # ║  Cbox Base Image - Health Check                                         ║
-# ║  Queries Cbox PM health endpoint for comprehensive status               ║
+# ║  Queries Cbox Init health endpoint for comprehensive status               ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 # shellcheck shell=sh
 
@@ -42,21 +42,21 @@ _check_failed() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Primary: Cbox PM Health Endpoint (if metrics enabled)
+# Primary: Cbox Init Health Endpoint (if metrics enabled)
 # ─────────────────────────────────────────────────────────────────────────────
 if [ "${CBOX_INIT_METRICS_ENABLED:-true}" = "true" ]; then
     if wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${METRICS_PORT}/health" 2>/dev/null; then
-        check_passed "Cbox PM healthy (metrics endpoint)"
+        check_passed "Cbox Init healthy (metrics endpoint)"
     elif curl -sf --max-time 3 "http://127.0.0.1:${METRICS_PORT}/health" >/dev/null 2>&1; then
-        check_passed "Cbox PM healthy (metrics endpoint)"
+        check_passed "Cbox Init healthy (metrics endpoint)"
     else
-        check_warning "Cbox PM metrics endpoint not responding (checking processes directly)"
+        check_warning "Cbox Init metrics endpoint not responding (checking processes directly)"
 
         # Fallback: Check processes directly
         if pgrep -x cbox-init >/dev/null 2>&1; then
-            check_passed "Cbox PM process running"
+            check_passed "Cbox Init process running"
         else
-            _check_failed "Cbox PM not running"
+            _check_failed "Cbox Init not running"
         fi
     fi
 fi

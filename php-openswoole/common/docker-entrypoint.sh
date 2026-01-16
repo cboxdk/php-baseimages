@@ -43,9 +43,9 @@ echo "╚═══════════════════════�
 log_info "PHP Version: $(php -r 'echo PHP_VERSION;')"
 log_info "OpenSwoole Version: $(php -r 'echo OpenSwoole\Util::getVersion();' 2>/dev/null || echo 'unknown')"
 
-# Check Cbox PM
+# Check Cbox Init
 if command -v cbox-init >/dev/null 2>&1; then
-    log_info "Cbox PM $(cbox-init --version 2>/dev/null | head -n1)"
+    log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
 # Working directory

@@ -99,9 +99,9 @@ if [ -n "$XDEBUG_MODE" ]; then
     log_warn "This should NOT be used in production!"
 fi
 
-# Check Cbox PM
+# Check Cbox Init
 if command -v cbox-init >/dev/null 2>&1; then
-    log_info "Cbox PM $(cbox-init --version 2>/dev/null | head -n1)"
+    log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
 # Run startup checks

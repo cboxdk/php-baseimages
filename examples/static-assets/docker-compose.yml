@@ -1,6 +1,6 @@
 # Static Assets Setup
 # PHP backend with compiled frontend assets (no Node in production)
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 
 services:
@@ -22,7 +22,7 @@ services:
       DB_DATABASE: /var/www/html/database/database.sqlite
       CACHE_DRIVER: file
       SESSION_DRIVER: file
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
     # No need to override - uses /usr/local/bin/cbox-init health
 
   # Build service (run once during CI/CD)

@@ -1,6 +1,6 @@
 # Laravel Reverb WebSockets Setup
 # Real-time features with Laravel Reverb (native PHP WebSocket server)
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 
 services:
@@ -14,7 +14,7 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      # Cbox PM manages ALL processes via env vars
+      # Cbox Init manages ALL processes via env vars
       LARAVEL_REVERB: "true"            # Enables Reverb WebSocket server
       LARAVEL_QUEUE: "true"             # Enables queue workers (for broadcasting)
       LARAVEL_SCHEDULER: "true"         # Enables scheduler
@@ -48,7 +48,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
     # No need to override - uses /usr/local/bin/cbox-init health
 
   mysql:

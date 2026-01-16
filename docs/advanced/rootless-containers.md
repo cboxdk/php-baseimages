@@ -245,13 +245,13 @@ spec:
           claimName: app-storage
 ```
 
-## Cbox PM with Rootless
+## Cbox Init with Rootless
 
-Cbox PM works seamlessly with rootless containers:
+Cbox Init works seamlessly with rootless containers:
 
 ```yaml
 environment:
-  # Cbox PM is already configured
+  # Cbox Init is already configured
   CBOX_INIT_PROCESS_PHP_FPM_ENABLED: "true"
   CBOX_INIT_PROCESS_NGINX_ENABLED: "true"
 

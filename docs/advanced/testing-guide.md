@@ -72,7 +72,7 @@ Available test scenarios in `tests/e2e/scenarios/`:
 # Symfony E2E test
 ./tests/e2e/scenarios/test-symfony.sh
 
-# Cbox PM integration
+# Cbox Init integration
 ./tests/e2e/scenarios/test-cbox-init.sh
 ```
 

@@ -79,7 +79,7 @@ php-fpm-nginx:8.4-bookworm-full-rootless  # Full + rootless
 
 **Tools:**
 - Composer 2
-- Cbox PM (process manager)
+- Cbox Init (process manager)
 - curl, wget, git, unzip
 
 ### Standard Tier (Slim + Image Processing + Node.js)

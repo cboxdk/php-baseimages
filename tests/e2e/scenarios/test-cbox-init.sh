@@ -1,6 +1,6 @@
 #!/bin/bash
-# E2E Test: Cbox PM Process Manager
-# Tests Cbox PM functionality, process management, and health checks
+# E2E Test: Cbox Init Process Manager
+# Tests Cbox Init functionality, process management, and health checks
 
 set -euo pipefail
 
@@ -22,7 +22,7 @@ do_cleanup() {
     return 0
 }
 
-log_section "Cbox PM E2E Test"
+log_section "Cbox Init E2E Test"
 
 # Create fixture directory and docker-compose.yml if they don't exist
 mkdir -p "$FIXTURE_DIR"
@@ -33,7 +33,7 @@ services:
     container_name: e2e-cbox-init-app
     ports:
       - "8094:80"
-      - "9094:9090"  # Cbox PM metrics port
+      - "9094:9090"  # Cbox Init metrics port
     environment:
       - PHP_MEMORY_LIMIT=256M
       - CBOX_LOG_LEVEL=debug
@@ -53,7 +53,7 @@ header('Content-Type: application/json');
 echo json_encode([
     'status' => 'ok',
     'php_version' => PHP_VERSION,
-    'server' => 'Cbox PM Test',
+    'server' => 'Cbox Init Test',
     'timestamp' => date('c'),
 ]);
 EOF
@@ -87,94 +87,94 @@ start_compose "$FIXTURE_DIR/docker-compose.yml" "$PROJECT_NAME"
 # Wait for container to be healthy
 wait_for_healthy "$CONTAINER_NAME" 60
 
-log_section "Cbox PM Binary Tests"
+log_section "Cbox Init Binary Tests"
 
-# Test Cbox PM binary exists and is executable
-assert_exec_succeeds "$CONTAINER_NAME" "which cbox-init" "Cbox PM binary found in PATH"
-assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox PM version command works"
+# Test Cbox Init binary exists and is executable
+assert_exec_succeeds "$CONTAINER_NAME" "which cbox-init" "Cbox Init binary found in PATH"
+assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox Init version command works"
 
-# Verify Cbox PM version format
+# Verify Cbox Init version format
 PM_VERSION=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>&1 || echo "unknown")
 if [[ "$PM_VERSION" =~ ^cbox-init\ version\ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
-    log_success "Cbox PM version format is correct: $PM_VERSION"
+    log_success "Cbox Init version format is correct: $PM_VERSION"
 else
-    log_warning "Cbox PM version format unexpected: $PM_VERSION"
+    log_warning "Cbox Init version format unexpected: $PM_VERSION"
 fi
 
-log_section "Cbox PM Configuration Tests"
+log_section "Cbox Init Configuration Tests"
 
 # Test config file exists
-assert_file_exists "$CONTAINER_NAME" "/etc/cbox-init/cbox-init.yaml" "Cbox PM config file exists"
+assert_file_exists "$CONTAINER_NAME" "/etc/cbox-init/cbox-init.yaml" "Cbox Init config file exists"
 
 # Test config validation
-assert_exec_succeeds "$CONTAINER_NAME" "cbox-init check-config --config /etc/cbox-init/cbox-init.yaml" "Cbox PM config is valid"
+assert_exec_succeeds "$CONTAINER_NAME" "cbox-init check-config --config /etc/cbox-init/cbox-init.yaml" "Cbox Init config is valid"
 
 # Verify config contains expected sections
 CONFIG_CONTENT=$(docker exec "$CONTAINER_NAME" cat /etc/cbox-init/cbox-init.yaml 2>&1)
 if echo "$CONFIG_CONTENT" | grep -q "processes:"; then
-    log_success "Cbox PM config has processes section"
+    log_success "Cbox Init config has processes section"
 else
-    log_failure "Cbox PM config missing processes section"
+    log_failure "Cbox Init config missing processes section"
 fi
 
 if echo "$CONFIG_CONTENT" | grep -q "php-fpm:"; then
-    log_success "Cbox PM config has php-fpm process"
+    log_success "Cbox Init config has php-fpm process"
 else
-    log_failure "Cbox PM config missing php-fpm process"
+    log_failure "Cbox Init config missing php-fpm process"
 fi
 
 if echo "$CONFIG_CONTENT" | grep -q "nginx:"; then
-    log_success "Cbox PM config has nginx process"
+    log_success "Cbox Init config has nginx process"
 else
-    log_failure "Cbox PM config missing nginx process"
+    log_failure "Cbox Init config missing nginx process"
 fi
 
-log_section "Cbox PM Process Management Tests"
+log_section "Cbox Init Process Management Tests"
 
-# Verify PHP-FPM is running (managed by Cbox PM)
+# Verify PHP-FPM is running (managed by Cbox Init)
 assert_process_running "$CONTAINER_NAME" "php-fpm" "PHP-FPM running"
 
-# Verify Nginx is running (managed by Cbox PM)
+# Verify Nginx is running (managed by Cbox Init)
 assert_process_running "$CONTAINER_NAME" "nginx" "Nginx running"
 
-# Verify Cbox PM is the parent process (PID 1)
+# Verify Cbox Init is the parent process (PID 1)
 PID1_CMD=$(docker exec "$CONTAINER_NAME" cat /proc/1/comm 2>&1 || echo "unknown")
 if [[ "$PID1_CMD" == "cbox-init" ]]; then
-    log_success "Cbox PM is PID 1 (init process)"
+    log_success "Cbox Init is PID 1 (init process)"
 else
     log_warning "PID 1 is: $PID1_CMD (expected cbox-init)"
 fi
 
-log_section "Cbox PM Metrics Tests"
+log_section "Cbox Init Metrics Tests"
 
 # Test metrics endpoint (internal)
 METRICS_OUTPUT=$(docker exec "$CONTAINER_NAME" curl -sf http://127.0.0.1:9090/metrics 2>&1 || echo "")
 if [[ -n "$METRICS_OUTPUT" ]]; then
-    log_success "Cbox PM metrics endpoint responds"
+    log_success "Cbox Init metrics endpoint responds"
 
     # Check for expected metrics
     if echo "$METRICS_OUTPUT" | grep -q "cbox_init_"; then
-        log_success "Cbox PM exports custom metrics"
+        log_success "Cbox Init exports custom metrics"
     else
-        log_info "Cbox PM metrics format may vary"
+        log_info "Cbox Init metrics format may vary"
     fi
 
     if echo "$METRICS_OUTPUT" | grep -q "process_"; then
-        log_success "Cbox PM exports process metrics"
+        log_success "Cbox Init exports process metrics"
     fi
 else
-    log_warning "Cbox PM metrics endpoint not responding (may be disabled)"
+    log_warning "Cbox Init metrics endpoint not responding (may be disabled)"
 fi
 
 # Test metrics from host (exposed port)
 EXTERNAL_METRICS=$(curl -sf "http://localhost:9094/metrics" 2>&1 || echo "")
 if [[ -n "$EXTERNAL_METRICS" ]]; then
-    log_success "Cbox PM metrics accessible from host on port 9094"
+    log_success "Cbox Init metrics accessible from host on port 9094"
 else
-    log_info "Cbox PM metrics not exposed externally (security default)"
+    log_info "Cbox Init metrics not exposed externally (security default)"
 fi
 
-log_section "Cbox PM Health Check Tests"
+log_section "Cbox Init Health Check Tests"
 
 # Test internal health endpoint via nginx
 assert_http_code "$BASE_URL/health" 200 "Nginx health endpoint returns 200"
@@ -183,7 +183,7 @@ assert_http_code "$BASE_URL/health" 200 "Nginx health endpoint returns 200"
 assert_http_code "$BASE_URL/" 200 "Application endpoint returns 200"
 assert_http_contains "$BASE_URL/" '"status":"ok"' "Application returns status ok"
 
-log_section "Cbox PM DAG Dependency Tests"
+log_section "Cbox Init DAG Dependency Tests"
 
 # Verify nginx depends on php-fpm (DAG dependency)
 # This is tested by ensuring both are running and nginx can reach php-fpm
@@ -202,9 +202,9 @@ else
     log_warning "FastCGI proxy test inconclusive"
 fi
 
-log_section "Cbox PM Graceful Shutdown Test"
+log_section "Cbox Init Graceful Shutdown Test"
 
-# Test that Cbox PM handles SIGTERM gracefully
+# Test that Cbox Init handles SIGTERM gracefully
 log_info "Testing graceful shutdown (sending SIGTERM)..."
 SHUTDOWN_START=$(date +%s)
 
@@ -226,20 +226,20 @@ sleep 5
 # Verify container came back up
 if docker exec "$CONTAINER_NAME" true 2>/dev/null; then
     log_success "Container restarted successfully"
-    # Cbox PM waits for PHP-FPM TCP health check (can take 35s+), so use longer timeout
+    # Cbox Init waits for PHP-FPM TCP health check (can take 35s+), so use longer timeout
     wait_for_healthy "$CONTAINER_NAME" 60 || log_warning "Container health check timed out (non-blocking)"
 else
     log_warning "Container restart check skipped"
 fi
 
-log_section "Cbox PM Log Format Tests"
+log_section "Cbox Init Log Format Tests"
 
 # Check container logs for JSON format
 LOGS=$(docker logs "$CONTAINER_NAME" 2>&1 | tail -20)
 if echo "$LOGS" | grep -q '"level"'; then
-    log_success "Cbox PM uses structured JSON logging"
+    log_success "Cbox Init uses structured JSON logging"
 elif echo "$LOGS" | grep -qE "INFO|DEBUG|ERROR"; then
-    log_success "Cbox PM uses structured logging"
+    log_success "Cbox Init uses structured logging"
 else
     log_info "Log format: $(echo "$LOGS" | head -1)"
 fi

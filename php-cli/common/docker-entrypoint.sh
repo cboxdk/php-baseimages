@@ -58,9 +58,9 @@ if command -v composer >/dev/null 2>&1; then
     log_info "Composer $(composer --version --no-ansi 2>/dev/null | head -n1)"
 fi
 
-# Check Cbox PM
+# Check Cbox Init
 if command -v cbox-init >/dev/null 2>&1; then
-    log_info "Cbox PM $(cbox-init --version 2>/dev/null | head -n1)"
+    log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
 # Setup proper permissions (skip in rootless mode)

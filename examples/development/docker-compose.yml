@@ -1,6 +1,6 @@
 # Development Environment Setup
 # Full development setup with hot reload, Xdebug, and dev tools
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 
 services:
@@ -15,7 +15,7 @@ services:
       - ./:/var/www/html
       - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:ro
     environment:
-      # Cbox PM manages ALL processes via env vars
+      # Cbox Init manages ALL processes via env vars
       LARAVEL_QUEUE: "true"             # Enables queue workers for dev
       LARAVEL_SCHEDULER: "true"         # Enables scheduler
 
@@ -43,7 +43,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
     # No need to override - uses /usr/local/bin/cbox-init health
 
   # Vite dev server for hot module replacement

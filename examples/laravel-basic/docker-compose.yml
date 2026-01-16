@@ -1,6 +1,6 @@
 # Laravel Basic Setup
 # Simple Laravel application with MySQL database
-# All processes managed by Cbox PM - NO command overrides!
+# All processes managed by Cbox Init - NO command overrides!
 # Usage: docker compose up -d
 
 services:
@@ -32,7 +32,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    # Cbox PM healthcheck - already built into image
+    # Cbox Init healthcheck - already built into image
     # No need to override - uses /usr/local/bin/cbox-init health
 
   mysql:

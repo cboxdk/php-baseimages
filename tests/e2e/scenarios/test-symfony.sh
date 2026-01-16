@@ -177,14 +177,14 @@ assert_exec_succeeds "$CONTAINER_NAME" "which composer" "Composer is installed"
 assert_exec_succeeds "$CONTAINER_NAME" "composer --version --no-ansi" "Composer works"
 
 # ═══════════════════════════════════════════════════════════════════════════
-# TEST 9: Cbox PM Integration
+# TEST 9: Cbox Init Integration
 # ═══════════════════════════════════════════════════════════════════════════
-log_section "Test 9: Cbox PM Integration"
+log_section "Test 9: Cbox Init Integration"
 
 if command -v cbox-init >/dev/null 2>&1 || docker exec "$CONTAINER_NAME" which cbox-init >/dev/null 2>&1; then
-    assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox PM available"
+    assert_exec_succeeds "$CONTAINER_NAME" "cbox-init --version" "Cbox Init available"
 else
-    log_info "Cbox PM not installed in this image"
+    log_info "Cbox Init not installed in this image"
 fi
 
 # Store test results before any cleanup that might affect shell state
