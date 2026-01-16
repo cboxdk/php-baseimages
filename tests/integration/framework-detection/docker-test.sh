@@ -39,7 +39,7 @@ trap cleanup EXIT
 
 # Test Laravel container
 test_laravel_container() {
-    info "Testing Laravel detection in Alpine container..."
+    info "Testing Laravel detection in Bookworm container..."
 
     # Create test Laravel structure
     mkdir -p tests/integration/framework-detection/fixtures/laravel
@@ -52,7 +52,7 @@ test_laravel_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/laravel:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-alpine \
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/laravel-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -66,9 +66,9 @@ test_laravel_container() {
     rm -f /tmp/laravel-test.log
 
     if [ "$RESULT" = "laravel" ]; then
-        pass "Laravel detected in Alpine container"
+        pass "Laravel detected in Bookworm container"
     else
-        fail "Laravel detection in Alpine container" "Got: $RESULT"
+        fail "Laravel detection in Bookworm container" "Got: $RESULT"
     fi
 }
 
@@ -112,7 +112,7 @@ test_symfony_container() {
 
 # Test WordPress container
 test_wordpress_container() {
-    info "Testing WordPress detection in Trixie container..."
+    info "Testing WordPress detection in Bookworm container..."
 
     # Create test WordPress structure
     mkdir -p tests/integration/framework-detection/fixtures/wordpress
@@ -125,7 +125,7 @@ test_wordpress_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/wordpress:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-trixie \
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/wordpress-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -139,15 +139,15 @@ test_wordpress_container() {
     rm -f /tmp/wordpress-test.log
 
     if [ "$RESULT" = "wordpress" ]; then
-        pass "WordPress detected in Trixie container"
+        pass "WordPress detected in Bookworm container"
     else
-        fail "WordPress detection in Trixie container" "Got: $RESULT"
+        fail "WordPress detection in Bookworm container" "Got: $RESULT"
     fi
 }
 
 # Test generic container
 test_generic_container() {
-    info "Testing generic PHP detection in Alpine container..."
+    info "Testing generic PHP detection in Bookworm container..."
 
     # Create test generic structure
     mkdir -p tests/integration/framework-detection/fixtures/generic
@@ -159,7 +159,7 @@ test_generic_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/generic:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-alpine \
+        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/generic-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -173,9 +173,9 @@ test_generic_container() {
     rm -f /tmp/generic-test.log
 
     if [ "$RESULT" = "generic" ]; then
-        pass "Generic PHP detected in Alpine container"
+        pass "Generic PHP detected in Bookworm container"
     else
-        fail "Generic PHP detection in Alpine container" "Got: $RESULT"
+        fail "Generic PHP detection in Bookworm container" "Got: $RESULT"
     fi
 }
 
