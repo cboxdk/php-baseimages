@@ -18,9 +18,6 @@ Copy-paste ready Docker Compose configurations for common use cases.
 | [Laravel Basic](laravel-basic/) | Simple Laravel app | PHP-FPM, Nginx, MySQL |
 | [Laravel Horizon](laravel-horizon/) | Queue dashboard | Horizon, Scheduler, MySQL, Redis |
 | [Laravel Production](laravel-production/) | Deploy ready | Resource limits, Horizon |
-| [Octane Swoole](octane-swoole/) | High performance | Swoole, MySQL, Redis |
-| [Octane RoadRunner](octane-roadrunner/) | HTTP/3, gRPC | RoadRunner, MySQL, Redis |
-| [Octane FrankenPHP](octane-frankenphp/) | Auto HTTPS | FrankenPHP, MySQL, Redis |
 | [Reverb WebSockets](reverb-websockets/) | Real-time features | Reverb, Queue, MySQL, Redis |
 | [Symfony Basic](symfony-basic/) | Symfony app | Messenger, PostgreSQL |
 | [WordPress](wordpress/) | CMS setup | PHP, MySQL |
@@ -63,7 +60,6 @@ services:
       LARAVEL_SCHEDULER: "true"   # Enables scheduler
       LARAVEL_HORIZON: "true"     # Enables Horizon (replaces QUEUE)
       LARAVEL_REVERB: "true"      # Enables Reverb WebSocket server
-      LARAVEL_OCTANE: "true"      # Enables Octane server
 
 # WRONG - Don't override command
 services:
@@ -91,23 +87,11 @@ services:
 | Laravel, Symfony | Default (`/var/www/html/public`) |
 | WordPress, plain PHP | `WEBROOT: /var/www/html` |
 
-## Octane Server Options
-
-Cbox Init supports all three Laravel Octane servers:
-
-| Server | Image | Environment Variable |
-|--------|-------|---------------------|
-| Swoole | `php-swoole:8.3-bookworm` | `OCTANE_SERVER: swoole` |
-| RoadRunner | `php-fpm-nginx:8.3-bookworm` | `OCTANE_SERVER: roadrunner` |
-| FrankenPHP | `php-frankenphp:8.3-bookworm` | `OCTANE_SERVER: frankenphp` |
-
-See [Octane documentation](../docs/guides/laravel-octane.md) for full configuration reference.
-
 ## Choosing an Example
 
 ### By Framework
 
-- **Laravel**: `laravel-basic`, `laravel-horizon`, `laravel-production`, `octane-*`, `reverb-websockets`
+- **Laravel**: `laravel-basic`, `laravel-horizon`, `laravel-production`, `reverb-websockets`
 - **Symfony**: `symfony-basic`
 - **WordPress**: `wordpress`
 - **Plain PHP**: `php-basic`, `api-only`
@@ -122,7 +106,6 @@ See [Octane documentation](../docs/guides/laravel-octane.md) for full configurat
 
 - **Monolith**: `laravel-basic`, `symfony-basic`
 - **Queue-heavy**: `laravel-horizon`
-- **High-performance**: `octane-swoole`, `octane-roadrunner`, `octane-frankenphp`
 - **Real-time**: `reverb-websockets`
 - **Multi-tenant SaaS**: `multi-tenant`
 - **Microservices**: `microservices`
@@ -188,18 +171,6 @@ services:
       LARAVEL_SCHEDULER: "true"
 ```
 
-### Enable Octane
-
-```yaml
-services:
-  app:
-    image: ghcr.io/cboxdk/baseimages/php-swoole:8.3-bookworm
-    environment:
-      LARAVEL_OCTANE: "true"
-      OCTANE_SERVER: swoole
-      OCTANE_PORT: 8000
-```
-
 ### Enable Reverb WebSockets
 
 ```yaml
@@ -232,5 +203,4 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
 
 - Check the README in each example folder
 - See [documentation](../docs/) for detailed guides
-- See [Laravel Octane Guide](../docs/guides/laravel-octane.md) for Octane configuration
 - Open an issue on GitHub

@@ -54,8 +54,6 @@
     "mongodb": "2.1.4",
     "igbinary": "3.2.16",
     "msgpack": "3.0.0",
-    "swoole": "6.0.0",
-    "openswoole": "22.1.2",
     "xdebug": "3.4.0",
     "pcov": "1.0.12",
     "uuid": "1.2.1",
@@ -64,7 +62,6 @@
   },
   "tools": {
     "composer": "2",
-    "frankenphp": "1.3.6",
     "cbox_init": "2.0.1"
   },
   "deprecation_policy": {

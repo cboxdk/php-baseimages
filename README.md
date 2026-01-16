@@ -3,8 +3,6 @@
 Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions on Debian 12 (Bookworm) and no unnecessary complexity.
 
 [![PHP-FPM-Nginx](https://github.com/cboxdk/baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-php-fpm-nginx.yml)
-[![Swoole](https://github.com/cboxdk/baseimages/actions/workflows/build-php-swoole.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-php-swoole.yml)
-[![FrankenPHP](https://github.com/cboxdk/baseimages/actions/workflows/build-frankenphp.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-frankenphp.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎯 Philosophy
@@ -74,16 +72,6 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 | **php-cli** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | CLI workers, cron jobs |
 | **nginx** | `bookworm` | Standalone Nginx |
 
-### High-Performance Images (Laravel Octane)
-
-| Image Type | Available Tags | Server | Best For |
-|------------|----------------|--------|----------|
-| **php-swoole** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | Swoole | Maximum performance, coroutines |
-| **php-openswoole** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | OpenSwoole | Swoole fork with async I/O |
-| **frankenphp** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` | FrankenPHP | Auto HTTPS, HTTP/3, worker mode |
-
-📖 **Laravel Octane guide:** [Laravel Octane →](docs/guides/laravel-octane.md)
-
 **Full image name:** `ghcr.io/cboxdk/baseimages/{type}:{tag}`
 
 ```bash
@@ -91,11 +79,6 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
 ghcr.io/cboxdk/baseimages/php-cli:8.2-bookworm
-
-# High-performance images (Laravel Octane)
-ghcr.io/cboxdk/baseimages/php-swoole:8.4-bookworm
-ghcr.io/cboxdk/baseimages/php-openswoole:8.4-bookworm
-ghcr.io/cboxdk/baseimages/frankenphp:8.4-bookworm
 ```
 
 ### Image Tiers: Slim / Standard / Full
@@ -172,11 +155,6 @@ Add `-dev` suffix for development images with Xdebug:
 - **[Queue Workers Guide](docs/guides/queue-workers.md)** - Background jobs, Horizon, scaling
 - [Development Workflow](docs/guides/development-workflow.md) - Local development + Xdebug
 - [Production Deployment](docs/guides/production-deployment.md) - Deploy to production
-
-### High-Performance (Laravel Octane)
-- **[Laravel Octane Guide](docs/guides/laravel-octane.md)** - Swoole, RoadRunner, FrankenPHP
-- [Swoole Guide](docs/guides/swoole-guide.md) - Coroutines, task workers, maximum performance
-- [FrankenPHP Guide](docs/guides/frankenphp-guide.md) - Auto HTTPS, HTTP/3, Caddy integration
 
 ### Advanced Topics
 - **[Extending Images](docs/advanced/extending-images.md)** - Add custom extensions and packages
@@ -417,13 +395,12 @@ docker run --rm -p 8000:80 my-image:8.3-bookworm
 
 ## 📝 Examples
 
-**12 production-ready example setups available:**
+**Production-ready example setups available:**
 
 | Example | Description |
 |---------|-------------|
 | [Laravel Basic](examples/laravel-basic/) | PHP + MySQL basic setup |
 | [Laravel Horizon](examples/laravel-horizon/) | Queue workers + Scheduler + Redis |
-| [Laravel Octane](examples/laravel-octane/) | High-performance Swoole |
 | [Symfony Basic](examples/symfony-basic/) | Symfony + PostgreSQL |
 | [WordPress](examples/wordpress/) | WordPress with optimized uploads |
 | [API Only](examples/api-only/) | REST/GraphQL backend |
