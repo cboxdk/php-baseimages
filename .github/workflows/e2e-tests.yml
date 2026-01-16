@@ -70,13 +70,26 @@ jobs:
         run: |
           echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download Cbox PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
           mkdir -p cbox-pm/binaries
           VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
           BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading Cbox PM v${VERSION}..."
           curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
           curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums..."
+          cd cbox-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+
+          # Rename to cbox-pm for the build
+          mv phpeek-pm-linux-amd64 cbox-pm-linux-amd64
+          mv phpeek-pm-linux-arm64 cbox-pm-linux-arm64
+          cd -
+
           chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
@@ -138,13 +151,26 @@ jobs:
         run: |
           echo "CBOX_PM_VERSION=$(jq -r '.tools.cbox_pm' versions.json)" >> $GITHUB_OUTPUT
 
-      - name: Download Cbox PM binaries
+      - name: Download and verify Cbox PM binaries
         run: |
           mkdir -p cbox-pm/binaries
           VERSION="${{ steps.versions.outputs.CBOX_PM_VERSION }}"
           BASE_URL="https://github.com/gophpeek/phpeek-pm/releases/download/v${VERSION}"
+
+          echo "Downloading Cbox PM v${VERSION}..."
           curl -fsSL "${BASE_URL}/phpeek-pm-linux-amd64" -o cbox-pm/binaries/phpeek-pm-linux-amd64
           curl -fsSL "${BASE_URL}/phpeek-pm-linux-arm64" -o cbox-pm/binaries/phpeek-pm-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-pm/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums..."
+          cd cbox-pm/binaries
+          grep -E "phpeek-pm-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+
+          # Rename to cbox-pm for the build
+          mv phpeek-pm-linux-amd64 cbox-pm-linux-amd64
+          mv phpeek-pm-linux-arm64 cbox-pm-linux-arm64
+          cd -
+
           chmod +x cbox-pm/binaries/cbox-pm-*
 
       - name: Determine Dockerfile paths
