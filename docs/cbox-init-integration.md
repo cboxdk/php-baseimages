@@ -15,7 +15,7 @@ Cbox Init is included and enabled by default. Just use the image:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "80:80"
       - "9090:9090"  # Prometheus metrics
@@ -145,7 +145,7 @@ Processes start with environment-specific settings
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "80:80"
 ```
@@ -155,7 +155,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       LARAVEL_OPTIMIZE_CONFIG: "true"
       LARAVEL_OPTIMIZE_ROUTE: "true"
@@ -173,7 +173,7 @@ A complete example configuration for Laravel:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # Laravel optimizations
       LARAVEL_OPTIMIZE_CONFIG: "true"
@@ -488,7 +488,7 @@ Mount a custom `cbox-init.yaml`:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       CBOX_INIT_CONFIG: /app/config/cbox-init.yaml
     volumes:

@@ -29,7 +29,7 @@ mkdir -p "$FIXTURE_DIR"
 cat > "$FIXTURE_DIR/docker-compose.yml" <<'EOF'
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-alpine}
     container_name: e2e-cbox-init-app
     ports:
       - "8094:80"
@@ -62,7 +62,7 @@ EOF
 cat > "$FIXTURE_DIR/docker-compose.yml" <<'EOF'
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-alpine}
     container_name: e2e-cbox-init-app
     ports:
       - "8094:80"

@@ -14,7 +14,7 @@ Run background jobs reliably with Cbox images.
 # docker-compose.yml
 services:
   worker:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     command: php artisan queue:work redis --sleep=3 --tries=3
     volumes:
       - ./:/var/www/html
@@ -41,7 +41,7 @@ Simple worker for processing jobs:
 
 ```yaml
 worker:
-  image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
   command: php artisan queue:work redis --sleep=3 --tries=3 --max-jobs=1000 --max-time=3600
   restart: unless-stopped
 ```
@@ -58,7 +58,7 @@ Comprehensive queue management with dashboard:
 
 ```yaml
 horizon:
-  image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
   command: php artisan horizon
   restart: unless-stopped
   volumes:
@@ -82,7 +82,7 @@ Run Laravel scheduled tasks:
 
 ```yaml
 scheduler:
-  image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
   command: >
     sh -c "while true; do
       php artisan schedule:run --verbose --no-interaction
@@ -95,7 +95,7 @@ Or use the built-in cron support:
 
 ```yaml
 scheduler:
-  image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
   environment:
     LARAVEL_SCHEDULER: "true"
 ```
@@ -107,10 +107,10 @@ scheduler:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
   worker:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     command: php artisan queue:work
     deploy:
       replicas: 3
@@ -121,11 +121,11 @@ services:
 ```yaml
 services:
   worker-high:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     command: php artisan queue:work --queue=high,default
 
   worker-low:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     command: php artisan queue:work --queue=low
 ```
 

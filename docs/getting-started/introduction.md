@@ -144,7 +144,7 @@ Configure everything via environment variables:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       # PHP
       PHP_MEMORY_LIMIT: 512M

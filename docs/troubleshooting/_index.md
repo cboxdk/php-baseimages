@@ -113,7 +113,7 @@ Include this information:
 
 ```bash
 # Cbox version
-docker inspect ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm | grep Created
+docker inspect ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm | grep Created
 
 # Docker version
 docker version

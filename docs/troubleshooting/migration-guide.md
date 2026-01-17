@@ -41,7 +41,7 @@ services:
 # After (Cbox)
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 **2. Update environment variables:**
@@ -109,7 +109,7 @@ services:
 # After (Cbox)
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html
 ```
@@ -178,7 +178,7 @@ services:
 # After (Cbox - combined)
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -193,7 +193,7 @@ FROM php:8.3-fpm
 RUN docker-php-ext-install pdo_mysql redis opcache gd
 
 # After - Extensions pre-installed, no Dockerfile needed!
-# Just use: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+# Just use: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 **3. Update configuration method:**
@@ -234,7 +234,7 @@ Check if Cbox includes everything you need:
 
 ```bash
 # Check included extensions
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm php -m
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm php -m
 ```
 
 **Option 2: Extend Cbox Image**
@@ -242,7 +242,7 @@ docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm php -m
 For additional requirements:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Add your custom extensions
 RUN apt-get update && apt-get install -y ffmpeg

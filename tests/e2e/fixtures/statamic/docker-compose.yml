@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-statamic-app
     ports:
       - "8099:80"

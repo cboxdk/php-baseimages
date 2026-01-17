@@ -15,7 +15,7 @@ Cbox provides hooks for running custom code at container startup. Use these for 
 Place executable scripts in `/docker-entrypoint-init.d/`:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 COPY scripts/init-*.sh /docker-entrypoint-init.d/
 RUN chmod +x /docker-entrypoint-init.d/*.sh
@@ -37,7 +37,7 @@ Use built-in Laravel features:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       LARAVEL_MIGRATE_ENABLED: "true"    # Run migrations
       LARAVEL_OPTIMIZE_ENABLED: "true"   # Cache config/routes
@@ -48,7 +48,7 @@ services:
 For complete control:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 COPY custom-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 RUN chmod +x /usr/local/bin/custom-entrypoint.sh
@@ -254,7 +254,7 @@ fi
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     volumes:
       - .:/var/www/html
       - ./docker/init:/docker-entrypoint-init.d:ro
@@ -313,7 +313,7 @@ spec:
 
         # Run migrations
         - name: migrations
-          image: ghcr.io/cboxdk/baseimages/php-cli:8.4-bookworm
+          image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
           command: ['php', 'artisan', 'migrate', '--force']
           volumeMounts:
             - name: app
@@ -321,7 +321,7 @@ spec:
 
       containers:
         - name: app
-          image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+          image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Lifecycle Hooks
@@ -329,7 +329,7 @@ spec:
 ```yaml
 containers:
   - name: app
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     lifecycle:
       postStart:
         exec:

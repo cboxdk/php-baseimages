@@ -57,7 +57,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     secrets:
       - app_key
       - db_password
@@ -195,7 +195,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     restart: unless-stopped
     volumes:
       - ./:/var/www/html:ro  # Read-only for security
@@ -397,7 +397,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
         ports:
         - containerPort: 80
           name: http

@@ -87,7 +87,7 @@ apc.gc_ttl = 3600
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
@@ -103,7 +103,7 @@ services:
 For permanent custom configuration in your image:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Copy custom PHP configuration
 COPY docker/php/custom.ini /usr/local/etc/php/conf.d/zz-custom.ini

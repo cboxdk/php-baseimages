@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8080:80"
     volumes:
@@ -153,7 +153,7 @@ docker compose exec app bin/magento cron:run
 
 ## Development Tips
 
-- Use `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
+- Use `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
 - Disable static content deployment for faster dev: `bin/magento deploy:mode:set developer`.
 - Flush caches quickly: `bin/magento cache:flush`.
 
@@ -162,7 +162,7 @@ docker compose exec app bin/magento cron:run
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html:ro
       - ./var:/var/www/html/var

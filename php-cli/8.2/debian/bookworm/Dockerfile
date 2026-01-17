@@ -12,12 +12,12 @@
 # ============================================================================
 # Import base images for each tier
 # ============================================================================
-FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-slim AS base-slim
-FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-slim-rootless AS base-slim-rootless
-FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm AS base-standard
-FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-full AS base-full
-FROM ghcr.io/cboxdk/baseimages/php-base:8.2-bookworm-full-rootless AS base-full-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-slim-rootless AS base-slim-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-rootless AS base-standard-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-full AS base-full
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-full-rootless AS base-full-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP CLI with essential extensions

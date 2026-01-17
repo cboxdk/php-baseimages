@@ -306,7 +306,7 @@ When mTLS is enabled, client certificate details are available:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"

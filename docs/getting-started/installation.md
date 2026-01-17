@@ -14,10 +14,10 @@ Cbox images are available from GitHub Container Registry (ghcr.io). No authentic
 
 ```bash
 # Pull the recommended image
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Verify installation
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm php -v
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm php -v
 ```
 
 **Expected output**:
@@ -34,7 +34,7 @@ Zend Engine v4.4.x, Copyright (c) Zend Technologies
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -54,10 +54,10 @@ PHP-FPM + Nginx in one container. Best for most applications.
 
 ```bash
 # Standard tier (DEFAULT)
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Slim tier (APIs, microservices)
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ### Development Editions
@@ -65,7 +65,7 @@ ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 Include Xdebug and SPX profiler:
 
 ```bash
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
 ```
 
 ### Single-Process (Microservices)
@@ -74,13 +74,13 @@ For Kubernetes or when you need separate scaling:
 
 ```bash
 # PHP-FPM only
-ghcr.io/cboxdk/baseimages/php-fpm:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm
 
 # PHP CLI only
-ghcr.io/cboxdk/baseimages/php-cli:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
 
 # Nginx only
-ghcr.io/cboxdk/baseimages/nginx:bookworm
+ghcr.io/cboxdk/php-baseimages/nginx:bookworm
 ```
 
 ## PHP Version Support
@@ -93,13 +93,13 @@ ghcr.io/cboxdk/baseimages/nginx:bookworm
 
 ```bash
 # PHP 8.4 (latest)
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # PHP 8.3
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # PHP 8.2
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 ```
 
 ## Tagging Strategy
@@ -130,7 +130,7 @@ docker run -d \
   --name myapp \
   -p 8000:80 \
   -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Method 2: Docker Compose (Recommended)
@@ -139,7 +139,7 @@ docker run -d \
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -151,7 +151,7 @@ services:
 ### Method 3: Custom Dockerfile
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Add custom extensions
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -183,7 +183,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+          image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
           ports:
             - containerPort: 80
           env:
@@ -231,20 +231,20 @@ build:
 
 ```bash
 # PHP version
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm php -v
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm php -v
 
 # Installed extensions
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm php -m
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm php -m
 
 # Specific extension
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm php -m | grep redis
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm php -m | grep redis
 ```
 
 ### Check Services
 
 ```bash
 # Start container
-docker run -d --name test ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker run -d --name test ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Check processes
 docker exec test ps aux
@@ -264,7 +264,7 @@ echo '<?php phpinfo();' > index.php
 
 # Run container
 docker run -d --name test -p 8000:80 -v $(pwd):/var/www/html/public \
-  ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Test
 curl http://localhost:8000
@@ -280,7 +280,7 @@ rm index.php
 
 ```bash
 # Error: manifest unknown
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Solution: Check image name spelling
 # Correct: php-fpm-nginx (with hyphens)
@@ -305,7 +305,7 @@ newgrp docker
 docker info | grep Architecture
 
 # Force platform if needed
-docker pull --platform linux/amd64 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull --platform linux/amd64 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Next Steps

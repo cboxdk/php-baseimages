@@ -53,13 +53,13 @@ Cbox Base Images is a collection of production-ready Docker images for PHP appli
 
 ```bash
 # Pull the latest image
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Run with your Laravel project
 docker run -d \
   -p 8080:80 \
   -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### How do I use the development image with Xdebug?
@@ -68,7 +68,7 @@ docker run -d \
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
     ports:
       - "8080:80"
       - "9003:9003"  # Xdebug port
@@ -107,7 +107,7 @@ environment:
 
 **Option 2**: Custom php.ini (build time)
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 COPY custom.ini /usr/local/etc/php/conf.d/99-custom.ini
 ```
 
@@ -115,7 +115,7 @@ COPY custom.ini /usr/local/etc/php/conf.d/99-custom.ini
 
 **Replace the default config**:
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 ```
 
@@ -283,7 +283,7 @@ kill -USR2 1  # Graceful reload
 
 **Fix**: Specify platform:
 ```bash
-docker pull --platform linux/amd64 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull --platform linux/amd64 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Updates & Maintenance
@@ -298,7 +298,7 @@ docker pull --platform linux/amd64 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-b
 
 ```bash
 # Pull latest
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Rebuild your image
 docker-compose build --pull
@@ -311,7 +311,7 @@ docker-compose up -d
 
 Use SHA-based tags for reproducibility:
 ```yaml
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
 ```
 
 Rolling tags (`8.4-bookworm`) get weekly security updates automatically.
@@ -344,7 +344,7 @@ Cbox includes everything from official images plus:
 FROM php:8.4-fpm-bookworm
 
 # After
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Getting Help

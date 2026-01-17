@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm}
     container_name: e2e-cbox-init-app
     ports:
       - "8094:80"

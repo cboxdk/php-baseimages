@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8082:80"
     volumes:
@@ -128,7 +128,7 @@ docker compose exec app vendor/bin/typo3 scheduler:run
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     environment:
       - APP_ENV=production
       - PHP_DISPLAY_ERRORS=Off

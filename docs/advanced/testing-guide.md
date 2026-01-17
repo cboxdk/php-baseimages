@@ -33,13 +33,13 @@ cd tests/unit
 
 ```bash
 cd tests/e2e
-./run-e2e-tests.sh ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+./run-e2e-tests.sh ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ### Run Specific Scenario
 
 ```bash
-./run-e2e-tests.sh ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm laravel
+./run-e2e-tests.sh ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm laravel
 ```
 
 ---
@@ -106,7 +106,7 @@ Each fixture contains a `docker-compose.yml` that uses the `IMAGE` environment v
 ```yaml
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm}
     # ...
 ```
 
@@ -224,7 +224,7 @@ mkdir -p tests/e2e/fixtures/{name}/app
 ```yaml
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm}
     container_name: e2e-{name}-app
     ports:
       - "{port}:80"

@@ -38,7 +38,7 @@ What do you need?
 ### Standard Tier (Default)
 
 ```bash
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 **Size**: ~250MB
@@ -62,7 +62,7 @@ ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
       LARAVEL_SCHEDULER: "true"
 ```
@@ -70,7 +70,7 @@ services:
 ### Slim Tier
 
 ```bash
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 **Size**: ~120MB (smallest)
@@ -92,7 +92,7 @@ ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
     environment:
       PHP_MEMORY_LIMIT: "256M"
 ```
@@ -100,7 +100,7 @@ services:
 ### Full Tier
 
 ```bash
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 **Size**: ~700MB
@@ -128,7 +128,7 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
     environment:
       PHP_MEMORY_LIMIT: "1G"  # Chromium needs more memory
 ```
@@ -154,7 +154,7 @@ All tiers support rootless execution (runs as `www-data` user):
 # Kubernetes deployment
 spec:
   containers:
-    - image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    - image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
       securityContext:
         runAsNonRoot: true
 ```
@@ -217,12 +217,12 @@ Need Browsershot, Dusk, or PDF generation?
 # Development (standard tier is fine)
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Production (same, standard handles most needs)
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Scenario 2: Laravel with Browsershot
@@ -231,7 +231,7 @@ services:
 # Full tier required for Chromium
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -242,7 +242,7 @@ services:
 # Slim tier for minimal footprint
 services:
   api:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ### Scenario 4: Kubernetes Production
@@ -251,7 +251,7 @@ services:
 # Rootless for security compliance
 spec:
   containers:
-    - image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    - image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
       securityContext:
         runAsNonRoot: true
         readOnlyRootFilesystem: true
@@ -263,7 +263,7 @@ spec:
 # Full tier for Chromium
 services:
   dusk:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
     environment:
       DUSK_DRIVER_URL: ""  # Use local Chromium
 ```
@@ -274,12 +274,12 @@ services:
 
 ```yaml
 # From Slim to Standard
-- image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
-+ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+- image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
++ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # From Standard to Full
-- image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
-+ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+- image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
++ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 ### Downgrading to a Smaller Tier
@@ -292,8 +292,8 @@ services:
 
 ```yaml
 # From Standard to Slim (if no ImageMagick/Node needed)
-- image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
-+ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+- image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
++ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ## Recommendations Summary

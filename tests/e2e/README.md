@@ -9,7 +9,7 @@ End-to-end tests for Cbox base images ensuring stability across all code types.
 ./run-e2e-tests.sh
 
 # Test specific image
-./run-e2e-tests.sh ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+./run-e2e-tests.sh ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Test specific scenario
 ./run-e2e-tests.sh local-image:latest laravel

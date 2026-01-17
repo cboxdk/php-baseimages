@@ -113,7 +113,7 @@ open http://localhost:8081
 
 # Run extension tests
 ./tests/test-extensions.sh cbox-fpm
-./tests/test-extensions.sh ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
+./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
 
 # Check logs for entrypoint behavior
 docker-compose logs -f php-fpm-nginx
@@ -325,7 +325,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 
 ## Image Publishing
 
-Images published to GitHub Container Registry: `ghcr.io/cboxdk/baseimages/`
+Images published to GitHub Container Registry: `ghcr.io/cboxdk/php-baseimages/`
 
 **Naming convention**:
 - `php-fpm:8.3-bookworm`

@@ -6,7 +6,7 @@
 services:
   # API Gateway - routes requests to services
   gateway:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-gateway
     restart: unless-stopped
     ports:
@@ -28,7 +28,7 @@ services:
 
   # User Service - handles authentication and user data
   user-service:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-user
     restart: unless-stopped
     volumes:
@@ -60,7 +60,7 @@ services:
 
   # Order Service - handles orders and inventory
   order-service:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-order
     restart: unless-stopped
     volumes:
@@ -93,7 +93,7 @@ services:
 
   # Notification Service - handles emails, SMS, push
   notification-service:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     container_name: micro-notification
     restart: unless-stopped
     volumes:

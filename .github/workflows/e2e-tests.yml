@@ -94,12 +94,12 @@ jobs:
           echo "=== Building php-base:8.3-bookworm ==="
           docker build --target root \
             -f php-base/8.3/debian/bookworm/Dockerfile \
-            -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm .
+            -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm .
 
           echo "=== Building php-fpm:8.3-bookworm ==="
           docker build --target root \
             -f php-fpm/8.3/debian/bookworm/Dockerfile \
-            -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm .
+            -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm .
 
           echo "=== Building php-fpm-nginx:8.3-bookworm ==="
           docker build --target root \
@@ -183,12 +183,12 @@ jobs:
           echo "=== Building php-base:${PHP}-${OS} ==="
           docker build --target root \
             -f ${{ steps.paths.outputs.base }} \
-            -t ghcr.io/cboxdk/baseimages/php-base:${PHP}-${OS} .
+            -t ghcr.io/cboxdk/php-baseimages/php-base:${PHP}-${OS} .
 
           echo "=== Building php-fpm:${PHP}-${OS} ==="
           docker build --target root \
             -f ${{ steps.paths.outputs.fpm }} \
-            -t ghcr.io/cboxdk/baseimages/php-fpm:${PHP}-${OS} .
+            -t ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP}-${OS} .
 
           echo "=== Building php-fpm-nginx:${PHP}-${OS} ==="
           docker build --target root \

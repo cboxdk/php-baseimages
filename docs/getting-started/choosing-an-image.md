@@ -121,16 +121,16 @@ Cbox Base Images use **Debian 12 (Bookworm)** for maximum compatibility and stab
 
 ```
 # Multi-service (PHP-FPM + Nginx)
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 
 # Single-process images (legacy)
-ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
-ghcr.io/cboxdk/baseimages/php-cli:8.3-bookworm
-ghcr.io/cboxdk/baseimages/nginx:bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-cli:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/nginx:bookworm
 ```
 
 ## Migration Guide
@@ -142,7 +142,7 @@ ghcr.io/cboxdk/baseimages/nginx:bookworm
 image: php:8.3-fpm
 
 # After (Cbox)
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ### From ServersideUp
@@ -152,7 +152,7 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
 image: serversideup/php:8.3-fpm-nginx
 
 # After (Cbox) - nearly identical API
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ```
 
 ### From Custom Dockerfiles
@@ -163,7 +163,7 @@ If you're building custom PHP images, you can likely:
 3. Benefit from weekly security updates
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Add custom extension (Debian uses apt-get)
 RUN apt-get update && apt-get install -y php8.3-custom-extension && rm -rf /var/lib/apt/lists/*

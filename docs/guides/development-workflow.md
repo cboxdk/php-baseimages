@@ -26,9 +26,9 @@ Optimize your local development experience with Cbox base images including Xdebu
 Cbox provides **pre-built development images** with Xdebug already installed and configured. These are the easiest way to get started with debugging.
 
 **Available dev images:**
-- `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev`
-- `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev`
-- `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-dev`
+- `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev`
+- `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev`
+- `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-dev`
 - Also available: `-debian-dev` variant
 
 ### Development docker-compose.yml
@@ -39,7 +39,7 @@ version: '3.8'
 services:
   app:
     # Use the pre-built dev image with Xdebug included!
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
     ports:
       - "8000:80"
       - "9003:9003"  # Xdebug port
@@ -290,7 +290,7 @@ services:
 **Install Node.js in container (Dockerfile.dev):**
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install Node.js
 RUN apt-get update && apt-get install -y nodejs npm
@@ -689,7 +689,7 @@ docker-compose build
 
 ```dockerfile
 # Cache composer dependencies
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 COPY composer.json composer.lock ./
 RUN composer install --no-scripts --no-autoloader
@@ -703,7 +703,7 @@ RUN composer dump-autoload --optimize
 **Dockerfile.dev:**
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install Xdebug
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -720,7 +720,7 @@ RUN apt-get update && apt-get install -y git vim
 **Dockerfile.prod:**
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Production optimizations only
 COPY --chown=www-data:www-data . /var/www/html

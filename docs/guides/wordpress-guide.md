@@ -15,7 +15,7 @@ Get WordPress running with MySQL and optimized performance.
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -70,7 +70,7 @@ Add Redis for faster caching:
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     depends_on:
       - mysql
       - redis
@@ -96,7 +96,7 @@ Use dev image with Xdebug:
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
     environment:
       - XDEBUG_MODE=debug,develop
       - XDEBUG_CONFIG=client_host=host.docker.internal
@@ -117,7 +117,7 @@ define('SCRIPT_DEBUG', true);
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - .:/var/www/html:ro
       - ./wp-content/uploads:/var/www/html/wp-content/uploads

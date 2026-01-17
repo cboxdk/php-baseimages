@@ -668,7 +668,7 @@ services:
 **New Relic:**
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN curl -L https://download.newrelic.com/php_agent/release/newrelic-php5-10.x-linux.tar.gz | tar -C /tmp -zx \
     && export NR_INSTALL_USE_CP_NOT_LN=1 \

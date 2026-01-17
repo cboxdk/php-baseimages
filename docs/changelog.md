@@ -22,10 +22,10 @@ All notable changes to Cbox base images.
 **Tag changes:**
 ```yaml
 # OLD (Alpine)
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-alpine
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-alpine
 
 # NEW (Bookworm)
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 **Why this change?**
@@ -74,13 +74,13 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 **Tag format changes:**
 ```yaml
 # OLD (2024.11)
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm           # Full edition
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-minimal   # Minimal edition
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm           # Full edition
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-minimal   # Minimal edition
 
 # NEW (2024.12)
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm           # Standard tier (default)
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim      # Slim tier
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tier (with Chromium)
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm           # Standard tier (default)
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim      # Slim tier
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tier (with Chromium)
 ```
 
 **Tier selection guide:**
@@ -158,13 +158,13 @@ image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tie
 
 ```yaml
 # Most apps - no change needed!
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # For Browsershot/Dusk users - use Full tier
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
 
 # For API/microservices - use Slim tier
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ### From bash-based entrypoint to Cbox Init

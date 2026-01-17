@@ -62,7 +62,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative
 # =============================================================================
 # Stage 3: Production Runtime
 # =============================================================================
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:${PHP_VERSION}-bookworm AS production
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:${PHP_VERSION}-bookworm AS production
 
 LABEL maintainer="Cbox <hello@cbox.com>"
 LABEL description="Production-optimized PHP application"
@@ -115,7 +115,7 @@ EXPOSE 80
 # =============================================================================
 # Stage 4: Development (optional, for local development)
 # =============================================================================
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:${PHP_VERSION}-bookworm-dev AS development
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:${PHP_VERSION}-bookworm-dev AS development
 
 WORKDIR /var/www/html
 

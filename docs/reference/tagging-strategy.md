@@ -29,9 +29,9 @@ Cbox Base Images follow a clear, predictable tagging strategy with three image t
 Most applications should use standard tier:
 
 ```
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 ```
 
 ### Slim Tier
@@ -39,9 +39,9 @@ ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
 For APIs and microservices with minimal footprint:
 
 ```
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-slim
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
 ```
 
 ### Full Tier
@@ -49,9 +49,9 @@ ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-slim
 For Browsershot, Dusk, Puppeteer, and PDF generation:
 
 ```
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-full
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-full
 ```
 
 ### Rootless Variants
@@ -60,13 +60,13 @@ All tiers support rootless execution (runs as `www-data` user):
 
 ```
 # Standard + rootless
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Slim + rootless
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-rootless
 
 # Full + rootless
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full-rootless
 ```
 
 ## Version Matrix
@@ -151,28 +151,28 @@ When a version is deprecated, migration guides are published at:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### API/Microservice (Slim Tier)
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
 ### PDF Generation (Full Tier)
 ```yaml
 services:
   pdf:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
 ```
 
 ### Kubernetes (Rootless)
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 ```
 
 ## See Also

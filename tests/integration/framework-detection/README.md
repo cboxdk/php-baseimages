@@ -164,7 +164,7 @@ test_newframework_container() {
     docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/newframework:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm \
+        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm \
         -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/newframework-test.log 2>&1
 
     RESULT=$(cat /tmp/newframework-test.log | grep -o "newframework" || echo "error")
@@ -198,7 +198,7 @@ If Docker tests fail:
 
 3. **Pull latest images:**
    ```bash
-   docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+   docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
    ```
 
 ### Unit Tests Failing

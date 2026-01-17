@@ -148,7 +148,7 @@ jobs:
       - name: Run Psalm
         run: |
           docker run --rm -v $(pwd):/var/www/html \
-            ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.5-bookworm \
+            ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm \
             vendor/bin/psalm --show-info=true
 
   deploy:

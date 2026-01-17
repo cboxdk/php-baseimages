@@ -55,9 +55,9 @@ jobs:
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run Docker integration tests
         run: |
@@ -110,8 +110,8 @@ jobs:
       - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
           docker build --target root -t cbox-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run performance benchmarks
@@ -164,8 +164,8 @@ jobs:
       - name: Build images for scanning (full chain)
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
-          docker build --target root -t ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/8.3/debian/bookworm/Dockerfile .
+          docker build --target root -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/8.3/debian/bookworm/Dockerfile .
           docker build --target root -t cbox-scan:bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 
       - name: Run Trivy vulnerability scanner

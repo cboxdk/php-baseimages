@@ -27,10 +27,10 @@ All tiers (slim, standard, full) have corresponding rootless versions.
 
 ```bash
 # Pull rootless image
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Run with port mapping (rootless uses port 8080)
-docker run -d -p 80:8080 ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker run -d -p 80:8080 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 ```
 
 ### Docker Compose
@@ -40,7 +40,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
     ports:
       - "80:8080"  # Map host 80 to container 8080
     volumes:
@@ -67,7 +67,7 @@ spec:
 
   containers:
   - name: app
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
     ports:
     - containerPort: 8080
 
@@ -135,7 +135,7 @@ spec:
 Rootless images require correct file ownership at build time:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Copy application with correct ownership
 COPY --chown=www-data:www-data . /var/www/html
@@ -156,7 +156,7 @@ The `PUID` and `PGID` environment variables are ignored in rootless mode. The en
 Run Laravel optimizations during image build:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -176,7 +176,7 @@ For database migrations, use Kubernetes init containers:
 ```yaml
 initContainers:
 - name: laravel-migrate
-  image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
   command: ["/bin/sh", "-c"]
   args:
     - |
@@ -230,7 +230,7 @@ spec:
 
       containers:
       - name: app
-        image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -269,16 +269,16 @@ environment:
 
 ```bash
 # Check container user
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless id
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless id
 # Output: uid=82(www-data) gid=82(www-data)
 
 # Verify CBOX_ROOTLESS is set
-docker run --rm ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless \
   printenv CBOX_ROOTLESS
 # Output: true
 
 # Verify processes
-docker run -d --name test ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker run -d --name test ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 docker exec test ps aux
 # All processes should run as www-data, not root
 docker stop test && docker rm test
@@ -290,10 +290,10 @@ docker stop test && docker rm test
 # Scan for vulnerabilities
 docker run --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  aquasec/trivy image ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+  aquasec/trivy image ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Check user configuration
-docker inspect ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
+docker inspect ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless \
   | jq '.[0].Config.User'
 # Should output: "www-data"
 ```
@@ -303,7 +303,7 @@ docker inspect ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
 ```bash
 # Verify Pod Security Standards compliance
 kubectl run test \
-  --image=ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless \
+  --image=ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless \
   --dry-run=server -o yaml
 ```
 
@@ -380,7 +380,7 @@ livenessProbe:
 To build your own rootless image from Cbox base:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 # Copy application (ownership already correct as www-data runs the build)
 COPY --chown=www-data:www-data . /var/www/html

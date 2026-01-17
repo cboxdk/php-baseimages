@@ -13,12 +13,12 @@
 # ============================================================================
 # Import base images for each tier from php-fpm
 # ============================================================================
-FROM ghcr.io/cboxdk/baseimages/php-fpm:8.5-bookworm-slim AS base-slim
-FROM ghcr.io/cboxdk/baseimages/php-fpm:8.5-bookworm-slim-rootless AS base-slim-rootless
-FROM ghcr.io/cboxdk/baseimages/php-fpm:8.5-bookworm AS base-standard
-FROM ghcr.io/cboxdk/baseimages/php-fpm:8.5-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/cboxdk/baseimages/php-fpm:8.5-bookworm-full AS base-full
-FROM ghcr.io/cboxdk/baseimages/php-fpm:8.5-bookworm-full-rootless AS base-full-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-slim-rootless AS base-slim-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-rootless AS base-standard-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-full AS base-full
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-full-rootless AS base-full-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM + Nginx

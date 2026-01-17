@@ -14,16 +14,16 @@ Just want to test the image? Run these docker commands:
 
 ```bash
 # Test PHP version and extensions
-docker run --rm --entrypoint php ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm -v
+docker run --rm --entrypoint php ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm -v
 
 # List all loaded extensions
-docker run --rm --entrypoint php ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm -m
+docker run --rm --entrypoint php ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm -m
 
 # See available tools
-docker run --rm --entrypoint sh ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm -c "php -v && composer -V && node -v"
+docker run --rm --entrypoint sh ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm -c "php -v && composer -V && node -v"
 
 # Start a web server with current directory mounted
-docker run --rm -p 8000:80 -v $(pwd):/var/www/html ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker run --rm -p 8000:80 -v $(pwd):/var/www/html ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 For a proper project setup, continue below.
@@ -57,7 +57,7 @@ EOF
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -110,10 +110,10 @@ curl localhost:8000/health    # Health check
 Cbox Base Images use Debian 12 (Bookworm) for maximum compatibility:
 
 ```
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.5-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 ```
 
 ### Tag Formats

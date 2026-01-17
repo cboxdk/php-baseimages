@@ -36,7 +36,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -72,13 +72,13 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 | **php-cli** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | CLI workers, cron jobs |
 | **nginx** | `bookworm` | Standalone Nginx |
 
-**Full image name:** `ghcr.io/cboxdk/baseimages/{type}:{tag}`
+**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{tag}`
 
 ```bash
 # Standard images
-ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
-ghcr.io/cboxdk/baseimages/php-cli:8.2-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 ```
 
 ### Image Tiers: Slim / Standard / Full
@@ -292,7 +292,7 @@ environment:
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 docker-compose up -d
 ```
 
@@ -312,7 +312,7 @@ docker-compose up -d
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     # ImageMagick, vips, Node.js included
 ```
 
@@ -320,7 +320,7 @@ services:
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
     # Minimal size (~120MB), core extensions only
 ```
 
@@ -328,7 +328,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
     # Includes Chromium for Browsershot/Dusk
 ```
 
@@ -336,7 +336,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
     # Runs as www-data user, not root
 ```
 
@@ -388,7 +388,7 @@ docker run --rm -p 8000:80 my-image:8.3-bookworm
 ./tests/e2e/run-all-tests.sh --specific security
 
 # Run extension tests
-./tests/test-extensions.sh ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
+./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
 ```
 
 📖 **Test documentation:** [tests/README.md](tests/README.md)
@@ -420,7 +420,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -456,12 +456,12 @@ version: '3.8'
 
 services:
   php-fpm:
-    image: ghcr.io/cboxdk/baseimages/php-fpm:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
     volumes:
       - ./:/var/www/html
 
   nginx:
-    image: ghcr.io/cboxdk/baseimages/nginx:bookworm
+    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm
     ports:
       - "80:80"
     volumes:
@@ -475,7 +475,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
     volumes:
       - ./:/var/www/html
     environment:

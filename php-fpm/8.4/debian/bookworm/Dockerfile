@@ -13,9 +13,9 @@
 # ============================================================================
 # Import base images for each tier (for extension copying)
 # ============================================================================
-FROM ghcr.io/cboxdk/baseimages/php-base:8.4-bookworm-slim AS base-slim
-FROM ghcr.io/cboxdk/baseimages/php-base:8.4-bookworm AS base-standard
-FROM ghcr.io/cboxdk/baseimages/php-base:8.4-bookworm-full AS base-full
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-full AS base-full
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM with essential extensions

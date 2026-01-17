@@ -13,7 +13,7 @@ Complete reference of all available Cbox base image tags and variants.
 All images are published to GitHub Container Registry:
 
 ```
-ghcr.io/cboxdk/baseimages/{image-type}:{tag}
+ghcr.io/cboxdk/php-baseimages/{image-type}:{tag}
 ```
 
 ## Image Tiers
@@ -93,7 +93,7 @@ Rolling tags receive weekly security updates:
 
 ```yaml
 # Automatically gets security patches every Monday
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## Immutable SHA Tags
@@ -102,7 +102,7 @@ For reproducible builds, use SHA-pinned tags:
 
 ```yaml
 # Locked to specific build
-image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
 ```
 
 ## Architecture Support
@@ -118,7 +118,7 @@ Docker automatically pulls the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ## OS Information
@@ -163,17 +163,17 @@ Cbox Base Images use Debian 12 (Bookworm) as the base operating system.
 
 ```bash
 # Pull standard tier (most Laravel/PHP apps)
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Pull slim tier (APIs, microservices)
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Pull full tier (Browsershot, Dusk)
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
 
 # Run with volume mount
 docker run -p 8000:80 -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
 ### Docker Compose
@@ -182,7 +182,7 @@ docker run -p 8000:80 -v $(pwd):/var/www/html \
 services:
   # Standard tier - most Laravel apps
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
       - "8000:80"
     volumes:
@@ -190,13 +190,13 @@ services:
 
   # Slim tier - API service
   api:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
     ports:
       - "8001:80"
 
   # Full tier - PDF generation service
   pdf:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -205,7 +205,7 @@ services:
 
 ```dockerfile
 # Standard tier for most apps
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -214,7 +214,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 ```dockerfile
 # Full tier for Browsershot
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm-full
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -234,7 +234,7 @@ All images are automatically rebuilt every Monday at 03:00 UTC:
 
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 docker-compose up -d --pull always
 ```
 

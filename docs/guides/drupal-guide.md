@@ -16,7 +16,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     ports:
       - "8081:80"
     volumes:
@@ -125,7 +125,7 @@ environment:
 
 ## Development Setup
 
-- Switch to `ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
+- Switch to `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev` for Xdebug.
 - Mount `web/sites` read/write for config export/import.
 - Use `drush uli` to generate one-time login links.
 
@@ -134,7 +134,7 @@ environment:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html:ro
       - ./web/sites/default/files:/var/www/html/web/sites/default/files

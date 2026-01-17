@@ -47,7 +47,7 @@ Create `Dockerfile` in your project root:
 
 ```dockerfile
 # Start from Cbox base image
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install MongoDB PHP extension
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
@@ -97,7 +97,7 @@ mongodb
 Need video processing capabilities?
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install FFmpeg for video/audio processing
 RUN apt-get update && apt-get install -y ffmpeg
@@ -119,7 +119,7 @@ docker-compose exec app ffmpeg -version
 Need to run `npm` or build frontend assets?
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install Node.js and npm
 RUN apt-get update && apt-get install -y nodejs npm
@@ -140,7 +140,7 @@ docker-compose exec app npm run build
 ### Example 4: Adding Multiple Extensions
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Install build dependencies (needed for compiling extensions)
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS
@@ -197,7 +197,7 @@ Mount it in `docker-compose.yml`:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
     volumes:
       - ./:/var/www/html
       # Mount custom PHP configuration
@@ -297,7 +297,7 @@ For complex builds with different development and production configurations:
 # ======================
 # Base Stage - Common to all environments
 # ======================
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm AS base
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm AS base
 
 # Install common extensions
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
@@ -387,7 +387,7 @@ docker-compose exec app php -m
 ### MongoDB Extension
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install mongodb-1.20.1 && \
@@ -404,7 +404,7 @@ $collection = $client->mydb->mycollection;
 ### Swoole Extension (High-Performance PHP)
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install swoole-5.1.5 && \
@@ -415,7 +415,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
 ### Memcached Extension
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS libmemcached-dev zlib-dev && \
     pecl install memcached-3.3.0 && \
@@ -426,7 +426,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS libmemcached-dev zlib-dev 
 ### GRPc Extension (for microservices)
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS linux-headers && \
     pecl install grpc-1.68.0 && \
@@ -437,7 +437,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS linux-headers && \
 ### Decimal Extension (for financial calculations)
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS mpdecimal-dev && \
     pecl install decimal-2.0.0 && \
@@ -481,7 +481,7 @@ echo "MySQL is up - continuing"
 Add to Dockerfile:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # Copy initialization script
 COPY docker/wait-for-db.sh /docker-entrypoint-init.d/01-wait-for-db.sh
@@ -512,7 +512,7 @@ fi
 Add to Dockerfile:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 COPY docker/run-migrations.sh /docker-entrypoint-init.d/02-run-migrations.sh
 RUN chmod +x /docker-entrypoint-init.d/02-run-migrations.sh
@@ -543,7 +543,7 @@ fi
 Add to Dockerfile:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 COPY docker/generate-key.sh /docker-entrypoint-init.d/03-generate-key.sh
 RUN chmod +x /docker-entrypoint-init.d/03-generate-key.sh
@@ -591,7 +591,7 @@ FROM php:8.3-fpm-bookworm
 
 ✅ **Correct:**
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 # Everything is already configured!
 ```
 
@@ -638,7 +638,7 @@ COPY . .
 RUN npm run build
 
 # Production stage - small and secure
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 COPY --from=frontend-builder /app/public/build /var/www/html/public/build
 ```
 
@@ -663,7 +663,7 @@ docker run --rm -it my-app:test /bin/bash
 Use comments and logical grouping:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 # ======================
 # PHP Extensions
@@ -761,7 +761,7 @@ tests/
 
 **Solution: Fix ownership:**
 ```dockerfile
-FROM ghcr.io/cboxdk/baseimages/php-fpm-nginx:8.3-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
 COPY --chown=www-data:www-data . /var/www/html
 
