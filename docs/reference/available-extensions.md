@@ -1,6 +1,6 @@
 ---
 title: "Available Extensions"
-description: "Complete list of PHP extensions by image tier - Slim, Standard, and Full"
+description: "Complete list of PHP extensions by image tier - Slim, Standard, Full, and Dev"
 weight: 30
 ---
 
@@ -10,13 +10,14 @@ Complete reference of all PHP extensions included in Cbox base images by tier.
 
 ## Extension Overview by Tier
 
-Cbox images come in three tiers with different extension sets:
+Cbox images come in four tiers with different extension sets:
 
 | Tier | Extensions | Best For |
 |------|-----------|----------|
 | **Slim** | 25+ core | APIs, microservices |
 | **Standard** | Slim + ImageMagick, vips, Node.js | Most apps (DEFAULT) |
 | **Full** | Standard + Chromium | Browsershot, Dusk, PDF |
+| **Dev** | Full + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
 ## Slim Tier Extensions
 
@@ -123,34 +124,122 @@ PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ```
 
+## Dev Tier Extensions
+
+The Dev tier includes everything in Full, plus development and profiling tools.
+
+### Additional Extensions (on top of Full)
+
+| Extension | Type | Version | Purpose |
+|-----------|------|---------|---------|
+| `xdebug` | PECL | 3.4.0 | Step debugging, code coverage, profiling |
+| `pcov` | PECL | 1.0.12 | Fast code coverage (10x faster than Xdebug) |
+| `spx` | GitHub | latest | Simple performance profiler with web UI |
+
+### Xdebug Configuration
+
+The dev tier includes pre-configured Xdebug settings:
+
+```ini
+xdebug.mode=develop,debug,coverage
+xdebug.client_host=host.docker.internal
+xdebug.client_port=9003
+xdebug.start_with_request=trigger
+xdebug.discover_client_host=true
+xdebug.log=/tmp/xdebug.log
+xdebug.idekey=VSCODE
+```
+
+**Xdebug Modes:**
+- `off` - Disabled
+- `develop` - Development helpers (var_dump improvements)
+- `coverage` - Code coverage collection
+- `debug` - Step debugging
+- `gcstats` - Garbage collection statistics
+- `profile` - Profiling
+- `trace` - Function tracing
+
+### PCOV Configuration
+
+PCOV is disabled by default (for faster execution). Enable it when running tests:
+
+```ini
+pcov.enabled=0
+pcov.directory=/var/www/html
+```
+
+**Usage:**
+```bash
+# Enable PCOV for PHPUnit coverage
+php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
+```
+
+### SPX Profiler
+
+SPX provides a web-based UI for profiling:
+
+```ini
+spx.http_enabled=1
+spx.http_key=dev
+spx.http_ip_whitelist=*
+```
+
+**Access the SPX UI:**
+```
+http://your-app/?SPX_KEY=dev&SPX_UI_URI=/
+```
+
+### Dev Tier Best Practices
+
+1. **Use PCOV for CI coverage** - It's 10x faster than Xdebug coverage
+2. **Disable Xdebug in production** - Dev tier is NOT for production
+3. **Use SPX for performance profiling** - More visual than Xdebug profiler
+4. **Switch modes as needed** - Only enable what you need
+
+```bash
+# Fast coverage in CI
+docker run --rm -e XDEBUG_MODE=off \
+  -v $(pwd):/var/www/html \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-dev \
+  php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
+
+# Step debugging
+docker run --rm -e XDEBUG_MODE=debug \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-dev \
+  php artisan test
+```
+
 ## Extension Comparison by Tier
 
-| Extension | Slim | Standard | Full |
-|-----------|:----:|:--------:|:----:|
-| opcache | ✅ | ✅ | ✅ |
-| pdo_mysql, pdo_pgsql | ✅ | ✅ | ✅ |
-| mysqli, pgsql | ✅ | ✅ | ✅ |
-| redis | ✅ | ✅ | ✅ |
-| apcu | ✅ | ✅ | ✅ |
-| mongodb | ✅ | ✅ | ✅ |
-| grpc | ✅ | ✅ | ✅ |
-| igbinary, msgpack | ✅ | ✅ | ✅ |
-| intl | ✅ | ✅ | ✅ |
-| bcmath | ✅ | ✅ | ✅ |
-| gd (WebP) | ✅ | ✅ | ✅ |
-| gd (AVIF) | ❌ | ✅ | ✅ |
-| imagick | ❌ | ✅ | ✅ |
-| vips | ❌ | ✅ | ✅ |
-| exif | ✅ | ✅ | ✅ |
-| pcntl | ✅ | ✅ | ✅ |
-| sockets | ✅ | ✅ | ✅ |
-| soap | ✅ | ✅ | ✅ |
-| xsl | ✅ | ✅ | ✅ |
-| ldap | ✅ | ✅ | ✅ |
-| bz2 | ✅ | ✅ | ✅ |
-| zip | ✅ | ✅ | ✅ |
-| **Node.js 22** | ❌ | ✅ | ✅ |
-| **Chromium** | ❌ | ❌ | ✅ |
+| Extension | Slim | Standard | Full | Dev |
+|-----------|:----:|:--------:|:----:|:---:|
+| opcache | ✅ | ✅ | ✅ | ✅ |
+| pdo_mysql, pdo_pgsql | ✅ | ✅ | ✅ | ✅ |
+| mysqli, pgsql | ✅ | ✅ | ✅ | ✅ |
+| redis | ✅ | ✅ | ✅ | ✅ |
+| apcu | ✅ | ✅ | ✅ | ✅ |
+| mongodb | ✅ | ✅ | ✅ | ✅ |
+| grpc | ✅ | ✅ | ✅ | ✅ |
+| igbinary, msgpack | ✅ | ✅ | ✅ | ✅ |
+| intl | ✅ | ✅ | ✅ | ✅ |
+| bcmath | ✅ | ✅ | ✅ | ✅ |
+| gd (WebP) | ✅ | ✅ | ✅ | ✅ |
+| gd (AVIF) | ❌ | ✅ | ✅ | ✅ |
+| imagick | ❌ | ✅ | ✅ | ✅ |
+| vips | ❌ | ✅ | ✅ | ✅ |
+| exif | ✅ | ✅ | ✅ | ✅ |
+| pcntl | ✅ | ✅ | ✅ | ✅ |
+| sockets | ✅ | ✅ | ✅ | ✅ |
+| soap | ✅ | ✅ | ✅ | ✅ |
+| xsl | ✅ | ✅ | ✅ | ✅ |
+| ldap | ✅ | ✅ | ✅ | ✅ |
+| bz2 | ✅ | ✅ | ✅ | ✅ |
+| zip | ✅ | ✅ | ✅ | ✅ |
+| **Node.js 22** | ❌ | ✅ | ✅ | ✅ |
+| **Chromium** | ❌ | ❌ | ✅ | ✅ |
+| **Xdebug** | ❌ | ❌ | ❌ | ✅ |
+| **PCOV** | ❌ | ❌ | ❌ | ✅ |
+| **SPX** | ❌ | ❌ | ❌ | ✅ |
 
 ## Extension Versions
 
@@ -166,6 +255,9 @@ All PECL extensions use pinned versions for reproducibility:
 | imagick | 3.8.1 |
 | vips | 1.0.13 |
 | grpc | 1.72.0 |
+| xdebug | 3.4.0 |
+| pcov | 1.0.12 |
+| spx | latest (from GitHub) |
 
 ## Checking Installed Extensions
 

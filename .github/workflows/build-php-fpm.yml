@@ -644,9 +644,208 @@ jobs:
           # Chromium check
           docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
 
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DEV TIER - Full + Xdebug, PCOV, SPX for development/testing
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-dev-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4', '8.5']
+        os_variant: ['bookworm']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (dev):"
+          echo "$BUILD_STATE" | jq .
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          echo "path=./php-fpm/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "base_os=bookworm" >> $GITHUB_OUTPUT
+
+      - name: Get PHP patch version
+        id: php_patch
+        run: |
+          BASE_IMAGE="php:${{ matrix.php_version }}-fpm-${{ steps.dockerfile.outputs.base_os }}"
+          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
+          echo "PHP patch version: $PHP_FULL"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Rolling version tags - DEV tier
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-dev,enable={{is_default_branch}}
+            # PHP patch version tags for version pinning
+            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-dev,enable={{is_default_branch}}
+            # Latest tag
+            type=raw,value=latest-${{ matrix.os_variant }}-dev,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
+            # Immutable SHA tags
+            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-,enable={{is_default_branch}}
+            # Branch tags
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: dev-root
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=fpm-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
+          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
+
+      - name: Test dev image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-dev"
+          echo "Testing dev image $IMAGE..."
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|xdebug|pcov|spx"
+          docker run --rm $IMAGE composer --version
+          docker run --rm $IMAGE node --version
+          docker run --rm $IMAGE cbox-init --version
+          # Dev tier should have chromium (inherited from full tier)
+          docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # DEV ROOTLESS
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-dev-rootless-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4', '8.5']
+        os_variant: ['bookworm']
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (dev-rootless):"
+          echo "$BUILD_STATE" | jq .
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          echo "path=./php-fpm/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "base_os=bookworm" >> $GITHUB_OUTPUT
+
+      - name: Get PHP patch version
+        id: php_patch
+        run: |
+          BASE_IMAGE="php:${{ matrix.php_version }}-fpm-${{ steps.dockerfile.outputs.base_os }}"
+          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
+          echo "PHP patch version: $PHP_FULL"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Rolling version tags - DEV ROOTLESS
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless,enable={{is_default_branch}}
+            # PHP patch version tags for version pinning
+            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-dev-rootless,enable={{is_default_branch}}
+            # Latest tag
+            type=raw,value=latest-${{ matrix.os_variant }}-dev-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
+            # Immutable SHA tags
+            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless-,enable={{is_default_branch}}
+            # Branch tags
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: dev-rootless
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=fpm-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
+          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
+
+      - name: Test dev rootless image
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless"
+          echo "Testing dev rootless image $IMAGE..."
+          # Verify running as non-root
+          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+          docker run --rm $IMAGE php -v
+          docker run --rm $IMAGE php -m | grep -E "xdebug|pcov|spx"
+
   # Trigger dependent image builds after php-fpm completes
   trigger-dependent-builds:
-    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-full-matrix, build-full-rootless-matrix]
+    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-full-matrix, build-full-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

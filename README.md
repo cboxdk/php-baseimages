@@ -81,13 +81,14 @@ ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
 ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 ```
 
-### Image Tiers: Slim / Standard / Full
+### Image Tiers: Slim / Standard / Full / Dev
 
 | Tier | Size | Extensions | Best For |
 |------|------|------------|----------|
 | **Slim** | ~120MB | 25+ core | API/microservices, minimal footprint |
 | **Standard** (default) | ~250MB | 30+ with ImageMagick, vips, Node.js | Most Laravel/PHP apps |
 | **Full** | ~700MB | Standard + Chromium | Browsershot, Dusk, PDF generation |
+| **Dev** | ~750MB | Full + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
 **Tag Suffixes:**
 
@@ -96,7 +97,8 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 | Standard (default) | `{version}-bookworm` | `8.4-bookworm` |
 | Slim | `{version}-bookworm-slim` | `8.4-bookworm-slim` |
 | Full | `{version}-bookworm-full` | `8.4-bookworm-full` |
-| Rootless variants | Add `-rootless` | `8.4-bookworm-rootless`, `8.4-bookworm-slim-rootless` |
+| Dev | `{version}-bookworm-dev` | `8.4-bookworm-dev` |
+| Rootless variants | Add `-rootless` | `8.4-bookworm-rootless`, `8.4-bookworm-dev-rootless` |
 
 **What's included:**
 
@@ -105,12 +107,13 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 | **Slim** | Redis, APCu, MongoDB, gRPC, GD (WebP), intl, bcmath, zip, PCNTL, sockets |
 | **Standard** | Slim + ImageMagick, libvips, GD (AVIF), Node.js 22, exiftool |
 | **Full** | Standard + Chromium, Puppeteer support |
+| **Dev** | Full + Xdebug 3.4, PCOV 1.0, SPX profiler |
 
 📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
 
 ### Development Images
 
-Add `-dev` suffix for development images with Xdebug:
+Add `-dev` suffix for development images with debugging and profiling tools:
 
 | Production | Development |
 |------------|-------------|
@@ -118,7 +121,11 @@ Add `-dev` suffix for development images with Xdebug:
 | `php-fpm:8.3-bookworm` | `php-fpm:8.3-bookworm-dev` |
 | `php-fpm:8.2-bookworm` | `php-fpm:8.2-bookworm-dev` |
 
-**Dev images include:** Xdebug 3.x, PHP error display, OPcache timestamp validation, port 9003
+**Dev images include:**
+- **Xdebug 3.4** - Step debugging, code coverage, profiling
+- **PCOV 1.0** - Fast code coverage (10x faster than Xdebug)
+- **SPX** - Performance profiler with web UI
+- Pre-configured for IDE integration (VS Code, PhpStorm)
 
 📖 **Complete image list:** [Available Images →](docs/reference/available-images.md)
 
@@ -303,9 +310,11 @@ docker-compose up -d
 | **Standard** | `8.4-bookworm` | Most apps (default tier) |
 | **Slim** | `8.4-bookworm-slim` | Minimal footprint, microservices |
 | **Full** | `8.4-bookworm-full` | Browsershot, Dusk, PDF generation |
+| **Dev** | `8.4-bookworm-dev` | Development, testing, CI/CD |
 | **Rootless** | `8.4-bookworm-rootless` | Security-restricted environments |
 | **Slim + Rootless** | `8.4-bookworm-slim-rootless` | Minimal + non-root |
 | **Full + Rootless** | `8.4-bookworm-full-rootless` | Chromium + non-root |
+| **Dev + Rootless** | `8.4-bookworm-dev-rootless` | Development + non-root |
 | **PHP Pinned** | `8.4.7-bookworm` | Production version lock |
 
 **Standard Tier** (most applications):
@@ -349,6 +358,7 @@ services:
 | **Slim** | ~120MB | APIs, microservices |
 | **Standard** | ~250MB | Most PHP applications |
 | **Full** | ~700MB | PDF generation, browser testing |
+| **Dev** | ~750MB | Development, testing, CI/CD |
 
 📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
 
@@ -475,12 +485,21 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
     volumes:
       - ./:/var/www/html
     environment:
       - XDEBUG_MODE=debug
       - XDEBUG_CONFIG=client_host=host.docker.internal
+```
+
+### Fast Code Coverage with PCOV
+
+```bash
+# 10x faster than Xdebug coverage
+docker run --rm -v $(pwd):/var/www/html \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-dev \
+  php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 ```
 
 ## 🤝 Contributing

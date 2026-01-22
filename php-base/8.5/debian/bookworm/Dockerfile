@@ -20,6 +20,8 @@ ARG MONGODB_VERSION=2.1.4
 ARG IGBINARY_VERSION=3.2.16
 ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
+ARG XDEBUG_VERSION=3.4.0
+ARG PCOV_VERSION=1.0.12
 
 # Stage 1: Get Node.js from official image
 ARG NODE_VERSION=22
@@ -270,6 +272,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
+# ============================================================================
+# DEV BASE - Full + Development tools (Xdebug, PCOV, SPX)
+# ============================================================================
+FROM full-base AS dev-base
+
+ARG XDEBUG_VERSION
+ARG PCOV_VERSION
+
+# Install dev extensions (Xdebug, PCOV, SPX)
+# Note: PHP 8.5 may require alpha/beta versions until stable releases support it
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS git zlib1g-dev \
+    && pecl install xdebug-${XDEBUG_VERSION} \
+    && pecl install pcov-${PCOV_VERSION} \
+    && docker-php-ext-enable xdebug pcov \
+    # SPX from GitHub (not on PECL)
+    && git clone --depth=1 https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
+    && cd /tmp/php-spx \
+    && phpize && ./configure && make && make install \
+    && docker-php-ext-enable spx \
+    && rm -rf /tmp/php-spx \
+    # Cleanup
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS git \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Copy dev extension configurations
+COPY php-base/common/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+COPY php-base/common/spx.ini /usr/local/etc/php/conf.d/docker-php-ext-spx.ini
+COPY php-base/common/pcov.ini /usr/local/etc/php/conf.d/docker-php-ext-pcov.ini
+
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM VARIANTS (root + rootless)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -323,6 +355,25 @@ RUN mkdir -p \
         /var/www /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d
 ENV CBOX_ROOTLESS=true \
     CBOX_IMAGE_TIER=full \
+    HOME=/var/www
+USER www-data
+WORKDIR /var/www/html
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DEV VARIANTS (root + rootless) - Full + Xdebug, PCOV, SPX
+# ═══════════════════════════════════════════════════════════════════════════
+FROM dev-base AS dev-root
+ENV CBOX_ROOTLESS=false \
+    CBOX_IMAGE_TIER=dev
+
+FROM dev-base AS dev-rootless
+RUN mkdir -p \
+    /var/www/html /var/www/.composer /var/www/.npm \
+    /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d && \
+    chown -R www-data:www-data \
+        /var/www /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d
+ENV CBOX_ROOTLESS=true \
+    CBOX_IMAGE_TIER=dev \
     HOME=/var/www
 USER www-data
 WORKDIR /var/www/html
