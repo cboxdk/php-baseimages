@@ -281,7 +281,6 @@ ARG XDEBUG_VERSION
 ARG PCOV_VERSION
 
 # Install dev extensions (Xdebug, PCOV, SPX)
-# Note: PHP 8.5 may require alpha/beta versions until stable releases support it
 RUN apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS git zlib1g-dev \
     && pecl install xdebug-${XDEBUG_VERSION} \

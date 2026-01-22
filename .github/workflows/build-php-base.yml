@@ -834,14 +834,13 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   # DEV TIER - Full + Xdebug, PCOV, SPX for development/testing
   # ═══════════════════════════════════════════════════════════════════════════
-  # NOTE: PHP 8.5 excluded - Xdebug doesn't support PHP 8.5 alpha yet
   build-dev-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4']
+        php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
 
     permissions:
@@ -970,14 +969,13 @@ jobs:
           # Verify Chromium is installed (inherited from full tier)
           docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
 
-  # NOTE: PHP 8.5 excluded - Xdebug doesn't support PHP 8.5 alpha yet
   build-dev-rootless-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4']
+        php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
 
     permissions:
