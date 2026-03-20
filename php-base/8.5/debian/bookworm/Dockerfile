@@ -20,7 +20,7 @@ ARG MONGODB_VERSION=2.1.4
 ARG IGBINARY_VERSION=3.2.16
 ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
-ARG XDEBUG_VERSION=3.4.0
+ARG XDEBUG_VERSION=3.5.0
 ARG PCOV_VERSION=1.0.12
 
 # Stage 1: Get Node.js from official image
@@ -86,7 +86,7 @@ RUN docker-php-ext-install -j$(nproc) \
     gmp
 
 # Install PECL extensions with PINNED versions (igbinary first for redis serialization)
-# Note: PHP 8.5 requires igbinary-beta until stable release with PHP 8.5 support
+# Note: PHP 8.5 uses igbinary 3.2.17RC1 (beta channel) - tracking stable release at https://pecl.php.net/package/igbinary
 RUN pecl install igbinary-beta && \
     docker-php-ext-enable igbinary && \
     pecl install redis-${REDIS_VERSION} --configureoptions 'enable-igbinary-serializer="yes"' && \

@@ -24,8 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IMAP extension removed from PHP 8.4 (deprecated by PHP core)
 
 ### Known Issues
-- PHP 8.5 support postponed: PECL extensions (igbinary, msgpack, mongodb) not yet compatible with PHP 8.5.0
-  - Will be added once PHP 8.5.1+ and compatible PECL versions are released
+- PHP 8.5: igbinary uses beta channel (3.2.17RC1) pending stable release
 - PHP 8.5 test profiles in docker-compose.yml (`--profile php85`)
 
 ### Documentation

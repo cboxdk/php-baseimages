@@ -107,7 +107,7 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 | **Slim** | Redis, APCu, MongoDB, gRPC, GD (WebP), intl, bcmath, zip, PCNTL, sockets |
 | **Standard** | Slim + ImageMagick, libvips, GD (AVIF), Node.js 22, exiftool |
 | **Full** | Standard + Chromium, Puppeteer support |
-| **Dev** | Full + Xdebug 3.4, PCOV 1.0, SPX profiler |
+| **Dev** | Full + Xdebug 3.5, PCOV 1.0, SPX profiler |
 
 📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
 
@@ -122,7 +122,7 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 | `php-fpm:8.2-bookworm` | `php-fpm:8.2-bookworm-dev` |
 
 **Dev images include:**
-- **Xdebug 3.4** - Step debugging, code coverage, profiling
+- **Xdebug 3.5** - Step debugging, code coverage, profiling
 - **PCOV 1.0** - Fast code coverage (10x faster than Xdebug)
 - **SPX** - Performance profiler with web UI
 - Pre-configured for IDE integration (VS Code, PhpStorm)

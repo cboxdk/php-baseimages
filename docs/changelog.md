@@ -44,7 +44,7 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 ```
 
 ### Added
-- PHP 8.5-beta support (experimental)
+- PHP 8.5 support
 - Laravel Reverb WebSocket support (`LARAVEL_REVERB=true`)
 - mTLS client certificate authentication
 - Reverse proxy support (Cloudflare, Traefik, HAProxy)

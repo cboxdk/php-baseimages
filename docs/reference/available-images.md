@@ -153,9 +153,9 @@ Cbox Base Images use Debian 12 (Bookworm) as the base operating system.
 | PHP 8.5 | Active | November 2029 |
 | PHP 8.4 | Active | November 2028 |
 | PHP 8.3 | Active | November 2027 |
-| PHP 8.2 | Active | December 2026 |
+| PHP 8.2 | EOL | December 2025 |
 
-**Recommendation**: Use PHP 8.4 for production stability, PHP 8.5 for latest features.
+**Recommendation**: Use PHP 8.4 or 8.5 for production. PHP 8.5 includes the latest language features.
 
 ## Usage Examples
 

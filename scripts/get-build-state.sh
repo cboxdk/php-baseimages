@@ -7,8 +7,8 @@
 #
 # Usage:
 #   ./scripts/get-build-state.sh <php_version> <os_variant>
-#   ./scripts/get-build-state.sh 8.2 alpine
-#   ./scripts/get-build-state.sh 8.5 alpine --preview
+#   ./scripts/get-build-state.sh 8.4 bookworm
+#   ./scripts/get-build-state.sh 8.2 bookworm
 #
 # Output (JSON):
 #   {
@@ -132,7 +132,7 @@ elif [[ $DAYS_TO_PHP_EOL -lt 0 ]]; then
 elif [[ $DAYS_TO_PHP_EOL -lt $WARNING_DAYS ]]; then
     # Within warning period
     LIFECYCLE="deprecated"
-    WARNING_MESSAGE="⚠️  DEPRECATION WARNING: PHP $PHP_VERSION reaches End-of-Life on $PHP_EOL ($DAYS_TO_PHP_EOL days). Please plan your upgrade to PHP 8.3 or 8.4."
+    WARNING_MESSAGE="⚠️  DEPRECATION WARNING: PHP $PHP_VERSION reaches End-of-Life on $PHP_EOL ($DAYS_TO_PHP_EOL days). Please plan your upgrade to PHP 8.4 or 8.5."
     SHOW_WARNING=true
     TAGS_SUFFIX="-deprecated"
 fi

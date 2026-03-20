@@ -22,24 +22,14 @@
     "eol": "2027-04-30"
   },
   "os": {
-    "alpine": {
-      "supported": ["3.20", "3.21"],
-      "default": "3.21",
-      "eol": {
-        "3.20": "2026-04-01",
-        "3.21": "2026-11-01"
-      }
-    },
     "debian": {
-      "supported": ["bookworm", "trixie"],
+      "supported": ["bookworm"],
       "default": "bookworm",
       "eol": {
-        "bookworm": "2028-06-30",
-        "trixie": "2030-06-30"
+        "bookworm": "2028-06-30"
       },
       "codename_to_version": {
-        "bookworm": "12",
-        "trixie": "13"
+        "bookworm": "12"
       }
     }
   },
