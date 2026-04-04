@@ -121,20 +121,12 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Cbox Init (Process Manager)
 # ============================================================================
 ARG CBOX_INIT_VERSION=2.0.1
-ARG CBOX_INIT_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
-ARG CBOX_INIT_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
-ARG TARGETARCH
 
 COPY --from=cbox-init-bin /cbox-init /usr/local/bin/cbox-init
 
-RUN set -eux; \
-    case "${TARGETARCH}" in \
-        amd64) CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_AMD64}" ;; \
-        arm64) CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_ARM64}" ;; \
-        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
-    esac; \
-    echo "${CBOX_INIT_CHECKSUM}  /usr/local/bin/cbox-init" | sha256sum -c -; \
-    chmod +x /usr/local/bin/cbox-init; \
+# Checksum verification happens in CI before build (see _build-image.yml)
+# Here we just ensure the binary is executable and runs
+RUN chmod +x /usr/local/bin/cbox-init && \
     /usr/local/bin/cbox-init --version
 
 # ============================================================================
