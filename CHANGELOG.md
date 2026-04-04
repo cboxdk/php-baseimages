@@ -5,7 +5,7 @@ All notable changes to Cbox PHP Base Images will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## 2026-04-04
 
 ### Breaking Changes
 - **Tier renamed: `full` → `chromium`** — Docker tags change from `-full` to `-chromium` (e.g., `8.4-bookworm-chromium`). The "full" name implied other tiers were incomplete; "chromium" is honest about what the extra 450MB adds.
@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLAUDE.md rewritten to reflect actual architecture (php-base layer, tier system)
 - Internal planning docs moved from `docs/superpowers/` to `superpowers/`
 
-## [1.0.0] - 2024-11-19
+## 2024-11-19
 
 ### Added
 - Initial release with PHP 8.2, 8.3, 8.4 support
@@ -82,5 +82,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security hardening guide
 - Troubleshooting guides
 
-[Unreleased]: https://github.com/cboxdk/php-baseimages/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/cboxdk/php-baseimages/releases/tag/v1.0.0
