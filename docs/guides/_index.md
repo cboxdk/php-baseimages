@@ -30,26 +30,6 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Redis Object Cache setup
   - Production deployment and optimization
 
-- **[Magento Guide](magento-guide.md)** ✨ New
-  - MySQL, Redis, and OpenSearch stack
-  - Cron and queue configuration
-  - Production storage layout
-
-- **[Drupal Guide](drupal-guide.md)** ✨ New
-  - PostgreSQL or MySQL setup
-  - Redis cache + Drush cron
-  - File storage best practices
-
-- **[TYPO3 Guide](typo3-guide.md)** ✨ New
-  - Composer-based install flow
-  - Redis caching + scheduler
-  - Persistent volumes for fileadmin
-
-- **[Statamic Guide](statamic-guide.md)** ✨ New
-  - Laravel-based Statamic stack
-  - Queue + scheduler toggles
-  - Asset + Glide configuration
-
 ### Workflow Guides
 
 - **[Development Workflow](development-workflow.md)**
@@ -117,6 +97,13 @@ All framework guides follow these principles:
 - **Debugging**: Use our [Debugging Guide](../troubleshooting/debugging-guide.md)
 - **Migration**: See our [Migration Guide](../troubleshooting/migration-guide.md)
 - **Community**: Join [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
+
+## Other Frameworks
+
+These frameworks work out of the box with Cbox PHP Base Images:
+
+- **Statamic** -- Runs on Laravel. Use the [Laravel Guide](laravel-guide).
+- **Drupal / TYPO3 / Magento** -- Use the standard tier with the [Quickstart](../getting-started/quickstart). No framework-specific configuration needed.
 
 ---
 

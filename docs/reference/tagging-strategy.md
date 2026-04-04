@@ -178,5 +178,4 @@ services:
 ## See Also
 
 - [Available Images](available-images.md) - Complete list of all images
-- [Choosing a Variant](../getting-started/choosing-variant.md) - Which tier to choose
-- [Image Tiers Comparison](editions-comparison.md) - Tier feature comparison
+- [Choosing Your Image](../getting-started/choosing-your-image) - Tiers, sizes, and when to use each

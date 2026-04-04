@@ -192,7 +192,7 @@ Ready to try Cbox?
 
 1. **[5-Minute Quickstart](quickstart.md)** - Get running immediately
 2. **[Laravel Guide](../guides/laravel-guide.md)** - Complete Laravel setup
-3. **[Choosing a Variant](choosing-variant.md)** - Which tier to use
+3. **[Choosing Your Image](choosing-your-image)** - Which tier to use
 
 ## Requirements
 

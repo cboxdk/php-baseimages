@@ -13,7 +13,7 @@ New to Cbox? This section will help you get up and running quickly.
 1. **[5-Minute Quickstart](quickstart.md)** - Get your first PHP application running in just 5 minutes
 2. **[Introduction](introduction.md)** - Learn why Cbox exists and how it compares to alternatives
 3. **[Installation](installation.md)** - Detailed installation instructions for all platforms
-4. **[Choosing a Variant](choosing-variant.md)** - Slim vs Standard vs Chromium - which tier is right for you?
+4. **[Choosing Your Image](choosing-your-image)** - Tiers, sizes, root vs rootless, single vs multi-service
 
 ## Quick Decision Guide
 

@@ -240,4 +240,4 @@ docker-compose up -d --pull always
 
 ---
 
-**Need help choosing?** See [Choosing a Variant](../getting-started/choosing-variant.md) | [Image Tiers Comparison](./editions-comparison.md)
+**Need help choosing?** See [Choosing Your Image](../getting-started/choosing-your-image)

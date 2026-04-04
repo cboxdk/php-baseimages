@@ -404,4 +404,4 @@ docker exec myapp php -r "foreach(get_loaded_extensions() as \$ext) echo \$ext.'
 
 ---
 
-**Need a specific extension?** See [Extending Images](../advanced/extending-images.md) | [Image Tiers Comparison](editions-comparison.md)
+**Need a specific extension?** See [Extending Images](../advanced/extending-images.md) | [Choosing Your Image](../getting-started/choosing-your-image)

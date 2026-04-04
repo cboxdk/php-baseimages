@@ -22,11 +22,10 @@ Cbox images come in three tiers:
 
 ### Image Information
 
-- **[Image Tiers Comparison](editions-comparison.md)**
-  - Slim vs Standard vs Chromium comparison
-  - Extension differences by tier
-  - Use case recommendations
-  - Migration between tiers
+- **[Choosing Your Image](../getting-started/choosing-your-image)**
+  - Image size matrix for all types and PHP versions
+  - Tier comparison (Slim / Standard / Chromium / Dev)
+  - Root vs rootless, single-service vs multi-service
 
 - **[Available Images](available-images.md)**
   - All image tags and variants
@@ -67,14 +66,6 @@ Cbox images come in three tiers:
   - Kubernetes liveness/readiness probes
   - Custom health check scripts
 
-### Architecture Decisions
-
-- **[Multi-Service vs Separate](multi-service-vs-separate.md)**
-  - Architecture comparison guide
-  - When to use each approach
-  - Trade-offs and considerations
-  - Migration between approaches
-
 ## Quick Tier Selection
 
 ```yaml
@@ -97,7 +88,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 
 Looking for a specific setting or variable?
 
-- **Image tier**: Check [Image Tiers Comparison](editions-comparison.md)
+- **Image tier**: Check [Choosing Your Image](../getting-started/choosing-your-image)
 - **Environment variable**: Check [Environment Variables](environment-variables.md)
 - **PHP setting**: Check [Configuration Options](configuration-options.md#php-ini)
 - **Extension availability**: Check [Available Extensions](available-extensions.md)
