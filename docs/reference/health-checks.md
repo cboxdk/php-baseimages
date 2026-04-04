@@ -1,12 +1,12 @@
 ---
 title: "Health Checks"
-description: "Configure Docker, Kubernetes, and custom health checks for Cbox base images"
+description: "Configure Docker, Kubernetes, and custom health checks for Cbox PHP Base Images"
 weight: 50
 ---
 
 # Health Checks
 
-Cbox base images include comprehensive health checking for Docker and Kubernetes environments.
+Cbox PHP Base Images include comprehensive health checking for Docker and Kubernetes environments.
 
 ## Built-in Health Check
 

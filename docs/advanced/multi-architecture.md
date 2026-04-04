@@ -10,7 +10,7 @@ Guide for building and deploying Cbox images across AMD64 (x86_64) and ARM64 (aa
 
 ## Platform Support
 
-Cbox Base Images are built for both architectures:
+Cbox PHP Base Images are built for both architectures:
 
 | Platform | Architecture | Examples |
 |----------|--------------|----------|

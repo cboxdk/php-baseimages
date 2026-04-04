@@ -107,7 +107,7 @@ curl localhost:8000/health    # Health check
 
 ## Available Images
 
-Cbox Base Images use Debian 12 (Bookworm) for maximum compatibility:
+Cbox PHP Base Images use Debian 12 (Bookworm) for maximum compatibility:
 
 ```
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm

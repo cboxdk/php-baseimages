@@ -6,7 +6,7 @@ weight: 15
 
 # Development Workflow Guide
 
-Optimize your local development experience with Cbox base images including Xdebug, hot-reload, profiling, and efficient debugging.
+Optimize your local development experience with Cbox PHP Base Images including Xdebug, hot-reload, profiling, and efficient debugging.
 
 ## Dev Images
 
@@ -17,7 +17,7 @@ Available dev images:
 - `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev`
 - `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-dev`
 
-For choosing between dev, slim, standard, and full tiers, see [Choosing Your Image](../getting-started/choosing-your-image).
+For choosing between dev, slim, standard, and chromium tiers, see [Choosing Your Image](../getting-started/choosing-your-image).
 
 ## Development docker-compose.yml
 

@@ -1,6 +1,6 @@
 ---
 title: "Common Issues & Solutions"
-description: "Quick solutions to common problems with Cbox base images including connection errors, permission issues, and configuration problems"
+description: "Quick solutions to common problems with Cbox PHP Base Images including connection errors, permission issues, and configuration problems"
 weight: 41
 ---
 

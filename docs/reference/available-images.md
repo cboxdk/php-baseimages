@@ -123,7 +123,7 @@ docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 ## OS Information
 
-Cbox Base Images use Debian 12 (Bookworm) as the base operating system.
+Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 
 | Feature | Debian 12 (Bookworm) |
 |---------|----------------------|

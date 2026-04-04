@@ -1,4 +1,4 @@
-# Cbox Base Images
+# Cbox PHP Base Images
 
 Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions on Debian 12 (Bookworm) and no unnecessary complexity.
 
@@ -109,7 +109,7 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 | **Chromium** | Standard + Chromium, Puppeteer support |
 | **Dev** | Chromium + Xdebug 3.5, PCOV 1.0, SPX profiler |
 
-📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
+📖 **Detailed comparison:** [Choosing Your Image →](docs/getting-started/choosing-your-image.md)
 
 ### Development Images
 
@@ -152,8 +152,7 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 - **[5-Minute Quickstart](docs/getting-started/quickstart.md)** - Get running in minutes
 - [Introduction](docs/getting-started/introduction.md) - Why Cbox?
 - [Installation](docs/getting-started/installation.md) - All installation methods
-- [Choosing a Variant](docs/getting-started/choosing-variant.md) - Image tier selection guide
-- **[Choosing an Image](docs/getting-started/choosing-an-image.md)** - Decision matrix for image selection
+- **[Choosing Your Image](docs/getting-started/choosing-your-image.md)** - Tiers, sizes, root vs rootless, single vs multi-service
 
 ### Framework Guides
 - **[Laravel Complete Guide](docs/guides/laravel-guide.md)** - Full Laravel setup with MySQL, Redis, Scheduler
@@ -180,7 +179,7 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 - [Configuration Options](docs/reference/configuration-options.md) - PHP/FPM/Nginx configs
 - [Available Extensions](docs/reference/available-extensions.md) - Complete extension list
 - [Health Checks](docs/reference/health-checks.md) - Monitoring guide
-- [Multi-Service vs Separate](docs/reference/multi-service-vs-separate.md) - Architecture decision
+- [Choosing Your Image](docs/getting-started/choosing-your-image.md) - Architecture decision (single vs multi-service)
 
 ### Help & Troubleshooting
 - [Common Issues](docs/troubleshooting/common-issues.md) - FAQ and solutions
@@ -360,7 +359,7 @@ services:
 | **Chromium** | ~700MB | PDF generation, browser testing |
 | **Dev** | ~750MB | Development, testing, CI/CD |
 
-📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
+📖 **Detailed comparison:** [Choosing Your Image →](docs/getting-started/choosing-your-image.md)
 
 ## 🏗️ Building Locally
 

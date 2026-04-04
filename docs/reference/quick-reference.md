@@ -1,6 +1,6 @@
 ---
 title: "Quick Reference"
-description: "Copy-paste ready snippets for Cbox base images"
+description: "Copy-paste ready snippets for Cbox PHP Base Images"
 weight: 1
 ---
 
@@ -26,98 +26,13 @@ docker compose up
 # Open http://localhost:8000
 ```
 
-## Laravel
+## Framework Guides
 
-```yaml
-services:
-  app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    ports:
-      - "8000:80"
-    volumes:
-      - .:/var/www/html
-    environment:
-      - LARAVEL_SCHEDULER=true
-    depends_on:
-      - mysql
-      - redis
+For full docker-compose setups with databases and caching, see the framework guides:
 
-  mysql:
-    image: mysql:8
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: laravel
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: secret
-    volumes:
-      - mysql-data:/var/lib/mysql
-
-  redis:
-    image: redis:7-alpine
-
-volumes:
-  mysql-data:
-```
-
-**.env essentials:**
-```bash
-DB_HOST=mysql
-REDIS_HOST=redis
-REDIS_CLIENT=phpredis
-```
-
-## Symfony
-
-```yaml
-services:
-  app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    ports:
-      - "8000:80"
-    volumes:
-      - .:/var/www/html
-    environment:
-      - APP_ENV=dev
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: symfony
-      POSTGRES_USER: symfony
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-volumes:
-  postgres-data:
-```
-
-## WordPress
-
-```yaml
-services:
-  wordpress:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    ports:
-      - "8000:80"
-    volumes:
-      - ./wordpress:/var/www/html
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:8
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: wordpress
-    volumes:
-      - mysql-data:/var/lib/mysql
-
-volumes:
-  mysql-data:
-```
+- [Laravel Guide](../guides/laravel-guide) -- MySQL, Redis, Scheduler, Horizon
+- [Symfony Guide](../guides/symfony-guide) -- PostgreSQL, Redis, Doctrine
+- [WordPress Guide](../guides/wordpress-guide) -- MySQL, Redis Object Cache
 
 ---
 
@@ -201,11 +116,11 @@ docker compose exec app php artisan test
 
 ## Available Images
 
+For the full image size matrix, tier descriptions, and rootless variants, see [Choosing Your Image](../getting-started/choosing-your-image).
+
 ```
 # Standard tier (DEFAULT)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 
 # Slim tier (APIs, microservices)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
@@ -214,36 +129,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 
 # Development (with Xdebug)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
 ```
 
----
-
-## Included Extensions
-
-All images include 40+ extensions:
-
-```
-bcmath, calendar, ctype, curl, dom, exif, fileinfo, gd, gettext,
-iconv, imagick, intl, mbstring, mongodb, mysqli, opcache, pcntl,
-pdo_mysql, pdo_pgsql, pgsql, redis, simplexml, soap, sockets,
-sodium, tokenizer, xml, xmlreader, xmlwriter, xsl, zip
-```
-
-Verify: `docker compose exec app php -m`
-
----
-
-## Add Custom Extension
-
-```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-
-RUN apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
-    && pecl install swoole \
-    && docker-php-ext-enable swoole \
-    && apt-get purge -y $PHPIZE_DEPS \
-    && rm -rf /var/lib/apt/lists/*
-```
-
-See [Extending Images](../advanced/extending-images.md) for more.
+See [Available Extensions](available-extensions) for the full extension list by tier.

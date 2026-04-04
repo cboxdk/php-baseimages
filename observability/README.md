@@ -1,6 +1,6 @@
 # Cbox Observability
 
-Pre-configured monitoring dashboards and configurations for Cbox Base Images.
+Pre-configured monitoring dashboards and configurations for Cbox PHP Base Images.
 
 ## Grafana Dashboard
 

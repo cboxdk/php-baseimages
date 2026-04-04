@@ -10,16 +10,12 @@ Get Symfony running with PostgreSQL, Redis, and optimized caching.
 
 ## Quick Start
 
-### 1. Create docker-compose.yml
+See [Quickstart](../getting-started/quickstart) for the base docker-compose setup. Add the Symfony-specific services:
 
 ```yaml
 services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    ports:
-      - "8000:80"
-    volumes:
-      - .:/var/www/html
     depends_on:
       - postgres
       - redis
@@ -40,14 +36,12 @@ volumes:
   postgres-data:
 ```
 
-### 2. Update .env
+Update `.env`:
 
 ```bash
 DATABASE_URL="postgresql://symfony:secret@postgres:5432/symfony?serverVersion=16"
 REDIS_URL=redis://redis:6379
 ```
-
-### 3. Start
 
 ```bash
 docker compose up -d
@@ -131,16 +125,6 @@ See [Production Deployment](production-deployment.md) for full guide.
 
 ## Common Mistakes
 
-### ❌ Using localhost
-
-```bash
-# Wrong
-DATABASE_URL="postgresql://symfony:secret@localhost:5432/symfony"
-
-# Correct - use Docker service name
-DATABASE_URL="postgresql://symfony:secret@postgres:5432/symfony"
-```
-
 ### ❌ Missing var directory permissions
 
 ```bash
@@ -150,6 +134,8 @@ docker compose exec app chown -R www-data:www-data var
 ### ❌ APP_ENV not set
 
 Always set `APP_ENV=prod` in production.
+
+See [Common Issues](../troubleshooting/common-issues) for Docker networking and other troubleshooting.
 
 ---
 

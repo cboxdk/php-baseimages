@@ -1,6 +1,6 @@
 ---
 title: "Getting Started"
-description: "Get started with Cbox base images - installation, quickstart guides, and choosing the right tier for your project"
+description: "Get started with Cbox PHP Base Images - installation, quickstart guides, and choosing the right tier for your project"
 weight: 1
 ---
 

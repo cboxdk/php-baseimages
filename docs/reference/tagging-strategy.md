@@ -6,7 +6,7 @@ weight: 40
 
 # Image Tagging Strategy
 
-Cbox Base Images follow a clear, predictable tagging strategy with three image tiers and rootless variants.
+Cbox PHP Base Images follow a clear, predictable tagging strategy with three image tiers and rootless variants.
 
 ## Tag Format
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cbox Base Images is a Docker image build system providing production-ready PHP containers with two architectural approaches:
+Cbox PHP Base Images is a Docker image build system providing production-ready PHP containers with two architectural approaches:
 
 1. **Single-Process Containers**: Separate PHP-FPM, PHP-CLI, and Nginx containers (traditional microservices)
 2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with Cbox Init process manager (no S6 Overlay)

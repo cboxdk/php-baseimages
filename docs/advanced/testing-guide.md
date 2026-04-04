@@ -1,12 +1,12 @@
 ---
 title: "Testing Guide"
-description: "Comprehensive guide to testing Cbox Base Images with E2E and unit tests"
+description: "Comprehensive guide to testing Cbox PHP Base Images with E2E and unit tests"
 weight: 50
 ---
 
 # Testing Guide
 
-This guide covers how to test Cbox Base Images locally during development.
+This guide covers how to test Cbox PHP Base Images locally during development.
 
 ## Test Infrastructure Overview
 

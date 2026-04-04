@@ -10,7 +10,7 @@ Security hardening guide for Cbox containers in production environments.
 
 ## Built-in Security Features
 
-Cbox base images come with security features enabled by default:
+Cbox PHP Base Images come with security features enabled by default:
 
 ### Nginx Security (Default Configuration)
 

@@ -602,5 +602,5 @@ Cbox Init v1.0.0 includes:
 ## Support
 
 For issues and feature requests:
-- Cbox Base Images: [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
+- Cbox PHP Base Images: [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
 - Cbox Init: [GitHub Issues](https://github.com/cboxdk/init/issues)

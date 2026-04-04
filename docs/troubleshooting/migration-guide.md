@@ -1,6 +1,6 @@
 ---
 title: "Migration Guide"
-description: "Migrate to Cbox base images from ServerSideUp, Bitnami, or custom images with step-by-step instructions"
+description: "Migrate to Cbox PHP Base Images from ServerSideUp, Bitnami, or custom images with step-by-step instructions"
 weight: 43
 ---
 

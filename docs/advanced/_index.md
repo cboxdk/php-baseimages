@@ -1,6 +1,6 @@
 ---
 title: "Advanced Topics"
-description: "Deep dives into customization, extensions, performance tuning, and security hardening for Cbox base images"
+description: "Deep dives into customization, extensions, performance tuning, and security hardening for Cbox PHP Base Images"
 weight: 20
 ---
 

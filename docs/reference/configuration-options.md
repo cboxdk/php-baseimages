@@ -1,12 +1,12 @@
 ---
 title: "Configuration Options Reference"
-description: "Complete reference for customizing PHP.ini, PHP-FPM pools, and Nginx server blocks in Cbox base images"
+description: "Complete reference for customizing PHP.ini, PHP-FPM pools, and Nginx server blocks in Cbox PHP Base Images"
 weight: 32
 ---
 
 # Configuration Options Reference
 
-Complete reference for advanced PHP, PHP-FPM, and Nginx configuration in Cbox base images.
+Complete reference for advanced PHP, PHP-FPM, and Nginx configuration in Cbox PHP Base Images.
 
 ## Table of Contents
 

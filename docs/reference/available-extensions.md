@@ -6,7 +6,7 @@ weight: 30
 
 # Available Extensions
 
-Complete reference of all PHP extensions included in Cbox base images by tier.
+Complete reference of all PHP extensions included in Cbox PHP Base Images by tier.
 
 ## Extension Overview by Tier
 

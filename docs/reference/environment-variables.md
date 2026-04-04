@@ -6,7 +6,7 @@ weight: 1
 
 # Environment Variables Reference
 
-Complete reference for all environment variables supported by Cbox base images powered by Cbox Init.
+Complete reference for all environment variables supported by Cbox PHP Base Images powered by Cbox Init.
 
 ## Quick Start Variables
 

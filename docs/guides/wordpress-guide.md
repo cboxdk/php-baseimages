@@ -10,16 +10,12 @@ Get WordPress running with MySQL and optimized performance.
 
 ## Quick Start
 
-### 1. Create docker-compose.yml
+See [Quickstart](../getting-started/quickstart) for the base docker-compose setup. Add the WordPress-specific services:
 
 ```yaml
 services:
   wordpress:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    ports:
-      - "8000:80"
-    volumes:
-      - .:/var/www/html
     depends_on:
       - mysql
 
@@ -37,17 +33,12 @@ volumes:
   mysql-data:
 ```
 
-### 2. Download WordPress
+Download WordPress and start:
 
 ```bash
 curl -O https://wordpress.org/latest.tar.gz
 tar -xzf latest.tar.gz --strip-components=1
 rm latest.tar.gz
-```
-
-### 3. Start
-
-```bash
 docker compose up -d
 ```
 
@@ -58,7 +49,7 @@ Visit **http://localhost:8000** and complete the installation wizard.
 define('DB_NAME', 'wordpress');
 define('DB_USER', 'wordpress');
 define('DB_PASSWORD', 'secret');
-define('DB_HOST', 'mysql');  // Service name, NOT localhost
+define('DB_HOST', 'mysql');  // Docker service name
 ```
 
 ---
@@ -137,16 +128,6 @@ See [Production Deployment](production-deployment.md) for full guide.
 
 ## Common Mistakes
 
-### ❌ Using localhost
-
-```php
-// Wrong
-define('DB_HOST', 'localhost');
-
-// Correct - use Docker service name
-define('DB_HOST', 'mysql');
-```
-
 ### ❌ Upload permission errors
 
 ```bash
@@ -159,6 +140,8 @@ docker compose exec wordpress chown -R www-data:www-data wp-content/uploads
 environment:
   - PHP_MEMORY_LIMIT=256M
 ```
+
+See [Common Issues](../troubleshooting/common-issues) for Docker networking and other troubleshooting.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Help & Troubleshooting"
-description: "Get help with Cbox base images - common issues, systematic debugging, and migration guides"
+description: "Get help with Cbox PHP Base Images - common issues, systematic debugging, and migration guides"
 weight: 40
 ---
 

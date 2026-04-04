@@ -1,6 +1,6 @@
 # Cbox Performance Benchmarks
 
-Performance benchmarking suite for Cbox base images.
+Performance benchmarking suite for Cbox PHP Base Images.
 
 ## Benchmark Suite
 

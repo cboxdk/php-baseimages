@@ -1,4 +1,4 @@
-# Cbox Base Images - Test Suite
+# Cbox PHP Base Images - Test Suite
 
 Comprehensive test coverage for Cbox Docker images.
 

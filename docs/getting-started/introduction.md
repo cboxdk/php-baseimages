@@ -4,9 +4,9 @@ description: "Why Cbox? Features, comparisons with ServerSideUp, Bitnami, and of
 weight: 1
 ---
 
-# Introduction to Cbox Base Images
+# Introduction to Cbox PHP Base Images
 
-Cbox Base Images are production-ready PHP Docker containers designed for modern PHP applications. Built with a "batteries included" philosophy while maintaining clean, optimized images.
+Cbox PHP Base Images are production-ready PHP Docker containers designed for modern PHP applications. Built with a "batteries included" philosophy while maintaining clean, optimized images.
 
 ## Why Cbox?
 
@@ -35,18 +35,7 @@ See [Cbox Init Integration](../cbox-init-integration.md) for advanced configurat
 
 ## Three Image Tiers
 
-Cbox images come in three tiers to match your exact needs:
-
-| Tier | Size | Use Case |
-|------|------|----------|
-| **Slim** | ~120MB | APIs, microservices, minimal footprint |
-| **Standard** | ~250MB | Most Laravel/PHP apps (DEFAULT) |
-| **Chromium** | ~700MB | Browsershot, Dusk, PDF generation |
-
-**Quick decision**:
-- Need PDF generation or browser testing? → **Chromium**
-- Building a standard Laravel/PHP app? → **Standard** (default)
-- Building APIs or microservices? → **Slim**
+Cbox images come in three tiers -- Slim (~120MB), Standard (~250MB), and Chromium (~700MB) -- to match your exact needs. See [Choosing Your Image](choosing-your-image) for the full size matrix and decision guide.
 
 ## Cbox vs Alternatives
 
@@ -162,29 +151,7 @@ No Dockerfile changes needed!
 
 ## Architecture Overview
 
-### Image Types
-
-```
-php-fpm-nginx/     # All-in-one (recommended for most)
-```
-
-### Image Tiers
-
-| Tier | Tag | Includes |
-|------|-----|----------|
-| **Slim** | `-slim` | Core extensions (25+) |
-| **Standard** | (none) | + ImageMagick, vips, Node.js |
-| **Chromium** | `-chromium` | + Chromium for browser automation |
-
-### Rootless Variants
-
-All tiers support rootless execution:
-
-| Tag | Description |
-|-----|-------------|
-| `8.4-bookworm-rootless` | Standard + rootless |
-| `8.4-bookworm-slim-rootless` | Slim + rootless |
-| `8.4-bookworm-chromium-rootless` | Chromium + rootless |
+For the full image size matrix, tier contents, rootless variants, and single-service vs multi-service comparison, see [Choosing Your Image](choosing-your-image).
 
 ## Getting Started
 

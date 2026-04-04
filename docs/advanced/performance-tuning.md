@@ -1,6 +1,6 @@
 ---
 title: "Performance Tuning Guide"
-description: "Optimize PHP-FPM, OPcache, and Nginx for maximum performance in Cbox base images"
+description: "Optimize PHP-FPM, OPcache, and Nginx for maximum performance in Cbox PHP Base Images"
 weight: 22
 ---
 

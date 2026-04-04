@@ -1,16 +1,16 @@
 ---
 title: "Rootless Containers"
-description: "Run Cbox Base Images as non-root containers for OpenShift, Kubernetes Pod Security, and enterprise compliance"
+description: "Run Cbox PHP Base Images as non-root containers for OpenShift, Kubernetes Pod Security, and enterprise compliance"
 weight: 60
 ---
 
 # Rootless Containers
 
-Guide for running Cbox Base Images as non-root containers for enhanced security and compliance.
+Guide for running Cbox PHP Base Images as non-root containers for enhanced security and compliance.
 
 ## Available Image Variants
 
-Cbox Base Images provide **official rootless variants** for all images:
+Cbox PHP Base Images provide **official rootless variants** for all images:
 
 | Image Type | Root (Default) | Rootless |
 |------------|----------------|----------|

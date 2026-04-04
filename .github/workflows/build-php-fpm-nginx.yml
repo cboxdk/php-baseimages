@@ -890,7 +890,7 @@ jobs:
           docker stop test-chromium-rootless && docker rm test-chromium-rootless
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # DEV TIER - Full + Xdebug, PCOV, SPX for development/testing
+  # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
     runs-on: ubuntu-latest

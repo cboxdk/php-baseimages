@@ -1,6 +1,6 @@
 # Cbox E2E Test Suite
 
-End-to-end tests for Cbox base images ensuring stability across all code types.
+End-to-end tests for Cbox PHP Base Images ensuring stability across all code types.
 
 ## Quick Start
 

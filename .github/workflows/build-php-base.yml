@@ -892,7 +892,7 @@ jobs:
           docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # DEV TIER - Full + Xdebug, PCOV, SPX for development/testing
+  # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
     runs-on: ubuntu-latest

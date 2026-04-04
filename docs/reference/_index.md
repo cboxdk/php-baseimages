@@ -1,12 +1,12 @@
 ---
 title: "Reference Documentation"
-description: "Complete technical reference for Cbox base images including image tiers, environment variables, and available extensions"
+description: "Complete technical reference for Cbox PHP Base Images including image tiers, environment variables, and available extensions"
 weight: 30
 ---
 
 # Reference Documentation
 
-Complete technical reference materials for Cbox base images.
+Complete technical reference materials for Cbox PHP Base Images.
 
 ## Image Tiers
 

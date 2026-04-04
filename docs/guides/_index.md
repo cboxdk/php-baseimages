@@ -1,6 +1,6 @@
 ---
 title: "Framework Guides"
-description: "Complete setup guides for Laravel, Symfony, WordPress, and other popular PHP frameworks using Cbox base images"
+description: "Complete setup guides for Laravel, Symfony, WordPress, and other popular PHP frameworks using Cbox PHP Base Images"
 weight: 10
 ---
 

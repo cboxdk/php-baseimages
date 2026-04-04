@@ -1,12 +1,12 @@
 ---
 title: "Changelog"
-description: "What's new in Cbox base images - features, improvements, and security updates"
+description: "What's new in Cbox PHP Base Images - features, improvements, and security updates"
 weight: 99
 ---
 
 # Changelog
 
-All notable changes to Cbox base images.
+All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 

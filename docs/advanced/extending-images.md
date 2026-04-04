@@ -1,12 +1,12 @@
 ---
 title: "Extending Cbox Images"
-description: "Learn how to customize Cbox base images to add custom PHP extensions, system packages, and initialization scripts"
+description: "Learn how to customize Cbox PHP Base Images to add custom PHP extensions, system packages, and initialization scripts"
 weight: 21
 ---
 
 # Extending Cbox Images
 
-Learn how to customize Cbox base images to add your own PHP extensions, system packages, configurations, and initialization scripts.
+Learn how to customize Cbox PHP Base Images to add your own PHP extensions, system packages, configurations, and initialization scripts.
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ Cbox images come with 40+ PHP extensions pre-installed, but you might need to:
 - ✅ Run initialization scripts on container startup
 - ✅ Install additional tools (Node.js, Python, etc.)
 
-**Important:** Always start with Cbox base images, never start from scratch! You get:
+**Important:** Always start with Cbox PHP Base Images, never start from scratch! You get:
 - Pre-configured PHP-FPM + Nginx
 - 40+ extensions already installed
 - Framework auto-detection

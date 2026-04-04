@@ -10,16 +10,12 @@ Get Laravel running with MySQL, Redis, and scheduler support.
 
 ## Quick Start
 
-### 1. Create docker-compose.yml
+See [Quickstart](../getting-started/quickstart) for the base docker-compose setup. Add the Laravel-specific environment and services:
 
 ```yaml
 services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    ports:
-      - "8000:80"
-    volumes:
-      - ./:/var/www/html
     environment:
       - LARAVEL_SCHEDULER=true
     depends_on:
@@ -42,16 +38,6 @@ services:
 volumes:
   mysql-data:
 ```
-
-### 2. Update .env
-
-```bash
-DB_HOST=mysql          # Service name, NOT localhost
-REDIS_HOST=redis       # Service name, NOT localhost
-REDIS_CLIENT=phpredis  # Pre-installed, faster than predis
-```
-
-### 3. Start
 
 ```bash
 docker compose up -d
@@ -161,24 +147,11 @@ See [Production Deployment](production-deployment.md) for full guide.
 
 ## Common Mistakes
 
-### ❌ Using localhost
+### ❌ Wrong Redis client
 
 ```bash
-# Wrong
-DB_HOST=localhost
-
-# Correct - use Docker service name
-DB_HOST=mysql
-```
-
-### ❌ Connection refused
-
-MySQL not ready. Use healthcheck or wait:
-
-```bash
-# Wait for MySQL to respond, then run migrations
-docker compose exec mysql sh -c 'until mysqladmin ping -h localhost --silent; do sleep 1; done'
-docker compose exec app php artisan migrate --force
+# Use phpredis (pre-installed, faster)
+REDIS_CLIENT=phpredis
 ```
 
 ### ❌ Permission errors
@@ -189,12 +162,16 @@ Cbox auto-fixes permissions. Manual fix:
 docker compose exec app chown -R www-data:www-data storage
 ```
 
-### ❌ Wrong Redis client
+### ❌ Connection refused
+
+MySQL not ready. Use healthcheck or wait:
 
 ```bash
-# Use phpredis (pre-installed, faster)
-REDIS_CLIENT=phpredis
+docker compose exec mysql sh -c 'until mysqladmin ping -h localhost --silent; do sleep 1; done'
+docker compose exec app php artisan migrate --force
 ```
+
+See [Common Issues](../troubleshooting/common-issues) for Docker networking and other troubleshooting.
 
 ---
 

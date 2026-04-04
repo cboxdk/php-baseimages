@@ -1,6 +1,6 @@
 ---
 title: "Installation"
-description: "Install Cbox base images with Docker, Docker Compose, or Kubernetes"
+description: "Install Cbox PHP Base Images with Docker, Docker Compose, or Kubernetes"
 weight: 2
 ---
 
