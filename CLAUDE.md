@@ -118,6 +118,13 @@ All images are based on Debian 12 (Bookworm):
 
 ### Local Development Builds
 
+Before building locally, download the Cbox Init binaries (they are not committed to git):
+
+```bash
+# Download Cbox Init binaries (required before first local build)
+./scripts/download-cbox-init.sh
+```
+
 ```bash
 # Build single-process containers (default profile)
 docker-compose build php-fpm nginx php-cli

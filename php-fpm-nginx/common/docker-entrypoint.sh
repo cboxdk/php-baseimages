@@ -104,6 +104,11 @@ sanitize_nginx_value() {
 
 ###########################################
 # PUID/PGID Runtime User Mapping
+# NOTE: This is an extended version of setup_user_permissions() from
+# entrypoint-lib.sh. It adds rootless-mode awareness, current UID/GID
+# checks before modifying, and ownership updates for the workdir and
+# common framework directories (storage, bootstrap/cache, var/).
+# Not using the lib version because the logic is a complete superset.
 ###########################################
 setup_user_permissions_extended() {
     # Skip PUID/PGID mapping in rootless mode
@@ -179,45 +184,13 @@ setup_user_permissions_extended() {
     log_info "User permissions configured successfully"
 }
 
-###########################################
-# Laravel .env Decryption Support
-###########################################
-decrypt_laravel_env() {
-    local workdir="${WORKDIR:-/var/www/html}"
-    local encrypted_file="$workdir/.env.encrypted"
-    local env_file="$workdir/.env"
-    local key=""
-
-    [ ! -f "$encrypted_file" ] && return 0
-
-    if [ -f "$env_file" ] && ! is_true "${LARAVEL_ENV_FORCE_DECRYPT:-false}"; then
-        log_info ".env exists, skipping decryption (set LARAVEL_ENV_FORCE_DECRYPT=true to override)"
-        return 0
-    fi
-
-    if [ -n "${LARAVEL_ENV_ENCRYPTION_KEY:-}" ]; then
-        key="$LARAVEL_ENV_ENCRYPTION_KEY"
-    elif [ -n "${LARAVEL_ENV_ENCRYPTION_KEY_FILE:-}" ] && [ -f "${LARAVEL_ENV_ENCRYPTION_KEY_FILE}" ]; then
-        key=$(cat "${LARAVEL_ENV_ENCRYPTION_KEY_FILE}" | tr -d '\n')
-    else
-        log_warn ".env.encrypted found but no decryption key provided"
-        return 0
-    fi
-
-    [ ! -f "$workdir/artisan" ] && { log_warn ".env.encrypted found but artisan not available"; return 0; }
-
-    log_info "Decrypting .env.encrypted..."
-    if php "$workdir/artisan" env:decrypt --key="$key" --force 2>&1; then
-        log_info "Successfully decrypted .env"
-        chmod 600 "$env_file" 2>/dev/null || true
-    else
-        log_error "Failed to decrypt .env.encrypted"
-        return 1
-    fi
-}
+# Laravel .env decryption: uses laravel_decrypt_env() from entrypoint-lib.sh
 
 ###########################################
 # Environment Variable Aliases (DX)
+# NOTE: Extended version of map_laravel_env_vars() from entrypoint-lib.sh.
+# This version adds validate_boolean() checks before each export to catch
+# invalid user input early. The lib version trusts input without validation.
 ###########################################
 map_env_aliases() {
     [ -n "$LARAVEL_HORIZON" ] && validate_boolean "$LARAVEL_HORIZON" && export CBOX_INIT_PROCESS_HORIZON_ENABLED="$LARAVEL_HORIZON"
@@ -231,18 +204,15 @@ map_env_aliases() {
     return 0
 }
 
-###########################################
-# PHP Version Auto-Detection
-###########################################
-detect_php_version_local() {
-    if command -v php >/dev/null 2>&1; then
-        php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;"
-    else
-        echo "8.3"
-    fi
-}
-
-PHP_VERSION=$(detect_php_version_local)
+# PHP Version Auto-Detection (uses detect_php_version from entrypoint-lib.sh,
+# falls back to inline detection if lib was not loaded)
+if command -v detect_php_version >/dev/null 2>&1; then
+    PHP_VERSION=$(detect_php_version)
+elif command -v php >/dev/null 2>&1; then
+    PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+else
+    PHP_VERSION="8.3"
+fi
 
 ###########################################
 # Runtime Configuration Generation
@@ -486,6 +456,9 @@ EOF
 
 ###########################################
 # Cbox Init Validation
+# NOTE: Similar to validate_cbox_init() from entrypoint-lib.sh but uses
+# exit 1 instead of return 1 on failure. During container startup, a missing
+# or broken cbox-init is fatal and must abort the entrypoint immediately.
 ###########################################
 validate_cbox_init_local() {
     local config="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
@@ -570,8 +543,10 @@ map_env_aliases
 # Setup PUID/PGID user permissions
 setup_user_permissions_extended
 
-# Decrypt Laravel .env.encrypted
-decrypt_laravel_env
+# Decrypt Laravel .env.encrypted (uses lib function if available)
+if command -v laravel_decrypt_env >/dev/null 2>&1; then
+    laravel_decrypt_env "${WORKDIR:-/var/www/html}"
+fi
 
 # Run preflight checks
 preflight_checks
@@ -596,6 +571,9 @@ elif [ -d /docker-entrypoint-init.d ]; then
 fi
 
 # Run migrations if enabled
+# NOTE: Not using laravel_run_migrations() from entrypoint-lib.sh because this
+# version supports LARAVEL_MIGRATE_ALLOW_FAILURE and can abort the container on
+# failure, which the lib version does not (it always warns and continues).
 if is_true "${LARAVEL_MIGRATE_ENABLED:-false}"; then
     [ -f "$WORKDIR/artisan" ] && {
         log_info "Running Laravel migrations..."
@@ -616,14 +594,25 @@ if is_true "${LARAVEL_MIGRATE_ENABLED:-false}"; then
     }
 fi
 
-# Optimize Laravel caches
-if is_true "${LARAVEL_OPTIMIZE_ENABLED:-false}"; then
+# Optimize Laravel caches (uses lib function if available)
+if command -v laravel_optimize >/dev/null 2>&1; then
+    laravel_optimize "$WORKDIR"
+elif is_true "${LARAVEL_OPTIMIZE_ENABLED:-false}"; then
     [ -f "$WORKDIR/artisan" ] && {
         log_info "Optimizing Laravel caches..."
         php artisan config:cache 2>&1 || true
         php artisan route:cache 2>&1 || true
         php artisan view:cache 2>&1 || true
     }
+fi
+
+# If a custom command was passed (not cbox-init, not empty, not a flag),
+# run it directly after setup instead of starting the process manager.
+# This supports: docker run myimage php artisan migrate
+#                docker run myimage bash
+if [ $# -gt 0 ] && [ "$1" != "cbox-init" ] && [ "${1#-}" = "$1" ]; then
+    log_info "Running custom command: $*"
+    exec "$@"
 fi
 
 # Start Cbox Init

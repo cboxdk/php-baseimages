@@ -45,3 +45,6 @@ docker-compose.override.yml
 
 # PHPeek PM is a separate repository
 phpeek-pm/
+
+# Cbox Init binaries (downloaded by scripts/download-cbox-init.sh)
+cbox-init/binaries/
