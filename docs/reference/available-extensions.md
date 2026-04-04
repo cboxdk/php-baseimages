@@ -34,9 +34,7 @@ The Slim tier includes all core extensions needed for most PHP applications.
 | `pgsql` | Built-in | PostgreSQL extension |
 | `redis` | PECL | Redis client extension |
 | `apcu` | PECL | User-land data caching |
-| `mongodb` | PECL | MongoDB driver |
 | `msgpack` | PECL | MessagePack serialization |
-| `grpc` | PECL | gRPC protocol support |
 | `zip` | Built-in | ZIP archive support |
 | `intl` | Built-in | Internationalization functions |
 | `bcmath` | Built-in | Arbitrary precision mathematics |
@@ -44,13 +42,23 @@ The Slim tier includes all core extensions needed for most PHP applications.
 | `exif` | Built-in | EXIF metadata reading |
 | `pcntl` | Built-in | Process control (signals, forking) |
 | `sockets` | Built-in | Low-level socket interface |
+| `bz2` | Built-in | Bzip2 compression |
+| `gmp` | Built-in | Arbitrary precision math |
+
+### Standard Tier Additions
+
+These extensions are added in the standard tier (and inherited by chromium/dev):
+
+| Extension | Source | Description |
+|-----------|--------|-------------|
+| `mongodb` | PECL | MongoDB driver |
+| `imagick` | PECL | ImageMagick bindings |
+| `vips` | PECL | libvips image processing |
 | `soap` | Built-in | SOAP protocol |
 | `xsl` | Built-in | XSL transformations |
 | `ldap` | Built-in | LDAP directory services |
-| `bz2` | Built-in | Bzip2 compression |
 | `calendar` | Built-in | Calendar conversion |
 | `gettext` | Built-in | GNU translations |
-| `gmp` | Built-in | Arbitrary precision math |
 | `shmop` | Built-in | Shared memory operations |
 | `sysvmsg` | Built-in | System V message queue |
 | `sysvsem` | Built-in | System V semaphore |
@@ -217,23 +225,27 @@ docker run --rm -e XDEBUG_MODE=debug \
 | mysqli, pgsql | ✅ | ✅ | ✅ | ✅ |
 | redis | ✅ | ✅ | ✅ | ✅ |
 | apcu | ✅ | ✅ | ✅ | ✅ |
-| mongodb | ✅ | ✅ | ✅ | ✅ |
-| grpc | ✅ | ✅ | ✅ | ✅ |
 | msgpack | ✅ | ✅ | ✅ | ✅ |
 | intl | ✅ | ✅ | ✅ | ✅ |
 | bcmath | ✅ | ✅ | ✅ | ✅ |
 | gd (WebP) | ✅ | ✅ | ✅ | ✅ |
-| gd (AVIF) | ❌ | ✅ | ✅ | ✅ |
-| imagick | ❌ | ✅ | ✅ | ✅ |
-| vips | ❌ | ✅ | ✅ | ✅ |
 | exif | ✅ | ✅ | ✅ | ✅ |
 | pcntl | ✅ | ✅ | ✅ | ✅ |
 | sockets | ✅ | ✅ | ✅ | ✅ |
-| soap | ✅ | ✅ | ✅ | ✅ |
-| xsl | ✅ | ✅ | ✅ | ✅ |
-| ldap | ✅ | ✅ | ✅ | ✅ |
 | bz2 | ✅ | ✅ | ✅ | ✅ |
+| gmp | ✅ | ✅ | ✅ | ✅ |
 | zip | ✅ | ✅ | ✅ | ✅ |
+| gd (AVIF) | ❌ | ✅ | ✅ | ✅ |
+| imagick | ❌ | ✅ | ✅ | ✅ |
+| vips | ❌ | ✅ | ✅ | ✅ |
+| mongodb | ❌ | ✅ | ✅ | ✅ |
+| soap | ❌ | ✅ | ✅ | ✅ |
+| xsl | ❌ | ✅ | ✅ | ✅ |
+| ldap | ❌ | ✅ | ✅ | ✅ |
+| calendar | ❌ | ✅ | ✅ | ✅ |
+| gettext | ❌ | ✅ | ✅ | ✅ |
+| shmop | ❌ | ✅ | ✅ | ✅ |
+| sysvmsg, sysvsem, sysvshm | ❌ | ✅ | ✅ | ✅ |
 | **Node.js 22** | ❌ | ✅ | ✅ | ✅ |
 | **Chromium** | ❌ | ❌ | ✅ | ✅ |
 | **Xdebug** | ❌ | ❌ | ❌ | ✅ |
@@ -252,7 +264,7 @@ All PECL extensions use pinned versions for reproducibility:
 | msgpack | 3.0.0 |
 | imagick | 3.8.1 |
 | vips | 1.0.13 |
-| grpc | 1.72.0 |
+
 | xdebug | 3.4.0 |
 | pcov | 1.0.12 |
 | spx | latest (from GitHub) |

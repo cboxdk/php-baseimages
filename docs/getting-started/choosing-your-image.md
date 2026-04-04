@@ -55,9 +55,9 @@ All images are prefixed with `ghcr.io/cboxdk/php-baseimages/`.
 
 ## Tiers
 
-**Slim** (`-slim`) -- Core PHP extensions (opcache, pdo_mysql, pdo_pgsql, redis, mongodb, grpc, intl, bcmath, gd with WebP, zip) plus Composer and Cbox Init. Best for APIs, microservices, and CI pipelines where image size matters.
+**Slim** (`-slim`) -- Core PHP extensions (opcache, pdo_mysql, pdo_pgsql, redis, apcu, msgpack, intl, bcmath, gd with WebP, zip, pcntl, sockets) plus Composer and Cbox Init. Best for APIs, microservices, and CI pipelines where image size matters.
 
-**Standard** (no suffix, default) -- Everything in Slim plus ImageMagick, libvips, GD with AVIF, Node.js 22, exiftool, ghostscript, and librsvg. The right choice for most Laravel, Symfony, and WordPress applications.
+**Standard** (no suffix, default) -- Everything in Slim plus ImageMagick, libvips, GD with AVIF, Node.js 22, mongodb, soap, ldap, xsl, calendar, gettext, sysv IPC, exiftool, ghostscript, and librsvg. The right choice for most Laravel, Symfony, and WordPress applications.
 
 **Chromium** (`-chromium`) -- Everything in Standard plus Chromium, Puppeteer environment, NSS, HarfBuzz, and fonts. Required for Browsershot, Laravel Dusk, Puppeteer, and PDF generation via headless browser.
 
