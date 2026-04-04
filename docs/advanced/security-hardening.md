@@ -755,8 +755,8 @@ trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx
 # Slim tier
 trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 
-# Full tier
-trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+# Chromium tier
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 #### CI/CD Integration
@@ -839,7 +839,7 @@ jobs:
 
     strategy:
       matrix:
-        tier: [slim, standard, full]
+        tier: [slim, standard, chromium]
 
     steps:
       - name: Checkout code
@@ -1338,4 +1338,4 @@ groups:
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

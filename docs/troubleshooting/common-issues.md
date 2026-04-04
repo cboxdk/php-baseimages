@@ -387,4 +387,4 @@ When something isn't working:
 
 ---
 
-**Still stuck?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).
+**Still stuck?** Ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

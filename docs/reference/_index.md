@@ -16,14 +16,14 @@ Cbox images come in three tiers:
 |------|------------|------|----------|
 | **Slim** | `-slim` | ~120MB | APIs, microservices |
 | **Standard** | (none) | ~250MB | Most apps (DEFAULT) |
-| **Full** | `-full` | ~700MB | Browsershot, Dusk, PDF |
+| **Chromium** | `-chromium` | ~700MB | Browsershot, Dusk, PDF |
 
 ## Available References
 
 ### Image Information
 
 - **[Image Tiers Comparison](editions-comparison.md)**
-  - Slim vs Standard vs Full comparison
+  - Slim vs Standard vs Chromium comparison
   - Extension differences by tier
   - Use case recommendations
   - Migration between tiers
@@ -54,7 +54,7 @@ Cbox images come in three tiers:
   - Custom configuration patterns
 
 - **[Available Extensions](available-extensions.md)**
-  - Extensions by tier (Slim/Standard/Full)
+  - Extensions by tier (Slim/Standard/Chromium)
   - Extension usage examples
   - Version information
   - Adding custom extensions
@@ -84,8 +84,8 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 # Slim tier - APIs, microservices
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 
-# Full tier - Browsershot, Dusk, PDF generation
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+# Chromium tier - Browsershot, Dusk, PDF generation
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 
 # Rootless variants (add -rootless suffix)
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
@@ -129,7 +129,7 @@ Reference documentation links to:
 
 Found an undocumented variable or option?
 
-1. Check existing issues: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
+1. Check existing issues: [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
 2. Submit a pull request with documentation
 3. Include example usage and expected behavior
 

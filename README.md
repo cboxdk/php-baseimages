@@ -2,12 +2,12 @@
 
 Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions on Debian 12 (Bookworm) and no unnecessary complexity.
 
-[![PHP-FPM-Nginx](https://github.com/cboxdk/baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/cboxdk/baseimages/actions/workflows/build-php-fpm-nginx.yml)
+[![PHP-FPM-Nginx](https://github.com/cboxdk/php-baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/cboxdk/php-baseimages/actions/workflows/build-php-fpm-nginx.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## 🎯 Philosophy
 
-- **Three Tiers**: Slim (~120MB), Standard (~250MB), Full (~700MB) - choose your needs
+- **Three Tiers**: Slim (~120MB), Standard (~250MB), Chromium (~700MB) - choose your needs
 - **Cbox Process Manager**: Production-grade Go-based process manager built-in
 - **Flexible Architecture**: Choose single-process OR multi-service containers
 - **Debian 12 (Bookworm)**: Stable, glibc-based images with excellent compatibility
@@ -81,14 +81,14 @@ ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
 ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 ```
 
-### Image Tiers: Slim / Standard / Full / Dev
+### Image Tiers: Slim / Standard / Chromium / Dev
 
 | Tier | Size | Extensions | Best For |
 |------|------|------------|----------|
 | **Slim** | ~120MB | 25+ core | API/microservices, minimal footprint |
 | **Standard** (default) | ~250MB | 30+ with ImageMagick, vips, Node.js | Most Laravel/PHP apps |
-| **Full** | ~700MB | Standard + Chromium | Browsershot, Dusk, PDF generation |
-| **Dev** | ~750MB | Full + Xdebug, PCOV, SPX | Development, testing, CI/CD |
+| **Chromium** | ~700MB | Standard + Chromium | Browsershot, Dusk, PDF generation |
+| **Dev** | ~750MB | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
 **Tag Suffixes:**
 
@@ -96,7 +96,7 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 |------|------------|---------|
 | Standard (default) | `{version}-bookworm` | `8.4-bookworm` |
 | Slim | `{version}-bookworm-slim` | `8.4-bookworm-slim` |
-| Full | `{version}-bookworm-full` | `8.4-bookworm-full` |
+| Chromium | `{version}-bookworm-chromium` | `8.4-bookworm-chromium` |
 | Dev | `{version}-bookworm-dev` | `8.4-bookworm-dev` |
 | Rootless variants | Add `-rootless` | `8.4-bookworm-rootless`, `8.4-bookworm-dev-rootless` |
 
@@ -106,8 +106,8 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 |------|------------|
 | **Slim** | Redis, APCu, MongoDB, gRPC, GD (WebP), intl, bcmath, zip, PCNTL, sockets |
 | **Standard** | Slim + ImageMagick, libvips, GD (AVIF), Node.js 22, exiftool |
-| **Full** | Standard + Chromium, Puppeteer support |
-| **Dev** | Full + Xdebug 3.5, PCOV 1.0, SPX profiler |
+| **Chromium** | Standard + Chromium, Puppeteer support |
+| **Dev** | Chromium + Xdebug 3.5, PCOV 1.0, SPX profiler |
 
 📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
 
@@ -201,17 +201,17 @@ Single container with both PHP-FPM and Nginx:
 
 ### Pre-Installed Extensions
 
-**All Tiers (Slim/Standard/Full):**
+**All Tiers (Slim/Standard/Chromium):**
 - **Core:** opcache, apcu, redis, pdo_mysql, pdo_pgsql, mysqli, pgsql, zip, intl, bcmath, sockets, pcntl
-- **Data:** mongodb, igbinary, msgpack, grpc
+- **Data:** mongodb, msgpack, grpc
 - **Images:** gd (WebP), exif
 - **Features:** soap, xsl, ldap, bz2, calendar, gettext, gmp
 
-**Standard + Full Tiers add:**
+**Standard + Chromium Tiers add:**
 - **Images:** imagick, vips, gd (AVIF support)
 - **Tools:** Node.js 22, npm, exiftool
 
-**Full Tier adds:**
+**Chromium Tier adds:**
 - **Browser:** Chromium for Browsershot/Dusk/Puppeteer
 
 📖 **Complete list:** [Available Extensions →](docs/reference/available-extensions.md)
@@ -309,11 +309,11 @@ docker-compose up -d
 |----------|---------|----------|
 | **Standard** | `8.4-bookworm` | Most apps (default tier) |
 | **Slim** | `8.4-bookworm-slim` | Minimal footprint, microservices |
-| **Full** | `8.4-bookworm-full` | Browsershot, Dusk, PDF generation |
+| **Chromium** | `8.4-bookworm-chromium` | Browsershot, Dusk, PDF generation |
 | **Dev** | `8.4-bookworm-dev` | Development, testing, CI/CD |
 | **Rootless** | `8.4-bookworm-rootless` | Security-restricted environments |
 | **Slim + Rootless** | `8.4-bookworm-slim-rootless` | Minimal + non-root |
-| **Full + Rootless** | `8.4-bookworm-full-rootless` | Chromium + non-root |
+| **Chromium + Rootless** | `8.4-bookworm-chromium-rootless` | Chromium + non-root |
 | **Dev + Rootless** | `8.4-bookworm-dev-rootless` | Development + non-root |
 | **PHP Pinned** | `8.4.7-bookworm` | Production version lock |
 
@@ -333,11 +333,11 @@ services:
     # Minimal size (~120MB), core extensions only
 ```
 
-**Full Tier** (PDF generation, browser testing):
+**Chromium Tier** (PDF generation, browser testing):
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
     # Includes Chromium for Browsershot/Dusk
 ```
 
@@ -357,7 +357,7 @@ services:
 |------|------------------|----------|
 | **Slim** | ~120MB | APIs, microservices |
 | **Standard** | ~250MB | Most PHP applications |
-| **Full** | ~700MB | PDF generation, browser testing |
+| **Chromium** | ~700MB | PDF generation, browser testing |
 | **Dev** | ~750MB | Development, testing, CI/CD |
 
 📖 **Detailed comparison:** [Image Tiers Guide →](docs/reference/editions-comparison.md)
@@ -366,7 +366,7 @@ services:
 
 ```bash
 # Clone repository
-git clone https://github.com/cboxdk/baseimages.git
+git clone https://github.com/cboxdk/php-baseimages.git
 cd baseimages
 
 # Build multi-service image
@@ -549,8 +549,8 @@ Inspired by the PHP community's need for clean, no-nonsense base images without 
 ## 💬 Support
 
 - **Documentation:** [docs/](docs/)
-- **Issues:** [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Issues:** [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 - **Security:** [SECURITY.md](SECURITY.md)
 
 ---

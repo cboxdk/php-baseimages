@@ -6,7 +6,7 @@
 # IMAGE TIERS (inherited from php-base):
 # - slim:     Minimal PHP + essential extensions - API/microservices
 # - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
-# - full:     + Chromium for Browsershot/Dusk - PDF generation, testing
+# - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 # ============================================================================
 
 # ============================================================================
@@ -16,8 +16,8 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-slim AS base-slim
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-slim-rootless AS base-slim-rootless
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm AS base-standard
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-full AS base-full
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-full-rootless AS base-full-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-chromium AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm-chromium-rootless AS base-chromium-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP CLI with essential extensions
@@ -27,7 +27,7 @@ FROM base-slim AS slim-root
 LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP CLI with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=slim
 
@@ -49,7 +49,7 @@ FROM base-slim-rootless AS slim-rootless
 LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP CLI with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=slim
 
@@ -74,7 +74,7 @@ FROM base-standard AS root
 LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm"
 LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=standard
 
@@ -96,7 +96,7 @@ FROM base-standard-rootless AS rootless
 LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=standard
 
@@ -114,16 +114,16 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FULL-ROOT: Everything including Chromium for Browsershot/Dusk
+# CHROMIUM-ROOT: Everything including Chromium for Browsershot/Dusk
 # ═══════════════════════════════════════════════════════════════════════════
-FROM base-full AS full-root
+FROM base-chromium AS chromium-root
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Full)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Chromium)"
 LABEL org.opencontainers.image.description="PHP CLI with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
-ENV CBOX_IMAGE_TIER=full
+ENV CBOX_IMAGE_TIER=chromium
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
@@ -136,16 +136,16 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FULL-ROOTLESS: Everything including Chromium, running as www-data
+# CHROMIUM-ROOTLESS: Everything including Chromium, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
-FROM base-full-rootless AS full-rootless
+FROM base-chromium-rootless AS chromium-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Full Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI 8.4 Bookworm (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
-ENV CBOX_IMAGE_TIER=full
+ENV CBOX_IMAGE_TIER=chromium
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

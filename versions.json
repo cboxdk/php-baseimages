@@ -38,7 +38,7 @@
     "imagick": "3.8.1",
     "apcu": "5.1.27",
     "mongodb": "2.1.4",
-    "igbinary": "3.2.16",
+
     "msgpack": "3.0.0",
     "xdebug": "3.5.0",
     "pcov": "1.0.12",

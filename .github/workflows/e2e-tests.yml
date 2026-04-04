@@ -49,7 +49,7 @@ on:
           - 'image-formats'
 
 env:
-  REGISTRY: ghcr.io/cboxdk/baseimages
+  REGISTRY: ghcr.io/cboxdk/php-baseimages
 
 jobs:
   # Quick smoke test on every push - builds entire chain locally

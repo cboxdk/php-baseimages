@@ -7,7 +7,7 @@
 # IMAGE TIERS:
 # - slim:     Minimal PHP + essential extensions (~200MB) - API/microservices
 # - standard: + ImageMagick, vips, Node.js (~400MB) - Most Laravel apps (DEFAULT)
-# - full:     + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
+# - chromium: + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
 # ============================================================================
 
 # ============================================================================
@@ -17,7 +17,6 @@ ARG REDIS_VERSION=6.3.0
 ARG IMAGICK_VERSION=3.8.1
 ARG APCU_VERSION=5.1.27
 ARG MONGODB_VERSION=2.1.4
-ARG IGBINARY_VERSION=3.2.16
 ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
 ARG XDEBUG_VERSION=3.5.0
@@ -35,13 +34,12 @@ FROM php:8.4-cli-bookworm AS slim-base
 LABEL org.opencontainers.image.title="Cbox PHP Base 8.4 Debian"
 LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 # Re-declare ARGs after FROM (they don't persist)
 ARG REDIS_VERSION
 ARG APCU_VERSION
 ARG MONGODB_VERSION
-ARG IGBINARY_VERSION
 ARG MSGPACK_VERSION
 
 # ============================================================================
@@ -85,10 +83,8 @@ RUN docker-php-ext-install -j$(nproc) \
     calendar gettext shmop sysvmsg sysvsem sysvshm \
     gmp
 
-# Install PECL extensions with PINNED versions (igbinary first for redis serialization)
-RUN pecl install igbinary-${IGBINARY_VERSION} && \
-    docker-php-ext-enable igbinary && \
-    pecl install redis-${REDIS_VERSION} --configureoptions 'enable-igbinary-serializer="yes"' && \
+# Install PECL extensions with PINNED versions
+RUN pecl install redis-${REDIS_VERSION} && \
     pecl install apcu-${APCU_VERSION} && \
     pecl install msgpack-${MSGPACK_VERSION} && \
     pecl install mongodb-${MONGODB_VERSION} && \
@@ -246,9 +242,9 @@ RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
 COPY php-base/common/imagemagick-policy.xml /etc/ImageMagick-6/policy.xml
 
 # ============================================================================
-# FULL BASE - Add Chromium for Browsershot/Dusk/Puppeteer
+# CHROMIUM BASE - Add Chromium for Browsershot/Dusk/Puppeteer
 # ============================================================================
-FROM standard-base AS full-base
+FROM standard-base AS chromium-base
 
 # Chromium and dependencies for headless browser
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -272,9 +268,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # ============================================================================
-# DEV BASE - Full + Development tools (Xdebug, PCOV, SPX)
+# DEV BASE - Chromium + Development tools (Xdebug, PCOV, SPX)
 # ============================================================================
-FROM full-base AS dev-base
+FROM chromium-base AS dev-base
 
 ARG XDEBUG_VERSION
 ARG PCOV_VERSION
@@ -339,26 +335,26 @@ USER www-data
 WORKDIR /var/www/html
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FULL VARIANTS (root + rootless)
+# CHROMIUM VARIANTS (root + rootless)
 # ═══════════════════════════════════════════════════════════════════════════
-FROM full-base AS full-root
+FROM chromium-base AS chromium-root
 ENV CBOX_ROOTLESS=false \
-    CBOX_IMAGE_TIER=full
+    CBOX_IMAGE_TIER=chromium
 
-FROM full-base AS full-rootless
+FROM chromium-base AS chromium-rootless
 RUN mkdir -p \
     /var/www/html /var/www/.composer /var/www/.npm \
     /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d && \
     chown -R www-data:www-data \
         /var/www /var/lib/php/sessions /tmp/cbox /docker-entrypoint-init.d
 ENV CBOX_ROOTLESS=true \
-    CBOX_IMAGE_TIER=full \
+    CBOX_IMAGE_TIER=chromium \
     HOME=/var/www
 USER www-data
 WORKDIR /var/www/html
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DEV VARIANTS (root + rootless) - Full + Xdebug, PCOV, SPX
+# DEV VARIANTS (root + rootless) - Chromium + Xdebug, PCOV, SPX
 # ═══════════════════════════════════════════════════════════════════════════
 FROM dev-base AS dev-root
 ENV CBOX_ROOTLESS=false \

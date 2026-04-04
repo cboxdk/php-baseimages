@@ -135,7 +135,7 @@ Test across all PHP versions and OS variants:
 The matrix tests cover:
 
 - **PHP Versions**: 8.2, 8.3, 8.4, 8.5
-- **Tiers**: Slim, Standard, Full
+- **Tiers**: Slim, Standard, Chromium
 - **Image Types**: php-fpm, php-fpm-nginx
 
 ---

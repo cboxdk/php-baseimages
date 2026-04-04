@@ -10,8 +10,8 @@
 #   ./test-extensions.sh baseimages-php-fpm-alpine fpm      # Explicit profile
 #
 # Profiles:
-#   fpm       - php-fpm single-process image (has vips, no igbinary/msgpack)
-#   fpm-nginx - php-fpm-nginx multi-service image (has igbinary/msgpack, no vips)
+#   fpm       - php-fpm single-process image (has vips, no msgpack)
+#   fpm-nginx - php-fpm-nginx multi-service image (has msgpack, no vips)
 #   cli       - php-cli image
 
 set -euo pipefail
@@ -315,20 +315,14 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 log_section "Serialization Extensions"
 
-# Igbinary and msgpack only in fpm-nginx profile
+# Msgpack only in fpm-nginx profile
 if [ "$PROFILE" = "fpm-nginx" ]; then
-    test_extension_loaded "igbinary" "Igbinary extension loaded"
     test_extension_loaded "msgpack" "Msgpack extension loaded"
-
-    test_extension_functional "Igbinary serialize/unserialize" \
-        "\$data = ['test' => 123]; echo igbinary_unserialize(igbinary_serialize(\$data))['test'];" \
-        "123"
 
     test_extension_functional "Msgpack pack/unpack" \
         "\$data = ['test' => 456]; echo msgpack_unpack(msgpack_pack(\$data))['test'];" \
         "456"
 else
-    log_skip "Igbinary extension (not in $PROFILE profile)"
     log_skip "Msgpack extension (not in $PROFILE profile)"
 fi
 
@@ -390,12 +384,8 @@ test_extension_functional "Redis class exists" \
     "echo class_exists('Redis') ? 'yes' : 'no';" \
     "yes"
 
-# Igbinary/msgpack serializers only if those extensions are installed
+# Msgpack serializer only if that extension is installed
 if [ "$PROFILE" = "fpm-nginx" ]; then
-    test_extension_functional "Redis supports igbinary serializer" \
-        "echo defined('Redis::SERIALIZER_IGBINARY') ? 'yes' : 'no';" \
-        "yes"
-
     test_extension_functional "Redis supports msgpack serializer" \
         "echo defined('Redis::SERIALIZER_MSGPACK') ? 'yes' : 'no';" \
         "yes"

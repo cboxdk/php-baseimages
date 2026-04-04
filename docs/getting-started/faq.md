@@ -13,7 +13,7 @@ weight: 10
 Cbox Base Images is a collection of production-ready Docker images for PHP applications. We provide:
 
 - **40+ PHP extensions** pre-installed and optimized
-- **Three tiers**: Slim (APIs), Standard (most apps), Full (Browsershot/Dusk)
+- **Three tiers**: Slim (APIs), Standard (most apps), Chromium (Browsershot/Dusk)
 - **PHP versions**: 8.2, 8.3, 8.4, 8.5
 - **Architecture types**: Single-process (PHP-FPM, PHP-CLI, Nginx) and Multi-service (PHP-FPM + Nginx)
 - **Development variants** with Xdebug pre-configured
@@ -351,7 +351,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 ### Where can I report issues?
 
-GitHub Issues: [github.com/cboxdk/baseimages/issues](https://github.com/cboxdk/baseimages/issues)
+GitHub Issues: [github.com/cboxdk/php-baseimages/issues](https://github.com/cboxdk/php-baseimages/issues)
 
 ### How do I contribute?
 

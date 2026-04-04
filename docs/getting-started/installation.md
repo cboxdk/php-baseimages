@@ -311,5 +311,5 @@ docker pull --platform linux/amd64 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8
 ## Next Steps
 
 - **[5-Minute Quickstart](quickstart.md)** - Get a Laravel app running
-- **[Choosing a Tier](choosing-variant.md)** - Slim vs Standard vs Full
+- **[Choosing a Tier](choosing-variant.md)** - Slim vs Standard vs Chromium
 - **[Laravel Guide](../guides/laravel-guide.md)** - Complete Laravel setup

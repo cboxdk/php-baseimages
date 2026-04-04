@@ -8,7 +8,7 @@ Performance benchmarking suite for Cbox base images.
 Measures and compares:
 - Uncompressed image size
 - Compressed image size (gzipped)
-- Storage efficiency across tiers (slim, standard, full)
+- Storage efficiency across tiers (slim, standard, chromium)
 
 ### 2. Container Startup Time
 Measures:
@@ -48,7 +48,7 @@ Benchmarks:
 # Build all tiers
 docker build --target root -t cbox-bookworm -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 docker build --target slim -t cbox-slim -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-docker build --target full -t cbox-full -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
+docker build --target chromium -t cbox-chromium -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
 ```
 
 ### Run All Benchmarks
@@ -83,7 +83,7 @@ tests/benchmarks/results/
 |------|------------|-----------------|
 | slim | 120 MB     | 45 MB           |
 | standard | 250 MB | 95 MB           |
-| full | 700 MB     | 280 MB          |
+| chromium | 700 MB     | 280 MB          |
 
 ## Container Startup Time Comparison
 
@@ -91,7 +91,7 @@ tests/benchmarks/results/
 |------|-------------------------------|---------|
 | slim | 1.234s                        | 0.045s  |
 | standard | 1.456s                    | 0.062s  |
-| full | 1.623s                        | 0.071s  |
+| chromium | 1.623s                        | 0.071s  |
 
 ## PHP Performance Comparison
 
@@ -99,7 +99,7 @@ tests/benchmarks/results/
 |------|---------------|--------------|--------------|
 | slim | 45,234        | 12.5MB       | 98.5%        |
 | standard | 44,892    | 13.2MB       | 98.3%        |
-| full | 44,756        | 13.4MB       | 98.1%        |
+| chromium | 44,756        | 13.4MB       | 98.1%        |
 
 ## HTTP Request Performance Comparison
 
@@ -107,7 +107,7 @@ tests/benchmarks/results/
 |------|--------------|---------------|---------------|
 | slim | 2,345        | 4.26ms        | 6.82ms        |
 | standard | 2,312    | 4.33ms        | 6.95ms        |
-| full | 2,289        | 4.37ms        | 7.01ms        |
+| chromium | 2,289        | 4.37ms        | 7.01ms        |
 ```
 
 ## CI/CD Integration
@@ -134,9 +134,9 @@ GitHub Actions uploads results as artifacts:
 ### Image Size
 - **Slim**: ~120MB - Best for size-constrained environments, APIs/microservices
 - **Standard**: ~250MB - Balance of size and features (default)
-- **Full**: ~700MB - Includes Chromium for Browsershot/Dusk
+- **Chromium**: ~700MB - Includes Chromium for Browsershot/Dusk
 
-**Recommendation**: Choose slim for microservices, standard for most apps, full for browser testing.
+**Recommendation**: Choose slim for microservices, standard for most apps, chromium for browser testing.
 
 ### Startup Time
 - Differences typically 10-30% between tiers
@@ -194,7 +194,7 @@ benchmark_your_test() {
     echo "# Your Benchmark Results" > "$RESULTS_DIR/your-test-$TIMESTAMP.md"
     echo "" >> "$RESULTS_DIR/your-test-$TIMESTAMP.md"
 
-    for tier in slim standard full; do
+    for tier in slim standard chromium; do
         IMAGE="cbox-${tier}"
 
         # Your test logic here

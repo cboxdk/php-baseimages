@@ -210,8 +210,8 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 # Slim tier (APIs, microservices)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 
-# Full tier (Browsershot, Dusk)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+# Chromium tier (Browsershot, Dusk)
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 
 # Development (with Xdebug)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev

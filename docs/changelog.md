@@ -54,10 +54,10 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 ## [2024.12] - December 2024
 
 ### Added
-- **3-Tier Image System** - Slim, Standard, Full tiers for different use cases
+- **3-Tier Image System** - Slim, Standard, Chromium tiers for different use cases
   - **Slim** (~120MB): Core extensions, APIs/microservices
   - **Standard** (~250MB): + ImageMagick, vips, Node.js 22 (DEFAULT)
-  - **Full** (~700MB): + Chromium for Browsershot/Dusk
+  - **Chromium** (~700MB): + Chromium for Browsershot/Dusk
 - **gRPC extension** - Added to all tiers
 - **Rootless variants** - All tiers support `-rootless` suffix
 - New tag format: `{type}:{php-version}-{os}[-tier][-rootless]`
@@ -65,7 +65,7 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 ### Changed
 - Renamed "Minimal" edition to "Slim" tier
 - Renamed "Full" edition to "Standard" tier (now the default)
-- New "Full" tier includes Chromium (previously separate)
+- New "Chromium" tier includes Chromium (previously separate)
 - Tag format changed from `-minimal` suffix to `-slim` suffix
 - Standard tier is now the default (no suffix)
 
@@ -80,7 +80,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-minimal   # Mini
 # NEW (2024.12)
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm           # Standard tier (default)
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim      # Slim tier
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full      # Full tier (with Chromium)
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium  # Chromium tier (with Chromium)
 ```
 
 **Tier selection guide:**
@@ -88,7 +88,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full      # Full
 |---------|---------|-------------|
 | `8.4-bookworm` | `8.4-bookworm` | Most apps (Standard is default) |
 | `8.4-bookworm-minimal` | `8.4-bookworm-slim` | APIs, microservices |
-| N/A | `8.4-bookworm-full` | Browsershot, Dusk, PDF |
+| N/A | `8.4-bookworm-chromium` | Browsershot, Dusk, PDF |
 
 ---
 
@@ -152,7 +152,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full      # Full
 |----------------|-------------|
 | `8.4-bookworm` (Full edition) | `8.4-bookworm` (Standard tier) - same tag! |
 | `8.4-bookworm-minimal` | `8.4-bookworm-slim` |
-| Browsershot/Dusk | `8.4-bookworm-full` |
+| Browsershot/Dusk | `8.4-bookworm-chromium` |
 
 **Step 2: Update your docker-compose.yml**
 
@@ -160,8 +160,8 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full      # Full
 # Most apps - no change needed!
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
-# For Browsershot/Dusk users - use Full tier
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+# For Browsershot/Dusk users - use Chromium tier
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 
 # For API/microservices - use Slim tier
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
@@ -210,6 +210,6 @@ docker compose exec app cat /etc/cbox-version
 
 ## Reporting Issues
 
-- **Bugs**: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
-- **Security**: See [SECURITY.md](https://github.com/cboxdk/baseimages/blob/main/SECURITY.md)
-- **Questions**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Bugs**: [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
+- **Security**: See [SECURITY.md](https://github.com/cboxdk/php-baseimages/blob/main/SECURITY.md)
+- **Questions**: [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)

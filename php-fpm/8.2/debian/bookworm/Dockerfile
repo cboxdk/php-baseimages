@@ -7,7 +7,7 @@
 # IMAGE TIERS (inherited from php-base):
 # - slim:     Minimal PHP + essential extensions - API/microservices
 # - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
-# - full:     + Chromium for Browsershot/Dusk - PDF generation, testing
+# - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 # ============================================================================
 
 # ============================================================================
@@ -15,7 +15,7 @@
 # ============================================================================
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-slim AS base-slim
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-full AS base-full
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-chromium AS base-chromium
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-dev AS base-dev
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ FROM php:8.2-fpm-bookworm AS slim-root
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 # Slim runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -80,7 +80,7 @@ FROM php:8.2-fpm-bookworm AS slim-rootless
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
@@ -129,7 +129,7 @@ FROM php:8.2-fpm-bookworm AS root
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 # Standard runtime dependencies (no Chromium)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -196,7 +196,7 @@ FROM php:8.2-fpm-bookworm AS rootless
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
@@ -247,16 +247,16 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FULL-ROOT: Everything including Chromium for Browsershot/Dusk
+# CHROMIUM-ROOT: Everything including Chromium for Browsershot/Dusk
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS full-root
+FROM php:8.2-fpm-bookworm AS chromium-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Full)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Chromium)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
-# Full runtime dependencies including Chromium
+# Chromium runtime dependencies including Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
     cron \
@@ -276,18 +276,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
     CBOX_ROOTLESS=false \
-    CBOX_IMAGE_TIER=full
+    CBOX_IMAGE_TIER=chromium
 
-COPY --from=base-full /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
-COPY --from=base-full /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
-COPY --from=base-full /usr/local/bin/node /usr/local/bin/node
-COPY --from=base-full /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
+COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
-COPY --from=base-full /usr/bin/composer /usr/bin/composer
-COPY --from=base-full /usr/local/bin/cbox-init /usr/local/bin/cbox-init
-COPY --from=base-full /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
-COPY --from=base-full /usr/local/lib/cbox/ /usr/local/lib/cbox/
+COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
+COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -306,14 +306,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# FULL-ROOTLESS: Everything including Chromium, running as www-data
+# CHROMIUM-ROOTLESS: Everything including Chromium, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS full-rootless
+FROM php:8.2-fpm-bookworm AS chromium-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Full Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
@@ -334,19 +334,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
     CBOX_ROOTLESS=true \
-    CBOX_IMAGE_TIER=full \
+    CBOX_IMAGE_TIER=chromium \
     HOME=/var/www
 
-COPY --from=base-full /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
-COPY --from=base-full /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
-COPY --from=base-full /usr/local/bin/node /usr/local/bin/node
-COPY --from=base-full /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
+COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
-COPY --from=base-full /usr/bin/composer /usr/bin/composer
-COPY --from=base-full /usr/local/bin/cbox-init /usr/local/bin/cbox-init
-COPY --from=base-full /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
-COPY --from=base-full /usr/local/lib/cbox/ /usr/local/lib/cbox/
+COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
+COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -369,14 +369,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DEV-ROOT: Full + Xdebug, PCOV, SPX for development/testing
+# DEV-ROOT: Chromium + Xdebug, PCOV, SPX for development/testing
 # ═══════════════════════════════════════════════════════════════════════════
 FROM php:8.2-fpm-bookworm AS dev-root
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Dev)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
@@ -427,14 +427,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DEV-ROOTLESS: Full + Xdebug, PCOV, SPX, running as www-data
+# DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM php:8.2-fpm-bookworm AS dev-rootless
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Dev Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/baseimages"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \

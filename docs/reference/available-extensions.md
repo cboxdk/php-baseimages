@@ -1,6 +1,6 @@
 ---
 title: "Available Extensions"
-description: "Complete list of PHP extensions by image tier - Slim, Standard, Full, and Dev"
+description: "Complete list of PHP extensions by image tier - Slim, Standard, Chromium, and Dev"
 weight: 30
 ---
 
@@ -16,8 +16,8 @@ Cbox images come in four tiers with different extension sets:
 |------|-----------|----------|
 | **Slim** | 25+ core | APIs, microservices |
 | **Standard** | Slim + ImageMagick, vips, Node.js | Most apps (DEFAULT) |
-| **Full** | Standard + Chromium | Browsershot, Dusk, PDF |
-| **Dev** | Full + Xdebug, PCOV, SPX | Development, testing, CI/CD |
+| **Chromium** | Standard + Chromium | Browsershot, Dusk, PDF |
+| **Dev** | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
 ## Slim Tier Extensions
 
@@ -35,7 +35,6 @@ The Slim tier includes all core extensions needed for most PHP applications.
 | `redis` | PECL | Redis client extension |
 | `apcu` | PECL | User-land data caching |
 | `mongodb` | PECL | MongoDB driver |
-| `igbinary` | PECL | Fast serialization |
 | `msgpack` | PECL | MessagePack serialization |
 | `grpc` | PECL | gRPC protocol support |
 | `zip` | Built-in | ZIP archive support |
@@ -104,9 +103,9 @@ The Standard tier includes everything in Slim, plus image processing and Node.js
 | SVG | ❌ | ✅ | ✅ |
 | TIFF | ❌ | ✅ | ✅ |
 
-## Full Tier Extensions
+## Chromium Tier Extensions
 
-The Full tier includes everything in Standard, plus Chromium for browser automation.
+The Chromium tier includes everything in Standard, plus Chromium for browser automation.
 
 ### Additional Components (on top of Standard)
 
@@ -126,9 +125,9 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 ## Dev Tier Extensions
 
-The Dev tier includes everything in Full, plus development and profiling tools.
+The Dev tier includes everything in Chromium, plus development and profiling tools.
 
-### Additional Extensions (on top of Full)
+### Additional Extensions (on top of Chromium)
 
 | Extension | Type | Version | Purpose |
 |-----------|------|---------|---------|
@@ -211,7 +210,7 @@ docker run --rm -e XDEBUG_MODE=debug \
 
 ## Extension Comparison by Tier
 
-| Extension | Slim | Standard | Full | Dev |
+| Extension | Slim | Standard | Chromium | Dev |
 |-----------|:----:|:--------:|:----:|:---:|
 | opcache | ✅ | ✅ | ✅ | ✅ |
 | pdo_mysql, pdo_pgsql | ✅ | ✅ | ✅ | ✅ |
@@ -220,7 +219,7 @@ docker run --rm -e XDEBUG_MODE=debug \
 | apcu | ✅ | ✅ | ✅ | ✅ |
 | mongodb | ✅ | ✅ | ✅ | ✅ |
 | grpc | ✅ | ✅ | ✅ | ✅ |
-| igbinary, msgpack | ✅ | ✅ | ✅ | ✅ |
+| msgpack | ✅ | ✅ | ✅ | ✅ |
 | intl | ✅ | ✅ | ✅ | ✅ |
 | bcmath | ✅ | ✅ | ✅ | ✅ |
 | gd (WebP) | ✅ | ✅ | ✅ | ✅ |
@@ -250,7 +249,6 @@ All PECL extensions use pinned versions for reproducibility:
 | redis | 6.3.0 |
 | apcu | 5.1.27 |
 | mongodb | 2.1.4 |
-| igbinary | 3.2.16 |
 | msgpack | 3.0.0 |
 | imagick | 3.8.1 |
 | vips | 1.0.13 |
@@ -371,11 +369,11 @@ All WordPress requirements are satisfied by **Standard tier** (for ImageMagick):
 
 ### Browsershot / Laravel Dusk
 
-Requires **Full tier** for Chromium:
+Requires **Chromium tier** for Chromium:
 
 | Requirement | Status |
 |-------------|--------|
-| Chromium | ✅ Full tier |
+| Chromium | ✅ Chromium tier |
 | Puppeteer env vars | ✅ Auto-configured |
 
 ## Troubleshooting

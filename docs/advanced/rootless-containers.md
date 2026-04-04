@@ -19,7 +19,7 @@ Cbox Base Images provide **official rootless variants** for all images:
 | php-fpm | `8.4-bookworm` | `8.4-bookworm-rootless` |
 | php-fpm-nginx | `8.4-bookworm` | `8.4-bookworm-rootless` |
 
-All tiers (slim, standard, full) have corresponding rootless versions.
+All tiers (slim, standard, chromium) have corresponding rootless versions.
 
 ## Quick Start: Using Rootless Images
 
@@ -411,4 +411,4 @@ docker build -t myapp:rootless .
 
 ---
 
-**Need help?** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions) | [Security Guide](security-hardening.md)
+**Need help?** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions) | [Security Guide](security-hardening.md)

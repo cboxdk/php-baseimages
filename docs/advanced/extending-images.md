@@ -780,4 +780,4 @@ RUN chmod -R 755 storage bootstrap/cache && \
 
 ---
 
-**Questions or Issues?** Check our [Troubleshooting Guide](../troubleshooting/common-issues.md) or [open an issue on GitHub](https://github.com/cboxdk/baseimages/issues).
+**Questions or Issues?** Check our [Troubleshooting Guide](../troubleshooting/common-issues.md) or [open an issue on GitHub](https://github.com/cboxdk/php-baseimages/issues).

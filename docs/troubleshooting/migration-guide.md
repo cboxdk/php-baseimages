@@ -335,8 +335,8 @@ docker-compose exec app php -m | grep extension_name
 Need help with migration?
 
 1. **Check examples:** See [guides section](../guides/_index.md) for your framework
-2. **Search issues:** [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
-3. **Ask community:** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+2. **Search issues:** [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
+3. **Ask community:** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 
 ## Related Documentation
 
@@ -347,4 +347,4 @@ Need help with migration?
 
 ---
 
-**Migration questions?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).
+**Migration questions?** Ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

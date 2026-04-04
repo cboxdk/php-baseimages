@@ -24,7 +24,7 @@ Cbox images come in three tiers:
 |------|-----|------|----------|
 | **Slim** | `-slim` | ~120MB | APIs, microservices |
 | **Standard** | (none) | ~250MB | Most apps (DEFAULT) |
-| **Full** | `-full` | ~700MB | Browsershot, Dusk, PDF |
+| **Chromium** | `-chromium` | ~700MB | Browsershot, Dusk, PDF |
 
 ```yaml
 # Standard tier (DEFAULT) - Most Laravel/PHP apps
@@ -33,8 +33,8 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 # Slim tier - APIs, microservices
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 
-# Full tier - Browsershot, Dusk, PDF generation
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+# Chromium tier - Browsershot, Dusk, PDF generation
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 ## 📚 Documentation Structure
@@ -46,7 +46,7 @@ Perfect for beginners and those evaluating Cbox.
 - **[5-Minute Quickstart](getting-started/quickstart.md)** ⭐ Start here!
 - [Introduction](getting-started/introduction.md) - Why Cbox? Comparisons
 - [Installation](getting-started/installation.md) - All installation methods
-- [Choosing a Variant](getting-started/choosing-variant.md) - Slim vs Standard vs Full
+- [Choosing a Variant](getting-started/choosing-variant.md) - Slim vs Standard vs Chromium
 
 ### Framework Guides
 
@@ -243,7 +243,7 @@ Solutions to common issues and systematic debugging.
 **Phase 5 - Extended Reference**
 - ✅ Introduction (Why Cbox?)
 - ✅ Installation Guide
-- ✅ Choosing a Tier (Slim vs Standard vs Full)
+- ✅ Choosing a Tier (Slim vs Standard vs Chromium)
 - ✅ Custom Extensions Guide
 - ✅ Custom Initialization Guide
 - ✅ Reverse Proxy & mTLS Guide
@@ -281,9 +281,9 @@ Inspired by ServerSideUp's excellent documentation standards.
 
 ## 💬 Get Help
 
-- **Documentation Issues:** [GitHub Issues](https://github.com/cboxdk/baseimages/issues) (label: documentation)
-- **General Questions:** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
-- **Security Issues:** [GitHub Security Advisories](https://github.com/cboxdk/baseimages/security)
+- **Documentation Issues:** [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues) (label: documentation)
+- **General Questions:** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
+- **Security Issues:** [GitHub Security Advisories](https://github.com/cboxdk/php-baseimages/security)
 
 ---
 

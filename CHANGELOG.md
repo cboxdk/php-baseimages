@@ -8,10 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **New PHP extensions** in Full edition (now 36+ extensions):
+- **New PHP extensions** in Chromium edition (now 36+ extensions):
   - `mongodb` - MongoDB NoSQL database driver
   - `gmp` - GNU Multiple Precision arithmetic (crypto/math libraries)
-  - `igbinary` - Binary serializer (Redis performance optimization)
   - `msgpack` - MessagePack serialization format
 - Redis extension updated to 6.3.0 for PHP 8.4 compatibility
 - APCu extension updated to 5.1.27 for PHP 8.4 (5.1.23 has build issues)
@@ -24,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IMAP extension removed from PHP 8.4 (deprecated by PHP core)
 
 ### Known Issues
-- PHP 8.5: igbinary uses beta channel (3.2.17RC1) pending stable release
+
 - PHP 8.5 test profiles in docker-compose.yml (`--profile php85`)
 
 ### Documentation
@@ -40,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release with PHP 8.2, 8.3, 8.4 support
 - Multi-service images (PHP-FPM + Nginx)
-- Minimal and Full editions
+- Slim, Standard, and Chromium editions
 - Alpine, Debian, and Ubuntu variants
 - Cbox Init v1.0.0 integration
 - Comprehensive documentation structure
@@ -72,5 +71,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Security hardening guide
 - Troubleshooting guides
 
-[Unreleased]: https://github.com/cboxdk/baseimages/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/cboxdk/baseimages/releases/tag/v1.0.0
+[Unreleased]: https://github.com/cboxdk/php-baseimages/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/cboxdk/php-baseimages/releases/tag/v1.0.0

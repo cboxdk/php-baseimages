@@ -24,7 +24,7 @@ Setting up PHP containers for production requires decisions:
 
 Cbox provides production-ready containers with:
 
-- **Three Image Tiers** - Slim (~120MB), Standard (~250MB), Full (~700MB)
+- **Three Image Tiers** - Slim (~120MB), Standard (~250MB), Chromium (~700MB)
 - **25+ PHP extensions pre-installed** - Everything Laravel, Symfony, WordPress need
 - **Cbox Init built-in** - Lightweight Go-based process manager (no S6 Overlay)
 - **50+ environment variables** - Runtime configuration without rebuilding
@@ -41,10 +41,10 @@ Cbox images come in three tiers to match your exact needs:
 |------|------|----------|
 | **Slim** | ~120MB | APIs, microservices, minimal footprint |
 | **Standard** | ~250MB | Most Laravel/PHP apps (DEFAULT) |
-| **Full** | ~700MB | Browsershot, Dusk, PDF generation |
+| **Chromium** | ~700MB | Browsershot, Dusk, PDF generation |
 
 **Quick decision**:
-- Need PDF generation or browser testing? → **Full**
+- Need PDF generation or browser testing? → **Chromium**
 - Building a standard Laravel/PHP app? → **Standard** (default)
 - Building APIs or microservices? → **Slim**
 
@@ -55,7 +55,7 @@ Cbox images come in three tiers to match your exact needs:
 | Feature | Cbox | ServerSideUp |
 |---------|--------|--------------|
 | Process Manager | Cbox Init (Go binary) | S6 Overlay |
-| Image Tiers | 3 (Slim/Standard/Full) | 2 (Base/Full) |
+| Image Tiers | 3 (Slim/Standard/Chromium) | 2 (Base/Full) |
 | Framework Support | Laravel/Symfony/WordPress | Laravel-focused |
 | PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
 | Community | Newer project | Established, active |
@@ -174,7 +174,7 @@ php-fpm-nginx/     # All-in-one (recommended for most)
 |------|-----|----------|
 | **Slim** | `-slim` | Core extensions (25+) |
 | **Standard** | (none) | + ImageMagick, vips, Node.js |
-| **Full** | `-full` | + Chromium for browser automation |
+| **Chromium** | `-chromium` | + Chromium for browser automation |
 
 ### Rootless Variants
 
@@ -184,7 +184,7 @@ All tiers support rootless execution:
 |-----|-------------|
 | `8.4-bookworm-rootless` | Standard + rootless |
 | `8.4-bookworm-slim-rootless` | Slim + rootless |
-| `8.4-bookworm-full-rootless` | Full + rootless |
+| `8.4-bookworm-chromium-rootless` | Chromium + rootless |
 
 ## Getting Started
 
@@ -203,5 +203,5 @@ Ready to try Cbox?
 ## Support
 
 - **Documentation**: You're reading it!
-- **Issues**: [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Issues**: [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)

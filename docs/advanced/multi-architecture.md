@@ -354,4 +354,4 @@ spec:
 
 ---
 
-**Need help?** [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions) | [Performance Tuning](performance-tuning.md)
+**Need help?** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions) | [Performance Tuning](performance-tuning.md)

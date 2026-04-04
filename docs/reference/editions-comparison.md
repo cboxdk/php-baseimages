@@ -1,6 +1,6 @@
 ---
-title: "Image Tiers: Slim / Standard / Full"
-description: "Complete comparison of Slim, Standard, and Full image tiers with extensions, sizes, and use cases"
+title: "Image Tiers: Slim / Standard / Chromium"
+description: "Complete comparison of Slim, Standard, and Chromium image tiers with extensions, sizes, and use cases"
 weight: 30
 ---
 
@@ -14,7 +14,7 @@ Cbox Base Images come in three tiers optimized for different use cases.
 What do you need?
 │
 ├─ PDF generation, browser testing (Browsershot/Dusk)?
-│  └─ Full Tier (~700MB)
+│  └─ Chromium Tier (~700MB)
 │
 ├─ Image processing (ImageMagick, vips), Node.js?
 │  └─ Standard Tier (~250MB) ✅ DEFAULT
@@ -29,7 +29,7 @@ What do you need?
 |------|------|----------|------------|
 | **Slim** | ~120MB | APIs, microservices, minimal footprint | `-slim` |
 | **Standard** | ~250MB | Most Laravel/PHP apps (DEFAULT) | (none) |
-| **Full** | ~700MB | Browsershot, Dusk, PDF generation | `-full` |
+| **Chromium** | ~700MB | Browsershot, Dusk, PDF generation | `-chromium` |
 
 ## Tag Format
 
@@ -39,10 +39,10 @@ What do you need?
 Examples:
 php-fpm-nginx:8.4-bookworm              # Standard (default)
 php-fpm-nginx:8.4-bookworm-slim         # Slim
-php-fpm-nginx:8.4-bookworm-full         # Full
+php-fpm-nginx:8.4-bookworm-chromium     # Chromium
 php-fpm-nginx:8.4-bookworm-rootless     # Standard + rootless
 php-fpm-nginx:8.4-bookworm-slim-rootless  # Slim + rootless
-php-fpm-nginx:8.4-bookworm-full-rootless  # Full + rootless
+php-fpm-nginx:8.4-bookworm-chromium-rootless  # Chromium + rootless
 ```
 
 ## Extensions by Tier
@@ -58,7 +58,6 @@ php-fpm-nginx:8.4-bookworm-full-rootless  # Full + rootless
 | `redis` | Redis cache/sessions |
 | `apcu` | In-memory cache |
 | `mongodb` | MongoDB NoSQL |
-| `igbinary` | Fast serialization |
 | `msgpack` | MessagePack serialization |
 | `grpc` | gRPC protocol support |
 | `zip` | ZIP archives |
@@ -98,7 +97,7 @@ Everything in Slim, plus:
 | `librsvg` | SVG rendering |
 | `icu-data-full` | Complete ICU locale data |
 
-### Full Tier (Standard + Browser Automation)
+### Chromium Tier (Standard + Browser Automation)
 
 Everything in Standard, plus:
 
@@ -121,7 +120,7 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 |------|------|----------|
 | **Slim** | ~120MB | APIs, microservices |
 | **Standard** | ~250MB | Most apps |
-| **Full** | ~700MB | Browser automation |
+| **Chromium** | ~700MB | Browser automation |
 
 ## Performance Characteristics
 
@@ -131,7 +130,7 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 |------|------------|--------|
 | Slim | ~800ms | Fewer extensions |
 | Standard | ~1000ms | ImageMagick, Node.js |
-| Full | ~1200ms | Chromium loaded |
+| Chromium | ~1200ms | Chromium loaded |
 
 ### Memory Footprint
 
@@ -139,7 +138,7 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 |------|----------|----------------|
 | Slim | ~15MB | ~30MB |
 | Standard | ~25MB | ~45MB |
-| Full | ~35MB | ~55MB |
+| Chromium | ~35MB | ~55MB |
 
 ## Use Case Matrix
 
@@ -150,10 +149,10 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 | Laravel app | Standard | ImageMagick, Node for assets |
 | Symfony app | Standard | Balanced feature set |
 | WordPress | Standard | Image processing needed |
-| PDF generation | Full | Requires Chromium |
-| Browsershot | Full | Requires Chromium |
-| Laravel Dusk | Full | Requires Chromium |
-| Puppeteer | Full | Requires Chromium |
+| PDF generation | Chromium | Requires Chromium |
+| Browsershot | Chromium | Requires Chromium |
+| Laravel Dusk | Chromium | Requires Chromium |
+| Puppeteer | Chromium | Requires Chromium |
 | Microservice | Slim | Smallest footprint |
 
 ## Migration Between Tiers
@@ -165,9 +164,9 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 - image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 + image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
-# From Standard to Full
+# From Standard to Chromium
 - image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
-+ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
++ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 ### Downgrading to a Smaller Tier
@@ -192,7 +191,7 @@ All tiers support rootless execution (runs as `www-data` user):
 |-----|-------------|
 | `8.4-bookworm-rootless` | Standard + rootless |
 | `8.4-bookworm-slim-rootless` | Slim + rootless |
-| `8.4-bookworm-full-rootless` | Full + rootless |
+| `8.4-bookworm-chromium-rootless` | Chromium + rootless |
 
 **When to use rootless:**
 - Kubernetes with security policies
@@ -241,12 +240,12 @@ services:
       LARAVEL_SCHEDULER: "true"
 ```
 
-### Full Tier (Browsershot)
+### Chromium Tier (Browsershot)
 
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
     ports:
       - "8000:80"
     environment:

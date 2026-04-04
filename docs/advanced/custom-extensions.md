@@ -211,11 +211,10 @@ RUN echo "opcache.enable=1" > /usr/local/etc/php/conf.d/99-opcache.ini \
 ```dockerfile
 # Good: Pin specific versions
 RUN pecl install redis-6.0.2 \
-    && pecl install igbinary-3.2.15 \
     && pecl install msgpack-3.0.0
 
 # Bad: Use latest (unpredictable)
-RUN pecl install redis igbinary msgpack
+RUN pecl install redis msgpack
 ```
 
 ### Use Build Arguments
@@ -302,10 +301,10 @@ apt-file search library-name
 
 ```dockerfile
 # Load order matters for some extensions
-# igbinary should load before redis (for serialization)
-RUN pecl install igbinary \
-    && docker-php-ext-enable igbinary \
-    && pecl install --configureoptions 'enable-redis-igbinary="yes"' redis \
+# msgpack should load before redis (for serialization)
+RUN pecl install msgpack \
+    && docker-php-ext-enable msgpack \
+    && pecl install --configureoptions 'enable-redis-msgpack="yes"' redis \
     && docker-php-ext-enable redis
 ```
 

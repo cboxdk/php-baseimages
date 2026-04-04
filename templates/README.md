@@ -405,5 +405,5 @@ docker-compose build --no-cache app
 ## Need Help?
 
 - 📖 [Full Documentation](../docs/)
-- 💬 [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
-- 🐛 [Report Issues](https://github.com/cboxdk/baseimages/issues)
+- 💬 [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
+- 🐛 [Report Issues](https://github.com/cboxdk/php-baseimages/issues)

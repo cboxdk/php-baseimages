@@ -157,8 +157,8 @@ Document all customizations in your repository:
 - **Quick Answers**: [Common Issues](../troubleshooting/common-issues.md)
 - **Debugging**: [Debugging Guide](../troubleshooting/debugging-guide.md)
 - **Reference**: [Environment Variables](../reference/environment-variables.md)
-- **Community**: [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Community**: [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 
 ---
 
-**Want to contribute?** Share your customization patterns in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions/categories/show-and-tell)!
+**Want to contribute?** Share your customization patterns in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions/categories/show-and-tell)!

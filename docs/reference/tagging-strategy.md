@@ -20,7 +20,7 @@ Cbox Base Images follow a clear, predictable tagging strategy with three image t
 |------|------------|------|----------|
 | **Slim** | `-slim` | ~120MB | APIs, microservices, minimal footprint |
 | **Standard** | (none) | ~250MB | Most Laravel/PHP apps (DEFAULT) |
-| **Full** | `-full` | ~700MB | Browsershot, Dusk, PDF generation |
+| **Chromium** | `-chromium` | ~700MB | Browsershot, Dusk, PDF generation |
 
 ## Complete Tag Examples
 
@@ -44,14 +44,14 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
 ```
 
-### Full Tier
+### Chromium Tier
 
 For Browsershot, Dusk, Puppeteer, and PDF generation:
 
 ```
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-full
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-chromium
 ```
 
 ### Rootless Variants
@@ -65,13 +65,13 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 # Slim + rootless
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-rootless
 
-# Full + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full-rootless
+# Chromium + rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-rootless
 ```
 
 ## Version Matrix
 
-| PHP Version | Debian 12 (Slim) | Debian 12 (Standard) | Debian 12 (Full) |
+| PHP Version | Debian 12 (Slim) | Debian 12 (Standard) | Debian 12 (Chromium) |
 |-------------|------------------|----------------------|------------------|
 | 8.4         | ✅               | ✅                   | ✅               |
 | 8.3         | ✅               | ✅                   | ✅               |
@@ -87,7 +87,7 @@ All variants also available with `-rootless` suffix.
 
 **Tier aliases**:
 - `slim` → `8.4-bookworm-slim`
-- `full` → `8.4-bookworm-full`
+- `chromium` → `8.4-bookworm-chromium`
 
 ## Deprecation Policy
 
@@ -161,11 +161,11 @@ services:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ```
 
-### PDF Generation (Full Tier)
+### PDF Generation (Chromium Tier)
 ```yaml
 services:
   pdf:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 ### Kubernetes (Rootless)

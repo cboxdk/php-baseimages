@@ -32,10 +32,8 @@ RUN docker-php-ext-install -j$(nproc) \
     calendar gettext shmop sysvmsg sysvsem sysvshm \
     gmp
 
-# Install PECL extensions (igbinary first, then others can use it)
-RUN pecl install igbinary-3.2.15 && \
-    docker-php-ext-enable igbinary && \
-    pecl install redis-6.0.2 imagick apcu-5.1.23 msgpack-3.0.0 mongodb-1.20.1 && \
+# Install PECL extensions
+RUN pecl install redis-6.0.2 imagick apcu-5.1.23 msgpack-3.0.0 mongodb-1.20.1 && \
     docker-php-ext-enable redis imagick apcu msgpack mongodb
 
 # Install Composer

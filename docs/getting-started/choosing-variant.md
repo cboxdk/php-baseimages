@@ -1,6 +1,6 @@
 ---
 title: "Choosing a Variant"
-description: "Slim vs Standard vs Full - which image tier to use for your PHP application"
+description: "Slim vs Standard vs Chromium - which image tier to use for your PHP application"
 weight: 4
 ---
 
@@ -14,7 +14,7 @@ Cbox offers three image tiers and rootless variants. This guide helps you choose
 What do you need?
 │
 ├─ PDF generation, browser testing (Browsershot/Dusk)?
-│  └─ Full Tier (~700MB)
+│  └─ Chromium Tier (~700MB)
 │
 ├─ Image processing (ImageMagick, vips), Node.js?
 │  └─ Standard Tier (~250MB) ✅ DEFAULT
@@ -29,8 +29,8 @@ What do you need?
 |----------|-----------------|
 | Most Laravel/PHP apps | `8.4-bookworm` (Standard) |
 | REST/GraphQL APIs | `8.4-bookworm-slim` |
-| Browsershot/PDF | `8.4-bookworm-full` |
-| Laravel Dusk tests | `8.4-bookworm-full` |
+| Browsershot/PDF | `8.4-bookworm-chromium` |
+| Laravel Dusk tests | `8.4-bookworm-chromium` |
 | Kubernetes (security) | `8.4-bookworm-rootless` |
 
 ## Image Tiers
@@ -97,10 +97,10 @@ services:
       PHP_MEMORY_LIMIT: "256M"
 ```
 
-### Full Tier
+### Chromium Tier
 
 ```bash
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 **Size**: ~700MB
@@ -128,7 +128,7 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
     environment:
       PHP_MEMORY_LIMIT: "1G"  # Chromium needs more memory
 ```
@@ -141,7 +141,7 @@ All tiers support rootless execution (runs as `www-data` user):
 |-----|------|-------------|
 | `8.4-bookworm-rootless` | Standard | Default + rootless |
 | `8.4-bookworm-slim-rootless` | Slim | Slim + rootless |
-| `8.4-bookworm-full-rootless` | Full | Full + rootless |
+| `8.4-bookworm-chromium-rootless` | Chromium | Chromium + rootless |
 
 **When to use rootless**:
 - Kubernetes with security policies
@@ -165,11 +165,11 @@ spec:
 |------|----------------------|
 | Slim | ~120MB |
 | Standard | ~250MB |
-| Full | ~700MB |
+| Chromium | ~700MB |
 
 ## Extension Comparison
 
-| Extension | Slim | Standard | Full |
+| Extension | Slim | Standard | Chromium |
 |-----------|------|----------|------|
 | opcache | ✅ | ✅ | ✅ |
 | pdo_mysql, pdo_pgsql | ✅ | ✅ | ✅ |
@@ -190,7 +190,7 @@ Start
   v
 Need Browsershot, Dusk, or PDF generation?
   │
-  ├── Yes → Full Tier (`-full`)
+  ├── Yes → Chromium Tier (`-chromium`)
   │
   └── No → Continue
         │
@@ -228,10 +228,10 @@ services:
 ### Scenario 2: Laravel with Browsershot
 
 ```yaml
-# Full tier required for Chromium
+# Chromium tier required for Chromium
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -260,10 +260,10 @@ spec:
 ### Scenario 5: Laravel Dusk Testing
 
 ```yaml
-# Full tier for Chromium
+# Chromium tier for Chromium
 services:
   dusk:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
     environment:
       DUSK_DRIVER_URL: ""  # Use local Chromium
 ```
@@ -277,9 +277,9 @@ services:
 - image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 + image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
-# From Standard to Full
+# From Standard to Chromium
 - image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
-+ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
++ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 ### Downgrading to a Smaller Tier
@@ -302,8 +302,8 @@ services:
 |-----------|----------------|
 | Starting new Laravel/PHP project | `8.4-bookworm` (Standard) |
 | Building REST/GraphQL API | `8.4-bookworm-slim` |
-| Need PDF generation | `8.4-bookworm-full` |
-| Running Laravel Dusk | `8.4-bookworm-full` |
+| Need PDF generation | `8.4-bookworm-chromium` |
+| Running Laravel Dusk | `8.4-bookworm-chromium` |
 | Kubernetes production | `8.4-bookworm-rootless` |
 | Maximum security | `8.4-bookworm-slim-rootless` |
 | CI/CD pipelines | `8.4-bookworm-slim` (fast) |

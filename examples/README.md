@@ -196,7 +196,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Use different tier
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ```
 
 ## Need Help?

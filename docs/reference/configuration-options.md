@@ -765,4 +765,4 @@ pm.process_idle_timeout = 10s
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

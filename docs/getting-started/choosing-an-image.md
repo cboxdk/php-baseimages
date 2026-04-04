@@ -123,7 +123,7 @@ Cbox Base Images use **Debian 12 (Bookworm)** for maximum compatibility and stab
 # Multi-service (PHP-FPM + Nginx)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-full
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 
@@ -178,7 +178,7 @@ COPY custom.ini /usr/local/etc/php/conf.d/
 A: `php-fpm-nginx:8.3-bookworm` for web, `php-cli:8.3-bookworm` for workers
 
 **Q: Which tier for production?**
-A: Standard for most apps, Slim for APIs, Full for PDF/browser automation
+A: Standard for most apps, Slim for APIs, Chromium for PDF/browser automation
 
 **Q: Should I use latest PHP version?**
 A: Use 8.3 for production stability, 8.4 for new projects

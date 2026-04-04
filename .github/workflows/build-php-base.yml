@@ -27,7 +27,7 @@ on:
         required: false
         default: 'all'
       tier:
-        description: 'Image tier to build (slim, standard, full, or all)'
+        description: 'Image tier to build (slim, standard, chromium, or all)'
         required: false
         default: 'all'
   schedule:
@@ -41,7 +41,7 @@ env:
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   # SLIM TIER - Minimal PHP with essential extensions only
-  # All OS variants now support tiered builds (slim, standard, full)
+  # All OS variants now support tiered builds (slim, standard, chromium)
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
@@ -55,10 +55,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -67,7 +71,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -135,6 +138,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
 
       - name: Build and push slim image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -151,7 +155,6 @@ jobs:
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -160,6 +163,13 @@ jobs:
             CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test slim image
         if: github.event_name != 'pull_request'
@@ -183,10 +193,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -195,7 +209,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -263,6 +276,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
 
       - name: Build and push slim-rootless image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -279,7 +293,6 @@ jobs:
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -288,6 +301,13 @@ jobs:
             CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test slim-rootless image
         if: github.event_name != 'pull_request'
@@ -312,10 +332,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -324,7 +348,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -397,6 +420,7 @@ jobs:
             type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -413,7 +437,6 @@ jobs:
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -422,6 +445,13 @@ jobs:
             CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test image
         if: github.event_name != 'pull_request'
@@ -446,10 +476,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -458,7 +492,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -531,6 +564,7 @@ jobs:
             type=raw,value=latest-${{ matrix.os_variant }}-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
 
       - name: Build and push rootless Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -547,7 +581,6 @@ jobs:
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -556,6 +589,13 @@ jobs:
             CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test rootless image
         if: github.event_name != 'pull_request'
@@ -570,10 +610,10 @@ jobs:
           docker run --rm $IMAGE cbox-init --version
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # FULL TIER - Includes Chromium for Browsershot/Dusk
-  # All OS variants now support tiered builds (slim, standard, full)
+  # CHROMIUM TIER - Includes Chromium for Browsershot/Dusk
+  # All OS variants now support tiered builds (slim, standard, chromium)
   # ═══════════════════════════════════════════════════════════════════════════
-  build-full-matrix:
+  build-chromium-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
@@ -585,10 +625,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -597,7 +641,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -654,34 +697,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (full)
+      - name: Extract metadata (chromium)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-full,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
 
-      - name: Build and push full image
+      - name: Build and push chromium image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ steps.dockerfile.outputs.path }}
-          target: full-root
+          target: chromium-root
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
           build-args: |
             REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -691,11 +734,18 @@ jobs:
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
-      - name: Test full image
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
+
+      - name: Test chromium image
         if: github.event_name != 'pull_request'
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full"
-          echo "Testing full $IMAGE..."
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium"
+          echo "Testing chromium $IMAGE..."
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
           docker run --rm $IMAGE composer --version
@@ -704,7 +754,7 @@ jobs:
           # Verify Chromium is installed
           docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
 
-  build-full-rootless-matrix:
+  build-chromium-rootless-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
     strategy:
@@ -716,10 +766,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -728,7 +782,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -759,7 +812,7 @@ jobs:
           echo "Verifying SHA256 checksums from checksums.txt..."
           cd cbox-init/binaries
           grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-          
+
           cd -
 
           chmod +x cbox-init/binaries/cbox-init-*
@@ -785,34 +838,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (full-rootless)
+      - name: Extract metadata (chromium-rootless)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless,enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
 
-      - name: Build and push full-rootless image
+      - name: Build and push chromium-rootless image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ steps.dockerfile.outputs.path }}
-          target: full-rootless
+          target: chromium-rootless
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
           build-args: |
             REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -822,11 +875,18 @@ jobs:
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
-      - name: Test full-rootless image
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
+
+      - name: Test chromium-rootless image
         if: github.event_name != 'pull_request'
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless"
-          echo "Testing full-rootless $IMAGE..."
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless"
+          echo "Testing chromium-rootless $IMAGE..."
           docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
@@ -846,10 +906,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -858,7 +922,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -928,6 +991,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
 
       - name: Build and push dev image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -944,7 +1008,6 @@ jobs:
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -956,6 +1019,13 @@ jobs:
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
 
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
+
       - name: Test dev image
         if: github.event_name != 'pull_request'
         run: |
@@ -966,7 +1036,7 @@ jobs:
           docker run --rm $IMAGE composer --version
           docker run --rm $IMAGE node --version
           docker run --rm $IMAGE cbox-init --version
-          # Verify Chromium is installed (inherited from full tier)
+          # Verify Chromium is installed (inherited from chromium tier)
           docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
 
   build-dev-rootless-matrix:
@@ -981,10 +1051,14 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Read versions from versions.json
         id: versions
@@ -993,7 +1067,6 @@ jobs:
           echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
           echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
           echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "IGBINARY_VERSION=$(jq -r '.extensions.igbinary' versions.json)" >> $GITHUB_OUTPUT
           echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
           echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
           echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
@@ -1063,6 +1136,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
 
       - name: Build and push dev-rootless image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -1079,7 +1153,6 @@ jobs:
             IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
             APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
             MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            IGBINARY_VERSION=${{ steps.versions.outputs.IGBINARY_VERSION }}
             MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
             VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
             NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
@@ -1090,6 +1163,13 @@ jobs:
             CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
             CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
             CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test dev-rootless image
         if: github.event_name != 'pull_request'
@@ -1102,7 +1182,7 @@ jobs:
 
   # Trigger dependent image builds after php-base completes
   trigger-dependent-builds:
-    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-full-matrix, build-full-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
+    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-chromium-matrix, build-chromium-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

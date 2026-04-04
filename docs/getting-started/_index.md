@@ -13,7 +13,7 @@ New to Cbox? This section will help you get up and running quickly.
 1. **[5-Minute Quickstart](quickstart.md)** - Get your first PHP application running in just 5 minutes
 2. **[Introduction](introduction.md)** - Learn why Cbox exists and how it compares to alternatives
 3. **[Installation](installation.md)** - Detailed installation instructions for all platforms
-4. **[Choosing a Variant](choosing-variant.md)** - Slim vs Standard vs Full - which tier is right for you?
+4. **[Choosing a Variant](choosing-variant.md)** - Slim vs Standard vs Chromium - which tier is right for you?
 
 ## Quick Decision Guide
 
@@ -21,7 +21,7 @@ New to Cbox? This section will help you get up and running quickly.
 What do you need?
 │
 ├─ PDF generation, browser testing (Browsershot/Dusk)?
-│  └─ Full Tier (`8.4-bookworm-full`)
+│  └─ Chromium Tier (`8.4-bookworm-chromium`)
 │
 ├─ Image processing (ImageMagick, vips), Node.js?
 │  └─ Standard Tier (`8.4-bookworm`) ✅ DEFAULT
@@ -33,7 +33,7 @@ What do you need?
 ## What You'll Learn
 
 - How to run Cbox containers with Docker Compose
-- Differences between Slim, Standard, and Full tiers
+- Differences between Slim, Standard, and Chromium tiers
 - When to use multi-service vs single-process containers
 - Basic configuration and environment variables
 
@@ -53,4 +53,4 @@ Once you've completed the getting started guides:
 
 ---
 
-**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues.md) or [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).
+**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues.md) or [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

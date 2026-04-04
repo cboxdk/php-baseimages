@@ -33,7 +33,7 @@ Cbox Base Images is a Docker image build system providing production-ready PHP c
 │   └── common/
 │
 ├── php-fpm-nginx/     # Multi-service containers (PHP-FPM + Nginx)
-│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5-beta
+│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
 │   │   └── debian/bookworm/
 │   └── common/        # Shared multi-service entrypoint, nginx config, healthcheck
 │
@@ -134,7 +134,7 @@ Located in `.github/workflows/`:
 - `build-php-fpm-nginx.yml` - **Multi-service images with weekly security rebuilds**
 
 **Key CI Features**:
-- **Matrix builds**: All PHP versions × tiers (slim/standard/full) in parallel
+- **Matrix builds**: All PHP versions × tiers (slim/standard/chromium) in parallel
 - **Weekly schedule**: Every Monday 03:00 UTC (`cron: '0 3 * * 1'`)
 - **Rolling tags**: `8.3-bookworm` gets updated weekly with security patches
 - **Immutable tags**: `8.3-bookworm-sha256:...` for reproducibility
@@ -244,7 +244,7 @@ Nginx server block for multi-service containers:
 
 ### .github/workflows/build-php-fpm-nginx.yml
 CI/CD with security focus:
-- Matrix builds: `php_version × tier (slim/standard/full)`
+- Matrix builds: `php_version × tier (slim/standard/chromium)`
 - Weekly rebuilds: `cron: '0 3 * * 1'`
 - Rolling + SHA tags
 - Trivy CVE scanning
@@ -311,7 +311,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 
 **Schedule**: GitHub Actions runs every Monday 03:00 UTC
 - Pulls latest upstream base images (php:8.x-fpm-bookworm, etc.)
-- Rebuilds all tiers (slim/standard/full)
+- Rebuilds all tiers (slim/standard/chromium)
 - Tags with rolling version (`8.3-bookworm`) AND immutable SHA
 - Runs Trivy CVE scan
 - Pushes to ghcr.io

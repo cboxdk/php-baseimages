@@ -299,4 +299,4 @@ When debugging an issue:
 
 ---
 
-**Need more help?** Ask in [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions).
+**Need more help?** Ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

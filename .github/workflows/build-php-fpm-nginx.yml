@@ -44,10 +44,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -106,6 +110,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -117,6 +122,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
           cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test slim image
         if: github.event_name != 'pull_request'
@@ -163,10 +175,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -225,6 +241,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -236,6 +253,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
           cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Test slim rootless image
         if: github.event_name != 'pull_request'
@@ -278,10 +302,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -346,6 +374,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -360,6 +389,13 @@ jobs:
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
             VCS_REF=${{ github.sha }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
@@ -421,10 +457,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -487,6 +527,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
 
       - name: Build and push rootless Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -501,6 +542,13 @@ jobs:
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
             VCS_REF=${{ github.sha }}
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
@@ -549,9 +597,9 @@ jobs:
           docker stop test-rootless && docker rm test-rootless
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # FULL TIER - + Chromium for Browsershot/Dusk/Puppeteer (Alpine only)
+  # CHROMIUM TIER - + Chromium for Browsershot/Dusk/Puppeteer (Alpine only)
   # ═══════════════════════════════════════════════════════════════════════════
-  build-full-matrix:
+  build-chromium-matrix:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -563,10 +611,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -574,7 +626,7 @@ jobs:
           chmod +x ./scripts/get-build-state.sh
           BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
           echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (full):"
+          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (chromium):"
           echo "$BUILD_STATE" | jq .
 
       - name: Determine Dockerfile path
@@ -612,80 +664,88 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Rolling version tags - FULL tier
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-full,enable={{is_default_branch}}
+            # Rolling version tags - CHROMIUM tier
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium,enable={{is_default_branch}}
             # PHP patch version tags for version pinning
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-full,enable={{is_default_branch}}
+            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-chromium,enable={{is_default_branch}}
             # Latest tag
-            type=raw,value=latest-${{ matrix.os_variant }}-full,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest-${{ matrix.os_variant }}-chromium,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
             # Immutable SHA tags
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-full-,enable={{is_default_branch}}
+            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-,enable={{is_default_branch}}
             # Branch tags
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ steps.dockerfile.outputs.path }}
-          target: full-root
+          target: chromium-root
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
-          cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+          cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
+          cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
           format: 'sarif'
-          output: 'trivy-results-full.sarif'
+          output: 'trivy-results-chromium.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
         if: github.event_name != 'pull_request'
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results-full.sarif'
+          sarif_file: 'trivy-results-chromium.sarif'
 
-      - name: Test full image
+      - name: Test chromium image
         if: github.event_name != 'pull_request'
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium"
           docker pull $IMAGE
-          docker run -d --name test-full -p 8080:80 $IMAGE
+          docker run -d --name test-chromium -p 8080:80 $IMAGE
 
           echo "Waiting for container to become healthy..."
           for i in {1..60}; do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-full 2>/dev/null || echo "unknown")
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-chromium 2>/dev/null || echo "unknown")
             if [ "$STATUS" = "healthy" ]; then
               echo "Container is healthy after ${i}s"
               break
             elif [ "$STATUS" = "unhealthy" ]; then
               echo "Container became unhealthy after ${i}s"
-              docker logs test-full
+              docker logs test-chromium
               exit 1
             fi
             sleep 1
           done
 
-          docker exec test-full curl -sf http://127.0.0.1/health || { docker logs test-full && exit 1; }
-          docker exec test-full php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-full cbox-init --version || exit 1
-          docker exec test-full composer --version || exit 1
-          docker exec test-full node --version || exit 1
-          # Full tier should have chromium
-          docker exec test-full which chromium-browser || docker exec test-full which chromium
-          docker stop test-full && docker rm test-full
+          docker exec test-chromium curl -sf http://127.0.0.1/health || { docker logs test-chromium && exit 1; }
+          docker exec test-chromium php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
+          docker exec test-chromium cbox-init --version || exit 1
+          docker exec test-chromium composer --version || exit 1
+          docker exec test-chromium node --version || exit 1
+          # Chromium tier should have chromium
+          docker exec test-chromium which chromium-browser || docker exec test-chromium which chromium
+          docker stop test-chromium && docker rm test-chromium
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # FULL ROOTLESS (Alpine only - Debian doesn't have tiered builds)
+  # CHROMIUM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
   # ─────────────────────────────────────────────────────────────────────────────
-  build-full-rootless-matrix:
+  build-chromium-rootless-matrix:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -697,10 +757,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -708,7 +772,7 @@ jobs:
           chmod +x ./scripts/get-build-state.sh
           BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
           echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (full-rootless):"
+          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (chromium-rootless):"
           echo "$BUILD_STATE" | jq .
 
       - name: Determine Dockerfile path
@@ -746,76 +810,84 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # Rolling version tags - FULL ROOTLESS
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless,enable={{is_default_branch}}
+            # Rolling version tags - CHROMIUM ROOTLESS
+            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless,enable={{is_default_branch}}
             # PHP patch version tags for version pinning
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-full-rootless,enable={{is_default_branch}}
+            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-chromium-rootless,enable={{is_default_branch}}
             # Latest tag
-            type=raw,value=latest-${{ matrix.os_variant }}-full-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest-${{ matrix.os_variant }}-chromium-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
             # Immutable SHA tags
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless-,enable={{is_default_branch}}
+            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless-,enable={{is_default_branch}}
             # Branch tags
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
+            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ steps.dockerfile.outputs.path }}
-          target: full-rootless
+          target: chromium-rootless
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
-          cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+          cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
+          cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
           format: 'sarif'
-          output: 'trivy-results-full-rootless.sarif'
+          output: 'trivy-results-chromium-rootless.sarif'
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
         if: github.event_name != 'pull_request'
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results-full-rootless.sarif'
+          sarif_file: 'trivy-results-chromium-rootless.sarif'
 
-      - name: Test full rootless image
+      - name: Test chromium rootless image
         if: github.event_name != 'pull_request'
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-full-rootless"
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless"
           docker pull $IMAGE
-          docker run -d --name test-full-rootless -p 8082:8080 $IMAGE
+          docker run -d --name test-chromium-rootless -p 8082:8080 $IMAGE
 
           echo "Waiting for container to become healthy..."
           for i in {1..60}; do
-            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-full-rootless 2>/dev/null || echo "unknown")
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' test-chromium-rootless 2>/dev/null || echo "unknown")
             if [ "$STATUS" = "healthy" ]; then
               echo "Container is healthy after ${i}s"
               break
             elif [ "$STATUS" = "unhealthy" ]; then
               echo "Container became unhealthy after ${i}s"
-              docker logs test-full-rootless
+              docker logs test-chromium-rootless
               exit 1
             fi
             sleep 1
           done
 
-          docker exec test-full-rootless id -u | grep -E "^(33|82)$"
-          docker exec test-full-rootless curl -sf http://127.0.0.1:8080/health || { docker logs test-full-rootless && exit 1; }
-          docker exec test-full-rootless php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
-          docker exec test-full-rootless cbox-init --version || exit 1
-          docker exec test-full-rootless composer --version || exit 1
-          docker exec test-full-rootless node --version || exit 1
+          docker exec test-chromium-rootless id -u | grep -E "^(33|82)$"
+          docker exec test-chromium-rootless curl -sf http://127.0.0.1:8080/health || { docker logs test-chromium-rootless && exit 1; }
+          docker exec test-chromium-rootless php -v | grep "PHP ${{ matrix.php_version }}" || exit 1
+          docker exec test-chromium-rootless cbox-init --version || exit 1
+          docker exec test-chromium-rootless composer --version || exit 1
+          docker exec test-chromium-rootless node --version || exit 1
           # Chromium check
-          docker exec test-full-rootless which chromium-browser || docker exec test-full-rootless which chromium
-          docker stop test-full-rootless && docker rm test-full-rootless
+          docker exec test-chromium-rootless which chromium-browser || docker exec test-chromium-rootless which chromium
+          docker stop test-chromium-rootless && docker rm test-chromium-rootless
 
   # ═══════════════════════════════════════════════════════════════════════════
   # DEV TIER - Full + Xdebug, PCOV, SPX for development/testing
@@ -832,10 +904,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -894,6 +970,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -905,6 +982,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
           cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
@@ -967,10 +1051,14 @@ jobs:
       contents: read
       packages: write
       security-events: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -1029,6 +1117,7 @@ jobs:
             type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -1040,6 +1129,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
           cache-to: type=gha,mode=max,scope=php-fpm-nginx-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
+
+      - name: Sign image with cosign
+        if: github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
       - name: Run Trivy vulnerability scanner
         if: github.event_name != 'pull_request'
@@ -1089,7 +1185,7 @@ jobs:
           docker stop test-dev-rootless && docker rm test-dev-rootless
 
   notify-security-updates:
-    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-full-matrix, build-full-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
+    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-chromium-matrix, build-chromium-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule'
 
@@ -1101,4 +1197,4 @@ jobs:
           echo "📦 PHP versions: 8.2, 8.3, 8.4"
           echo "🐧 OS variants: Debian Bookworm"
           echo "🔐 Rootless variants: Available for all OS variants"
-          echo "📊 Image tiers: slim, standard, full, dev"
+          echo "📊 Image tiers: slim, standard, chromium, dev"

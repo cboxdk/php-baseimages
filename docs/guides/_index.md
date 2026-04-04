@@ -116,8 +116,8 @@ All framework guides follow these principles:
 - **Quick answers**: Check [Common Issues](../troubleshooting/common-issues.md)
 - **Debugging**: Use our [Debugging Guide](../troubleshooting/debugging-guide.md)
 - **Migration**: See our [Migration Guide](../troubleshooting/migration-guide.md)
-- **Community**: Join [GitHub Discussions](https://github.com/cboxdk/baseimages/discussions)
+- **Community**: Join [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 
 ---
 
-**Can't find your framework?** Check the [Community Guides](https://github.com/cboxdk/baseimages/discussions/categories/guides) or create one and share it!
+**Can't find your framework?** Check the [Community Guides](https://github.com/cboxdk/php-baseimages/discussions/categories/guides) or create one and share it!

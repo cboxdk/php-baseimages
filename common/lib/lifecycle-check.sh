@@ -90,7 +90,7 @@ cbox_lifecycle_check() {
             printf "║  %-64s ║\n" "⚠️  This is a preview release for testing only"
             printf "║  %-64s ║\n" "NOT RECOMMENDED FOR PRODUCTION USE"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "Report issues: https://github.com/cboxdk/baseimages/issues"
+            printf "║  %-64s ║\n" "Report issues: https://github.com/cboxdk/php-baseimages/issues"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "Suppress: CBOX_SUPPRESS_WARNINGS=true"
             echo "╚══════════════════════════════════════════════════════════════════╝"

@@ -141,4 +141,4 @@ groups:
 
 - [Cbox Documentation](https://cbox.com/docs)
 - [Cbox Init Integration Guide](../docs/cbox-init-integration.md)
-- [GitHub Issues](https://github.com/cboxdk/baseimages/issues)
+- [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
