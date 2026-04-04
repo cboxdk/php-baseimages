@@ -27,6 +27,19 @@ ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-bookworm-slim AS node
 
 # ============================================================================
+# Cbox Init binary selection (multi-stage to avoid dead layers)
+# Only the correct architecture binary is ever present in the final image.
+# ============================================================================
+FROM scratch AS cbox-init-amd64
+COPY cbox-init/binaries/cbox-init-linux-amd64 /cbox-init
+
+FROM scratch AS cbox-init-arm64
+COPY cbox-init/binaries/cbox-init-linux-arm64 /cbox-init
+
+ARG TARGETARCH
+FROM cbox-init-${TARGETARCH} AS cbox-init-bin
+
+# ============================================================================
 # SLIM BASE - Minimal dependencies, essential extensions only
 # ============================================================================
 FROM php:8.2-cli-bookworm AS slim-base
@@ -112,27 +125,18 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ARG CBOX_INIT_VERSION=2.0.1
 ARG CBOX_INIT_SHA256_AMD64=5a5b6c92374f0c15a338ca3b925884e077269664f281328c133004bfc0879cbd
 ARG CBOX_INIT_SHA256_ARM64=7139ecd6a4570414e801ad343ef02882bbdafd738f755cbef3f2a00a997a0b84
-ARG TARGETPLATFORM
+ARG TARGETARCH
 
-COPY cbox-init/binaries/cbox-init-linux-amd64 /tmp/cbox-init-linux-amd64
-COPY cbox-init/binaries/cbox-init-linux-arm64 /tmp/cbox-init-linux-arm64
+COPY --from=cbox-init-bin /cbox-init /usr/local/bin/cbox-init
 
 RUN set -eux; \
-    case "${TARGETPLATFORM}" in \
-        linux/amd64) \
-            CBOX_INIT_ARCH="amd64"; \
-            CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_AMD64}" ;; \
-        linux/arm64) \
-            CBOX_INIT_ARCH="arm64"; \
-            CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_ARM64}" ;; \
-        *) \
-            echo "Unsupported platform: ${TARGETPLATFORM}"; \
-            exit 1 ;; \
+    case "${TARGETARCH}" in \
+        amd64) CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_AMD64}" ;; \
+        arm64) CBOX_INIT_CHECKSUM="${CBOX_INIT_SHA256_ARM64}" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
     esac; \
-    echo "${CBOX_INIT_CHECKSUM}  /tmp/cbox-init-linux-${CBOX_INIT_ARCH}" | sha256sum -c -; \
-    mv /tmp/cbox-init-linux-${CBOX_INIT_ARCH} /usr/local/bin/cbox-init; \
+    echo "${CBOX_INIT_CHECKSUM}  /usr/local/bin/cbox-init" | sha256sum -c -; \
     chmod +x /usr/local/bin/cbox-init; \
-    rm -f /tmp/cbox-init-linux-*; \
     /usr/local/bin/cbox-init --version
 
 # ============================================================================

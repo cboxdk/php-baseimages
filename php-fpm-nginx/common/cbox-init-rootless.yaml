@@ -93,16 +93,24 @@ processes:
   # ─────────────────────────────────────────────────────────────────────────
   # Laravel Reverb - WebSocket Server
   # Enable via CBOX_INIT_PROCESS_REVERB_ENABLED=true or LARAVEL_REVERB=true
+  # ROOTLESS: Uses port 6001 (Laravel Reverb default) to avoid conflict with
+  # Nginx on port 8080
   # ─────────────────────────────────────────────────────────────────────────
   reverb:
     enabled: false
-    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
     type: longrun
     restart: always
     scale: 1
     working_dir: /var/www/html
     stdout: true
     stderr: true
+    health_check:
+      type: tcp
+      address: "127.0.0.1:6001"
+      period: 10
+      timeout: 3
+      failure_threshold: 3
 
   # ─────────────────────────────────────────────────────────────────────────
   # Queue Workers - Default Queue

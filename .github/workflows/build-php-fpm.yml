@@ -20,8 +20,12 @@ on:
         default: 'all'
   repository_dispatch:
     types: [php-base-updated]
+  workflow_run:
+    workflows: ["Build and Push PHP-Base Images"]
+    types: [completed]
+    branches: [main]
   schedule:
-    # Weekly security rebuild - Monday 02:00 UTC (after php-base at 01:00)
+    # Weekly security rebuild - Monday 02:00 UTC (fallback; workflow_run trigger fires on completion)
     - cron: '0 2 * * 1'
 
 env:
@@ -35,6 +39,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -105,7 +110,7 @@ jobs:
             type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
             # PHP patch version tags for version pinning
             type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
-            # Latest tag (points to 8.4-alpine-slim)
+            # Latest tag (points to 8.4-bookworm-slim)
             type=raw,value=latest-${{ matrix.os_variant }}-slim,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
             # Immutable SHA tags for reproducibility
             type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-,enable={{is_default_branch}}
@@ -148,10 +153,11 @@ jobs:
           ! docker run --rm $IMAGE node --version 2>/dev/null || echo "Warning: node found in slim tier"
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # SLIM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
+  # SLIM ROOTLESS
   # ─────────────────────────────────────────────────────────────────────────────
   build-slim-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -252,8 +258,8 @@ jobs:
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless"
           echo "Testing slim rootless image $IMAGE..."
-          # Verify running as non-root (www-data = uid 82 on Alpine, 33 on Debian)
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+          # Verify running as non-root (www-data = uid 33 on Debian Bookworm)
+          docker run --rm $IMAGE id -u | grep -E "^33$"
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE composer --version
 
@@ -262,6 +268,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -330,9 +337,9 @@ jobs:
           tags: |
             # Rolling version tags (recommended for most users) - NO SUFFIX for standard tier
             type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
-            # PHP patch version tags for version pinning (e.g., 8.4.7-alpine)
+            # PHP patch version tags for version pinning (e.g., 8.4.7-bookworm)
             type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
-            # Latest tag (points to 8.4-alpine)
+            # Latest tag (points to 8.4-bookworm)
             type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
             # Immutable SHA tags for reproducibility
             type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-,enable={{is_default_branch}}
@@ -377,6 +384,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   build-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -445,9 +453,9 @@ jobs:
           tags: |
             # Rolling version tags (recommended for most users)
             type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
-            # PHP patch version tags for version pinning (e.g., 8.4.7-alpine-rootless)
+            # PHP patch version tags for version pinning (e.g., 8.4.7-bookworm-rootless)
             type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
-            # Latest tag (points to 8.4-alpine-rootless)
+            # Latest tag (points to 8.4-bookworm-rootless)
             type=raw,value=latest-${{ matrix.os_variant }}-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
             # Immutable SHA tags for reproducibility
             type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless-,enable={{is_default_branch}}
@@ -481,8 +489,8 @@ jobs:
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless"
           echo "Testing rootless image $IMAGE..."
-          # Verify running as non-root (www-data = uid 82 on Alpine, 33 on Debian)
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+          # Verify running as non-root (www-data = uid 33 on Debian Bookworm)
+          docker run --rm $IMAGE id -u | grep -E "^33$"
           docker run --rm $IMAGE php -v
           docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
           docker run --rm $IMAGE composer --version
@@ -490,10 +498,11 @@ jobs:
           docker run --rm $IMAGE cbox-init --version
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # CHROMIUM TIER - + Chromium for Browsershot/Dusk/Puppeteer (Alpine only)
+  # CHROMIUM TIER - + Chromium for Browsershot/Dusk/Puppeteer
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -603,10 +612,11 @@ jobs:
           docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # CHROMIUM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
+  # CHROMIUM ROOTLESS
   # ─────────────────────────────────────────────────────────────────────────────
   build-chromium-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -721,6 +731,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -834,6 +845,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   build-dev-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:

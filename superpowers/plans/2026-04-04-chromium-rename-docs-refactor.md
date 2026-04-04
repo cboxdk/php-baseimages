@@ -8,7 +8,7 @@
 
 **Tech Stack:** Dockerfiles, GitHub Actions YAML, Markdown
 
-**Spec:** `docs/superpowers/specs/2026-04-04-chromium-rename-docs-refactor-design.md`
+**Spec:** `superpowers/specs/2026-04-04-chromium-rename-docs-refactor-design.md`
 
 ---
 

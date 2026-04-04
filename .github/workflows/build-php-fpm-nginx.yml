@@ -20,8 +20,12 @@ on:
         default: 'all'
   repository_dispatch:
     types: [php-fpm-updated]
+  workflow_run:
+    workflows: ["Build and Push PHP-FPM Images"]
+    types: [completed]
+    branches: [main]
   schedule:
-    # Weekly security rebuild - Monday 04:00 UTC (after php-fpm at 02:00)
+    # Weekly security rebuild - Monday 04:00 UTC (fallback; workflow_run trigger fires on completion)
     - cron: '0 4 * * 1'
 
 env:
@@ -30,10 +34,11 @@ env:
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
-  # SLIM TIER - Minimal PHP + essential extensions (Alpine only)
+  # SLIM TIER - Minimal PHP + essential extensions
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -101,7 +106,7 @@ jobs:
             type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
             # PHP patch version tags for version pinning
             type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
-            # Latest tag (points to 8.4-alpine-slim)
+            # Latest tag (points to 8.4-bookworm-slim)
             type=raw,value=latest-${{ matrix.os_variant }}-slim,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
             # Immutable SHA tags for reproducibility
             type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-,enable={{is_default_branch}}
@@ -161,10 +166,11 @@ jobs:
           docker stop test-slim && docker rm test-slim
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # SLIM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
+  # SLIM ROOTLESS
   # ─────────────────────────────────────────────────────────────────────────────
   build-slim-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -292,6 +298,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -361,7 +368,7 @@ jobs:
           tags: |
             # Rolling version tags (recommended for most users) - NO SUFFIX for standard tier
             type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
-            # PHP patch version tags for version pinning (e.g., 8.4.15-alpine)
+            # PHP patch version tags for version pinning (e.g., 8.4.15-bookworm)
             type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
             # Convenience tags (8.3 -> 8.3-bookworm)
             type=raw,value=${{ matrix.php_version }},enable=${{ github.ref == 'refs/heads/main' }}
@@ -447,6 +454,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   build-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -516,7 +524,7 @@ jobs:
           tags: |
             # Rolling version tags (recommended for most users)
             type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
-            # PHP patch version tags for version pinning (e.g., 8.4.15-alpine-rootless)
+            # PHP patch version tags for version pinning (e.g., 8.4.15-bookworm-rootless)
             type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
             # Convenience tags (8.3-rootless -> 8.3-bookworm-rootless)
             type=raw,value=${{ matrix.php_version }}-rootless,enable=${{ github.ref == 'refs/heads/main' }}
@@ -597,10 +605,11 @@ jobs:
           docker stop test-rootless && docker rm test-rootless
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # CHROMIUM TIER - + Chromium for Browsershot/Dusk/Puppeteer (Alpine only)
+  # CHROMIUM TIER - + Chromium for Browsershot/Dusk/Puppeteer
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -743,10 +752,11 @@ jobs:
           docker stop test-chromium && docker rm test-chromium
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # CHROMIUM ROOTLESS (Alpine only - Debian doesn't have tiered builds)
+  # CHROMIUM ROOTLESS
   # ─────────────────────────────────────────────────────────────────────────────
   build-chromium-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -894,6 +904,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1041,6 +1052,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   build-dev-rootless-matrix:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     strategy:
       fail-fast: false
       matrix:

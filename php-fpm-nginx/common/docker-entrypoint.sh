@@ -599,10 +599,19 @@ fi
 if is_true "${LARAVEL_MIGRATE_ENABLED:-false}"; then
     [ -f "$WORKDIR/artisan" ] && {
         log_info "Running Laravel migrations..."
+        migration_failed=0
         if [ "${APP_ENV:-production}" = "production" ]; then
-            php artisan migrate --force --no-interaction 2>&1 || log_warn "Migration failed"
+            php artisan migrate --force --no-interaction 2>&1 || migration_failed=1
         else
-            php artisan migrate --no-interaction 2>&1 || log_warn "Migration failed"
+            php artisan migrate --no-interaction 2>&1 || migration_failed=1
+        fi
+        if [ "$migration_failed" = "1" ]; then
+            if is_true "${LARAVEL_MIGRATE_ALLOW_FAILURE:-false}"; then
+                log_warn "Migration failed - continuing anyway (LARAVEL_MIGRATE_ALLOW_FAILURE=true)"
+            else
+                log_error "Migration failed - aborting container startup. Set LARAVEL_MIGRATE_ALLOW_FAILURE=true to continue on failure."
+                exit 1
+            fi
         fi
     }
 fi

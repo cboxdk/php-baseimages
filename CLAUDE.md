@@ -13,18 +13,42 @@ Cbox PHP Base Images is a Docker image build system providing production-ready P
 
 ## Architecture
 
+### Build Hierarchy
+
+The images follow a layered build hierarchy where each layer extends the previous:
+
+```
+Layer 1: Official PHP images (php:8.x-cli-bookworm, php:8.x-fpm-bookworm)
+   ↓
+Layer 2: php-base        — Single source of truth for ALL PHP extensions, Composer, Node.js, Cbox Init
+   ↓
+Layer 3: php-fpm         — Copies extensions from php-base via multi-stage COPY, adds FPM config
+         php-cli         — Extends php-base directly, adds CLI entrypoint
+   ↓
+Layer 4: php-fpm-nginx   — Extends php-fpm, adds Nginx + Cbox Init process management
+```
+
+Each layer is built in **four tiers**: slim, standard, chromium, dev (see Dockerfile comments for details).
+
 ### Directory Structure
 
 ```
 .
-├── php-fpm/           # Single-process PHP-FPM images
-│   ├── {version}/     # 8.2, 8.3, 8.4
+├── php-base/          # LAYER 2: Single source of truth for all PHP extensions
+│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
 │   │   └── debian/
-│   │       └── bookworm/  # Debian 12 (only supported OS)
-│   └── common/        # Shared config (entrypoint, healthcheck, php.ini, fpm-pool.conf)
+│   │       └── bookworm/
+│   │           └── Dockerfile  # Multi-stage: slim → standard → chromium → dev
+│   └── common/        # Shared config (php.ini, imagemagick-policy.xml, xdebug.ini, etc.)
 │
-├── php-cli/           # Single-process PHP-CLI images
-│   ├── {version}/
+├── php-fpm/           # LAYER 3: PHP-FPM images (copies extensions from php-base)
+│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
+│   │   └── debian/
+│   │       └── bookworm/
+│   └── common/        # Shared config (entrypoint, healthcheck, fpm-pool.conf)
+│
+├── php-cli/           # LAYER 3: PHP-CLI images (extends php-base directly)
+│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
 │   │   └── debian/bookworm/
 │   └── common/        # Shared CLI entrypoint and healthcheck
 │
@@ -32,13 +56,15 @@ Cbox PHP Base Images is a Docker image build system providing production-ready P
 │   └── debian/bookworm/
 │   └── common/
 │
-├── php-fpm-nginx/     # Multi-service containers (PHP-FPM + Nginx)
+├── php-fpm-nginx/     # LAYER 4: Multi-service containers (extends php-fpm, adds Nginx)
 │   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
 │   │   └── debian/bookworm/
 │   └── common/        # Shared multi-service entrypoint, nginx config, healthcheck
 │
+├── common/            # Shared libraries (entrypoint-lib.sh, lifecycle-check.sh)
+├── cbox-init/         # Cbox Init process manager binaries
 ├── .github/workflows/ # CI/CD with weekly security rebuilds
-└── docs/             # Comprehensive documentation (junior-friendly)
+└── docs/              # Comprehensive documentation (junior-friendly)
 ```
 
 ### Multi-Service Architecture (Key Innovation)
@@ -60,18 +86,24 @@ This entrypoint manages both PHP-FPM and Nginx using Cbox Init:
 
 ### Shared Configuration Pattern
 
-All variants share common configuration from `{type}/common/`:
-- `docker-entrypoint.sh` - Startup logic with framework detection
-- `healthcheck.sh` - Deep health validation (process, port, opcache, extensions)
-- `php.ini` / `php-dev.ini` - PHP configuration (prod/dev)
-- `fpm-pool.conf` - PHP-FPM pool settings
-- `default.conf` - Nginx server block (for multi-service)
+Each image type has a `common/` directory with shared configuration:
+- `php-base/common/` - PHP config (php.ini, imagemagick-policy.xml, xdebug.ini, spx.ini, pcov.ini)
+- `php-fpm/common/` - FPM entrypoint, healthcheck, fpm-pool.conf
+- `php-cli/common/` - CLI entrypoint, healthcheck
+- `php-fpm-nginx/common/` - Multi-service entrypoint, healthcheck, nginx config, cbox-init config
+- `common/lib/` - Shared shell libraries (entrypoint-lib.sh, lifecycle-check.sh)
 
-**Dockerfile Pattern**: Each variant copies from common:
+**Dockerfile Pattern**: Downstream images (php-fpm, php-cli) copy extensions and tools from php-base via multi-stage builds:
 ```dockerfile
-COPY {type}/common/docker-entrypoint.sh /usr/local/bin/
-COPY {type}/common/healthcheck.sh /usr/local/bin/
-COPY {type}/common/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+# Import pre-built base image
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm AS base-standard
+
+# Start from official PHP image, then copy everything from base
+FROM php:8.4-fpm-bookworm AS root
+COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-standard /usr/bin/composer /usr/bin/composer
+COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 ```
 
 ### OS Configuration (Debian 12 Bookworm)
@@ -128,13 +160,14 @@ docker-compose exec php-fpm-nginx php -v  # Check version
 
 Located in `.github/workflows/`:
 
-- `build-php-fpm.yml` - Builds PHP-FPM images (Debian 12 Bookworm)
-- `build-php-cli.yml` - Builds PHP-CLI images
+- `build-php-base.yml` - **Builds php-base images (must run first, all others depend on it)**
+- `build-php-fpm.yml` - Builds PHP-FPM images (copies extensions from php-base)
+- `build-php-cli.yml` - Builds PHP-CLI images (extends php-base)
 - `build-nginx.yml` - Builds Nginx images
-- `build-php-fpm-nginx.yml` - **Multi-service images with weekly security rebuilds**
+- `build-php-fpm-nginx.yml` - Multi-service images (extends php-fpm)
 
 **Key CI Features**:
-- **Matrix builds**: All PHP versions × tiers (slim/standard/chromium) in parallel
+- **Matrix builds**: All PHP versions x tiers (slim/standard/chromium/dev) in parallel
 - **Weekly schedule**: Every Monday 03:00 UTC (`cron: '0 3 * * 1'`)
 - **Rolling tags**: `8.3-bookworm` gets updated weekly with security patches
 - **Immutable tags**: `8.3-bookworm-sha256:...` for reproducibility
@@ -145,42 +178,41 @@ Located in `.github/workflows/`:
 
 ### Adding a New PHP Version
 
-1. Copy directory structure:
+1. Copy directory structure (start with php-base since it's the foundation):
 ```bash
-cp -r php-fpm-nginx/8.3 php-fpm-nginx/8.6
-cp -r php-fpm/8.3 php-fpm/8.6
-cp -r php-cli/8.3 php-cli/8.6
+cp -r php-base/8.4 php-base/8.6
+cp -r php-fpm/8.4 php-fpm/8.6
+cp -r php-cli/8.4 php-cli/8.6
+cp -r php-fpm-nginx/8.4 php-fpm-nginx/8.6
 ```
 
-2. Update Dockerfiles: Change `FROM php:8.3-*` to `FROM php:8.6-*`
+2. Update Dockerfiles: Change `FROM php:8.4-*` to `FROM php:8.6-*` and update base image references (e.g., `php-base:8.4-bookworm` to `php-base:8.6-bookworm`)
 
-3. Update GitHub Actions workflow matrix:
+3. Add the version to `versions.json` under `php.supported`, `php.eol`, and `php.latest_patch`
+
+4. Update GitHub Actions workflow matrices in all `build-*.yml` files:
 ```yaml
 matrix:
   php_version: ['8.2', '8.3', '8.4', '8.6']
 ```
 
-4. Update documentation in `README.md` and `docs/`
+5. Update documentation in `README.md` and `docs/`
 
 ### Adding a New PHP Extension
 
-Extensions are installed in Dockerfiles. Pattern:
+Extensions are centralized in `php-base/` Dockerfiles. All downstream images (php-fpm, php-cli, php-fpm-nginx) inherit extensions automatically via multi-stage `COPY --from=base-*` directives. **Never edit php-fpm, php-cli, or php-fpm-nginx Dockerfiles for extension changes.**
 
-```dockerfile
-# Debian 12 (Bookworm)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libextension-dev && \
-    pecl install extension-version && \
-    docker-php-ext-enable extension && \
-    apt-get purge -y --auto-remove && \
-    rm -rf /var/lib/apt/lists/*
-```
+1. Edit `php-base/{version}/debian/bookworm/Dockerfile` for each PHP version:
+   - Add runtime libraries to the appropriate tier stage (`slim-base`, `standard-base`, or `chromium-base`)
+   - Add build dependencies, compile the extension, then clean up build deps
+   - For PECL extensions, pin the version using a build ARG (see existing pattern)
 
-**Update these files**:
-- All Dockerfiles for that image type (php-fpm, php-cli, php-fpm-nginx)
-- `tests/test-extensions.sh` - Add to required or optional extensions
-- `docs/reference/available-extensions.md` - Document the extension
-- `README.md` - Update extension count if needed
+2. If the extension version is configurable, add it to `versions.json` under `extensions`
+
+3. Update supporting files:
+   - `tests/test-extensions.sh` - Add to required or optional extensions
+   - `docs/reference/available-extensions.md` - Document the extension
+   - `README.md` - Update extension count if needed
 
 ### Modifying Entrypoint Behavior
 
@@ -227,6 +259,15 @@ docker inspect cbox-fpm-nginx --format='{{json .State.Health}}' | jq
 
 ## Critical Files
 
+### php-base/{version}/debian/bookworm/Dockerfile
+The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Multi-stage Dockerfile that builds four tiers:
+- **slim-base**: Minimal PHP + essential extensions (~200MB)
+- **standard-base**: + ImageMagick, vips, AVIF, Node.js (~400MB)
+- **chromium-base**: + Chromium for Browsershot/Dusk (~800MB)
+- **dev-base**: + Xdebug, PCOV, SPX for development
+
+All downstream images inherit from these stages. Extension changes go here only.
+
 ### php-fpm-nginx/common/docker-entrypoint.sh
 The heart of multi-service containers. Handles:
 - Framework detection and auto-configuration
@@ -244,7 +285,7 @@ Nginx server block for multi-service containers:
 
 ### .github/workflows/build-php-fpm-nginx.yml
 CI/CD with security focus:
-- Matrix builds: `php_version × tier (slim/standard/chromium)`
+- Matrix builds: `php_version x tier (slim/standard/chromium/dev)`
 - Weekly rebuilds: `cron: '0 3 * * 1'`
 - Rolling + SHA tags
 - Trivy CVE scanning
@@ -311,7 +352,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 
 **Schedule**: GitHub Actions runs every Monday 03:00 UTC
 - Pulls latest upstream base images (php:8.x-fpm-bookworm, etc.)
-- Rebuilds all tiers (slim/standard/chromium)
+- Rebuilds all tiers (slim/standard/chromium/dev)
 - Tags with rolling version (`8.3-bookworm`) AND immutable SHA
 - Runs Trivy CVE scan
 - Pushes to ghcr.io

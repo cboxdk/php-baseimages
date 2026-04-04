@@ -45,7 +45,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -183,7 +183,7 @@ jobs:
 
   build-slim-rootless-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -322,7 +322,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -466,7 +466,7 @@ jobs:
 
   build-rootless-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -615,7 +615,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -756,7 +756,7 @@ jobs:
 
   build-chromium-rootless-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -896,7 +896,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
@@ -1041,7 +1041,7 @@ jobs:
 
   build-dev-rootless-matrix:
     runs-on: ubuntu-latest
-    timeout-minutes: 480  # 8 hours for Alpine ARM64 QEMU builds
+    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
