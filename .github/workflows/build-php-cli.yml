@@ -24,577 +24,185 @@ on:
     # Weekly security rebuild - Monday 02:00 UTC (after php-base at 01:00)
     - cron: '0 2 * * 1'
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/php-cli
-
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   # SLIM TIER - Minimal PHP with essential extensions only
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: slim
+      target: slim-root
+      tag-suffix: slim
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing slim image $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE cbox-init --version
+    secrets: inherit
 
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (slim):"
-          echo "$BUILD_STATE" | jq .
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
-
-      - name: Get PHP patch version
-        id: php_patch
-        run: |
-          BASE_IMAGE="php:${{ matrix.php_version }}-cli-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
-          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
-          echo "PHP patch version: $PHP_FULL"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-
-      - name: Build and push slim Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: slim-root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-
-      - name: Test slim image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim"
-          echo "Testing slim image $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE cbox-init --version
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # SLIM ROOTLESS
-  # ─────────────────────────────────────────────────────────────────────────────
   build-slim-rootless-matrix:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
-
-      - name: Get PHP patch version
-        id: php_patch
-        run: |
-          BASE_IMAGE="php:${{ matrix.php_version }}-cli-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
-          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless,enable={{is_default_branch}}
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-slim-rootless,enable={{is_default_branch}}
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless-,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-
-      - name: Build and push slim rootless Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: slim-rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-
-      - name: Test slim rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless"
-          echo "Testing slim rootless image $IMAGE..."
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE composer --version
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: slim
+      target: slim-rootless
+      rootless: true
+      tag-suffix: slim-rootless
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing slim rootless image $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE composer --version
+    secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
   # STANDARD TIER (DEFAULT) - With ImageMagick, vips, Node.js
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: standard
+      target: root
+      tag-suffix: ''
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-latest-tag: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+    secrets: inherit
 
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }}:"
-          echo "$BUILD_STATE" | jq .
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
-
-      - name: Get PHP patch version
-        id: php_patch
-        run: |
-          BASE_IMAGE="php:${{ matrix.php_version }}-cli-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
-          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
-          echo "PHP patch version: $PHP_FULL"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            # Rolling version tags (recommended for most users)
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
-            # PHP patch version tags for version pinning (e.g., 8.4.7-bookworm)
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
-            # Latest tag (points to 8.4-bookworm)
-            type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
-            # Immutable SHA tags for reproducibility
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-,enable={{is_default_branch}}
-            # Branch tags
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}
-
-      - name: Test image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
-          echo "Testing $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # STANDARD ROOTLESS
-  # ─────────────────────────────────────────────────────────────────────────────
   build-rootless-matrix:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (rootless):"
-          echo "$BUILD_STATE" | jq .
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
-
-      - name: Get PHP patch version
-        id: php_patch
-        run: |
-          BASE_IMAGE="php:${{ matrix.php_version }}-cli-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
-          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
-          echo "PHP patch version: $PHP_FULL"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for rootless images
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            # Rolling version tags (recommended for most users)
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
-            # PHP patch version tags for version pinning (e.g., 8.4.7-bookworm-rootless)
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
-            # Latest tag (points to 8.4-bookworm-rootless)
-            type=raw,value=latest-${{ matrix.os_variant }}-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
-            # Immutable SHA tags for reproducibility
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless-,enable={{is_default_branch}}
-            # Branch tags
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-
-      - name: Build and push rootless Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-
-      - name: Test rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless"
-          echo "Testing rootless image $IMAGE..."
-          # Verify running as non-root (www-data = uid 33 on Debian Bookworm)
-          docker run --rm $IMAGE id -u | grep -E "^33$"
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: standard
+      target: rootless
+      rootless: true
+      tag-suffix: rootless
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-latest-tag: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing rootless image $IMAGE..."
+        # Verify running as non-root (www-data = uid 33 on Debian Bookworm)
+        docker run --rm $IMAGE id -u | grep -E "^33$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+    secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
   # CHROMIUM TIER - With Chromium for Browsershot/Dusk
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: chromium
+      target: chromium-root
+      tag-suffix: chromium
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing chromium image $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+        # Verify Chromium is installed
+        docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
+    secrets: inherit
 
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
-
-      - name: Get PHP patch version
-        id: php_patch
-        run: |
-          BASE_IMAGE="php:${{ matrix.php_version }}-cli-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
-          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
-          echo "PHP patch version: $PHP_FULL"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium,enable={{is_default_branch}}
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-chromium,enable={{is_default_branch}}
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-
-      - name: Build and push chromium Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: chromium-root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-
-      - name: Test chromium image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium"
-          echo "Testing chromium image $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
-          # Verify Chromium is installed
-          docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # CHROMIUM ROOTLESS
-  # ─────────────────────────────────────────────────────────────────────────────
   build-chromium-rootless-matrix:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-cli/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
-
-      - name: Get PHP patch version
-        id: php_patch
-        run: |
-          BASE_IMAGE="php:${{ matrix.php_version }}-cli-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
-          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless,enable={{is_default_branch}}
-            type=raw,value=${{ steps.php_patch.outputs.version }}-${{ matrix.os_variant }}-chromium-rootless,enable={{is_default_branch}}
-            type=sha,prefix=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless-,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-
-      - name: Build and push chromium rootless Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: chromium-rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-          cache-to: type=gha,mode=max,scope=cli-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-
-      - name: Test chromium rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless"
-          echo "Testing chromium rootless image $IMAGE..."
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: chromium
+      target: chromium-rootless
+      rootless: true
+      tag-suffix: chromium-rootless
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing chromium rootless image $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
+    secrets: inherit

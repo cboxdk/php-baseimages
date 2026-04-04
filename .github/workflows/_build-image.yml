@@ -1,0 +1,332 @@
+name: Build Image Tier
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        description: 'Image name (e.g., php-base, php-fpm, php-fpm-nginx)'
+        required: true
+        type: string
+      image-type:
+        description: 'Image type for Dockerfile path (e.g., php-base, php-fpm, php-cli, php-fpm-nginx)'
+        required: true
+        type: string
+      php-version:
+        description: 'PHP version (e.g., 8.4)'
+        required: true
+        type: string
+      os-variant:
+        description: 'OS variant (e.g., bookworm)'
+        required: true
+        type: string
+      tier:
+        description: 'Image tier (slim, standard, chromium, dev)'
+        required: true
+        type: string
+      target:
+        description: 'Dockerfile build target (e.g., slim-root, root, chromium-rootless)'
+        required: true
+        type: string
+      rootless:
+        description: 'Whether this is a rootless variant'
+        required: false
+        type: boolean
+        default: false
+      # --- Tag control ---
+      tag-suffix:
+        description: 'Tag suffix (e.g., slim, rootless, chromium-rootless, empty for standard root)'
+        required: true
+        type: string
+      enable-patch-tags:
+        description: 'Enable PHP patch version tags (requires upstream base image pull)'
+        required: false
+        type: boolean
+        default: false
+      enable-latest-tag:
+        description: 'Enable latest-* tag for this tier'
+        required: false
+        type: boolean
+        default: false
+      enable-convenience-tags:
+        description: 'Enable convenience tags (e.g., 8.3 -> 8.3-bookworm for standard tier)'
+        required: false
+        type: boolean
+        default: false
+      latest-php-version:
+        description: 'The PHP version that gets the latest tag (e.g., 8.4)'
+        required: false
+        type: string
+        default: '8.4'
+      # --- Base image for patch version lookup ---
+      base-image-type:
+        description: 'Base image type for PHP patch version (fpm or cli)'
+        required: false
+        type: string
+        default: 'fpm'
+      # --- Build args ---
+      build-args:
+        description: 'Additional build-args (newline-separated KEY=VALUE pairs)'
+        required: false
+        type: string
+        default: ''
+      # --- Feature toggles ---
+      enable-cosign:
+        description: 'Enable cosign image signing'
+        required: false
+        type: boolean
+        default: true
+      enable-trivy:
+        description: 'Enable Trivy vulnerability scanning'
+        required: false
+        type: boolean
+        default: false
+      # --- Test configuration ---
+      test-script:
+        description: 'Shell script for testing the built image (receives IMAGE env var)'
+        required: false
+        type: string
+        default: ''
+      # --- Build infrastructure ---
+      cache-scope-prefix:
+        description: 'Cache scope prefix (e.g., base, fpm, cli, php-fpm-nginx)'
+        required: true
+        type: string
+      platforms:
+        description: 'Build platforms'
+        required: false
+        type: string
+        default: 'linux/amd64,linux/arm64'
+      timeout:
+        description: 'Job timeout in minutes'
+        required: false
+        type: number
+        default: 90
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout }}
+
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install cosign
+        if: inputs.enable-cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ inputs.php-version }} ${{ inputs.os-variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
+          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
+          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
+          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
+          echo "Build state for PHP ${{ inputs.php-version }} ${{ inputs.os-variant }} (${{ inputs.tier }}):"
+          echo "$BUILD_STATE" | jq .
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          if [ -f versions.json ]; then
+            echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+            echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+            echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+            echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+            echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+            echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+            echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
+            echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
+            echo "PCOV_VERSION=$(jq -r '.extensions.pcov // "1.0.12"' versions.json)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download and verify Cbox Init binaries
+        if: inputs.image-type == 'php-base'
+        run: |
+          mkdir -p cbox-init/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
+
+          echo "Downloading Cbox Init v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd cbox-init/binaries
+          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+
+          cd -
+
+          chmod +x cbox-init/binaries/cbox-init-*
+          ls -la cbox-init/binaries/
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          echo "path=./${{ inputs.image-type }}/${{ inputs.php-version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "base_os=bookworm" >> $GITHUB_OUTPUT
+
+      - name: Get PHP patch version
+        id: php_patch
+        if: inputs.enable-patch-tags
+        run: |
+          BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-${{ steps.dockerfile.outputs.base_os }}"
+          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
+          echo "PHP patch version: $PHP_FULL"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # Tag generation: compute the tag suffix string for metadata action
+      # For standard root tier: tag-suffix is empty, so tags are like 8.4-bookworm
+      # For other tiers: tag-suffix is e.g. "slim", "rootless", "chromium-rootless"
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Compute tag values
+        id: tags
+        run: |
+          SUFFIX="${{ inputs.tag-suffix }}"
+          if [ -n "$SUFFIX" ]; then
+            echo "version_tag=${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "patch_tag=${{ steps.php_patch.outputs.version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "latest_tag=latest-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "sha_prefix=${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}-" >> $GITHUB_OUTPUT
+            echo "branch_suffix=-${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "convenience_tag=${{ inputs.php-version }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "cache_scope=${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+          else
+            echo "version_tag=${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "patch_tag=${{ steps.php_patch.outputs.version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "latest_tag=latest-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "sha_prefix=${{ inputs.php-version }}-${{ inputs.os-variant }}-" >> $GITHUB_OUTPUT
+            echo "branch_suffix=-${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "convenience_tag=${{ inputs.php-version }}" >> $GITHUB_OUTPUT
+            echo "cache_scope=${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}
+          tags: |
+            type=raw,value=${{ steps.tags.outputs.version_tag }},enable={{is_default_branch}}
+            type=raw,value=${{ steps.tags.outputs.patch_tag }},enable=${{ inputs.enable-patch-tags && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=${{ steps.tags.outputs.latest_tag }},enable=${{ inputs.enable-latest-tag && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.tags.outputs.convenience_tag }},enable=${{ inputs.enable-convenience-tags && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ inputs.enable-convenience-tags && inputs.tag-suffix == '' && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
+            type=sha,prefix=${{ steps.tags.outputs.sha_prefix }},enable={{is_default_branch}}
+            type=ref,event=branch,suffix=${{ steps.tags.outputs.branch_suffix }}
+            type=ref,event=pr,suffix=${{ steps.tags.outputs.branch_suffix }}
+
+      - name: Construct build-args
+        id: buildargs
+        run: |
+          # Build the args file to avoid shell quoting issues with multiline strings
+          ARGS_FILE=$(mktemp)
+          # php-base images need versions from versions.json as build-args
+          if [ "${{ inputs.image-type }}" = "php-base" ]; then
+            cat >> "$ARGS_FILE" <<'VERSIONS'
+          REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+          IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+          APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+          MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+          MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+          VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+          NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+          CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+          CBOX_PHP_VERSION=${{ inputs.php-version }}
+          CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+          CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+          CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+          VERSIONS
+            # Dev tier also needs xdebug/pcov versions
+            if [ "${{ inputs.tier }}" = "dev" ]; then
+              cat >> "$ARGS_FILE" <<'DEVVERSIONS'
+          XDEBUG_VERSION=${{ steps.versions.outputs.XDEBUG_VERSION }}
+          PCOV_VERSION=${{ steps.versions.outputs.PCOV_VERSION }}
+          DEVVERSIONS
+            fi
+          fi
+          # Append any caller-provided build-args
+          CALLER_ARGS="${{ inputs.build-args }}"
+          if [ -n "$CALLER_ARGS" ]; then
+            echo "$CALLER_ARGS" >> "$ARGS_FILE"
+          fi
+          # Write multiline output (strip leading whitespace from heredoc indentation)
+          {
+            echo "args<<BUILDARGS_EOF"
+            sed 's/^[[:space:]]*//' "$ARGS_FILE"
+            echo "BUILDARGS_EOF"
+          } >> $GITHUB_OUTPUT
+          rm -f "$ARGS_FILE"
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: ${{ inputs.target }}
+          platforms: ${{ inputs.platforms }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}
+          cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}
+          build-args: ${{ steps.buildargs.outputs.args }}
+
+      - name: Sign image with cosign
+        if: inputs.enable-cosign && github.event_name != 'pull_request'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@${DIGEST}"
+
+      - name: Run Trivy vulnerability scanner
+        if: inputs.enable-trivy && github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        if: inputs.enable-trivy && github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Test built image
+        if: inputs.test-script != '' && github.event_name != 'pull_request'
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
+          PHP_VERSION: ${{ inputs.php-version }}
+          TIER: ${{ inputs.tier }}
+          ROOTLESS: ${{ inputs.rootless }}
+        run: ${{ inputs.test-script }}

@@ -8,6 +8,7 @@ on:
       - 'common/**'
       - 'versions.json'
       - '.github/workflows/build-php-base.yml'
+      - '.github/workflows/_build-image.yml'
     tags:
       - 'base-*'
   pull_request:
@@ -34,1153 +35,243 @@ on:
     # Weekly security rebuild - Monday 01:00 UTC (runs before dependent images)
     - cron: '0 1 * * 1'
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/php-base
+# ═══════════════════════════════════════════════════════════════════════════════
+# php-base uses build-args from versions.json and downloads cbox-init binaries.
+# These are handled inside _build-image.yml (conditional on image-type=php-base).
+#
+# Tag pattern for php-base is simpler than downstream images:
+#   - No PHP patch version tags
+#   - No latest tags for non-standard tiers
+#   - Uses semver tags on tag pushes
+# ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   # SLIM TIER - Minimal PHP with essential extensions only
-  # All OS variants now support tiered builds (slim, standard, chromium)
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-          
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (slim)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-
-      - name: Build and push slim image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: slim-root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test slim image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim"
-          echo "Testing slim $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
-          docker run --rm $IMAGE composer --version
-          # Slim does NOT have node, imagemagick, vips - that's expected
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: slim
+      target: slim-root
+      tag-suffix: slim
+      cache-scope-prefix: base
+      enable-cosign: true
+      test-script: |
+        echo "Testing slim $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
+        docker run --rm $IMAGE composer --version
+        # Slim does NOT have node, imagemagick, vips - that's expected
+    secrets: inherit
 
   build-slim-rootless-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-          
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (slim-rootless)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-
-      - name: Build and push slim-rootless image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: slim-rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test slim-rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-slim-rootless"
-          echo "Testing slim-rootless $IMAGE..."
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
-          docker run --rm $IMAGE php -v
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: slim
+      target: slim-rootless
+      rootless: true
+      tag-suffix: slim-rootless
+      cache-scope-prefix: base
+      enable-cosign: true
+      test-script: |
+        echo "Testing slim-rootless $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+    secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
   # STANDARD TIER (DEFAULT) - ImageMagick, vips, Node.js included
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }}:"
-          echo "$BUILD_STATE" | jq .
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-          
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
-            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
-            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }},enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.os_variant }},enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
-
-      - name: Build and push Docker image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}"
-          echo "Testing $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: standard
+      target: root
+      tag-suffix: ''
+      cache-scope-prefix: base
+      enable-cosign: true
+      enable-latest-tag: true
+      test-script: |
+        echo "Testing $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+    secrets: inherit
 
   build-rootless-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-          echo "Build state for PHP ${{ matrix.php_version }} ${{ matrix.os_variant }} (rootless):"
-          echo "$BUILD_STATE" | jq .
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-          
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for rootless images
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-            type=semver,pattern={{version}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless,enable={{is_default_branch}}
-            type=raw,value=latest-${{ matrix.os_variant }}-rootless,enable=${{ matrix.php_version == '8.4' && github.ref == 'refs/heads/main' }}
-
-      - name: Build and push rootless Docker image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-rootless"
-          echo "Testing rootless image $IMAGE..."
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: standard
+      target: rootless
+      rootless: true
+      tag-suffix: rootless
+      cache-scope-prefix: base
+      enable-cosign: true
+      enable-latest-tag: true
+      test-script: |
+        echo "Testing rootless image $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+    secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
   # CHROMIUM TIER - Includes Chromium for Browsershot/Dusk
-  # All OS variants now support tiered builds (slim, standard, chromium)
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-          
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (chromium)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-
-      - name: Build and push chromium image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: chromium-root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test chromium image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium"
-          echo "Testing chromium $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
-          # Verify Chromium is installed
-          docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: chromium
+      target: chromium-root
+      tag-suffix: chromium
+      cache-scope-prefix: base
+      enable-cosign: true
+      test-script: |
+        echo "Testing chromium $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+        # Verify Chromium is installed
+        docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+    secrets: inherit
 
   build-chromium-rootless-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (chromium-rootless)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-
-      - name: Build and push chromium-rootless image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: chromium-rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test chromium-rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-chromium-rootless"
-          echo "Testing chromium-rootless $IMAGE..."
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: chromium
+      target: chromium-rootless
+      rootless: true
+      tag-suffix: chromium-rootless
+      cache-scope-prefix: base
+      enable-cosign: true
+      test-script: |
+        echo "Testing chromium-rootless $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+    secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
   # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
-
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-          echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
-          echo "PCOV_VERSION=$(jq -r '.extensions.pcov // "1.0.12"' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (dev)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-dev,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
-
-      - name: Build and push dev image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: dev-root
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            XDEBUG_VERSION=${{ steps.versions.outputs.XDEBUG_VERSION }}
-            PCOV_VERSION=${{ steps.versions.outputs.PCOV_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test dev image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-dev"
-          echo "Testing dev $IMAGE..."
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips|xdebug|pcov|spx"
-          docker run --rm $IMAGE composer --version
-          docker run --rm $IMAGE node --version
-          docker run --rm $IMAGE cbox-init --version
-          # Verify Chromium is installed (inherited from chromium tier)
-          docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: dev
+      target: dev-root
+      tag-suffix: dev
+      cache-scope-prefix: base
+      enable-cosign: true
+      test-script: |
+        echo "Testing dev $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips|xdebug|pcov|spx"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+        # Verify Chromium is installed (inherited from chromium tier)
+        docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
+    secrets: inherit
 
   build-dev-rootless-matrix:
-    runs-on: ubuntu-latest
-    timeout-minutes: 90  # 90 minutes for Bookworm AMD64/ARM64 builds
     strategy:
       fail-fast: false
       matrix:
         php_version: ['8.2', '8.3', '8.4', '8.5']
         os_variant: ['bookworm']
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-base
+      image-type: php-base
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: dev
+      target: dev-rootless
+      rootless: true
+      tag-suffix: dev-rootless
+      cache-scope-prefix: base
+      enable-cosign: true
+      test-script: |
+        echo "Testing dev-rootless $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "xdebug|pcov|spx"
+    secrets: inherit
 
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Read versions from versions.json
-        id: versions
-        run: |
-          echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-          echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-          echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-          echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-          echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-          echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
-          echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-          echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
-          echo "PCOV_VERSION=$(jq -r '.extensions.pcov // "1.0.12"' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Get build lifecycle state
-        id: lifecycle
-        run: |
-          chmod +x ./scripts/get-build-state.sh
-          BUILD_STATE=$(./scripts/get-build-state.sh ${{ matrix.php_version }} ${{ matrix.os_variant }})
-          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
-          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
-          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
-          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
-          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums from checksums.txt..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-          ls -la cbox-init/binaries/
-
-      - name: Determine Dockerfile path
-        id: dockerfile
-        run: |
-          echo "path=./php-base/${{ matrix.php_version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (dev-rootless)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless,enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
-            type=ref,event=pr,suffix=-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
-
-      - name: Build and push dev-rootless image
-        id: build
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ steps.dockerfile.outputs.path }}
-          target: dev-rootless
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless
-          build-args: |
-            REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
-            IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
-            APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
-            MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
-            MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-            VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
-            NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-            XDEBUG_VERSION=${{ steps.versions.outputs.XDEBUG_VERSION }}
-            PCOV_VERSION=${{ steps.versions.outputs.PCOV_VERSION }}
-            CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-            CBOX_PHP_VERSION=${{ matrix.php_version }}
-            CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-            CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-            CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
-
-      - name: Sign image with cosign
-        if: github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
-        run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
-
-      - name: Test dev-rootless image
-        if: github.event_name != 'pull_request'
-        run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.php_version }}-${{ matrix.os_variant }}-dev-rootless"
-          echo "Testing dev-rootless $IMAGE..."
-          docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
-          docker run --rm $IMAGE php -v
-          docker run --rm $IMAGE php -m | grep -E "xdebug|pcov|spx"
-
+  # ═══════════════════════════════════════════════════════════════════════════
   # Trigger dependent image builds after php-base completes
+  # ═══════════════════════════════════════════════════════════════════════════
   trigger-dependent-builds:
     needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-chromium-matrix, build-chromium-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
