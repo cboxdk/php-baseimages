@@ -3,16 +3,23 @@
 # Tests PHP extensions are properly installed and functional in baseimages
 #
 # Usage:
-#   ./test-extensions.sh [IMAGE] [PROFILE]
+#   ./test-extensions.sh [IMAGE] [PROFILE] [TIER]
 #   ./test-extensions.sh                                    # Uses default image
-#   ./test-extensions.sh baseimages-php-fpm-alpine          # Test local build (auto-detect profile)
+#   ./test-extensions.sh baseimages-php-fpm-alpine          # Test local build (auto-detect profile+tier)
 #   ./test-extensions.sh baseimages-php-fpm-nginx-alpine    # Multi-service image
-#   ./test-extensions.sh baseimages-php-fpm-alpine fpm      # Explicit profile
+#   ./test-extensions.sh baseimages-php-fpm-alpine fpm      # Explicit profile (auto-detect tier)
+#   ./test-extensions.sh baseimages-php-fpm-alpine fpm slim # Explicit profile and tier
 #
 # Profiles:
 #   fpm       - php-fpm single-process image (has vips, no msgpack)
 #   fpm-nginx - php-fpm-nginx multi-service image (has msgpack, no vips)
 #   cli       - php-cli image
+#
+# Tiers:
+#   slim     - Core extensions only (no mongodb, soap, ldap, xsl, IPC, calendar, gettext)
+#   standard - Full extensions including niche/enterprise (DEFAULT)
+#   chromium - Same as standard + Chromium
+#   dev      - Same as chromium + Xdebug, PCOV, SPX
 
 set -euo pipefail
 
@@ -50,6 +57,33 @@ detect_profile() {
 }
 
 PROFILE=$(detect_profile "$IMAGE" "${2:-}")
+
+# Detect tier from explicit arg, image name, or container env
+detect_tier() {
+    local img="$1"
+    local explicit_tier="${2:-}"
+
+    if [ -n "$explicit_tier" ]; then
+        echo "$explicit_tier"
+    elif echo "$img" | grep -qi "\-slim"; then
+        echo "slim"
+    elif echo "$img" | grep -qi "\-dev"; then
+        echo "dev"
+    elif echo "$img" | grep -qi "\-chromium"; then
+        echo "chromium"
+    else
+        # Try reading from the container's CBOX_IMAGE_TIER env var
+        local container_tier
+        container_tier=$(docker run --rm --entrypoint sh "$img" -c 'echo $CBOX_IMAGE_TIER' 2>/dev/null || true)
+        if [ -n "$container_tier" ]; then
+            echo "$container_tier"
+        else
+            echo "standard"
+        fi
+    fi
+}
+
+TIER=$(detect_tier "$IMAGE" "${3:-}")
 
 log_test() {
     echo -e "${BLUE}[TEST]${NC} $1"
@@ -134,6 +168,7 @@ test_extension_functional() {
 
 log_section "Testing Image: $IMAGE"
 echo -e "  Profile: ${YELLOW}$PROFILE${NC}"
+echo -e "  Tier:    ${YELLOW}$TIER${NC}"
 
 # Verify image exists
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
@@ -335,7 +370,13 @@ log_section "Database Extensions"
 
 test_extension_loaded "mysqli" "MySQLi extension loaded"
 test_extension_loaded "pgsql" "PostgreSQL extension loaded"
-test_extension_loaded "mongodb" "MongoDB extension loaded"
+
+# MongoDB moved from slim to standard tier
+if [ "$TIER" != "slim" ]; then
+    test_extension_loaded "mongodb" "MongoDB extension loaded"
+else
+    log_skip "MongoDB extension (not in slim tier)"
+fi
 
 test_extension_functional "PDO drivers include mysql" \
     "echo in_array('mysql', PDO::getAvailableDrivers()) ? 'yes' : 'no';" \
@@ -346,34 +387,52 @@ test_extension_functional "PDO drivers include pgsql" \
     "yes"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Communication Extensions
+# Communication Extensions (soap and ldap moved from slim to standard tier)
 # ─────────────────────────────────────────────────────────────────────────────
 log_section "Communication Extensions"
 
-test_extension_loaded "soap" "SOAP extension loaded"
-test_extension_loaded "ldap" "LDAP extension loaded"
+if [ "$TIER" != "slim" ]; then
+    test_extension_loaded "soap" "SOAP extension loaded"
+    test_extension_loaded "ldap" "LDAP extension loaded"
+else
+    log_skip "SOAP extension (not in slim tier)"
+    log_skip "LDAP extension (not in slim tier)"
+fi
 test_extension_loaded "imap" "IMAP extension loaded"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Utility Extensions
+# Utility Extensions (xsl, calendar, gettext moved from slim to standard tier)
 # ─────────────────────────────────────────────────────────────────────────────
 log_section "Utility Extensions"
 
-test_extension_loaded "xsl" "XSL extension loaded"
+if [ "$TIER" != "slim" ]; then
+    test_extension_loaded "xsl" "XSL extension loaded"
+    test_extension_loaded "calendar" "Calendar extension loaded"
+    test_extension_loaded "gettext" "Gettext extension loaded"
+else
+    log_skip "XSL extension (not in slim tier)"
+    log_skip "Calendar extension (not in slim tier)"
+    log_skip "Gettext extension (not in slim tier)"
+fi
 test_extension_loaded "bz2" "Bzip2 extension loaded"
 test_extension_loaded "gmp" "GMP extension loaded"
-test_extension_loaded "calendar" "Calendar extension loaded"
-test_extension_loaded "gettext" "Gettext extension loaded"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# IPC Extensions (for queue workers)
+# IPC Extensions (moved from slim to standard tier)
 # ─────────────────────────────────────────────────────────────────────────────
 log_section "IPC Extensions"
 
-test_extension_loaded "shmop" "Shared Memory extension loaded"
-test_extension_loaded "sysvmsg" "System V Messages extension loaded"
-test_extension_loaded "sysvsem" "System V Semaphores extension loaded"
-test_extension_loaded "sysvshm" "System V Shared Memory extension loaded"
+if [ "$TIER" != "slim" ]; then
+    test_extension_loaded "shmop" "Shared Memory extension loaded"
+    test_extension_loaded "sysvmsg" "System V Messages extension loaded"
+    test_extension_loaded "sysvsem" "System V Semaphores extension loaded"
+    test_extension_loaded "sysvshm" "System V Shared Memory extension loaded"
+else
+    log_skip "Shared Memory extension (not in slim tier)"
+    log_skip "System V Messages extension (not in slim tier)"
+    log_skip "System V Semaphores extension (not in slim tier)"
+    log_skip "System V Shared Memory extension (not in slim tier)"
+fi
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Redis Functionality Tests
@@ -443,6 +502,7 @@ log_section "Test Summary"
 echo ""
 echo "  Image:   $IMAGE"
 echo "  Profile: $PROFILE"
+echo "  Tier:    $TIER"
 echo "  Tests:   $TESTS_RUN"
 echo -e "  ${GREEN}Passed:${NC}  $TESTS_PASSED"
 echo -e "  ${RED}Failed:${NC}  $TESTS_FAILED"

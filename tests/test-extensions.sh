@@ -17,7 +17,7 @@ fi
 
 echo -e "${YELLOW}Testing PHP extensions in: $IMAGE${NC}"
 
-# Required core extensions
+# Required core extensions (present in ALL tiers, including slim)
 REQUIRED_EXTENSIONS=(
     "opcache"
     "pdo_mysql"
@@ -31,7 +31,9 @@ REQUIRED_EXTENSIONS=(
     "apcu"
 )
 
-# Optional extensions (check but don't fail)
+# Optional extensions - present in standard+ tier (check but don't fail)
+# Note: mongodb, soap, ldap, xsl, calendar, gettext, shmop, sysvmsg,
+# sysvsem, sysvshm were moved from slim to standard tier
 OPTIONAL_EXTENSIONS=(
     "gd"
     "imagick"
@@ -40,6 +42,14 @@ OPTIONAL_EXTENSIONS=(
     "sockets"
     "pcntl"
     "xsl"
+    "mongodb"
+    "ldap"
+    "calendar"
+    "gettext"
+    "shmop"
+    "sysvmsg"
+    "sysvsem"
+    "sysvshm"
 )
 
 echo -e "\n${YELLOW}Checking required extensions...${NC}"

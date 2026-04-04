@@ -5,8 +5,11 @@
 # All other images (php-cli, php-fpm, php-fpm-nginx, php-swoole, etc.) extend this
 #
 # IMAGE TIERS:
-# - slim:     Minimal PHP + essential extensions (~200MB) - API/microservices
-# - standard: + ImageMagick, vips, Node.js (~400MB) - Most Laravel apps (DEFAULT)
+# - slim:     Core PHP + database/cache/queue extensions - API/microservices
+#             (opcache, pdo_mysql, pdo_pgsql, mysqli, pgsql, redis, apcu, msgpack,
+#              zip, intl, bcmath, gd, exif, pcntl, sockets, bz2, gmp)
+# - standard: + ImageMagick, vips, Node.js, mongodb, soap, ldap, xsl,
+#               calendar, gettext, shmop, sysvmsg, sysvsem, sysvshm - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
 # ============================================================================
 
@@ -52,7 +55,6 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 # Re-declare ARGs after FROM (they don't persist)
 ARG REDIS_VERSION
 ARG APCU_VERSION
-ARG MONGODB_VERSION
 ARG MSGPACK_VERSION
 
 # ============================================================================
@@ -66,7 +68,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Runtime libraries (minimal set for slim tier)
     libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 \
     libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
+    libxml2 \
     libbz2-1.0 libonig5 libreadline8 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -77,7 +79,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libpq-dev libicu-dev libzip-dev \
-    libxml2-dev libxslt1-dev libldap2-dev \
     libbz2-dev libonig-dev libreadline-dev libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -92,22 +93,19 @@ RUN docker-php-ext-install -j$(nproc) \
     opcache \
     pdo_mysql pdo_pgsql mysqli pgsql \
     zip intl bcmath gd exif \
-    pcntl sockets soap xsl ldap bz2 \
-    calendar gettext shmop sysvmsg sysvsem sysvshm \
+    pcntl sockets bz2 \
     gmp
 
 # Install PECL extensions with PINNED versions
 RUN pecl install redis-${REDIS_VERSION} && \
     pecl install apcu-${APCU_VERSION} && \
     pecl install msgpack-${MSGPACK_VERSION} && \
-    pecl install mongodb-${MONGODB_VERSION} && \
-    docker-php-ext-enable redis apcu msgpack mongodb
+    docker-php-ext-enable redis apcu msgpack
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libpq-dev libicu-dev libzip-dev \
-    libxml2-dev libxslt1-dev libldap2-dev \
     libbz2-dev libonig-dev libreadline-dev libgmp-dev && \
     rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* \
     /usr/share/doc /usr/share/man /usr/share/locale/* \
@@ -183,6 +181,7 @@ FROM slim-base AS standard-base
 # Re-declare ARGs
 ARG IMAGICK_VERSION
 ARG VIPS_VERSION
+ARG MONGODB_VERSION
 
 # Copy Node.js binaries from official node image
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
@@ -212,13 +211,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libimage-exiftool-perl \
     # Netcat for health checks
     netcat-openbsd \
+    # Runtime libs for extensions moved from slim (soap, xsl, ldap)
+    libxslt1.1 libldap-2.5-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install build deps for ImageMagick/vips extensions
+# Install build deps for ImageMagick/vips + moved extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
     libavif-dev libmagickwand-dev libvips-dev \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
+    libxml2-dev libxslt1-dev libldap2-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Reconfigure GD with AVIF support
@@ -229,15 +231,22 @@ RUN docker-php-ext-configure gd \
     --with-avif && \
     docker-php-ext-install -j$(nproc) gd
 
-# Install ImageMagick and vips PECL extensions
+# Install extensions moved from slim tier (niche/enterprise)
+RUN docker-php-ext-install -j$(nproc) \
+    soap xsl ldap \
+    calendar gettext shmop sysvmsg sysvsem sysvshm
+
+# Install ImageMagick, vips, and mongodb PECL extensions
 RUN pecl install imagick-${IMAGICK_VERSION} && \
     pecl install vips-${VIPS_VERSION} && \
-    docker-php-ext-enable imagick vips
+    pecl install mongodb-${MONGODB_VERSION} && \
+    docker-php-ext-enable imagick vips mongodb
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
     libavif-dev libmagickwand-dev libvips-dev \
-    libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev && \
+    libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
+    libxml2-dev libxslt1-dev libldap2-dev && \
     rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* \
     /root/.pearrc /root/.pear && \
     find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all {} \; 2>/dev/null || true

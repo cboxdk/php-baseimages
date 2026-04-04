@@ -8,6 +8,9 @@
 # - slim:     Minimal PHP + essential extensions - API/microservices
 # - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
+#
+# ARCHITECTURE: Shared dependency stages install runtime libs ONCE per tier.
+# Root/rootless variants extend the shared stage (no apt-get duplication).
 # ============================================================================
 
 # ============================================================================
@@ -18,17 +21,13 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm AS base-standard
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-chromium AS base-chromium
 FROM ghcr.io/cboxdk/php-baseimages/php-base:8.2-bookworm-dev AS base-dev
 
-# ═══════════════════════════════════════════════════════════════════════════
-# SLIM-ROOT: Minimal PHP-FPM with essential extensions
-# ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS slim-root
+# ============================================================================
+# Shared dependency stages (runtime libs installed once per tier)
+# ============================================================================
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Slim)"
-LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions"
-LABEL org.opencontainers.image.vendor="Cbox"
-LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
+# --- Slim tier: minimal runtime dependencies ---
+FROM php:8.2-fpm-bookworm AS fpm-slim-deps
 
-# Slim runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
     cron \
@@ -37,6 +36,41 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2 libxslt1.1 libldap-2.5-0 \
     libbz2-1.0 libonig5 libreadline8 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
+
+# Copy FPM-specific configurations (shared across root/rootless)
+COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
+COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
+
+# --- Standard tier: adds ImageMagick, vips, Node.js runtime deps ---
+FROM fpm-slim-deps AS fpm-standard-deps
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libavif15 libmagickwand-6.q16-6 \
+    libheif1 ghostscript librsvg2-bin \
+    libvips42 libvips-tools \
+    libimage-exiftool-perl \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Chromium tier: adds headless browser ---
+FROM fpm-standard-deps AS fpm-chromium-deps
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium fonts-liberation libnss3 \
+    libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SLIM-ROOT: Minimal PHP-FPM with essential extensions
+# ═══════════════════════════════════════════════════════════════════════════
+FROM fpm-slim-deps AS slim-root
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Slim)"
+LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_ROOTLESS=false \
     CBOX_IMAGE_TIER=slim
@@ -54,12 +88,6 @@ COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 # Copy Cbox shared libraries from base image
 COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
-# Copy FPM-specific configurations
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
-
 # Create directories
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
@@ -75,21 +103,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOTLESS: Minimal PHP-FPM running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS slim-rootless
+FROM fpm-slim-deps AS slim-rootless
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV CBOX_ROOTLESS=true \
     CBOX_IMAGE_TIER=slim \
@@ -100,11 +119,6 @@ COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
 COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
-
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 RUN mkdir -p /var/www/html /var/www/.composer \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
@@ -124,26 +138,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # ROOT (STANDARD): Default - ImageMagick, vips, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS root
+FROM fpm-standard-deps AS root
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-# Standard runtime dependencies (no Chromium)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    libimage-exiftool-perl \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV CBOX_ROOTLESS=false \
     CBOX_IMAGE_TIER=standard
@@ -170,12 +170,6 @@ COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/polic
 # Copy Cbox shared libraries from base image
 COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
-# Copy FPM-specific configurations
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
-
 # Create directories
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
@@ -191,25 +185,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # ROOTLESS (STANDARD): Default rootless - ImageMagick, vips, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS rootless
+FROM fpm-standard-deps AS rootless
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    libimage-exiftool-perl \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV CBOX_ROOTLESS=true \
     CBOX_IMAGE_TIER=standard \
@@ -225,11 +206,6 @@ COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
-
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
@@ -249,29 +225,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # CHROMIUM-ROOT: Everything including Chromium for Browsershot/Dusk
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS chromium-root
+FROM fpm-chromium-deps AS chromium-root
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Chromium)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-# Chromium runtime dependencies including Chromium
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    libimage-exiftool-perl \
-    chromium fonts-liberation libnss3 \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
@@ -289,11 +248,6 @@ COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
-
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
 
@@ -308,28 +262,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # CHROMIUM-ROOTLESS: Everything including Chromium, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS chromium-rootless
+FROM fpm-chromium-deps AS chromium-rootless
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    libimage-exiftool-perl \
-    chromium fonts-liberation libnss3 \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
@@ -347,11 +285,6 @@ COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
 COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
-
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
@@ -371,28 +304,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # DEV-ROOT: Chromium + Xdebug, PCOV, SPX for development/testing
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS dev-root
+FROM fpm-chromium-deps AS dev-root
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Dev)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    libimage-exiftool-perl \
-    chromium fonts-liberation libnss3 \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
@@ -410,11 +327,6 @@ COPY --from=base-dev /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
-
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
 
@@ -429,28 +341,12 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 # DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
-FROM php:8.2-fpm-bookworm AS dev-rootless
+FROM fpm-chromium-deps AS dev-rootless
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.2 Bookworm (Dev Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
-    cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 \
-    libwebp7 libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
-    libimage-exiftool-perl \
-    chromium fonts-liberation libnss3 \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
-    && rm -rf /var/lib/apt/lists/*
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
@@ -468,11 +364,6 @@ COPY --from=base-dev /usr/bin/composer /usr/bin/composer
 COPY --from=base-dev /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
-
-COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
-COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
