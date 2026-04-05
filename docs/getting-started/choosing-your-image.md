@@ -61,7 +61,7 @@ All images are prefixed with `ghcr.io/cboxdk/php-baseimages/`.
 
 **Chromium** (`-chromium`) -- Everything in Standard plus Chromium, Puppeteer environment, NSS, HarfBuzz, and fonts. Required for Browsershot, Laravel Dusk, Puppeteer, and PDF generation via headless browser.
 
-**Dev** (`-dev`) -- Standard tier with Xdebug, PCOV, and SPX pre-installed. Use for local development and CI test runs. Never use in production.
+**Dev** (`-dev`) -- Chromium tier with Xdebug, PCOV, and SPX pre-installed. Use for local development and CI test runs. Never use in production.
 
 ## Root vs Rootless
 

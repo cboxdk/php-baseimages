@@ -87,18 +87,22 @@ ghcr.io/cboxdk/php-baseimages/nginx:bookworm
 
 | Version | Status | Recommended |
 |---------|--------|-------------|
+| PHP 8.5 | Active | Yes |
 | PHP 8.4 | Active | Yes |
 | PHP 8.3 | Active | Yes |
-| PHP 8.2 | Active | Legacy support |
+| PHP 8.2 | EOL Dec 2025 | Upgrade recommended |
 
 ```bash
-# PHP 8.4 (latest)
+# PHP 8.5 (latest)
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
+
+# PHP 8.4
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # PHP 8.3
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 
-# PHP 8.2
+# PHP 8.2 (EOL)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 ```
 

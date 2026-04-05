@@ -139,7 +139,7 @@ The Dev tier includes everything in Chromium, plus development and profiling too
 
 | Extension | Type | Version | Purpose |
 |-----------|------|---------|---------|
-| `xdebug` | PECL | 3.4.0 | Step debugging, code coverage, profiling |
+| `xdebug` | PECL | 3.5.0 | Step debugging, code coverage, profiling |
 | `pcov` | PECL | 1.0.12 | Fast code coverage (10x faster than Xdebug) |
 | `spx` | GitHub | latest | Simple performance profiler with web UI |
 

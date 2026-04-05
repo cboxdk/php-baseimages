@@ -17,7 +17,7 @@ weight: 1
 | **Slim** | `-slim` | ~120 MiB | APIs, microservices |
 | **Standard** | *(none)* | ~250 MiB | Most apps (default) |
 | **Chromium** | `-chromium` | ~700 MiB | Browsershot, Dusk, PDF |
-| **Dev** | `-dev` | ~300 MiB | Xdebug, PCOV, SPX |
+| **Dev** | `-dev` | ~750 MiB | Chromium + Xdebug, PCOV, SPX |
 
 ```yaml
 # Standard (default) -- most Laravel/PHP apps
