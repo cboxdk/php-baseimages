@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP-FPM + Nginx Image - Debian 8.3 (Bookworm)
+# Cbox PHP-FPM + Nginx Image - Debian (Bookworm)
 # ============================================================================
 # LAYER 4: Extends php-fpm with Nginx for single-container deployment
 #          Uses Cbox Init as process manager
@@ -8,26 +8,32 @@
 # - slim:     Minimal PHP + essential extensions - API/microservices
 # - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
+#
+# PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
 # ============================================================================
+
+ARG PHP_VERSION=8.4
 
 # ============================================================================
 # Import base images for each tier from php-fpm
 # ============================================================================
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-slim AS base-slim
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-slim-rootless AS base-slim-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-chromium AS base-chromium
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-chromium-rootless AS base-chromium-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev AS base-dev
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev-rootless AS base-dev-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim-rootless AS base-slim-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-rootless AS base-standard-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium-rootless AS base-chromium-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev-rootless AS base-dev-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim AS slim-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Slim)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM + Nginx with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -82,7 +88,9 @@ CMD ["cbox-init"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim-rootless AS slim-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Slim Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM + Nginx with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -147,7 +155,9 @@ CMD ["cbox-init"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -202,7 +212,9 @@ CMD ["cbox-init"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox Init - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -267,7 +279,9 @@ CMD ["cbox-init"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-chromium AS chromium-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Chromium)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Chromium)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -322,7 +336,9 @@ CMD ["cbox-init"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-chromium-rootless AS chromium-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Chromium Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -383,12 +399,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DEV-ROOT: Chromium + Development tools (Xdebug, PCOV, SPX)
+# DEV-ROOT: Chromium + Xdebug, PCOV, SPX for development/testing
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-dev AS dev-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Dev)"
-LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Xdebug, PCOV, SPX for development"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Dev)"
+LABEL org.opencontainers.image.description="PHP-FPM + Nginx with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
@@ -438,12 +456,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DEV-ROOTLESS: Chromium + Development tools, running as www-data
+# DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-dev-rootless AS dev-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx 8.3 Bookworm (Dev Rootless)"
-LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Xdebug, PCOV, SPX - Rootless"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Dev Rootless)"
+LABEL org.opencontainers.image.description="PHP-FPM + Nginx with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 

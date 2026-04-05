@@ -3,7 +3,9 @@ services:
   php-fpm:
     build:
       context: .
-      dockerfile: ./php-fpm/8.3/debian/bookworm/Dockerfile
+      dockerfile: ./php-fpm/Dockerfile
+      args:
+        PHP_VERSION: "8.3"
     container_name: cbox-fpm
     volumes:
       - ./test-app:/var/www/html
@@ -14,7 +16,9 @@ services:
   php-fpm-dev:
     build:
       context: .
-      dockerfile: ./php-fpm/8.3/debian/bookworm/Dockerfile.dev
+      dockerfile: ./php-fpm/Dockerfile.dev
+      args:
+        PHP_VERSION: "8.3"
     container_name: cbox-fpm-dev
     volumes:
       - ./test-app:/var/www/html
@@ -30,7 +34,9 @@ services:
   php-cli:
     build:
       context: .
-      dockerfile: ./php-cli/8.3/debian/bookworm/Dockerfile
+      dockerfile: ./php-cli/Dockerfile
+      args:
+        PHP_VERSION: "8.3"
     container_name: cbox-cli
     volumes:
       - ./test-app:/var/www/html
@@ -42,7 +48,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: ./nginx/debian/bookworm/Dockerfile
+      dockerfile: ./nginx/Dockerfile
     container_name: cbox-nginx
     ports:
       - "8080:80"
@@ -57,7 +63,9 @@ services:
   php-fpm-nginx:
     build:
       context: .
-      dockerfile: ./php-fpm-nginx/8.3/debian/bookworm/Dockerfile
+      dockerfile: ./php-fpm-nginx/Dockerfile
+      args:
+        PHP_VERSION: "8.3"
     container_name: cbox-fpm-nginx
     ports:
       - "8081:80"

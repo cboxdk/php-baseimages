@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP-FPM Image - Debian 8.5 (Bookworm)
+# Cbox PHP-FPM Image - Debian (Bookworm)
 # ============================================================================
 # LAYER 3: Multi-stage build that copies extensions from php-base
 #          and uses official php-fpm as base
@@ -11,22 +11,27 @@
 #
 # ARCHITECTURE: Shared dependency stages install runtime libs ONCE per tier.
 # Root/rootless variants extend the shared stage (no apt-get duplication).
+#
+# PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
 # ============================================================================
+
+ARG PHP_VERSION=8.4
 
 # ============================================================================
 # Import base images for each tier (for extension copying)
 # ============================================================================
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-bookworm-slim AS base-slim
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-bookworm AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-bookworm-chromium AS base-chromium
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-bookworm-dev AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-slim AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-chromium AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev AS base-dev
 
 # ============================================================================
 # Shared dependency stages (runtime libs installed once per tier)
 # ============================================================================
 
 # --- Slim tier: minimal runtime dependencies ---
-FROM php:8.5-fpm-bookworm AS fpm-slim-deps
+ARG PHP_VERSION
+FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
@@ -67,7 +72,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-slim-deps AS slim-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Slim)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -105,7 +112,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-slim-deps AS slim-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Slim Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -140,7 +149,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-standard-deps AS root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -187,7 +198,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-standard-deps AS rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -227,7 +240,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-chromium-deps AS chromium-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Chromium)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Chromium)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -264,7 +279,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-chromium-deps AS chromium-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Chromium Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -306,7 +323,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-chromium-deps AS dev-root
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Dev)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Dev)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -343,7 +362,9 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-chromium-deps AS dev-rootless
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM 8.5 Bookworm (Dev Rootless)"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Dev Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"

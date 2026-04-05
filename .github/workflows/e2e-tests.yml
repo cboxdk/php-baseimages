@@ -92,18 +92,18 @@ jobs:
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building php-base:8.3-bookworm ==="
-          docker build --target root \
-            -f php-base/8.3/debian/bookworm/Dockerfile \
+          docker build --target root --build-arg PHP_VERSION=8.3 \
+            -f php-base/Dockerfile \
             -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm .
 
           echo "=== Building php-fpm:8.3-bookworm ==="
-          docker build --target root \
-            -f php-fpm/8.3/debian/bookworm/Dockerfile \
+          docker build --target root --build-arg PHP_VERSION=8.3 \
+            -f php-fpm/Dockerfile \
             -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm .
 
           echo "=== Building php-fpm-nginx:8.3-bookworm ==="
-          docker build --target root \
-            -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile \
+          docker build --target root --build-arg PHP_VERSION=8.3 \
+            -f php-fpm-nginx/Dockerfile \
             -t test-image:local .
 
       - name: Run plain PHP E2E test
@@ -170,10 +170,9 @@ jobs:
       - name: Determine Dockerfile paths
         id: paths
         run: |
-          PHP="${{ github.event.inputs.php_version }}"
-          echo "base=php-base/${PHP}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "fpm=php-fpm/${PHP}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "nginx=php-fpm-nginx/${PHP}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "base=php-base/Dockerfile" >> $GITHUB_OUTPUT
+          echo "fpm=php-fpm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "nginx=php-fpm-nginx/Dockerfile" >> $GITHUB_OUTPUT
 
       - name: Build image chain
         run: |
@@ -181,17 +180,17 @@ jobs:
           OS="${{ github.event.inputs.os_variant }}"
 
           echo "=== Building php-base:${PHP}-${OS} ==="
-          docker build --target root \
+          docker build --target root --build-arg PHP_VERSION=${PHP} \
             -f ${{ steps.paths.outputs.base }} \
             -t ghcr.io/cboxdk/php-baseimages/php-base:${PHP}-${OS} .
 
           echo "=== Building php-fpm:${PHP}-${OS} ==="
-          docker build --target root \
+          docker build --target root --build-arg PHP_VERSION=${PHP} \
             -f ${{ steps.paths.outputs.fpm }} \
             -t ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP}-${OS} .
 
           echo "=== Building php-fpm-nginx:${PHP}-${OS} ==="
-          docker build --target root \
+          docker build --target root --build-arg PHP_VERSION=${PHP} \
             -f ${{ steps.paths.outputs.nginx }} \
             -t test-image:${PHP}-${OS} .
 

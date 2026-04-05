@@ -37,7 +37,7 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          echo "path=./nginx/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "path=./nginx/Dockerfile" >> $GITHUB_OUTPUT
           echo "context=." >> $GITHUB_OUTPUT
 
       - name: Set up QEMU

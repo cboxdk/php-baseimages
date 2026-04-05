@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP Base Image - Debian 8.4 (Bookworm)
+# Cbox PHP Base Image - Debian (Bookworm)
 # ============================================================================
 # LAYER 2: Single source of truth for all PHP extensions, Composer, Node, Cbox Init
 # All other images (php-cli, php-fpm, php-fpm-nginx, php-swoole, etc.) extend this
@@ -11,7 +11,14 @@
 # - standard: + ImageMagick, vips, Node.js, mongodb, soap, ldap, xsl,
 #               calendar, gettext, shmop, sysvmsg, sysvsem, sysvshm - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
+#
+# PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
 # ============================================================================
+
+# ============================================================================
+# PHP Version (parameterized - pass via --build-arg)
+# ============================================================================
+ARG PHP_VERSION=8.4
 
 # ============================================================================
 # Extension Versions (from versions.json - passed as build args by CI)
@@ -45,9 +52,12 @@ FROM cbox-init-${TARGETARCH} AS cbox-init-bin
 # ============================================================================
 # SLIM BASE - Minimal dependencies, essential extensions only
 # ============================================================================
-FROM php:8.4-cli-bookworm AS slim-base
+ARG PHP_VERSION
+FROM php:${PHP_VERSION}-cli-bookworm AS slim-base
 
-LABEL org.opencontainers.image.title="Cbox PHP Base 8.4 Debian"
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP Base ${PHP_VERSION} Debian"
 LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -89,6 +99,7 @@ RUN docker-php-ext-configure gd \
     --with-webp
 
 # Install core PHP extensions
+# Note: opcache is built-in in PHP 8.5+ but install is a no-op
 RUN docker-php-ext-install -j$(nproc) \
     opcache \
     pdo_mysql pdo_pgsql mysqli pgsql \
@@ -146,7 +157,7 @@ RUN chmod +x /usr/local/lib/cbox/*.sh
 # Lifecycle State (set at build time via CI)
 # ============================================================================
 ARG CBOX_LIFECYCLE=stable
-ARG CBOX_PHP_VERSION=8.4
+ARG CBOX_PHP_VERSION=${PHP_VERSION}
 ARG CBOX_PHP_EOL=
 ARG CBOX_REMOVAL_DATE=
 ARG CBOX_PREVIEW_STATUS=

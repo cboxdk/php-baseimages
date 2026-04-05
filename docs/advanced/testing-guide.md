@@ -252,7 +252,7 @@ chmod +x tests/e2e/scenarios/test-{name}.sh
 
 ```bash
 # Build local image
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t my-test-image:local .
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t my-test-image:local .
 
 # Run E2E tests against local image
 IMAGE=my-test-image:local ./tests/e2e/run-e2e-tests.sh

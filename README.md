@@ -369,7 +369,7 @@ git clone https://github.com/cboxdk/php-baseimages.git
 cd baseimages
 
 # Build multi-service image
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t my-image:8.3-bookworm .
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t my-image:8.3-bookworm .
 
 # Test it
 docker run --rm -p 8000:80 my-image:8.3-bookworm

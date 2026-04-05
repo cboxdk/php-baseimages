@@ -35,30 +35,23 @@ Each layer is built in **four tiers**: slim, standard, chromium, dev (see Docker
 ```
 .
 ├── php-base/          # LAYER 2: Single source of truth for all PHP extensions
-│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
-│   │   └── debian/
-│   │       └── bookworm/
-│   │           └── Dockerfile  # Multi-stage: slim → standard → chromium → dev
+│   ├── Dockerfile     # Multi-stage: slim → standard → chromium → dev (ARG PHP_VERSION=8.4)
 │   └── common/        # Shared config (php.ini, imagemagick-policy.xml, xdebug.ini, etc.)
 │
 ├── php-fpm/           # LAYER 3: PHP-FPM images (copies extensions from php-base)
-│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
-│   │   └── debian/
-│   │       └── bookworm/
+│   ├── Dockerfile     # ARG PHP_VERSION=8.4
 │   └── common/        # Shared config (entrypoint, healthcheck, fpm-pool.conf)
 │
 ├── php-cli/           # LAYER 3: PHP-CLI images (extends php-base directly)
-│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
-│   │   └── debian/bookworm/
+│   ├── Dockerfile     # ARG PHP_VERSION=8.4
 │   └── common/        # Shared CLI entrypoint and healthcheck
 │
 ├── nginx/             # Standalone Nginx images
-│   └── debian/bookworm/
+│   ├── Dockerfile
 │   └── common/
 │
 ├── php-fpm-nginx/     # LAYER 4: Multi-service containers (extends php-fpm, adds Nginx)
-│   ├── {version}/     # 8.2, 8.3, 8.4, 8.5
-│   │   └── debian/bookworm/
+│   ├── Dockerfile     # ARG PHP_VERSION=8.4
 │   └── common/        # Shared multi-service entrypoint, nginx config, healthcheck
 │
 ├── common/            # Shared libraries (entrypoint-lib.sh, lifecycle-check.sh)
@@ -133,7 +126,7 @@ docker-compose build php-fpm nginx php-cli
 docker-compose --profile multi build php-fpm-nginx
 
 # Build specific PHP version
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t test-image .
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t test-image .
 
 # Build with no cache (force rebuild)
 docker-compose build --no-cache php-fpm
@@ -185,31 +178,23 @@ Located in `.github/workflows/`:
 
 ### Adding a New PHP Version
 
-1. Copy directory structure (start with php-base since it's the foundation):
-```bash
-cp -r php-base/8.4 php-base/8.6
-cp -r php-fpm/8.4 php-fpm/8.6
-cp -r php-cli/8.4 php-cli/8.6
-cp -r php-fpm-nginx/8.4 php-fpm-nginx/8.6
-```
+Since Dockerfiles use `ARG PHP_VERSION`, no directory copying is needed. Just:
 
-2. Update Dockerfiles: Change `FROM php:8.4-*` to `FROM php:8.6-*` and update base image references (e.g., `php-base:8.4-bookworm` to `php-base:8.6-bookworm`)
+1. Add the version to `versions.json` under `php.supported`, `php.eol`, and `php.latest_patch`
 
-3. Add the version to `versions.json` under `php.supported`, `php.eol`, and `php.latest_patch`
-
-4. Update GitHub Actions workflow matrices in all `build-*.yml` files:
+2. Update GitHub Actions workflow matrices in all `build-*.yml` files:
 ```yaml
 matrix:
   php_version: ['8.2', '8.3', '8.4', '8.6']
 ```
 
-5. Update documentation in `README.md` and `docs/`
+3. Update documentation in `README.md` and `docs/`
 
 ### Adding a New PHP Extension
 
-Extensions are centralized in `php-base/` Dockerfiles. All downstream images (php-fpm, php-cli, php-fpm-nginx) inherit extensions automatically via multi-stage `COPY --from=base-*` directives. **Never edit php-fpm, php-cli, or php-fpm-nginx Dockerfiles for extension changes.**
+Extensions are centralized in `php-base/Dockerfile`. All downstream images (php-fpm, php-cli, php-fpm-nginx) inherit extensions automatically via multi-stage `COPY --from=base-*` directives. **Never edit php-fpm, php-cli, or php-fpm-nginx Dockerfiles for extension changes.**
 
-1. Edit `php-base/{version}/debian/bookworm/Dockerfile` for each PHP version:
+1. Edit `php-base/Dockerfile`:
    - Add runtime libraries to the appropriate tier stage (`slim-base`, `standard-base`, or `chromium-base`)
    - Add build dependencies, compile the extension, then clean up build deps
    - For PECL extensions, pin the version using a build ARG (see existing pattern)
@@ -266,8 +251,8 @@ docker inspect cbox-fpm-nginx --format='{{json .State.Health}}' | jq
 
 ## Critical Files
 
-### php-base/{version}/debian/bookworm/Dockerfile
-The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Multi-stage Dockerfile that builds four tiers:
+### php-base/Dockerfile
+The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Accepts `ARG PHP_VERSION=8.4`. Multi-stage Dockerfile that builds four tiers:
 - **slim-base**: Minimal PHP + essential extensions (~200MB)
 - **standard-base**: + ImageMagick, vips, AVIF, Node.js (~400MB)
 - **chromium-base**: + Chromium for Browsershot/Dusk (~800MB)
@@ -347,8 +332,8 @@ nginx.conf includes: `include /etc/nginx/conf.d/*.conf;`
 ### Build Context
 All Dockerfiles must be built from repository root with proper context:
 ```bash
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile .
-# NOT: docker build php-fpm-nginx/8.3/debian/bookworm/
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 .
+# NOT: docker build php-fpm-nginx/
 ```
 
 This is because Dockerfiles copy from `{type}/common/` which is relative to repo root.

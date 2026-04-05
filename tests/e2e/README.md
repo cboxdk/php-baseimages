@@ -57,7 +57,7 @@ tests/e2e/
 
 ```bash
 # Build image
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t test-image:local .
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t test-image:local .
 
 # Run tests
 ./tests/e2e/run-e2e-tests.sh test-image:local all

@@ -188,7 +188,7 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          echo "path=./${{ inputs.image-type }}/${{ inputs.php-version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "path=./${{ inputs.image-type }}/Dockerfile" >> $GITHUB_OUTPUT
           echo "base_os=bookworm" >> $GITHUB_OUTPUT
 
       - name: Get PHP patch version
@@ -227,6 +227,8 @@ jobs:
         run: |
           # Build the args file to avoid shell quoting issues with multiline strings
           ARGS_FILE=$(mktemp)
+          # All images need PHP_VERSION as a build arg (used in FROM lines)
+          echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
           # php-base images need versions from versions.json as build-args
           if [ "${{ inputs.image-type }}" = "php-base" ]; then
             cat >> "$ARGS_FILE" <<'VERSIONS'
@@ -368,7 +370,7 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          echo "path=./${{ inputs.image-type }}/${{ inputs.php-version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "path=./${{ inputs.image-type }}/Dockerfile" >> $GITHUB_OUTPUT
           echo "base_os=bookworm" >> $GITHUB_OUTPUT
 
       - name: Get PHP patch version
@@ -407,6 +409,8 @@ jobs:
         run: |
           # Build the args file to avoid shell quoting issues with multiline strings
           ARGS_FILE=$(mktemp)
+          # All images need PHP_VERSION as a build arg (used in FROM lines)
+          echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
           # php-base images need versions from versions.json as build-args
           if [ "${{ inputs.image-type }}" = "php-base" ]; then
             cat >> "$ARGS_FILE" <<'VERSIONS'

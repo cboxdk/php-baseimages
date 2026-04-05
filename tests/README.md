@@ -145,7 +145,7 @@ jobs:
 
 ```bash
 # Build test image
-docker build -f php-fpm-nginx/8.3/debian/bookworm/Dockerfile -t cbox-test:local .
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t cbox-test:local .
 
 # Run with custom image
 IMAGE=cbox-test:local ./tests/e2e/scenarios/test-database.sh
