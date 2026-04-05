@@ -195,7 +195,7 @@ matrix:
 Extensions are centralized in `php-base/Dockerfile`. All downstream images (php-fpm, php-cli, php-fpm-nginx) inherit extensions automatically via multi-stage `COPY --from=base-*` directives. **Never edit php-fpm, php-cli, or php-fpm-nginx Dockerfiles for extension changes.**
 
 1. Edit `php-base/Dockerfile`:
-   - Add runtime libraries to the appropriate tier stage (`slim-base`, `standard-base`, or `chromium-base`)
+   - Add runtime libraries to the appropriate tier stage (`slim-base`, `standard-base`, `chromium-base`, or `dev-base`)
    - Add build dependencies, compile the extension, then clean up build deps
    - For PECL extensions, pin the version using a build ARG (see existing pattern)
 

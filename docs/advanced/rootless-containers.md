@@ -19,7 +19,7 @@ Cbox PHP Base Images provide **official rootless variants** for all images:
 | php-fpm | `8.4-bookworm` | `8.4-bookworm-rootless` |
 | php-fpm-nginx | `8.4-bookworm` | `8.4-bookworm-rootless` |
 
-All tiers (slim, standard, chromium) have corresponding rootless versions.
+All tiers (slim, standard, chromium, dev) have corresponding rootless versions.
 
 ## Quick Start: Using Rootless Images
 

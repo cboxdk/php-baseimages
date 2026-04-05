@@ -9,7 +9,7 @@ Comprehensive integration tests for Cbox's automatic framework detection system.
 - ✅ WordPress detection (wp-config.php presence)
 - ✅ Generic PHP detection (no framework markers)
 - ✅ Detection priority (framework-specific wins over generic)
-- ✅ Cross-tier testing (slim, standard, chromium)
+- ✅ Cross-tier testing (slim, standard, chromium, dev)
 
 ## Test Suites
 

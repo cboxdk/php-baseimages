@@ -1,80 +1,54 @@
 ---
 title: "Cbox vs ServerSideUp"
-description: "Honest comparison to help you choose the right PHP Docker images for your project"
+description: "Technical comparison of Cbox and ServerSideUp PHP Docker images"
 weight: 60
 ---
 
 # Cbox vs ServerSideUp
 
-Both Cbox and ServerSideUp provide production-ready PHP Docker images. This guide helps you choose based on your specific needs.
+Both projects provide production-ready PHP Docker images. This page compares them on technical merits so you can pick the right fit.
 
-## Quick Comparison
+## At a Glance
 
-| Aspect | Cbox | ServerSideUp |
-|--------|--------|--------------|
-| Process Manager | Cbox Init (Go) | S6 Overlay |
-| Community | Newer project | Established, active community |
-| PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
-| Image Tiers | Slim, Standard, Chromium, Dev | Base, Full |
-| Framework Focus | Laravel, Symfony, WordPress | Laravel-focused |
+| | Cbox | ServerSideUp |
+|---|---|---|
+| Process Manager | Cbox Init (Go binary, ~8 MiB) | S6 Overlay |
+| Image Tiers | 4 (Slim / Standard / Chromium / Dev) | 2 (Base / Full) |
+| PHP Versions | 8.2--8.5 | 8.1--8.5 |
+| OS Support | Debian 12 | Debian 12, Alpine |
+| Extensions (base) | 15 (Slim) / 28+ (Standard) | 6 |
+| Framework Detection | Auto (Laravel, Symfony, WordPress) | Laravel only (opt-in) |
+| Prometheus Metrics | Built-in | No |
+| Health Checks | Built-in with auto-restart | Manual |
+| Multi-arch | Native ARM64 builds | Depot.dev |
+| FPM base size | ~120 MiB (Slim) | ~170 MiB |
 
-## When to Choose ServerSideUp
+## Extensions
 
-ServerSideUp is an excellent choice when:
+ServerSideUp ships 6 extensions and expects users to install their own. Cbox ships 15 (Slim) to 28+ (Standard) per tier, so most Laravel, Symfony, and WordPress applications work without a custom Dockerfile. Extensions like `gd`, `intl`, `redis`, `imagick`, and `vips` are included out of the box on Standard and above.
 
-- **You want established community support** - ServerSideUp has a larger user base and more community resources
-- **You're comfortable with S6 Overlay** - Their S6-based process management is battle-tested
-- **You primarily use Laravel** - Their Laravel integration is mature and well-documented
-- **You prefer a proven solution** - They've been around longer with more production deployments
+## Process Management
 
-## When to Choose Cbox
+S6 Overlay is a proven init system with a large user base and flexible service definitions. Cbox Init takes a different approach: a single Go binary configured with YAML, with built-in Prometheus metrics (`/metrics`), structured JSON logging, and automatic health-check-driven restarts. The trade-off is simplicity and observability versus ecosystem maturity.
 
-Cbox may be better when:
+## Framework Support
 
-- **You want built-in Prometheus metrics** - Cbox Init includes observability features
-- **You need Symfony or WordPress** - We have framework-specific optimizations
-- **You prefer a single-binary approach** - Cbox Init is a single Go binary
-- **You want four image tiers** - Slim, Standard, Chromium, and Dev for different use cases
+ServerSideUp targets Laravel. Cbox auto-detects Laravel, Symfony, and WordPress at container startup and configures permissions, cron schedules, and process workers accordingly.
 
-## Process Management Comparison
+## Image Tiers
 
-### ServerSideUp (S6 Overlay)
-- Mature, widely-used init system
-- More configuration options
-- Different learning path from traditional Docker
-- Well-documented in the S6 ecosystem
+ServerSideUp offers 2 tiers (Base, Full). Cbox offers 4:
 
-### Cbox (Cbox Init)
-- Lightweight Go binary
-- Built-in Prometheus metrics
-- Simpler configuration
-- Newer, less battle-tested
+| Tier | Use Case |
+|------|----------|
+| **Slim** (~120 MiB) | APIs, microservices, minimal footprint |
+| **Standard** (~250 MiB) | Most apps -- ImageMagick, vips, Node.js (DEFAULT) |
+| **Chromium** (~700 MiB) | Browsershot, Dusk, PDF generation |
+| **Dev** (~750 MiB) | Chromium + Xdebug, PCOV, SPX for local development |
 
-## Honest Assessment
+## When ServerSideUp Might Be Better
 
-**ServerSideUp advantages:**
-- More mature project with proven track record
-- Larger community for support
-- More third-party tutorials and resources
-- S6 Overlay is a known quantity in the Docker ecosystem
-
-**Cbox advantages:**
-- Built-in Prometheus metrics and health checks
-- Single Go binary for process management
-- Multi-framework support (Laravel, Symfony, WordPress)
-- Four image tiers (Slim, Standard, Chromium, Dev)
-
-## Recommendation
-
-**Start with ServerSideUp if:**
-- This is your first time with PHP Docker images
-- You need community support and resources
-- You're building a Laravel application
-
-**Consider Cbox if:**
-- You want built-in observability (Prometheus metrics)
-- You're using Symfony or WordPress
-- You prefer a single-binary process manager
-- You need flexible image tiers (Slim/Standard/Chromium/Dev)
-
-Both are good choices. Pick based on your specific needs, not marketing claims.
+- You need Alpine-based images
+- You need PHP 8.1 support
+- You prefer a larger community with more third-party tutorials
+- You are already invested in the S6 Overlay ecosystem

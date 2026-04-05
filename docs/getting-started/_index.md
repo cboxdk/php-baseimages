@@ -20,6 +20,9 @@ New to Cbox? This section will help you get up and running quickly.
 ```
 What do you need?
 │
+├─ Local development with Xdebug, PCOV, SPX?
+│  └─ Dev Tier (`8.4-bookworm-dev`)
+│
 ├─ PDF generation, browser testing (Browsershot/Dusk)?
 │  └─ Chromium Tier (`8.4-bookworm-chromium`)
 │
@@ -33,7 +36,7 @@ What do you need?
 ## What You'll Learn
 
 - How to run Cbox containers with Docker Compose
-- Differences between Slim, Standard, and Chromium tiers
+- Differences between Slim, Standard, Chromium, and Dev tiers
 - When to use multi-service vs single-process containers
 - Basic configuration and environment variables
 

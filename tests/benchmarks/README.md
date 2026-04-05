@@ -8,7 +8,7 @@ Performance benchmarking suite for Cbox PHP Base Images.
 Measures and compares:
 - Uncompressed image size
 - Compressed image size (gzipped)
-- Storage efficiency across tiers (slim, standard, chromium)
+- Storage efficiency across tiers (slim, standard, chromium, dev)
 
 ### 2. Container Startup Time
 Measures:
@@ -135,8 +135,9 @@ GitHub Actions uploads results as artifacts:
 - **Slim**: ~120MB - Best for size-constrained environments, APIs/microservices
 - **Standard**: ~250MB - Balance of size and features (default)
 - **Chromium**: ~700MB - Includes Chromium for Browsershot/Dusk
+- **Dev**: ~750MB - Chromium + Xdebug, PCOV, SPX for local development
 
-**Recommendation**: Choose slim for microservices, standard for most apps, chromium for browser testing.
+**Recommendation**: Choose slim for microservices, standard for most apps, chromium for browser testing, dev for local development.
 
 ### Startup Time
 - Differences typically 10-30% between tiers
@@ -194,7 +195,7 @@ benchmark_your_test() {
     echo "# Your Benchmark Results" > "$RESULTS_DIR/your-test-$TIMESTAMP.md"
     echo "" >> "$RESULTS_DIR/your-test-$TIMESTAMP.md"
 
-    for tier in slim standard chromium; do
+    for tier in slim standard chromium dev; do
         IMAGE="cbox-${tier}"
 
         # Your test logic here

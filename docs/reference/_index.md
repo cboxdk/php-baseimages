@@ -54,7 +54,7 @@ Cbox images come in four tiers:
   - Custom configuration patterns
 
 - **[Available Extensions](available-extensions.md)**
-  - Extensions by tier (Slim/Standard/Chromium)
+  - Extensions by tier (Slim/Standard/Chromium/Dev)
   - Extension usage examples
   - Version information
   - Adding custom extensions
@@ -78,6 +78,9 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 
 # Chromium tier - Browsershot, Dusk, PDF generation
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+
+# Dev tier - Local development with Xdebug, PCOV, SPX
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
 
 # Rootless variants (add -rootless suffix)
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless

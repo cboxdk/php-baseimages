@@ -54,10 +54,11 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 ## [2024.12] - December 2024
 
 ### Added
-- **3-Tier Image System** - Slim, Standard, Chromium tiers for different use cases
+- **4-Tier Image System** - Slim, Standard, Chromium, Dev tiers for different use cases
   - **Slim** (~120 MiB): Core extensions, APIs/microservices
   - **Standard** (~250 MiB): + ImageMagick, vips, Node.js 22 (DEFAULT)
   - **Chromium** (~700 MiB): + Chromium for Browsershot/Dusk
+  - **Dev** (~750 MiB): + Xdebug, PCOV, SPX for local development
 - **gRPC extension** - Added to all tiers
 - **Rootless variants** - All tiers support `-rootless` suffix
 - New tag format: `{type}:{php-version}-{os}[-tier][-rootless]`
@@ -89,6 +90,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium  # Chro
 | `8.4-bookworm` | `8.4-bookworm` | Most apps (Standard is default) |
 | `8.4-bookworm-minimal` | `8.4-bookworm-slim` | APIs, microservices |
 | N/A | `8.4-bookworm-chromium` | Browsershot, Dusk, PDF |
+| N/A | `8.4-bookworm-dev` | Local development (Xdebug, PCOV, SPX) |
 
 ---
 
