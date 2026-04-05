@@ -279,12 +279,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Trigger php-cli build
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          event-type: php-base-updated
-
-      - name: Trigger php-fpm build
+      - name: Trigger dependent builds (php-fpm + php-cli)
         uses: peter-evans/repository-dispatch@v2
         with:
           event-type: php-base-updated
