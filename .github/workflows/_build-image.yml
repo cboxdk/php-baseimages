@@ -100,7 +100,7 @@ on:
         description: 'Job timeout in minutes'
         required: false
         type: number
-        default: 90
+        default: 180
 
 jobs:
   build:
