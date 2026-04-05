@@ -92,7 +92,7 @@ on:
         required: true
         type: string
       platforms:
-        description: 'Build platforms'
+        description: 'Build platforms (comma-separated, e.g., linux/amd64,linux/arm64)'
         required: false
         type: string
         default: 'linux/amd64,linux/arm64'
@@ -100,26 +100,40 @@ on:
         description: 'Job timeout in minutes'
         required: false
         type: number
-        default: 180
+        default: 60
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Architecture: Split into parallel native builds + manifest merge
+#
+#   build-amd64 (ubuntu-latest)     ──┐
+#                                      ├── merge (create multi-arch manifest)
+#   build-arm64 (ubuntu-24.04-arm)  ──┘
+#
+# Each platform builds natively (no QEMU) and pushes by digest only.
+# The merge job creates the multi-arch manifest with all tags.
+# For PRs, builds run but skip push; merge job is skipped entirely.
+# ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
-  build:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # AMD64 build (native on ubuntu-latest)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-amd64:
+    if: contains(inputs.platforms, 'linux/amd64')
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
       contents: read
       packages: write
-      security-events: write
       id-token: write
+
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install cosign
-        if: inputs.enable-cosign
-        uses: sigstore/cosign-installer@v3
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -186,9 +200,6 @@ jobs:
           echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
           echo "PHP patch version: $PHP_FULL"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -201,47 +212,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ─────────────────────────────────────────────────────────────────────────
-      # Tag generation: compute the tag suffix string for metadata action
-      # For standard root tier: tag-suffix is empty, so tags are like 8.4-bookworm
-      # For other tiers: tag-suffix is e.g. "slim", "rootless", "chromium-rootless"
-      # ─────────────────────────────────────────────────────────────────────────
-      - name: Compute tag values
+      - name: Compute cache scope
         id: tags
         run: |
           SUFFIX="${{ inputs.tag-suffix }}"
           if [ -n "$SUFFIX" ]; then
-            echo "version_tag=${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
-            echo "patch_tag=${{ steps.php_patch.outputs.version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
-            echo "latest_tag=latest-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
-            echo "sha_prefix=${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}-" >> $GITHUB_OUTPUT
-            echo "branch_suffix=-${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
-            echo "convenience_tag=${{ inputs.php-version }}-${SUFFIX}" >> $GITHUB_OUTPUT
             echo "cache_scope=${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
           else
-            echo "version_tag=${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
-            echo "patch_tag=${{ steps.php_patch.outputs.version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
-            echo "latest_tag=latest-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
-            echo "sha_prefix=${{ inputs.php-version }}-${{ inputs.os-variant }}-" >> $GITHUB_OUTPUT
-            echo "branch_suffix=-${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
-            echo "convenience_tag=${{ inputs.php-version }}" >> $GITHUB_OUTPUT
             echo "cache_scope=${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
           fi
-
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}
-          tags: |
-            type=raw,value=${{ steps.tags.outputs.version_tag }},enable={{is_default_branch}}
-            type=raw,value=${{ steps.tags.outputs.patch_tag }},enable=${{ inputs.enable-patch-tags && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=raw,value=${{ steps.tags.outputs.latest_tag }},enable=${{ inputs.enable-latest-tag && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
-            type=raw,value=${{ steps.tags.outputs.convenience_tag }},enable=${{ inputs.enable-convenience-tags && github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ inputs.enable-convenience-tags && inputs.tag-suffix == '' && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
-            type=sha,prefix=${{ steps.tags.outputs.sha_prefix }},enable={{is_default_branch}}
-            type=ref,event=branch,suffix=${{ steps.tags.outputs.branch_suffix }}
-            type=ref,event=pr,suffix=${{ steps.tags.outputs.branch_suffix }}
 
       - name: Construct build-args
         id: buildargs
@@ -285,30 +264,330 @@ jobs:
           } >> $GITHUB_OUTPUT
           rm -f "$ARGS_FILE"
 
-      - name: Build and push Docker image
+      - name: Build and push by digest (amd64)
         id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
-          platforms: ${{ inputs.platforms }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}
-          cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}
+          platforms: linux/amd64
+          cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-amd64
+          cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-amd64
           build-args: ${{ steps.buildargs.outputs.args }}
+          # For pushes: push by digest only (no tags yet — tags applied during merge)
+          # For PRs: build only (no push), validates the build still works
+          outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.tag-suffix || 'standard' }}-amd64
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # ARM64 build (native on ubuntu-24.04-arm)
+  # ─────────────────────────────────────────────────────────────────────────────
+  build-arm64:
+    if: contains(inputs.platforms, 'linux/arm64')
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: ${{ inputs.timeout }}
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get build lifecycle state
+        id: lifecycle
+        run: |
+          chmod +x ./scripts/get-build-state.sh
+          BUILD_STATE=$(./scripts/get-build-state.sh ${{ inputs.php-version }} ${{ inputs.os-variant }})
+          echo "LIFECYCLE=$(echo "$BUILD_STATE" | jq -r '.lifecycle')" >> $GITHUB_OUTPUT
+          echo "PHP_EOL=$(echo "$BUILD_STATE" | jq -r '.php_eol')" >> $GITHUB_OUTPUT
+          echo "REMOVAL_DATE=$(echo "$BUILD_STATE" | jq -r '.removal_date // empty')" >> $GITHUB_OUTPUT
+          echo "PREVIEW_STATUS=$(echo "$BUILD_STATE" | jq -r '.status // empty')" >> $GITHUB_OUTPUT
+          echo "TAGS_SUFFIX=$(echo "$BUILD_STATE" | jq -r '.tags_suffix // empty')" >> $GITHUB_OUTPUT
+          echo "Build state for PHP ${{ inputs.php-version }} ${{ inputs.os-variant }} (${{ inputs.tier }}):"
+          echo "$BUILD_STATE" | jq .
+
+      - name: Read versions from versions.json
+        id: versions
+        run: |
+          if [ -f versions.json ]; then
+            echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
+            echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
+            echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
+            echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
+            echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
+            echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+            echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+            echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
+            echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
+            echo "PCOV_VERSION=$(jq -r '.extensions.pcov // "1.0.12"' versions.json)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download and verify Cbox Init binaries
+        if: inputs.image-type == 'php-base'
+        run: |
+          mkdir -p cbox-init/binaries
+          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
+          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
+
+          echo "Downloading Cbox Init v${VERSION}..."
+          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+
+          echo "Verifying SHA256 checksums from checksums.txt..."
+          cd cbox-init/binaries
+          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
+
+          cd -
+
+          chmod +x cbox-init/binaries/cbox-init-*
+          ls -la cbox-init/binaries/
+
+      - name: Determine Dockerfile path
+        id: dockerfile
+        run: |
+          echo "path=./${{ inputs.image-type }}/${{ inputs.php-version }}/debian/bookworm/Dockerfile" >> $GITHUB_OUTPUT
+          echo "base_os=bookworm" >> $GITHUB_OUTPUT
+
+      - name: Get PHP patch version
+        id: php_patch
+        if: inputs.enable-patch-tags
+        run: |
+          BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-${{ steps.dockerfile.outputs.base_os }}"
+          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
+          echo "PHP patch version: $PHP_FULL"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute cache scope
+        id: tags
+        run: |
+          SUFFIX="${{ inputs.tag-suffix }}"
+          if [ -n "$SUFFIX" ]; then
+            echo "cache_scope=${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+          else
+            echo "cache_scope=${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Construct build-args
+        id: buildargs
+        run: |
+          # Build the args file to avoid shell quoting issues with multiline strings
+          ARGS_FILE=$(mktemp)
+          # php-base images need versions from versions.json as build-args
+          if [ "${{ inputs.image-type }}" = "php-base" ]; then
+            cat >> "$ARGS_FILE" <<'VERSIONS'
+          REDIS_VERSION=${{ steps.versions.outputs.REDIS_VERSION }}
+          IMAGICK_VERSION=${{ steps.versions.outputs.IMAGICK_VERSION }}
+          APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
+          MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
+          MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
+          VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+          NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+          CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+          CBOX_PHP_VERSION=${{ inputs.php-version }}
+          CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+          CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+          CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+          VERSIONS
+            # Dev tier also needs xdebug/pcov versions
+            if [ "${{ inputs.tier }}" = "dev" ]; then
+              cat >> "$ARGS_FILE" <<'DEVVERSIONS'
+          XDEBUG_VERSION=${{ steps.versions.outputs.XDEBUG_VERSION }}
+          PCOV_VERSION=${{ steps.versions.outputs.PCOV_VERSION }}
+          DEVVERSIONS
+            fi
+          fi
+          # Append any caller-provided build-args
+          CALLER_ARGS="${{ inputs.build-args }}"
+          if [ -n "$CALLER_ARGS" ]; then
+            echo "$CALLER_ARGS" >> "$ARGS_FILE"
+          fi
+          # Write multiline output (strip leading whitespace from heredoc indentation)
+          {
+            echo "args<<BUILDARGS_EOF"
+            sed 's/^[[:space:]]*//' "$ARGS_FILE"
+            echo "BUILDARGS_EOF"
+          } >> $GITHUB_OUTPUT
+          rm -f "$ARGS_FILE"
+
+      - name: Build and push by digest (arm64)
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          target: ${{ inputs.target }}
+          platforms: linux/arm64
+          cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-arm64
+          cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-arm64
+          build-args: ${{ steps.buildargs.outputs.args }}
+          # For pushes: push by digest only (no tags yet — tags applied during merge)
+          # For PRs: build only (no push), validates the build still works
+          outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.tag-suffix || 'standard' }}-arm64
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Merge: create multi-arch manifest from platform-specific digests
+  # ─────────────────────────────────────────────────────────────────────────────
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name != 'pull_request'
+    needs:
+      - build-amd64
+      - build-arm64
+
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write
+
+    steps:
+      - name: Download amd64 digest
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.tag-suffix || 'standard' }}-amd64
+          path: /tmp/digests
+
+      - name: Download arm64 digest
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.tag-suffix || 'standard' }}-arm64
+          path: /tmp/digests
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # Tag generation: compute the tag suffix string for metadata action
+      # For standard root tier: tag-suffix is empty, so tags are like 8.4-bookworm
+      # For other tiers: tag-suffix is e.g. "slim", "rootless", "chromium-rootless"
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Compute tag values
+        id: tags
+        run: |
+          SUFFIX="${{ inputs.tag-suffix }}"
+          if [ -n "$SUFFIX" ]; then
+            echo "version_tag=${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "patch_tag=-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "latest_tag=latest-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "sha_prefix=${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}-" >> $GITHUB_OUTPUT
+            echo "branch_suffix=-${{ inputs.php-version }}-${{ inputs.os-variant }}-${SUFFIX}" >> $GITHUB_OUTPUT
+            echo "convenience_tag=${{ inputs.php-version }}-${SUFFIX}" >> $GITHUB_OUTPUT
+          else
+            echo "version_tag=${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "patch_tag=-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "latest_tag=latest-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "sha_prefix=${{ inputs.php-version }}-${{ inputs.os-variant }}-" >> $GITHUB_OUTPUT
+            echo "branch_suffix=-${{ inputs.php-version }}-${{ inputs.os-variant }}" >> $GITHUB_OUTPUT
+            echo "convenience_tag=${{ inputs.php-version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get PHP patch version for tags
+        id: php_patch
+        if: inputs.enable-patch-tags
+        run: |
+          # Pull the base image to detect patch version (runs on amd64 merge runner)
+          BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-bookworm"
+          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
+          echo "PHP patch version: $PHP_FULL"
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}
+          tags: |
+            type=raw,value=${{ steps.tags.outputs.version_tag }},enable={{is_default_branch}}
+            type=raw,value=${{ steps.php_patch.outputs.version }}${{ steps.tags.outputs.patch_tag }},enable=${{ inputs.enable-patch-tags && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=${{ steps.tags.outputs.latest_tag }},enable=${{ inputs.enable-latest-tag && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.tags.outputs.convenience_tag }},enable=${{ inputs.enable-convenience-tags && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ inputs.enable-convenience-tags && inputs.tag-suffix == '' && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
+            type=sha,prefix=${{ steps.tags.outputs.sha_prefix }},enable={{is_default_branch}}
+            type=ref,event=branch,suffix=${{ steps.tags.outputs.branch_suffix }}
+            type=ref,event=pr,suffix=${{ steps.tags.outputs.branch_suffix }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf 'ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@sha256:%s ' *)
+
+      - name: Inspect manifest
+        run: |
+          docker buildx imagetools inspect ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
+
+      - name: Install cosign
+        if: inputs.enable-cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Sign image with cosign
-        if: inputs.enable-cosign && github.event_name != 'pull_request'
-        env:
-          DIGEST: ${{ steps.build.outputs.digest }}
+        if: inputs.enable-cosign
         run: |
-          cosign sign --yes "ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@${DIGEST}"
+          # Sign using the version tag (manifest list)
+          cosign sign --yes "ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}"
 
       - name: Run Trivy vulnerability scanner
-        if: inputs.enable-trivy && github.event_name != 'pull_request'
+        if: inputs.enable-trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
@@ -317,13 +596,13 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
-        if: inputs.enable-trivy && github.event_name != 'pull_request'
+        if: inputs.enable-trivy
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
 
       - name: Test built image
-        if: inputs.test-script != '' && github.event_name != 'pull_request'
+        if: inputs.test-script != ''
         env:
           IMAGE: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
           PHP_VERSION: ${{ inputs.php-version }}
