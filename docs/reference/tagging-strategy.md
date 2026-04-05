@@ -6,7 +6,7 @@ weight: 40
 
 # Image Tagging Strategy
 
-Cbox PHP Base Images follow a clear, predictable tagging strategy with three image tiers and rootless variants.
+Cbox PHP Base Images follow a clear, predictable tagging strategy with four image tiers and rootless variants.
 
 ## Tag Format
 
@@ -18,9 +18,10 @@ Cbox PHP Base Images follow a clear, predictable tagging strategy with three ima
 
 | Tier | Tag Suffix | Size | Use Case |
 |------|------------|------|----------|
-| **Slim** | `-slim` | ~120MB | APIs, microservices, minimal footprint |
-| **Standard** | (none) | ~250MB | Most Laravel/PHP apps (DEFAULT) |
-| **Chromium** | `-chromium` | ~700MB | Browsershot, Dusk, PDF generation |
+| **Slim** | `-slim` | ~120 MiB | APIs, microservices, minimal footprint |
+| **Standard** | (none) | ~250 MiB | Most Laravel/PHP apps (DEFAULT) |
+| **Chromium** | `-chromium` | ~700 MiB | Browsershot, Dusk, PDF generation |
+| **Dev** | `-dev` | ~750 MiB | Chromium + Xdebug, PCOV, SPX |
 
 ## Complete Tag Examples
 
@@ -29,6 +30,7 @@ Cbox PHP Base Images follow a clear, predictable tagging strategy with three ima
 Most applications should use standard tier:
 
 ```
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
@@ -39,6 +41,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 For APIs and microservices with minimal footprint:
 
 ```
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
@@ -49,6 +52,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
 For Browsershot, Dusk, Puppeteer, and PDF generation:
 
 ```
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-chromium
@@ -71,23 +75,24 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-rootless
 
 ## Version Matrix
 
-| PHP Version | Debian 12 (Slim) | Debian 12 (Standard) | Debian 12 (Chromium) |
-|-------------|------------------|----------------------|------------------|
-| 8.4         | ✅               | ✅                   | ✅               |
-| 8.3         | ✅               | ✅                   | ✅               |
-| 8.2         | ✅               | ✅                   | ✅               |
+| PHP Version | Debian 12 (Slim) | Debian 12 (Standard) | Debian 12 (Chromium) | Debian 12 (Dev) |
+|-------------|------------------|----------------------|----------------------|-----------------|
+| 8.5         | ✅               | ✅                   | ✅                   | ✅              |
+| 8.4         | ✅               | ✅                   | ✅                   | ✅              |
+| 8.3         | ✅               | ✅                   | ✅                   | ✅              |
+| 8.2         | ✅               | ✅                   | ✅                   | ✅              |
 
 All variants also available with `-rootless` suffix.
 
 ## Alias Tags
 
 **Latest stable**:
-- `latest` → `8.4-bookworm`
-- `8.4` → `8.4-bookworm`
+- `latest` → `8.5-bookworm`
+- `8.5` → `8.5-bookworm`
 
 **Tier aliases**:
-- `slim` → `8.4-bookworm-slim`
-- `chromium` → `8.4-bookworm-chromium`
+- `slim` → `8.5-bookworm-slim`
+- `chromium` → `8.5-bookworm-chromium`
 
 ## Deprecation Policy
 

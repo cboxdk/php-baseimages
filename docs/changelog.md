@@ -55,9 +55,9 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 
 ### Added
 - **3-Tier Image System** - Slim, Standard, Chromium tiers for different use cases
-  - **Slim** (~120MB): Core extensions, APIs/microservices
-  - **Standard** (~250MB): + ImageMagick, vips, Node.js 22 (DEFAULT)
-  - **Chromium** (~700MB): + Chromium for Browsershot/Dusk
+  - **Slim** (~120 MiB): Core extensions, APIs/microservices
+  - **Standard** (~250 MiB): + ImageMagick, vips, Node.js 22 (DEFAULT)
+  - **Chromium** (~700 MiB): + Chromium for Browsershot/Dusk
 - **gRPC extension** - Added to all tiers
 - **Rootless variants** - All tiers support `-rootless` suffix
 - New tag format: `{type}:{php-version}-{os}[-tier][-rootless]`

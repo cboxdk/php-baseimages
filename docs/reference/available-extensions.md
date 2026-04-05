@@ -264,8 +264,7 @@ All PECL extensions use pinned versions for reproducibility:
 | msgpack | 3.0.0 |
 | imagick | 3.8.1 |
 | vips | 1.0.13 |
-
-| xdebug | 3.4.0 |
+| xdebug | 3.5.0 |
 | pcov | 1.0.12 |
 | spx | latest (from GitHub) |
 
@@ -309,7 +308,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install swoole && \
     docker-php-ext-enable swoole && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 ### Core Extensions

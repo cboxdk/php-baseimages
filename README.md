@@ -7,7 +7,7 @@ Clean, minimal, and production-ready PHP Docker base images for modern PHP appli
 
 ## 🎯 Philosophy
 
-- **Three Tiers**: Slim (~120MB), Standard (~250MB), Chromium (~700MB) - choose your needs
+- **Four Tiers**: Slim (~120 MiB), Standard (~250 MiB), Chromium (~700 MiB), Dev (~750 MiB) - choose your needs
 - **Cbox Process Manager**: Production-grade Go-based process manager built-in
 - **Flexible Architecture**: Choose single-process OR multi-service containers
 - **Debian 12 (Bookworm)**: Stable, glibc-based images with excellent compatibility
@@ -85,10 +85,10 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 
 | Tier | Size | Extensions | Best For |
 |------|------|------------|----------|
-| **Slim** | ~120MB | 25+ core | API/microservices, minimal footprint |
-| **Standard** (default) | ~250MB | 30+ with ImageMagick, vips, Node.js | Most Laravel/PHP apps |
-| **Chromium** | ~700MB | Standard + Chromium | Browsershot, Dusk, PDF generation |
-| **Dev** | ~750MB | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
+| **Slim** | ~120 MiB | 25+ core | API/microservices, minimal footprint |
+| **Standard** (default) | ~250 MiB | 30+ with ImageMagick, vips, Node.js | Most Laravel/PHP apps |
+| **Chromium** | ~700 MiB | Standard + Chromium | Browsershot, Dusk, PDF generation |
+| **Dev** | ~750 MiB | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
 **Tag Suffixes:**
 
@@ -104,8 +104,8 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
 
 | Tier | Extensions |
 |------|------------|
-| **Slim** | Redis, APCu, MongoDB, gRPC, GD (WebP), intl, bcmath, zip, PCNTL, sockets |
-| **Standard** | Slim + ImageMagick, libvips, GD (AVIF), Node.js 22, exiftool |
+| **Slim** | Redis, APCu, msgpack, GD (WebP), intl, bcmath, zip, PCNTL, sockets |
+| **Standard** | Slim + ImageMagick, libvips, GD (AVIF), Node.js 22, MongoDB, exiftool |
 | **Chromium** | Standard + Chromium, Puppeteer support |
 | **Dev** | Chromium + Xdebug 3.5, PCOV 1.0, SPX profiler |
 
@@ -173,8 +173,7 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 
 ### Reference
 - **[Cbox Init Integration](docs/cbox-init-integration.md)** - Process manager guide
-- **[Cbox Init Environment Variables](docs/cbox-init-environment-variables.md)** - PM configuration
-- **[Cbox Init Architecture](docs/cbox-init-architecture.md)** - Technical deep dive
+- **[Environment Variables](docs/reference/environment-variables.md)** - All configuration options including Cbox Init
 - [Environment Variables](docs/reference/environment-variables.md) - All configuration options
 - [Configuration Options](docs/reference/configuration-options.md) - PHP/FPM/Nginx configs
 - [Available Extensions](docs/reference/available-extensions.md) - Complete extension list
@@ -200,14 +199,16 @@ Single container with both PHP-FPM and Nginx:
 
 ### Pre-Installed Extensions
 
-**All Tiers (Slim/Standard/Chromium):**
+**Slim Tier (all tiers inherit these):**
 - **Core:** opcache, apcu, redis, pdo_mysql, pdo_pgsql, mysqli, pgsql, zip, intl, bcmath, sockets, pcntl
-- **Data:** mongodb, msgpack, grpc
+- **Data:** msgpack
 - **Images:** gd (WebP), exif
-- **Features:** soap, xsl, ldap, bz2, calendar, gettext, gmp
+- **Features:** bz2, gmp
 
-**Standard + Chromium Tiers add:**
+**Standard + Chromium + Dev Tiers add:**
+- **Data:** mongodb
 - **Images:** imagick, vips, gd (AVIF support)
+- **Features:** soap, xsl, ldap, calendar, gettext, sysv IPC
 - **Tools:** Node.js 22, npm, exiftool
 
 **Chromium Tier adds:**
@@ -329,7 +330,7 @@ services:
 services:
   api:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
-    # Minimal size (~120MB), core extensions only
+    # Minimal size (~120 MiB), core extensions only
 ```
 
 **Chromium Tier** (PDF generation, browser testing):
@@ -354,10 +355,10 @@ services:
 
 | Tier | Size (FPM-Nginx) | Best For |
 |------|------------------|----------|
-| **Slim** | ~120MB | APIs, microservices |
-| **Standard** | ~250MB | Most PHP applications |
-| **Chromium** | ~700MB | PDF generation, browser testing |
-| **Dev** | ~750MB | Development, testing, CI/CD |
+| **Slim** | ~120 MiB | APIs, microservices |
+| **Standard** | ~250 MiB | Most PHP applications |
+| **Chromium** | ~700 MiB | PDF generation, browser testing |
+| **Dev** | ~750 MiB | Development, testing, CI/CD |
 
 📖 **Detailed comparison:** [Choosing Your Image →](docs/getting-started/choosing-your-image.md)
 
@@ -366,7 +367,7 @@ services:
 ```bash
 # Clone repository
 git clone https://github.com/cboxdk/php-baseimages.git
-cd baseimages
+cd php-baseimages
 
 # Build multi-service image
 docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t my-image:8.3-bookworm .
@@ -511,7 +512,7 @@ We welcome contributions!
 4. Test locally with `docker-compose`
 5. Submit a pull request
 
-📖 **Contributing guide:** [CONTRIBUTING.md](CONTRIBUTING.md)
+📖 **Contributing guide:** See the steps above or open a [GitHub Discussion](https://github.com/cboxdk/php-baseimages/discussions)
 
 ## 📖 Additional Resources
 
@@ -550,7 +551,7 @@ Inspired by the PHP community's need for clean, no-nonsense base images without 
 - **Documentation:** [docs/](docs/)
 - **Issues:** [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
-- **Security:** [SECURITY.md](SECURITY.md)
+- **Security:** [GitHub Security Advisories](https://github.com/cboxdk/php-baseimages/security)
 
 ---
 

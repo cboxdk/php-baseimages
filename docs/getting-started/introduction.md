@@ -24,7 +24,7 @@ Setting up PHP containers for production requires decisions:
 
 Cbox provides production-ready containers with:
 
-- **Three Image Tiers** - Slim (~120MB), Standard (~250MB), Chromium (~700MB)
+- **Four Image Tiers** - Slim (~120 MiB), Standard (~250 MiB), Chromium (~700 MiB), Dev (~750 MiB)
 - **25+ PHP extensions pre-installed** - Everything Laravel, Symfony, WordPress need
 - **Cbox Init built-in** - Lightweight Go-based process manager (no S6 Overlay)
 - **50+ environment variables** - Runtime configuration without rebuilding
@@ -33,9 +33,9 @@ Cbox provides production-ready containers with:
 
 See [Cbox Init Integration](../cbox-init-integration.md) for advanced configuration.
 
-## Three Image Tiers
+## Four Image Tiers
 
-Cbox images come in three tiers -- Slim (~120MB), Standard (~250MB), and Chromium (~700MB) -- to match your exact needs. See [Choosing Your Image](choosing-your-image) for the full size matrix and decision guide.
+Cbox images come in four tiers -- Slim (~120 MiB), Standard (~250 MiB), Chromium (~700 MiB), and Dev (~750 MiB) -- to match your exact needs. See [Choosing Your Image](choosing-your-image) for the full size matrix and decision guide.
 
 ## Cbox vs Alternatives
 
@@ -44,7 +44,7 @@ Cbox images come in three tiers -- Slim (~120MB), Standard (~250MB), and Chromiu
 | Feature | Cbox | ServerSideUp |
 |---------|--------|--------------|
 | Process Manager | Cbox Init (Go binary) | S6 Overlay |
-| Image Tiers | 3 (Slim/Standard/Chromium) | 2 (Base/Full) |
+| Image Tiers | 4 (Slim/Standard/Chromium/Dev) | 2 (Base/Full) |
 | Framework Support | Laravel/Symfony/WordPress | Laravel-focused |
 | PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
 | Community | Newer project | Established, active |
@@ -63,7 +63,7 @@ Both are production-ready. See [Cbox vs ServerSideUp](../guides/cbox-vs-serversi
 | Production Ready | Yes | No (minimal) |
 | Nginx Integration | Built-in | Separate setup |
 | Framework Support | Auto-detection | None |
-| Image Size | 120-700MB | 120MB+ (with extensions) |
+| Image Size | 120-750 MiB | 120 MiB+ (with extensions) |
 
 **When to choose Cbox**: Production applications, rapid development, team standardization.
 
@@ -73,7 +73,7 @@ Both are production-ready. See [Cbox vs ServerSideUp](../guides/cbox-vs-serversi
 
 | Feature | Cbox | Bitnami |
 |---------|--------|---------|
-| Image Size | 120-700MB | 400-600MB |
+| Image Size | 120-750 MiB | 400-600 MiB |
 | Customization | Easy | Complex |
 | Configuration | Environment vars | Config files |
 | Updates | Weekly | Bitnami schedule |

@@ -53,7 +53,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install mongodb-1.20.1 && \
     docker-php-ext-enable mongodb && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 
 # Verify installation
 RUN php -m | grep mongodb
@@ -154,7 +154,7 @@ RUN pecl install mongodb-1.20.1 && \
 RUN docker-php-ext-enable mongodb swoole xdebug
 
 # Remove build dependencies to keep image small
-RUN apk del $PHPIZE_DEPS
+RUN apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 
 # Verify installations
 RUN php -m | grep -E "(mongodb|swoole|xdebug)"
@@ -303,7 +303,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm AS base
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install redis-6.1.0 mongodb-1.20.1 && \
     docker-php-ext-enable redis mongodb && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js for asset compilation
 RUN apt-get update && apt-get install -y nodejs npm
@@ -317,7 +317,7 @@ FROM base AS development
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install xdebug-3.3.2 && \
     docker-php-ext-enable xdebug && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 
 # Copy development PHP configuration
 COPY docker/dev-php.ini /usr/local/etc/php/conf.d/99-dev.ini
@@ -377,7 +377,7 @@ Cbox includes these extensions by default - **no need to install**:
 
 ✅ opcache, ✅ apcu, ✅ redis, ✅ pdo_mysql, ✅ pdo_pgsql, ✅ mysqli, ✅ pgsql,
 ✅ zip, ✅ intl, ✅ bcmath, ✅ gd, ✅ imagick, ✅ exif, ✅ pcntl, ✅ sockets,
-✅ soap, ✅ xsl, ✅ ldap, ✅ imap, ✅ bz2, ✅ calendar, ✅ gettext, ✅ shmop
+✅ soap, ✅ xsl, ✅ ldap, ✅ bz2, ✅ calendar, ✅ gettext, ✅ shmop
 
 **Check installed extensions:**
 ```bash
@@ -392,7 +392,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install mongodb-1.20.1 && \
     docker-php-ext-enable mongodb && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 **Usage in PHP:**
@@ -409,7 +409,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install swoole-5.1.5 && \
     docker-php-ext-enable swoole && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 ### Memcached Extension
@@ -420,7 +420,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS libmemcached-dev zlib-dev && \
     pecl install memcached-3.3.0 && \
     docker-php-ext-enable memcached && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 ### GRPc Extension (for microservices)
@@ -431,7 +431,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS linux-headers && \
     pecl install grpc-1.68.0 && \
     docker-php-ext-enable grpc && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 ### Decimal Extension (for financial calculations)
@@ -442,7 +442,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS mpdecimal-dev && \
     pecl install decimal-2.0.0 && \
     docker-php-ext-enable decimal && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 ---
@@ -621,7 +621,7 @@ RUN pecl install mongodb
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     pecl install mongodb && \
     docker-php-ext-enable mongodb && \
-    apk del $PHPIZE_DEPS  # ← Removes build tools
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*  # ← Removes build tools
 ```
 
 ### 4. Use Multi-Stage Builds for Complex Images
@@ -676,7 +676,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
     # Enable all
     docker-php-ext-enable mongodb memcached && \
     # Cleanup
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 
 # ======================
 # System Packages
@@ -741,7 +741,7 @@ docker images my-app:test
 ```
 
 **Common causes:**
-1. Not removing build dependencies (`apk del $PHPIZE_DEPS`)
+1. Not removing build dependencies (`apt-get purge -y --auto-remove $PHPIZE_DEPS`)
 2. Including unnecessary files (use `.dockerignore`)
 3. Not using multi-stage builds
 
@@ -776,7 +776,7 @@ RUN chmod -R 755 storage bootstrap/cache && \
 - **[Custom Extensions Guide](custom-extensions.md)** - Deep dive into PECL extensions
 - **[Performance Tuning](performance-tuning.md)** - Optimize PHP/Nginx for production
 - **[Security Hardening](security-hardening.md)** - Secure your custom images
-- **[CI/CD Integration](ci-cd-integration.md)** - Automate builds and deployments
+- **[Production Deployment](../guides/production-deployment.md)** - Deploy with CI/CD
 
 ---
 

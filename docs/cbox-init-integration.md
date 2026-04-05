@@ -212,7 +212,7 @@ services:
 
 ## Environment Variables
 
-Complete reference: [cbox-init-environment-variables.md](./cbox-init-environment-variables.md)
+Complete reference: [Environment Variables](./reference/environment-variables)
 
 **Quick reference**:
 
@@ -596,7 +596,7 @@ Cbox Init v1.0.0 includes:
 ## Resources
 
 - **Cbox Init Repository**: https://github.com/cboxdk/init
-- **Environment Variables**: See [cbox-init-environment-variables.md](./cbox-init-environment-variables.md)
+- **Environment Variables**: See [Environment Variables](./reference/environment-variables)
 - **Example Configs**: See examples throughout this documentation
 
 ## Support

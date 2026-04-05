@@ -210,7 +210,7 @@ docker-compose logs app > logs.txt
 
 Found a solution not documented here?
 
-1. Check [Contributing Guide](../../CONTRIBUTING.md)
+1. Check the [GitHub repository](https://github.com/cboxdk/php-baseimages)
 2. Submit documentation PR
 3. Share in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions/categories/show-and-tell)
 

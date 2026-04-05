@@ -13,6 +13,7 @@ Optimize your local development experience with Cbox PHP Base Images including X
 Cbox provides **pre-built development images** with Xdebug, PCOV, and SPX already installed. These are the easiest way to get started with debugging and profiling.
 
 Available dev images:
+- `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-dev`
 - `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev`
 - `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev`
 - `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-dev`

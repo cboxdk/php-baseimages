@@ -244,7 +244,7 @@ if (extension_loaded('vips')) {
 
 ## Browsershot (PDF Generation)
 
-Cbox includes Chromium for Browsershot PDF/screenshot generation.
+The Chromium and Dev tiers include Chromium for Browsershot PDF/screenshot generation. Use the `-chromium` or `-dev` tag suffix.
 
 ### Installation
 

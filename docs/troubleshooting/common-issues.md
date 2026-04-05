@@ -319,7 +319,7 @@ docker-compose exec app npm run build
 ```yaml
 # Enable queue worker
 environment:
-  - LARAVEL_QUEUE_ENABLED=true
+  - LARAVEL_QUEUE=true
   - LARAVEL_QUEUE_CONNECTION=redis
 ```
 

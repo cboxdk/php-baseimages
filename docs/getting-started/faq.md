@@ -10,7 +10,7 @@ weight: 10
 
 ### What is Cbox PHP Base Images?
 
-Production-ready PHP Docker containers with 25+ extensions pre-installed, three tiers (Slim/Standard/Chromium), framework auto-detection, and Cbox Init process management. See the [Introduction](introduction) for details.
+Production-ready PHP Docker containers with 25+ extensions pre-installed, four tiers (Slim/Standard/Chromium/Dev), framework auto-detection, and Cbox Init process management. See the [Introduction](introduction) for details.
 
 ### Which image should I use?
 
@@ -108,7 +108,7 @@ Rolling tags (`8.4-bookworm`) get weekly security updates automatically.
 ### Migrating from serversideup images?
 
 **Key differences**:
-1. No S6 Overlay - services managed by bash entrypoint
+1. No S6 Overlay - services managed by Cbox Init (Go-based process manager)
 2. Different environment variable names (check docs)
 3. Config paths may differ
 
@@ -146,4 +146,4 @@ GitHub Issues: [github.com/cboxdk/php-baseimages/issues](https://github.com/cbox
 2. Create a feature branch
 3. Submit a pull request
 
-See [Contributing Guide](../contributing.md) for details.
+See the [GitHub repository](https://github.com/cboxdk/php-baseimages) for details.

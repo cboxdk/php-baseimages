@@ -264,7 +264,7 @@ COPY docker-entrypoint-init.d/ /docker-entrypoint-init.d/
 environment:
   - LARAVEL_SCHEDULER=true
   - LARAVEL_AUTO_OPTIMIZE=true
-  - LARAVEL_QUEUE_ENABLED=true
+  - LARAVEL_QUEUE=true
 ```
 
 ### Symfony

@@ -198,9 +198,10 @@ All Cbox extensions are available on both architectures:
 
 | Image | AMD64 | ARM64 | Difference |
 |-------|-------|-------|------------|
-| php-fpm-nginx:8.4-bookworm | ~70MB | ~68MB | ARM64 slightly smaller |
-| php-fpm-nginx:8.4-debian | ~150MB | ~145MB | ARM64 slightly smaller |
-| php-fpm-nginx:8.4-bookworm-dev | ~180MB | ~175MB | ARM64 slightly smaller |
+| php-fpm-nginx:8.4-bookworm-slim | ~120 MiB | ~115 MiB | ARM64 slightly smaller |
+| php-fpm-nginx:8.4-bookworm | ~250 MiB | ~240 MiB | ARM64 slightly smaller |
+| php-fpm-nginx:8.4-bookworm-chromium | ~700 MiB | ~680 MiB | ARM64 slightly smaller |
+| php-fpm-nginx:8.4-bookworm-dev | ~750 MiB | ~730 MiB | ARM64 slightly smaller |
 
 ## Troubleshooting
 
@@ -235,7 +236,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS
 # Install extension from source
 RUN pecl install some-extension && \
     docker-php-ext-enable some-extension && \
-    apk del $PHPIZE_DEPS
+    apt-get purge -y --auto-remove $PHPIZE_DEPS && rm -rf /var/lib/apt/lists/*
 ```
 
 ### Cross-Platform Testing

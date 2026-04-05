@@ -15,7 +15,7 @@ Both Cbox and ServerSideUp provide production-ready PHP Docker images. This guid
 | Process Manager | Cbox Init (Go) | S6 Overlay |
 | Community | Newer project | Established, active community |
 | PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
-| Image Tiers | Slim, Standard, Chromium | Base, Full |
+| Image Tiers | Slim, Standard, Chromium, Dev | Base, Full |
 | Framework Focus | Laravel, Symfony, WordPress | Laravel-focused |
 
 ## When to Choose ServerSideUp
@@ -34,7 +34,7 @@ Cbox may be better when:
 - **You want built-in Prometheus metrics** - Cbox Init includes observability features
 - **You need Symfony or WordPress** - We have framework-specific optimizations
 - **You prefer a single-binary approach** - Cbox Init is a single Go binary
-- **You want three image tiers** - Slim, Standard, and Chromium for different use cases
+- **You want four image tiers** - Slim, Standard, Chromium, and Dev for different use cases
 
 ## Process Management Comparison
 
@@ -62,7 +62,7 @@ Cbox may be better when:
 - Built-in Prometheus metrics and health checks
 - Single Go binary for process management
 - Multi-framework support (Laravel, Symfony, WordPress)
-- Three image tiers (Slim, Standard, Chromium)
+- Four image tiers (Slim, Standard, Chromium, Dev)
 
 ## Recommendation
 
@@ -75,6 +75,6 @@ Cbox may be better when:
 - You want built-in observability (Prometheus metrics)
 - You're using Symfony or WordPress
 - You prefer a single-binary process manager
-- You need flexible image tiers (Slim/Standard/Chromium)
+- You need flexible image tiers (Slim/Standard/Chromium/Dev)
 
 Both are good choices. Pick based on your specific needs, not marketing claims.

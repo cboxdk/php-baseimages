@@ -10,13 +10,14 @@ Complete technical reference materials for Cbox PHP Base Images.
 
 ## Image Tiers
 
-Cbox images come in three tiers:
+Cbox images come in four tiers:
 
 | Tier | Tag Suffix | Size | Best For |
 |------|------------|------|----------|
-| **Slim** | `-slim` | ~120MB | APIs, microservices |
-| **Standard** | (none) | ~250MB | Most apps (DEFAULT) |
-| **Chromium** | `-chromium` | ~700MB | Browsershot, Dusk, PDF |
+| **Slim** | `-slim` | ~120 MiB | APIs, microservices |
+| **Standard** | (none) | ~250 MiB | Most apps (DEFAULT) |
+| **Chromium** | `-chromium` | ~700 MiB | Browsershot, Dusk, PDF |
+| **Dev** | `-dev` | ~750 MiB | Chromium + Xdebug, PCOV, SPX |
 
 ## Available References
 
