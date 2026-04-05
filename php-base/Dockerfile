@@ -99,13 +99,15 @@ RUN docker-php-ext-configure gd \
     --with-webp
 
 # Install core PHP extensions
-# Note: opcache is built-in in PHP 8.5+ but install is a no-op
+ARG PHP_VERSION
 RUN docker-php-ext-install -j$(nproc) \
-    opcache \
     pdo_mysql pdo_pgsql mysqli pgsql \
     zip intl bcmath gd exif \
     pcntl sockets bz2 \
-    gmp
+    gmp \
+    && if echo "$PHP_VERSION" | grep -qvE '^8\.[5-9]|^[9]'; then \
+        docker-php-ext-install opcache; \
+    fi
 
 # Install PECL extensions with PINNED versions
 RUN pecl install redis-${REDIS_VERSION} && \
