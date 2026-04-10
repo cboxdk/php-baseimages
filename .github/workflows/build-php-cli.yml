@@ -206,3 +206,63 @@ jobs:
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
     secrets: inherit
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-dev-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4', '8.5']
+        os_variant: ['bookworm']
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: dev
+      target: dev-root
+      tag-suffix: dev
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing dev image $IMAGE..."
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|xdebug|pcov|spx"
+        docker run --rm $IMAGE composer --version
+        docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE cbox-init --version
+        # Dev tier should have chromium (inherited from chromium tier)
+        docker run --rm $IMAGE which chromium-browser || docker run --rm $IMAGE which chromium
+    secrets: inherit
+
+  build-dev-rootless-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ['8.2', '8.3', '8.4', '8.5']
+        os_variant: ['bookworm']
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      image-name: php-cli
+      image-type: php-cli
+      php-version: ${{ matrix.php_version }}
+      os-variant: ${{ matrix.os_variant }}
+      tier: dev
+      target: dev-rootless
+      rootless: true
+      tag-suffix: dev-rootless
+      cache-scope-prefix: cli
+      enable-patch-tags: true
+      enable-cosign: false
+      base-image-type: cli
+      test-script: |
+        echo "Testing dev rootless image $IMAGE..."
+        docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
+        docker run --rm $IMAGE php -v
+        docker run --rm $IMAGE php -m | grep -E "xdebug|pcov|spx"
+    secrets: inherit

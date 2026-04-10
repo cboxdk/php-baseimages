@@ -7,6 +7,7 @@
 # - slim:     Minimal PHP + essential extensions - API/microservices
 # - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
+# - dev:      + Xdebug, PCOV, SPX for development/testing
 #
 # PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
 # ============================================================================
@@ -22,6 +23,8 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm AS base-stan
 FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-rootless AS base-standard-rootless
 FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-chromium AS base-chromium
 FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-chromium-rootless AS base-chromium-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev-rootless AS base-dev-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP CLI with essential extensions
@@ -162,6 +165,57 @@ LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=chromium
+
+USER root
+COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+    mkdir -p /docker-entrypoint-init.d && \
+    chown -R www-data:www-data /docker-entrypoint-init.d
+USER www-data
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh || exit 1
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DEV-ROOT: Chromium + Xdebug, PCOV, SPX for development/testing
+# ═══════════════════════════════════════════════════════════════════════════
+FROM base-dev AS dev-root
+
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Dev)"
+LABEL org.opencontainers.image.description="PHP CLI with Xdebug, PCOV, SPX for development and testing"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
+
+ENV CBOX_IMAGE_TIER=dev
+
+COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+    mkdir -p /docker-entrypoint-init.d
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD /usr/local/bin/healthcheck.sh || exit 1
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
+# ═══════════════════════════════════════════════════════════════════════════
+FROM base-dev-rootless AS dev-rootless
+
+ARG PHP_VERSION
+
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Dev Rootless)"
+LABEL org.opencontainers.image.description="PHP CLI with Xdebug, PCOV, SPX - Rootless"
+LABEL org.opencontainers.image.vendor="Cbox"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
+
+ENV CBOX_IMAGE_TIER=dev
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

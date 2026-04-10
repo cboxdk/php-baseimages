@@ -44,12 +44,22 @@ All tags also have `-rootless` and `-dev` variants (append the suffix).
 |-----|------|------|
 | `php-cli:8.5-bookworm-slim` | Slim | ~100 MiB |
 | `php-cli:8.5-bookworm` | Standard | ~230 MiB |
+| `php-cli:8.5-bookworm-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.5-bookworm-dev` | Dev | ~700 MiB |
 | `php-cli:8.4-bookworm-slim` | Slim | ~100 MiB |
 | `php-cli:8.4-bookworm` | Standard | ~230 MiB |
+| `php-cli:8.4-bookworm-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.4-bookworm-dev` | Dev | ~700 MiB |
 | `php-cli:8.3-bookworm-slim` | Slim | ~100 MiB |
 | `php-cli:8.3-bookworm` | Standard | ~230 MiB |
+| `php-cli:8.3-bookworm-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.3-bookworm-dev` | Dev | ~700 MiB |
 | `php-cli:8.2-bookworm-slim` | Slim | ~100 MiB |
 | `php-cli:8.2-bookworm` | Standard | ~230 MiB |
+| `php-cli:8.2-bookworm-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.2-bookworm-dev` | Dev | ~700 MiB |
+
+All tags also have `-rootless` variants (append the suffix).
 
 All images are prefixed with `ghcr.io/cboxdk/php-baseimages/`.
 
