@@ -168,13 +168,22 @@ jobs:
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-scan:bookworm -f php-fpm-nginx/Dockerfile .
 
+      - name: Install Trivy
+        run: |
+          TRIVY_VERSION=0.69.3
+          mkdir -p "$HOME/.local/bin"
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b "$HOME/.local/bin" "v${TRIVY_VERSION}"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/trivy" --version
+
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'cbox-scan:bookworm'
-          format: 'sarif'
-          output: 'trivy-bookworm-results.sarif'
-          severity: 'CRITICAL,HIGH'
+        run: |
+          trivy image \
+            --format sarif \
+            --output trivy-bookworm-results.sarif \
+            --severity CRITICAL,HIGH \
+            cbox-scan:bookworm
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
@@ -189,4 +198,4 @@ jobs:
           echo "# Security Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Debian 12 (Bookworm)" >> $GITHUB_STEP_SUMMARY
-          docker run --rm aquasec/trivy image --severity CRITICAL,HIGH --format table cbox-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
+          trivy image --severity CRITICAL,HIGH --format table cbox-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
