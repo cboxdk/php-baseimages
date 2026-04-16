@@ -14,7 +14,7 @@ permissions:
 jobs:
   framework-detection-tests:
     name: Framework Detection Tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ax41]
 
     steps:
       - name: Checkout code
@@ -73,7 +73,7 @@ jobs:
 
   performance-benchmarks:
     name: Performance Benchmarks
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ax41]
     needs: framework-detection-tests
 
     steps:
@@ -128,7 +128,7 @@ jobs:
 
   security-scan:
     name: CVE Security Scan
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ax41]
 
     steps:
       - name: Checkout code

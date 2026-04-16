@@ -55,7 +55,7 @@ jobs:
   # Quick smoke test on every push - builds entire chain locally
   smoke-test:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ax41]
     timeout-minutes: 30
 
     steps:
@@ -133,7 +133,7 @@ jobs:
   # Full matrix test (manual trigger)
   full-matrix:
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, ax41]
     timeout-minutes: 45
 
     steps:
