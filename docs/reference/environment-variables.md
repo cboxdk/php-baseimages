@@ -376,46 +376,7 @@ secrets:
 
 The Management API provides runtime control over container processes (list, scale, restart). It is **disabled by default** for security.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `CBOX_INIT_API_ENABLED` | `false` | Enable the Management API |
-| `CBOX_INIT_API_PORT` | `9180` | Port the API listens on |
-| `CBOX_INIT_API_AUTH_TOKEN` | *(empty)* | Bearer token for API authentication. Recommended when exposing the port |
-
-**Enable in docker-compose:**
-```yaml
-services:
-  app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
-    ports:
-      - "9180:9180"
-    environment:
-      CBOX_INIT_API_ENABLED: "true"
-      CBOX_INIT_API_AUTH_TOKEN: "my-secret-token"
-```
-
-**Usage:**
-```bash
-# List all processes
-curl -H "Authorization: Bearer my-secret-token" \
-  http://localhost:9180/api/v1/processes
-
-# Scale queue workers
-curl -X POST \
-  -H "Authorization: Bearer my-secret-token" \
-  -H "Content-Type: application/json" \
-  -d '{"replicas": 5}' \
-  http://localhost:9180/api/v1/processes/queue-default/scale
-
-# Restart a process
-curl -X POST \
-  -H "Authorization: Bearer my-secret-token" \
-  http://localhost:9180/api/v1/processes/php-fpm/restart
-```
-
-> **Security:** Always set `CBOX_INIT_API_AUTH_TOKEN` when exposing port 9180 outside the container. Do not expose the API to the public internet without additional network-level protection.
-
-See [Cbox Init Integration](../cbox-init-integration#-management-api) for full documentation.
+The API is configured via `cbox-init.yaml`, not environment variables. To enable it, mount a custom config with `api_enabled: true`. See [Cbox Init Integration](../cbox-init-integration#-management-api) for full setup instructions and examples.
 
 ---
 

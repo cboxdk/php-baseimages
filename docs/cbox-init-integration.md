@@ -97,31 +97,46 @@ Exported on port 9090 at `/metrics`:
 
 REST API for runtime process control (disabled by default for security).
 
-**Enable via environment variable:**
-```yaml
-environment:
-  CBOX_INIT_API_ENABLED: "true"
-  CBOX_INIT_API_PORT: "9180"          # Default: 9180
-  CBOX_INIT_API_AUTH_TOKEN: "my-secret-token"  # Recommended when exposing the port
-```
+The API is configured via `cbox-init.yaml` — the Go binary reads config from YAML only, not from environment variables. To enable it, mount a custom config file:
 
-**Or via custom `cbox-init.yaml`:**
+**1. Create a custom `cbox-init.yaml`:**
 ```yaml
+# custom-cbox-init.yaml
+version: "1.0"
+
 global:
   api_enabled: true
   api_port: 9180
+
+  metrics_enabled: true
+  metrics_port: 9090
+  metrics_path: /metrics
+
+  shutdown_timeout: 30
+  log_level: info
+  log_format: json
+
+# Copy the processes section from the default config:
+# /etc/cbox-init/cbox-init.yaml inside the container
+processes:
+  php-fpm:
+    enabled: true
+    command: ["php-fpm", "-F", "-R"]
+    # ... (see default config for full process definitions)
 ```
 
-**Expose the API port in docker-compose:**
+**2. Mount it and expose the port in docker-compose:**
 ```yaml
 services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     ports:
-      - "9180:9180"
+      - "80:80"
+      - "9180:9180"   # Management API
     environment:
-      CBOX_INIT_API_ENABLED: "true"
-      CBOX_INIT_API_AUTH_TOKEN: "my-secret-token"
+      CBOX_INIT_CONFIG: /etc/cbox-init/cbox-init.yaml
+    volumes:
+      - ./custom-cbox-init.yaml:/etc/cbox-init/cbox-init.yaml:ro
 ```
 
 **Available endpoints (port 9180):**
@@ -131,11 +146,10 @@ services:
 
 **Example request:**
 ```bash
-curl -H "Authorization: Bearer my-secret-token" \
-  http://localhost:9180/api/v1/processes
+curl http://localhost:9180/api/v1/processes
 ```
 
-> **Security:** The API gives runtime control over container processes. Always set `CBOX_INIT_API_AUTH_TOKEN` when exposing the port outside the container, and avoid exposing it to the public internet.
+> **Security:** The API gives runtime control over container processes. Avoid exposing port 9180 to the public internet without network-level protection.
 
 ## Architecture
 
@@ -255,7 +269,7 @@ Complete reference: [Environment Variables](./reference/environment-variables)
 | **Laravel Hooks** | `LARAVEL_OPTIMIZE_ENABLED`, `LARAVEL_MIGRATE_ENABLED` |
 | **Process Control** | `CBOX_INIT_PROCESS_*_ENABLED` |
 | **Scaling** | `CBOX_INIT_PROCESS_QUEUE_*_SCALE` |
-| **Management API** | `CBOX_INIT_API_ENABLED`, `CBOX_INIT_API_PORT`, `CBOX_INIT_API_AUTH_TOKEN` |
+| **Management API** | Custom `cbox-init.yaml` (see [Management API](#-management-api)) |
 | **Observability** | `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_METRICS_PORT` |
 | **Logging** | `CBOX_INIT_LOG_LEVEL`, `CBOX_INIT_LOG_FORMAT` |
 
@@ -537,7 +551,6 @@ Scale processes at runtime using the Management API (must be enabled first, see 
 ```bash
 # Scale queue workers to 10 instances
 curl -X POST \
-  -H "Authorization: Bearer my-secret-token" \
   -H "Content-Type: application/json" \
   -d '{"replicas": 10}' \
   http://localhost:9180/api/v1/processes/queue-default/scale
