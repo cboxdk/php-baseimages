@@ -133,7 +133,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # ============================================================================
 # Cbox Init (Process Manager)
 # ============================================================================
-ARG CBOX_INIT_VERSION=2.0.1
+ARG CBOX_INIT_VERSION=2.1.0
 
 COPY --from=cbox-init-bin /cbox-init /usr/local/bin/cbox-init
 

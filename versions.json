@@ -48,7 +48,7 @@
   },
   "tools": {
     "composer": "2",
-    "cbox_init": "2.0.1"
+    "cbox_init": "2.1.0"
   },
   "deprecation_policy": {
     "php_removal_after_eol_months": 6,

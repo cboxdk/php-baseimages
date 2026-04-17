@@ -57,7 +57,13 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Actionable follow-ups to widen the gap
   - Talking points for stakeholders
 
-- **[Health Checks & CI Templates](healthchecks-ci.md)** ✨ New
+- **[Observability & Health Checks](observability.md)** ✨ New
+  - Application health checks with `cboxdk/laravel-health`
+  - Queue metrics and Prometheus export with `cboxdk/laravel-queue-metrics`
+  - Dynamic queue autoscaling with `cboxdk/laravel-queue-autoscale`
+  - Combined Prometheus scrape config
+
+- **[Health Checks & CI Templates](healthchecks-ci.md)**
   - Docker Compose health-check override file
   - GitHub Actions workflow for `php artisan test`
   - Deployment-ready verification checklist

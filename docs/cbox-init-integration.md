@@ -6,7 +6,7 @@ weight: 15
 
 # Cbox Process Manager
 
-Cbox Init is the built-in Go-based process manager for all `php-fpm-nginx` images. It provides multi-process orchestration, structured logging, health checks, Prometheus metrics, and graceful lifecycle management.
+Cbox Init is the built-in Go-based process manager for `php-fpm-nginx` and `php-cli` images. It provides multi-process orchestration, structured logging, health checks, Prometheus metrics, and graceful lifecycle management.
 
 ## Quick Start
 
@@ -20,6 +20,39 @@ services:
       - "80:80"
       - "9090:9090"  # Prometheus metrics
 ```
+
+## CLI Workloads
+
+Cbox Init also works with `php-cli` images for background workloads like queue workers, schedulers, and Horizon -- without PHP-FPM or Nginx overhead.
+
+### Why use Cbox Init for CLI?
+
+Running `command: php artisan queue:work` directly bypasses Cbox Init entirely -- no structured logging, no metrics, no health checks, no graceful shutdown. Setting process env vars instead lets Cbox Init manage the process with all these features.
+
+### Usage
+
+Set process env vars and omit the `command:` -- the entrypoint auto-detects and starts Cbox Init:
+
+```yaml
+services:
+  worker:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_QUEUE: "true"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "5"
+
+  scheduler:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_SCHEDULER: "true"
+
+  horizon:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_HORIZON: "true"
+```
+
+All the same env vars, CLI commands, metrics, and Management API work identically to `php-fpm-nginx`.
 
 ## Enable Laravel Services
 
@@ -101,7 +134,8 @@ REST API for runtime process control (disabled by default for security).
 ```yaml
 environment:
   CBOX_INIT_API_ENABLED: "true"
-  CBOX_INIT_API_PORT: "9180"       # Default: 9180
+  CBOX_INIT_API_PORT: "9180"          # Default: 9180
+  CBOX_INIT_API_AUTH: "my-secret"     # Optional: Bearer token authentication
 ```
 
 **Expose the port in docker-compose:**
@@ -114,19 +148,87 @@ services:
       - "9180:9180"   # Management API
     environment:
       CBOX_INIT_API_ENABLED: "true"
+      CBOX_INIT_API_AUTH: "my-secret"
 ```
 
 **Available endpoints (port 9180):**
+- `GET /api/v1/health` - Health check (no auth required)
 - `GET /api/v1/processes` - List processes and their status
-- `POST /api/v1/processes/{name}/scale` - Dynamic scaling
-- `POST /api/v1/processes/{name}/restart` - Restart process
+- `POST /api/v1/processes/{name}/start` - Start a stopped process
+- `POST /api/v1/processes/{name}/stop` - Stop a running process
+- `POST /api/v1/processes/{name}/restart` - Restart a process
+- `POST /api/v1/processes/{name}/scale` - Scale to N instances
+- `GET /api/v1/logs/stream` - Real-time log streaming (SSE)
 
-**Example request:**
+**Example requests:**
 ```bash
-curl http://localhost:9180/api/v1/processes
+# Without auth
+curl http://localhost:9180/api/v1/health
+
+# With auth
+curl -H "Authorization: Bearer my-secret" \
+  http://localhost:9180/api/v1/processes
+
+# Scale queue workers
+curl -X POST \
+  -H "Authorization: Bearer my-secret" \
+  -H "Content-Type: application/json" \
+  -d '{"scale": 10}' \
+  http://localhost:9180/api/v1/processes/queue-default/scale
 ```
 
-> **Security:** The API gives runtime control over container processes. Avoid exposing port 9180 to the public internet without network-level protection.
+> **Security:** If `CBOX_INIT_API_AUTH` is set, all endpoints except `/api/v1/health` require a `Bearer` token. Avoid exposing port 9180 to the public internet without network-level protection.
+
+### 🖥️ CLI Commands (v2.1.0+)
+
+Cbox Init includes CLI commands for managing processes from inside the container. These work via a Unix socket that is always active — no TCP port or API configuration needed.
+
+```bash
+# Inside the container (docker exec)
+cbox-init list                     # List all processes
+cbox-init status nginx             # Show process details
+cbox-init start horizon            # Start a stopped process
+cbox-init stop horizon             # Stop a running process
+cbox-init restart horizon          # Restart a process
+cbox-init scale queue-default 10   # Scale to N instances
+cbox-init reload-config            # Reload config from disk
+cbox-init logs nginx -f            # Stream logs in real-time (SSE)
+```
+
+**Example:**
+```bash
+docker exec my-app cbox-init list
+docker exec my-app cbox-init restart php-fpm
+docker exec my-app cbox-init scale queue-default 5
+```
+
+### 📄 Log File Tailing (v2.1.0+)
+
+Cbox Init can tail application log files (e.g., Laravel's `storage/logs/laravel.log`) and pipe them through the same logging pipeline as stdout/stderr — including JSON parsing, level detection, filtering, and redaction.
+
+The default configuration tails `laravel.log` automatically with JSON parsing and size-based rotation.
+
+**Custom log files via `cbox-init.yaml`:**
+```yaml
+processes:
+  php-fpm:
+    logging:
+      files:
+        laravel-log:
+          path: /var/www/html/storage/logs/laravel.log
+          json: { enabled: true, detect_auto: true }
+          min_level: info
+          rotate:
+            max_size: 50MB
+            max_files: 7
+        custom-log:
+          path: /var/www/html/storage/logs/custom.log
+          rotate:
+            max_size: 10MB
+            max_files: 3
+```
+
+Tailed log entries appear in `docker logs` alongside process stdout/stderr, with the source file labeled in the structured output.
 
 ## Architecture
 
@@ -246,7 +348,7 @@ Complete reference: [Environment Variables](./reference/environment-variables)
 | **Laravel Hooks** | `LARAVEL_OPTIMIZE_ENABLED`, `LARAVEL_MIGRATE_ENABLED` |
 | **Process Control** | `CBOX_INIT_PROCESS_*_ENABLED` |
 | **Scaling** | `CBOX_INIT_PROCESS_QUEUE_*_SCALE` |
-| **Management API** | `CBOX_INIT_API_ENABLED`, `CBOX_INIT_API_PORT` |
+| **Management API** | `CBOX_INIT_API_ENABLED`, `CBOX_INIT_API_PORT`, `CBOX_INIT_API_AUTH` |
 | **Observability** | `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_METRICS_PORT` |
 | **Logging** | `CBOX_INIT_LOG_LEVEL`, `CBOX_INIT_LOG_FORMAT` |
 
@@ -529,7 +631,7 @@ Scale processes at runtime using the Management API (must be enabled first, see 
 # Scale queue workers to 10 instances
 curl -X POST \
   -H "Content-Type: application/json" \
-  -d '{"replicas": 10}' \
+  -d '{"scale": 10}' \
   http://localhost:9180/api/v1/processes/queue-default/scale
 ```
 
@@ -600,9 +702,9 @@ environment:
   CBOX_INIT_RESTART_BACKOFF: "10"
 ```
 
-## Features (v1.0.0)
+## Features
 
-Cbox Init v1.0.0 includes:
+Cbox Init includes:
 
 - ✅ Multi-process orchestration with DAG dependency resolver
 - ✅ Health checks (TCP, HTTP, exec) with auto-restart
@@ -614,6 +716,10 @@ Cbox Init v1.0.0 includes:
 - ✅ Sensitive data redaction
 - ✅ Scheduled tasks with cron expressions
 - ✅ Management API for runtime process control (disabled by default)
+- ✅ CLI commands via Unix socket (`list`, `status`, `start`, `stop`, `restart`, `scale`, `logs`)
+- ✅ Log file tailing with JSON parsing and size-based rotation
+- ✅ SSE log streaming (`/api/v1/logs/stream` and `cbox-init logs -f`)
+- ✅ Bearer token authentication for Management API
 
 **Coming soon:**
 - Grafana dashboard templates

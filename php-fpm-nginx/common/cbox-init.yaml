@@ -17,6 +17,7 @@ global:
   # Management API (disabled by default for security)
   api_enabled: false
   api_port: 9180
+  api_auth: ""
 
   # Prometheus Metrics (enabled by default, localhost only for security)
   metrics_enabled: true
@@ -49,6 +50,14 @@ processes:
       period: 5
       timeout: 3
       failure_threshold: 3
+    logging:
+      files:
+        laravel-log:
+          path: /var/www/html/storage/logs/laravel.log
+          json: { enabled: true, detect_auto: true }
+          rotate:
+            max_size: 50MB
+            max_files: 7
 
   # ─────────────────────────────────────────────────────────────────────────
   # Nginx - Web server (depends on PHP-FPM being ready)
@@ -138,6 +147,22 @@ processes:
   scheduler:
     enabled: false
     command: ["php", "artisan", "schedule:work"]
+    type: longrun
+    restart: always
+    scale: 1
+    working_dir: /var/www/html
+    stdout: true
+    stderr: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Queue Autoscaler (cboxdk/laravel-queue-autoscale)
+  # Enable via CBOX_INIT_PROCESS_AUTOSCALER_ENABLED=true or CBOX_QUEUE_AUTOSCALER=true
+  # NOTE: When using autoscaler, disable queue-default/queue-high —
+  #       the autoscaler spawns its own workers via Symfony Process.
+  # ─────────────────────────────────────────────────────────────────────────
+  autoscaler:
+    enabled: false
+    command: ["php", "artisan", "queue:autoscale"]
     type: longrun
     restart: always
     scale: 1

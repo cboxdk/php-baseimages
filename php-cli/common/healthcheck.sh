@@ -84,6 +84,18 @@ if command -v cbox-init >/dev/null 2>&1; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Check 5b: Cbox Init Health Endpoint (when running as PID 1)
+# ─────────────────────────────────────────────────────────────────────────────
+METRICS_PORT="${CBOX_INIT_METRICS_PORT:-9090}"
+if [ "$(cat /proc/1/comm 2>/dev/null)" = "cbox-init" ]; then
+    if curl -sf "http://127.0.0.1:${METRICS_PORT}/health" >/dev/null 2>&1; then
+        check_passed "Cbox Init health endpoint healthy"
+    else
+        _check_failed "Cbox Init health endpoint not responding on :${METRICS_PORT}"
+    fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Check 6: Critical PHP Extensions
 # ─────────────────────────────────────────────────────────────────────────────
 required_extensions="json mbstring"

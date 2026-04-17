@@ -10,15 +10,17 @@ Run background jobs reliably with Cbox images.
 
 ## Quick Start
 
+Use the `php-cli` image with process env vars. The entrypoint auto-starts Cbox Init with structured logging, metrics, health checks, and graceful shutdown:
+
 ```yaml
 # docker-compose.yml
 services:
   worker:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    command: php artisan queue:work redis --sleep=3 --tries=3
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
     volumes:
       - ./:/var/www/html
     environment:
+      LARAVEL_QUEUE: "true"
       QUEUE_CONNECTION: redis
       REDIS_HOST: redis
     depends_on:
@@ -33,6 +35,43 @@ volumes:
   redis_data:
 ```
 
+Scale workers within a single container using `CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE`:
+
+```yaml
+  worker:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_QUEUE: "true"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "5"
+```
+
+Add a high-priority queue with `LARAVEL_QUEUE_HIGH`:
+
+```yaml
+  worker:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_QUEUE: "true"
+      LARAVEL_QUEUE_HIGH: "true"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "3"
+      CBOX_INIT_PROCESS_QUEUE_HIGH_SCALE: "2"
+```
+
+### Alternative: Direct Command
+
+If you need full control over the `queue:work` arguments, you can bypass Cbox Init with a direct command override. This loses structured logging, metrics, health checks, and graceful shutdown:
+
+```yaml
+  worker:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    command: php artisan queue:work redis --sleep=3 --tries=3
+    volumes:
+      - ./:/var/www/html
+    environment:
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+```
+
 ## Worker Types
 
 ### Basic Queue Worker
@@ -41,12 +80,22 @@ Simple worker for processing jobs:
 
 ```yaml
 worker:
-  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+  image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+  environment:
+    LARAVEL_QUEUE: "true"
+  restart: unless-stopped
+```
+
+Cbox Init manages restarts, memory limits, and graceful shutdown automatically. To customize `queue:work` arguments, use a direct command override instead:
+
+```yaml
+worker:
+  image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
   command: php artisan queue:work redis --sleep=3 --tries=3 --max-jobs=1000 --max-time=3600
   restart: unless-stopped
 ```
 
-**Options explained**:
+**Options explained** (direct command only):
 - `--sleep=3`: Wait 3 seconds when no jobs
 - `--tries=3`: Retry failed jobs 3 times
 - `--max-jobs=1000`: Restart after 1000 jobs (prevents memory leaks)
@@ -58,12 +107,12 @@ Comprehensive queue management with dashboard:
 
 ```yaml
 horizon:
-  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-  command: php artisan horizon
+  image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
   restart: unless-stopped
   volumes:
     - ./:/var/www/html
   environment:
+    LARAVEL_HORIZON: "true"
     QUEUE_CONNECTION: redis
     REDIS_HOST: redis
 ```
@@ -82,22 +131,25 @@ Run Laravel scheduled tasks:
 
 ```yaml
 scheduler:
-  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+  image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+  restart: unless-stopped
+  environment:
+    LARAVEL_SCHEDULER: "true"
+```
+
+Cbox Init runs `schedule:work` with structured logging, metrics, and graceful shutdown.
+
+**Alternative: Direct Command** (loses Cbox Init features):
+
+```yaml
+scheduler:
+  image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
   command: >
     sh -c "while true; do
       php artisan schedule:run --verbose --no-interaction
       sleep 60
     done"
   restart: unless-stopped
-```
-
-Or use the built-in cron support:
-
-```yaml
-scheduler:
-  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-  environment:
-    LARAVEL_SCHEDULER: "true"
 ```
 
 ## Architecture Patterns
@@ -107,26 +159,26 @@ scheduler:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
   worker:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    command: php artisan queue:work
-    deploy:
-      replicas: 3
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_QUEUE: "true"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "3"
 ```
 
 ### Queue Priority Setup
 
 ```yaml
 services:
-  worker-high:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    command: php artisan queue:work --queue=high,default
-
-  worker-low:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-    command: php artisan queue:work --queue=low
+  worker:
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.4-bookworm
+    environment:
+      LARAVEL_QUEUE: "true"
+      LARAVEL_QUEUE_HIGH: "true"
+      CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "2"
+      CBOX_INIT_PROCESS_QUEUE_HIGH_SCALE: "2"
 ```
 
 ### Horizon with Auto-Scaling

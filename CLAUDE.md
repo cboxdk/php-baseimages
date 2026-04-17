@@ -301,13 +301,24 @@ Comprehensive docs in `docs/` following ServerSideUp quality standards:
 
 ## Environment Variables
 
-### Multi-Service Containers
+### Cbox Init Containers (php-fpm-nginx and php-cli)
 
 ```bash
 # Laravel Features
-LARAVEL_SCHEDULER=true            # Enable cron for schedule:run (LARAVEL_SCHEDULER_ENABLED still accepted)
-LARAVEL_AUTO_OPTIMIZE=false       # Auto-cache config/routes on startup
-LARAVEL_AUTO_MIGRATE=false        # Auto-run migrations (dangerous in prod!)
+LARAVEL_SCHEDULER=true            # Enable schedule:work (LARAVEL_SCHEDULER_ENABLED still accepted)
+LARAVEL_OPTIMIZE_ENABLED=true     # Auto-cache config/routes/views on startup
+LARAVEL_MIGRATE_ENABLED=false     # Auto-run migrations (dangerous in prod!)
+
+# Cbox Init Management API
+CBOX_INIT_API_ENABLED=true        # Enable REST API on port 9180
+CBOX_INIT_API_PORT=9180           # API port (default: 9180)
+CBOX_INIT_API_AUTH=my-secret      # Bearer token for API auth
+
+# Cbox Init Global Config Overrides
+CBOX_INIT_METRICS_ENABLED=true    # Prometheus metrics (default: true)
+CBOX_INIT_METRICS_PORT=9090       # Metrics port (default: 9090)
+CBOX_INIT_LOG_LEVEL=info          # Log level (debug, info, warn, error)
+CBOX_INIT_LOG_FORMAT=json         # Log format (json, text)
 
 # Xdebug (dev images only)
 XDEBUG_MODE=debug,develop,coverage

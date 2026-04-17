@@ -61,6 +61,8 @@ All tags also have `-rootless` and `-dev` variants (append the suffix).
 
 All tags also have `-rootless` variants (append the suffix).
 
+**php-cli with Cbox Init:** Use `php-cli` for background workloads (queue workers, schedulers, Horizon). Set `LARAVEL_QUEUE=true` or similar env vars and the entrypoint automatically starts Cbox Init with structured logging, metrics, and health checks. See [Queue Workers Guide](../guides/queue-workers).
+
 All images are prefixed with `ghcr.io/cboxdk/php-baseimages/`.
 
 ## Tiers

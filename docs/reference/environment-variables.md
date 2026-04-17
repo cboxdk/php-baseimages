@@ -36,6 +36,22 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `LARAVEL_REVERB` | `CBOX_INIT_PROCESS_REVERB_ENABLED` | Enable Laravel Reverb |
 | `LARAVEL_QUEUE` | `CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED` | Enable default queue worker |
 | `LARAVEL_QUEUE_HIGH` | `CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED` | Enable high priority queue |
+| `CBOX_QUEUE_AUTOSCALER` | `CBOX_INIT_PROCESS_AUTOSCALER_ENABLED` | Enable queue autoscaler (`cboxdk/laravel-queue-autoscale`) |
+
+### Queue Scaling
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE` | `2` | Number of default queue worker instances |
+| `CBOX_INIT_PROCESS_QUEUE_HIGH_SCALE` | `1` | Number of high priority queue worker instances |
+
+### Laravel Startup Hooks
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LARAVEL_OPTIMIZE_ENABLED` | `false` | Run `config:cache`, `route:cache`, `view:cache` on startup |
+| `LARAVEL_MIGRATE_ENABLED` | `false` | Run `php artisan migrate --force` on startup |
+| `LARAVEL_MIGRATE_ALLOW_FAILURE` | `false` | Continue container startup if migrations fail |
 
 ---
 
@@ -52,9 +68,13 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_MAX_INPUT_VARS` | `1000` | Max input variables |
 | `PHP_DATE_TIMEZONE` | `UTC` | Default timezone |
 | `PHP_DISPLAY_ERRORS` | `Off` | Display errors (use `On` for dev) |
+| `PHP_DISPLAY_STARTUP_ERRORS` | `Off` | Display startup errors |
 | `PHP_ERROR_REPORTING` | `E_ALL & ~E_DEPRECATED & ~E_STRICT` | Error reporting level |
 | `PHP_LOG_ERRORS` | `On` | Log errors |
 | `PHP_ERROR_LOG` | `/dev/stderr` | Error log destination |
+| `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
+| `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
+| `PHP_OPEN_BASEDIR` | `/var/www/html:/tmp:/var/tmp` | Restrict filesystem access (FPM only) |
 
 ### OPcache
 
@@ -68,6 +88,18 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_OPCACHE_VALIDATE_TIMESTAMPS` | `0` | Validate timestamps (1 for dev) |
 | `PHP_OPCACHE_JIT` | `tracing` | JIT mode: `tracing`, `function`, `off` |
 | `PHP_OPCACHE_JIT_BUFFER_SIZE` | `128M` | JIT buffer size |
+
+### PHP-FPM Pool
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PHP_FPM_PM` | `dynamic` | Process manager: `dynamic`, `static`, `ondemand` |
+| `PHP_FPM_PM_MAX_CHILDREN` | `50` | Max concurrent child processes |
+| `PHP_FPM_PM_START_SERVERS` | `5` | Initial child count (dynamic mode) |
+| `PHP_FPM_PM_MIN_SPARE_SERVERS` | `5` | Min idle processes (dynamic mode) |
+| `PHP_FPM_PM_MAX_SPARE_SERVERS` | `35` | Max idle processes (dynamic mode) |
+| `PHP_FPM_PM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
+| `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | Max request execution time before kill |
 
 ---
 
@@ -374,12 +406,13 @@ secrets:
 
 ## Cbox Init Management API
 
-The Management API provides runtime control over container processes (list, scale, restart). It is **disabled by default** for security.
+The Management API provides runtime control over container processes. It is **disabled by default** for security.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CBOX_INIT_API_ENABLED` | `false` | Enable the Management API |
 | `CBOX_INIT_API_PORT` | `9180` | Port the API listens on |
+| `CBOX_INIT_API_AUTH` | *(empty)* | Bearer token for API authentication |
 
 ```yaml
 services:
@@ -389,9 +422,41 @@ services:
       - "9180:9180"
     environment:
       CBOX_INIT_API_ENABLED: "true"
+      CBOX_INIT_API_AUTH: "my-secret"
 ```
 
-See [Cbox Init Integration](../cbox-init-integration#-management-api) for endpoints and examples.
+See [Cbox Init Integration](../cbox-init-integration#-management-api) for endpoints, CLI commands, and examples.
+
+---
+
+## Cbox Init Global Config
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_INIT_METRICS_ENABLED` | `true` | Enable Prometheus metrics endpoint |
+| `CBOX_INIT_METRICS_PORT` | `9090` | Metrics endpoint port |
+| `CBOX_INIT_LOG_LEVEL` | `info` | Log level: `debug`, `info`, `warn`, `error` |
+| `CBOX_INIT_LOG_FORMAT` | `json` | Log format: `json`, `text` |
+| `CBOX_INIT_SHUTDOWN_TIMEOUT` | `30` | Seconds to wait for graceful process shutdown |
+| `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Path to cbox-init config file |
+
+---
+
+## Development (Dev Images Only)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `XDEBUG_MODE` | `off` | Xdebug mode: `debug`, `develop`, `coverage`, `profile`, or comma-separated |
+| `XDEBUG_CONFIG` | *(empty)* | Xdebug config string (e.g., `client_host=host.docker.internal client_port=9003`) |
+| `PHP_IDE_CONFIG` | *(empty)* | IDE server mapping (e.g., `serverName=docker`) |
+
+```yaml
+# Example: Enable step debugging
+environment:
+  XDEBUG_MODE: "debug"
+  XDEBUG_CONFIG: "client_host=host.docker.internal client_port=9003"
+  PHP_IDE_CONFIG: "serverName=docker"
+```
 
 ---
 
@@ -401,6 +466,7 @@ See [Cbox Init Integration](../cbox-init-integration#-management-api) for endpoi
 |----------|---------|-------------|
 | `WORKDIR` | `/var/www/html` | Working directory |
 | `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Cbox Init config path |
+| `REVERB_PORT` | `8080` | Reverb port for healthcheck (override if using non-default port) |
 
 ---
 

@@ -198,6 +198,7 @@ map_env_aliases() {
     [ -n "$LARAVEL_SCHEDULER" ] && validate_boolean "$LARAVEL_SCHEDULER" && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER"
     [ -n "$LARAVEL_QUEUE" ] && validate_boolean "$LARAVEL_QUEUE" && export CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
     [ -n "$LARAVEL_QUEUE_HIGH" ] && validate_boolean "$LARAVEL_QUEUE_HIGH" && export CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
+    [ -n "$CBOX_QUEUE_AUTOSCALER" ] && validate_boolean "$CBOX_QUEUE_AUTOSCALER" && export CBOX_INIT_PROCESS_AUTOSCALER_ENABLED="$CBOX_QUEUE_AUTOSCALER"
     # Backward compatibility
     [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
     [ -n "$LARAVEL_AUTO_OPTIMIZE" ] && export LARAVEL_OPTIMIZE_ENABLED="$LARAVEL_AUTO_OPTIMIZE"
@@ -224,8 +225,63 @@ generate_php_config() {
     [ -f "$template" ] && envsubst < "$template" > "$output" 2>/dev/null || true
 }
 
+apply_php_env_overrides() {
+    local ini="/usr/local/etc/php/conf.d/zz-env-overrides.ini"
+    local fpm="/usr/local/etc/php-fpm.d/zz-env-overrides.conf"
+    local content=""
+
+    # PHP ini overrides (zz- prefix ensures it loads last and wins)
+    content="; Auto-generated from environment variables"
+    [ -n "$PHP_MEMORY_LIMIT" ] && content="${content}\nmemory_limit = $PHP_MEMORY_LIMIT"
+    [ -n "$PHP_MAX_EXECUTION_TIME" ] && content="${content}\nmax_execution_time = $PHP_MAX_EXECUTION_TIME"
+    [ -n "$PHP_MAX_INPUT_TIME" ] && content="${content}\nmax_input_time = $PHP_MAX_INPUT_TIME"
+    [ -n "$PHP_POST_MAX_SIZE" ] && content="${content}\npost_max_size = $PHP_POST_MAX_SIZE"
+    [ -n "$PHP_UPLOAD_MAX_FILESIZE" ] && content="${content}\nupload_max_filesize = $PHP_UPLOAD_MAX_FILESIZE"
+    [ -n "$PHP_MAX_FILE_UPLOADS" ] && content="${content}\nmax_file_uploads = $PHP_MAX_FILE_UPLOADS"
+    [ -n "$PHP_MAX_INPUT_VARS" ] && content="${content}\nmax_input_vars = $PHP_MAX_INPUT_VARS"
+    [ -n "$PHP_DATE_TIMEZONE" ] && content="${content}\ndate.timezone = $PHP_DATE_TIMEZONE"
+    [ -n "$PHP_DISPLAY_ERRORS" ] && content="${content}\ndisplay_errors = $PHP_DISPLAY_ERRORS"
+    [ -n "$PHP_DISPLAY_STARTUP_ERRORS" ] && content="${content}\ndisplay_startup_errors = $PHP_DISPLAY_STARTUP_ERRORS"
+    [ -n "$PHP_ERROR_REPORTING" ] && content="${content}\nerror_reporting = $PHP_ERROR_REPORTING"
+    [ -n "$PHP_LOG_ERRORS" ] && content="${content}\nlog_errors = $PHP_LOG_ERRORS"
+    [ -n "$PHP_ERROR_LOG" ] && content="${content}\nerror_log = $PHP_ERROR_LOG"
+    [ -n "$PHP_SESSION_COOKIE_SECURE" ] && content="${content}\nsession.cookie_secure = $PHP_SESSION_COOKIE_SECURE"
+    [ -n "$PHP_REALPATH_CACHE_TTL" ] && content="${content}\nrealpath_cache_ttl = $PHP_REALPATH_CACHE_TTL"
+    [ -n "$PHP_OPEN_BASEDIR" ] && content="${content}\nopen_basedir = $PHP_OPEN_BASEDIR"
+    [ -n "$PHP_OPCACHE_ENABLE" ] && content="${content}\nopcache.enable = $PHP_OPCACHE_ENABLE"
+    [ -n "$PHP_OPCACHE_MEMORY_CONSUMPTION" ] && content="${content}\nopcache.memory_consumption = $PHP_OPCACHE_MEMORY_CONSUMPTION"
+    [ -n "$PHP_OPCACHE_INTERNED_STRINGS_BUFFER" ] && content="${content}\nopcache.interned_strings_buffer = $PHP_OPCACHE_INTERNED_STRINGS_BUFFER"
+    [ -n "$PHP_OPCACHE_MAX_ACCELERATED_FILES" ] && content="${content}\nopcache.max_accelerated_files = $PHP_OPCACHE_MAX_ACCELERATED_FILES"
+    [ -n "$PHP_OPCACHE_REVALIDATE_FREQ" ] && content="${content}\nopcache.revalidate_freq = $PHP_OPCACHE_REVALIDATE_FREQ"
+    [ -n "$PHP_OPCACHE_VALIDATE_TIMESTAMPS" ] && content="${content}\nopcache.validate_timestamps = $PHP_OPCACHE_VALIDATE_TIMESTAMPS"
+    [ -n "$PHP_OPCACHE_JIT" ] && content="${content}\nopcache.jit = $PHP_OPCACHE_JIT"
+    [ -n "$PHP_OPCACHE_JIT_BUFFER_SIZE" ] && content="${content}\nopcache.jit_buffer_size = $PHP_OPCACHE_JIT_BUFFER_SIZE"
+    printf '%b\n' "$content" > "$ini"
+
+    # PHP-FPM pool overrides
+    content="; Auto-generated from environment variables\n[www]"
+    [ -n "$PHP_FPM_PM" ] && content="${content}\npm = $PHP_FPM_PM"
+    [ -n "$PHP_FPM_PM_MAX_CHILDREN" ] && content="${content}\npm.max_children = $PHP_FPM_PM_MAX_CHILDREN"
+    [ -n "$PHP_FPM_PM_START_SERVERS" ] && content="${content}\npm.start_servers = $PHP_FPM_PM_START_SERVERS"
+    [ -n "$PHP_FPM_PM_MIN_SPARE_SERVERS" ] && content="${content}\npm.min_spare_servers = $PHP_FPM_PM_MIN_SPARE_SERVERS"
+    [ -n "$PHP_FPM_PM_MAX_SPARE_SERVERS" ] && content="${content}\npm.max_spare_servers = $PHP_FPM_PM_MAX_SPARE_SERVERS"
+    [ -n "$PHP_FPM_PM_MAX_REQUESTS" ] && content="${content}\npm.max_requests = $PHP_FPM_PM_MAX_REQUESTS"
+    [ -n "$PHP_FPM_REQUEST_TERMINATE_TIMEOUT" ] && content="${content}\nrequest_terminate_timeout = $PHP_FPM_REQUEST_TERMINATE_TIMEOUT"
+    # FPM pool overrides for PHP values (php_admin_value wins over php.ini)
+    [ -n "$PHP_MEMORY_LIMIT" ] && content="${content}\nphp_admin_value[memory_limit] = $PHP_MEMORY_LIMIT"
+    [ -n "$PHP_MAX_EXECUTION_TIME" ] && content="${content}\nphp_admin_value[max_execution_time] = $PHP_MAX_EXECUTION_TIME"
+    [ -n "$PHP_MAX_INPUT_TIME" ] && content="${content}\nphp_admin_value[max_input_time] = $PHP_MAX_INPUT_TIME"
+    [ -n "$PHP_UPLOAD_MAX_FILESIZE" ] && content="${content}\nphp_admin_value[upload_max_filesize] = $PHP_UPLOAD_MAX_FILESIZE"
+    [ -n "$PHP_POST_MAX_SIZE" ] && content="${content}\nphp_admin_value[post_max_size] = $PHP_POST_MAX_SIZE"
+    [ -n "$PHP_OPEN_BASEDIR" ] && content="${content}\nphp_admin_value[open_basedir] = $PHP_OPEN_BASEDIR"
+    printf '%b\n' "$content" > "$fpm"
+}
+
 generate_runtime_configs() {
-    # PHP configuration
+    # PHP environment variable overrides
+    apply_php_env_overrides
+
+    # PHP custom templates (user-provided)
     generate_php_config "/usr/local/etc/php/conf.d/99-custom.ini.template" "/usr/local/etc/php/conf.d/99-custom.ini"
     generate_php_config "/etc/php/${PHP_VERSION}/fpm/conf.d/99-custom.ini.template" "/etc/php/${PHP_VERSION}/fpm/conf.d/99-custom.ini"
 
@@ -473,6 +529,10 @@ apply_cbox_init_env_overrides() {
     # Management API overrides
     [ -n "$CBOX_INIT_API_ENABLED" ] && sed -i "s/^\(\s*\)api_enabled:.*/\1api_enabled: ${CBOX_INIT_API_ENABLED}/" "$dst"
     [ -n "$CBOX_INIT_API_PORT" ] && sed -i "s/^\(\s*\)api_port:.*/\1api_port: ${CBOX_INIT_API_PORT}/" "$dst"
+    if [ -n "$CBOX_INIT_API_AUTH" ]; then
+        escaped_auth=$(printf '%s\n' "$CBOX_INIT_API_AUTH" | sed 's/[&/\]/\\&/g')
+        sed -i "s/^\(\s*\)api_auth:.*/\1api_auth: \"${escaped_auth}\"/" "$dst"
+    fi
 
     # Metrics overrides
     [ -n "$CBOX_INIT_METRICS_ENABLED" ] && sed -i "s/^\(\s*\)metrics_enabled:.*/\1metrics_enabled: ${CBOX_INIT_METRICS_ENABLED}/" "$dst"

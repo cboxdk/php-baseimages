@@ -48,6 +48,13 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 - Laravel Reverb WebSocket support (`LARAVEL_REVERB=true`)
 - mTLS client certificate authentication
 - Reverse proxy support (Cloudflare, Traefik, HAProxy)
+- **Cbox Init v2.1.0** - CLI commands, log file tailing, API authentication
+  - CLI commands via Unix socket: `list`, `status`, `start`, `stop`, `restart`, `scale`, `logs -f`, `reload-config`
+  - Log file tailing with JSON parsing and size-based rotation (Laravel log tailed by default)
+  - SSE log streaming (`/api/v1/logs/stream` and `cbox-init logs -f`)
+  - Bearer token authentication for Management API (`CBOX_INIT_API_AUTH`)
+  - New API endpoints: `start`, `stop`, `health`, `logs/stream`
+- Environment variable overrides for cbox-init global config (`CBOX_INIT_API_ENABLED`, `CBOX_INIT_API_PORT`, `CBOX_INIT_API_AUTH`, `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_METRICS_PORT`, `CBOX_INIT_LOG_LEVEL`, `CBOX_INIT_LOG_FORMAT`)
 
 ---
 

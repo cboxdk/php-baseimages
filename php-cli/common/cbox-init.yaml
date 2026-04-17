@@ -1,6 +1,6 @@
 # ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  Cbox Init Configuration (Rootless)                                       ║
-# ║  Process Manager for PHP Docker Containers - Unprivileged Port 8080       ║
+# ║  Cbox Init Configuration (CLI)                                           ║
+# ║  Process Manager for PHP CLI Docker Containers                           ║
 # ║  https://github.com/cboxdk/init                                    ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 
@@ -34,54 +34,6 @@ global:
 # ═══════════════════════════════════════════════════════════════════════════
 processes:
   # ─────────────────────────────────────────────────────────────────────────
-  # PHP-FPM - Core PHP process handler
-  # ─────────────────────────────────────────────────────────────────────────
-  php-fpm:
-    enabled: true
-    command: ["php-fpm", "-F", "-R"]
-    type: longrun
-    restart: always
-    scale: 1
-    stdout: true
-    stderr: true
-    health_check:
-      type: tcp
-      address: "127.0.0.1:9000"
-      period: 5
-      timeout: 3
-      failure_threshold: 3
-    logging:
-      files:
-        laravel-log:
-          path: /var/www/html/storage/logs/laravel.log
-          json: { enabled: true, detect_auto: true }
-          rotate:
-            max_size: 50MB
-            max_files: 7
-
-  # ─────────────────────────────────────────────────────────────────────────
-  # Nginx - Web server (depends on PHP-FPM being ready)
-  # ROOTLESS: Uses unprivileged port 8080 instead of 80
-  # ─────────────────────────────────────────────────────────────────────────
-  nginx:
-    enabled: true
-    command: ["nginx", "-g", "daemon off;"]
-    type: longrun
-    restart: always
-    scale: 1
-    depends_on:
-      - php-fpm
-    stdout: true
-    stderr: true
-    health_check:
-      type: http
-      url: "http://127.0.0.1:8080/health"
-      period: 5
-      timeout: 3
-      failure_threshold: 3
-      expected_status: 200
-
-  # ─────────────────────────────────────────────────────────────────────────
   # Laravel Horizon - Queue Manager
   # Enable via CBOX_INIT_PROCESS_HORIZON_ENABLED=true or LARAVEL_HORIZON=true
   # ─────────────────────────────────────────────────────────────────────────
@@ -98,28 +50,28 @@ processes:
       pre_stop_hook:
         command: ["php", "artisan", "horizon:terminate"]
         timeout: 60
+    logging:
+      files:
+        laravel-log:
+          path: /var/www/html/storage/logs/laravel.log
+          json: { enabled: true, detect_auto: true }
+          rotate:
+            max_size: 50MB
+            max_files: 7
 
   # ─────────────────────────────────────────────────────────────────────────
   # Laravel Reverb - WebSocket Server
   # Enable via CBOX_INIT_PROCESS_REVERB_ENABLED=true or LARAVEL_REVERB=true
-  # ROOTLESS: Uses port 6001 (Laravel Reverb default) to avoid conflict with
-  # Nginx on port 8080
   # ─────────────────────────────────────────────────────────────────────────
   reverb:
     enabled: false
-    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
     type: longrun
     restart: always
     scale: 1
     working_dir: /var/www/html
     stdout: true
     stderr: true
-    health_check:
-      type: tcp
-      address: "127.0.0.1:6001"
-      period: 10
-      timeout: 3
-      failure_threshold: 3
 
   # ─────────────────────────────────────────────────────────────────────────
   # Queue Workers - Default Queue
@@ -134,6 +86,14 @@ processes:
     working_dir: /var/www/html
     stdout: true
     stderr: true
+    logging:
+      files:
+        laravel-log:
+          path: /var/www/html/storage/logs/laravel.log
+          json: { enabled: true, detect_auto: true }
+          rotate:
+            max_size: 50MB
+            max_files: 7
 
   # ─────────────────────────────────────────────────────────────────────────
   # Queue Workers - High Priority Queue
