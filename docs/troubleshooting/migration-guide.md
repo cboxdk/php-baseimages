@@ -54,7 +54,7 @@ AUTORUN_ENABLED=true
 AUTORUN_LARAVEL_STORAGE_LINK=true
 
 # Cbox
-LARAVEL_AUTO_OPTIMIZE=true
+LARAVEL_OPTIMIZE_ENABLED=true
 # (storage link runs automatically)
 ```
 
@@ -263,7 +263,7 @@ COPY docker-entrypoint-init.d/ /docker-entrypoint-init.d/
 # Add Laravel-specific settings
 environment:
   - LARAVEL_SCHEDULER=true
-  - LARAVEL_AUTO_OPTIMIZE=true
+  - LARAVEL_OPTIMIZE_ENABLED=true
   - LARAVEL_QUEUE=true
 ```
 

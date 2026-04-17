@@ -56,7 +56,7 @@ OPcache with JIT, realpath cache, Nginx open file cache, gzip compression, and p
 First requests trigger OPcache warming and framework bootstrapping. Enable warm-up in production:
 ```yaml
 environment:
-  LARAVEL_AUTO_OPTIMIZE: "true"  # Runs optimize on startup
+  LARAVEL_OPTIMIZE_ENABLED: "true"  # Runs config:cache, route:cache, view:cache on startup
 ```
 
 ## Security

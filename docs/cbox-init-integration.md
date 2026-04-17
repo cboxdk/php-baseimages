@@ -27,9 +27,8 @@ Configure Laravel features via environment variables:
 
 ```yaml
 environment:
-  # Laravel optimizations
-  LARAVEL_OPTIMIZE_CONFIG: "true"
-  LARAVEL_OPTIMIZE_ROUTE: "true"
+  # Laravel optimizations (runs config:cache, route:cache, view:cache)
+  LARAVEL_OPTIMIZE_ENABLED: "true"
   LARAVEL_MIGRATE_ENABLED: "true"
 
   # Enable Horizon
@@ -65,8 +64,8 @@ Per-process hooks:
 - Horizon: `horizon:terminate` on shutdown
 
 ### 📊 Health Monitoring
-- **TCP checks** - PHP-FPM (port 9000), Reverb (port 8080)
-- **HTTP checks** - Nginx (port 80 /health)
+- **TCP checks** - PHP-FPM (port 9000), Reverb (port 8080, or 6001 in rootless)
+- **HTTP checks** - Nginx (port 80 /health, or 8080 in rootless)
 - **Exec checks** - Horizon (`php artisan horizon:status`)
 
 ### 🔁 Restart Policies
@@ -94,11 +93,49 @@ Exported on port 9090 at `/metrics`:
 - `cbox_init_scheduled_task_duration_seconds` - Execution duration
 - `cbox_init_scheduled_task_total` - Total runs by status (success/failure)
 
-### 🔌 Management API (Phase 5)
-REST API on port 8080 (when enabled):
-- `GET /api/v1/processes` - List processes
+### 🔌 Management API
+
+REST API for runtime process control (disabled by default for security).
+
+**Enable via environment variable:**
+```yaml
+environment:
+  CBOX_INIT_API_ENABLED: "true"
+  CBOX_INIT_API_PORT: "9180"          # Default: 9180
+  CBOX_INIT_API_AUTH_TOKEN: "my-secret-token"  # Recommended when exposing the port
+```
+
+**Or via custom `cbox-init.yaml`:**
+```yaml
+global:
+  api_enabled: true
+  api_port: 9180
+```
+
+**Expose the API port in docker-compose:**
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    ports:
+      - "9180:9180"
+    environment:
+      CBOX_INIT_API_ENABLED: "true"
+      CBOX_INIT_API_AUTH_TOKEN: "my-secret-token"
+```
+
+**Available endpoints (port 9180):**
+- `GET /api/v1/processes` - List processes and their status
 - `POST /api/v1/processes/{name}/scale` - Dynamic scaling
 - `POST /api/v1/processes/{name}/restart` - Restart process
+
+**Example request:**
+```bash
+curl -H "Authorization: Bearer my-secret-token" \
+  http://localhost:9180/api/v1/processes
+```
+
+> **Security:** The API gives runtime control over container processes. Always set `CBOX_INIT_API_AUTH_TOKEN` when exposing the port outside the container, and avoid exposing it to the public internet.
 
 ## Architecture
 
@@ -157,8 +194,7 @@ services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      LARAVEL_OPTIMIZE_CONFIG: "true"
-      LARAVEL_OPTIMIZE_ROUTE: "true"
+      LARAVEL_OPTIMIZE_ENABLED: "true"
       LARAVEL_MIGRATE_ENABLED: "true"
       CBOX_INIT_PROCESS_HORIZON_ENABLED: "true"
     ports:
@@ -175,10 +211,8 @@ services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     environment:
-      # Laravel optimizations
-      LARAVEL_OPTIMIZE_CONFIG: "true"
-      LARAVEL_OPTIMIZE_ROUTE: "true"
-      LARAVEL_OPTIMIZE_VIEW: "true"
+      # Laravel optimizations (runs config:cache, route:cache, view:cache)
+      LARAVEL_OPTIMIZE_ENABLED: "true"
       LARAVEL_MIGRATE_ENABLED: "true"
 
       # Enable Horizon
@@ -218,10 +252,11 @@ Complete reference: [Environment Variables](./reference/environment-variables)
 
 | Category | Key Variables |
 |----------|---------------|
-| **Laravel Hooks** | `LARAVEL_OPTIMIZE_*`, `LARAVEL_MIGRATE_ENABLED` |
+| **Laravel Hooks** | `LARAVEL_OPTIMIZE_ENABLED`, `LARAVEL_MIGRATE_ENABLED` |
 | **Process Control** | `CBOX_INIT_PROCESS_*_ENABLED` |
 | **Scaling** | `CBOX_INIT_PROCESS_QUEUE_*_SCALE` |
-| **Observability** | `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_API_ENABLED` |
+| **Management API** | `CBOX_INIT_API_ENABLED`, `CBOX_INIT_API_PORT`, `CBOX_INIT_API_AUTH_TOKEN` |
+| **Observability** | `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_METRICS_PORT` |
 | **Logging** | `CBOX_INIT_LOG_LEVEL`, `CBOX_INIT_LOG_FORMAT` |
 
 ## Monitoring
@@ -495,17 +530,17 @@ services:
       - ./custom-cbox-init.yaml:/app/config/cbox-init.yaml:ro
 ```
 
-### Dynamic Scaling (Phase 5)
+### Dynamic Scaling via API
 
-Via Management API:
+Scale processes at runtime using the Management API (must be enabled first, see [Management API](#-management-api)):
 
 ```bash
 # Scale queue workers to 10 instances
 curl -X POST \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer my-secret-token" \
   -H "Content-Type: application/json" \
   -d '{"replicas": 10}' \
-  http://localhost:8080/api/v1/processes/queue-default/scale
+  http://localhost:9180/api/v1/processes/queue-default/scale
 ```
 
 ### Multiple Queue Types
@@ -534,7 +569,7 @@ If you're migrating from images using Supervisor or S6-Overlay, Cbox Init offers
 - ✅ Native Prometheus metrics
 - ✅ Health checks with automatic restart
 - ✅ Graceful shutdown handling (Horizon: horizon:terminate)
-- ✅ Dynamic scaling via API (Phase 5)
+- ✅ Dynamic scaling via Management API
 - ✅ Dependency management (DAG-based startup order)
 
 **No breaking changes** - Cbox Init is a drop-in replacement.
@@ -588,9 +623,9 @@ Cbox Init v1.0.0 includes:
 - ✅ Structured JSON logging with multiline support
 - ✅ Sensitive data redaction
 - ✅ Scheduled tasks with cron expressions
+- ✅ Management API for runtime process control (disabled by default)
 
 **Coming soon:**
-- Management API for dynamic scaling
 - Grafana dashboard templates
 
 ## Resources

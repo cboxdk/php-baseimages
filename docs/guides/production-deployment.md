@@ -49,7 +49,7 @@ services:
 
       # Laravel Production
       - LARAVEL_SCHEDULER=true
-      - LARAVEL_AUTO_OPTIMIZE=true
+      - LARAVEL_OPTIMIZE_ENABLED=true
       - APP_ENV=production
       - APP_DEBUG=false
 ```
