@@ -376,7 +376,22 @@ secrets:
 
 The Management API provides runtime control over container processes (list, scale, restart). It is **disabled by default** for security.
 
-The API is configured via `cbox-init.yaml`, not environment variables. To enable it, mount a custom config with `api_enabled: true`. See [Cbox Init Integration](../cbox-init-integration#-management-api) for full setup instructions and examples.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_INIT_API_ENABLED` | `false` | Enable the Management API |
+| `CBOX_INIT_API_PORT` | `9180` | Port the API listens on |
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    ports:
+      - "9180:9180"
+    environment:
+      CBOX_INIT_API_ENABLED: "true"
+```
+
+See [Cbox Init Integration](../cbox-init-integration#-management-api) for endpoints and examples.
 
 ---
 

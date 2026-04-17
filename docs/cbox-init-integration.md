@@ -97,35 +97,14 @@ Exported on port 9090 at `/metrics`:
 
 REST API for runtime process control (disabled by default for security).
 
-The API is configured via `cbox-init.yaml` — the Go binary reads config from YAML only, not from environment variables. To enable it, mount a custom config file:
-
-**1. Create a custom `cbox-init.yaml`:**
+**Enable via environment variable:**
 ```yaml
-# custom-cbox-init.yaml
-version: "1.0"
-
-global:
-  api_enabled: true
-  api_port: 9180
-
-  metrics_enabled: true
-  metrics_port: 9090
-  metrics_path: /metrics
-
-  shutdown_timeout: 30
-  log_level: info
-  log_format: json
-
-# Copy the processes section from the default config:
-# /etc/cbox-init/cbox-init.yaml inside the container
-processes:
-  php-fpm:
-    enabled: true
-    command: ["php-fpm", "-F", "-R"]
-    # ... (see default config for full process definitions)
+environment:
+  CBOX_INIT_API_ENABLED: "true"
+  CBOX_INIT_API_PORT: "9180"       # Default: 9180
 ```
 
-**2. Mount it and expose the port in docker-compose:**
+**Expose the port in docker-compose:**
 ```yaml
 services:
   app:
@@ -134,9 +113,7 @@ services:
       - "80:80"
       - "9180:9180"   # Management API
     environment:
-      CBOX_INIT_CONFIG: /etc/cbox-init/cbox-init.yaml
-    volumes:
-      - ./custom-cbox-init.yaml:/etc/cbox-init/cbox-init.yaml:ro
+      CBOX_INIT_API_ENABLED: "true"
 ```
 
 **Available endpoints (port 9180):**
@@ -269,7 +246,7 @@ Complete reference: [Environment Variables](./reference/environment-variables)
 | **Laravel Hooks** | `LARAVEL_OPTIMIZE_ENABLED`, `LARAVEL_MIGRATE_ENABLED` |
 | **Process Control** | `CBOX_INIT_PROCESS_*_ENABLED` |
 | **Scaling** | `CBOX_INIT_PROCESS_QUEUE_*_SCALE` |
-| **Management API** | Custom `cbox-init.yaml` (see [Management API](#-management-api)) |
+| **Management API** | `CBOX_INIT_API_ENABLED`, `CBOX_INIT_API_PORT` |
 | **Observability** | `CBOX_INIT_METRICS_ENABLED`, `CBOX_INIT_METRICS_PORT` |
 | **Logging** | `CBOX_INIT_LOG_LEVEL`, `CBOX_INIT_LOG_FORMAT` |
 

@@ -456,6 +456,39 @@ EOF
 }
 
 ###########################################
+# Cbox Init Environment Variable Overrides
+# The Go binary reads global config from YAML only (no env binding for
+# api_enabled, api_port, etc.). This function copies the template config
+# to /tmp and patches it with sed so that env vars like
+# CBOX_INIT_API_ENABLED actually take effect.
+###########################################
+apply_cbox_init_env_overrides() {
+    local src="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
+    local dst="/tmp/cbox-init.yaml"
+
+    [ ! -f "$src" ] && return 0
+
+    cp "$src" "$dst"
+
+    # Management API overrides
+    [ -n "$CBOX_INIT_API_ENABLED" ] && sed -i "s/^\(\s*\)api_enabled:.*/\1api_enabled: ${CBOX_INIT_API_ENABLED}/" "$dst"
+    [ -n "$CBOX_INIT_API_PORT" ] && sed -i "s/^\(\s*\)api_port:.*/\1api_port: ${CBOX_INIT_API_PORT}/" "$dst"
+
+    # Metrics overrides
+    [ -n "$CBOX_INIT_METRICS_ENABLED" ] && sed -i "s/^\(\s*\)metrics_enabled:.*/\1metrics_enabled: ${CBOX_INIT_METRICS_ENABLED}/" "$dst"
+    [ -n "$CBOX_INIT_METRICS_PORT" ] && sed -i "s/^\(\s*\)metrics_port:.*/\1metrics_port: ${CBOX_INIT_METRICS_PORT}/" "$dst"
+
+    # Logging overrides
+    [ -n "$CBOX_INIT_LOG_LEVEL" ] && sed -i "s/^\(\s*\)log_level:.*/\1log_level: ${CBOX_INIT_LOG_LEVEL}/" "$dst"
+    [ -n "$CBOX_INIT_LOG_FORMAT" ] && sed -i "s/^\(\s*\)log_format:.*/\1log_format: ${CBOX_INIT_LOG_FORMAT}/" "$dst"
+
+    # Shutdown timeout override
+    [ -n "$CBOX_INIT_SHUTDOWN_TIMEOUT" ] && sed -i "s/^\(\s*\)shutdown_timeout:.*/\1shutdown_timeout: ${CBOX_INIT_SHUTDOWN_TIMEOUT}/" "$dst"
+
+    export CBOX_INIT_CONFIG="$dst"
+}
+
+###########################################
 # Cbox Init Validation
 # NOTE: Similar to validate_cbox_init() from entrypoint-lib.sh but uses
 # exit 1 instead of return 1 on failure. During container startup, a missing
@@ -618,6 +651,7 @@ fi
 
 # Start Cbox Init
 CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
+apply_cbox_init_env_overrides
 log_info "Starting Cbox Init process manager"
 log_info "Config: $CBOX_INIT_CONFIG"
 
