@@ -106,13 +106,14 @@ on:
 # Architecture: Split into parallel builds + manifest merge
 #
 #   build-amd64 (self-hosted ax41, native)              ──┐
-#                                                          ├── merge (multi-arch manifest)
+#                                                          ├── merge (GitHub-hosted, manifest + sign)
 #   build-arm64 (GitHub-hosted ARM runner, native)      ──┘
 #
 # AMD64 builds natively on self-hosted Hetzner AX41. ARM64 builds natively on
 # GitHub-hosted ARM runners (ubuntu-24.04-arm). Both push by digest; the merge
-# job creates the multi-arch manifest with all tags. For PRs, builds run but
-# skip push; merge is skipped.
+# job runs on GitHub-hosted ubuntu-24.04 to avoid token expiry and resource
+# contention on the self-hosted runner. For PRs, builds run but skip push;
+# merge is skipped.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
@@ -486,7 +487,7 @@ jobs:
   # Merge: create multi-arch manifest from platform-specific digests
   # ─────────────────────────────────────────────────────────────────────────────
   merge:
-    runs-on: [self-hosted, linux, ax41]
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     if: github.event_name != 'pull_request'
     needs:
