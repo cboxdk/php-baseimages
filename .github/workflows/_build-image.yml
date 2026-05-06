@@ -275,6 +275,7 @@ jobs:
           file: ${{ steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
           platforms: linux/amd64
+          provenance: false
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-amd64
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-amd64
           build-args: ${{ steps.buildargs.outputs.args }}
@@ -457,6 +458,7 @@ jobs:
           file: ${{ steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
           platforms: linux/arm64
+          provenance: false
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-arm64
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-arm64
           build-args: ${{ steps.buildargs.outputs.args }}
