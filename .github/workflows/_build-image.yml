@@ -105,13 +105,14 @@ on:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Architecture: Split into parallel builds + manifest merge
 #
-#   build-amd64 (self-hosted ax41, native)          ──┐
-#                                                      ├── merge (multi-arch manifest)
-#   build-arm64 (self-hosted ax41, QEMU emulation)  ──┘
+#   build-amd64 (self-hosted ax41, native)              ──┐
+#                                                          ├── merge (multi-arch manifest)
+#   build-arm64 (GitHub-hosted ARM runner, native)      ──┘
 #
-# AMD64 builds natively. ARM64 builds via QEMU emulation (self-hosted runners
-# are x86_64 only). Both push by digest; the merge job creates the multi-arch
-# manifest with all tags. For PRs, builds run but skip push; merge is skipped.
+# AMD64 builds natively on self-hosted Hetzner AX41. ARM64 builds natively on
+# GitHub-hosted ARM runners (ubuntu-24.04-arm). Both push by digest; the merge
+# job creates the multi-arch manifest with all tags. For PRs, builds run but
+# skip push; merge is skipped.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
@@ -298,11 +299,11 @@ jobs:
           retention-days: 1
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # ARM64 build (QEMU emulation on self-hosted Hetzner AX41)
+  # ARM64 build (native on GitHub-hosted ARM runner)
   # ─────────────────────────────────────────────────────────────────────────────
   build-arm64:
     if: contains(inputs.platforms, 'linux/arm64')
-    runs-on: [self-hosted, linux, ax41]
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
@@ -381,11 +382,6 @@ jobs:
           PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
           echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
           echo "PHP patch version: $PHP_FULL"
-
-      - name: Set up QEMU (for linux/arm64 emulation)
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
