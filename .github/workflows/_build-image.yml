@@ -124,6 +124,9 @@ jobs:
     if: contains(inputs.platforms, 'linux/amd64')
     runs-on: [self-hosted, linux, ax41]
     timeout-minutes: ${{ inputs.timeout }}
+    concurrency:
+      group: amd64-build-${{ inputs.php-version }}
+      cancel-in-progress: false
 
     permissions:
       contents: read
