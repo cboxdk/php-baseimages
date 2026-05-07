@@ -14,12 +14,89 @@ These are the most commonly used variables. Just set what you need!
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `PUID` | *(container default)* | User ID for application files — fixes permission issues |
+| `PGID` | *(container default)* | Group ID for application files |
 | `LARAVEL_SCHEDULER` | `false` | Enable Laravel scheduler |
 | `LARAVEL_HORIZON` | `false` | Enable Laravel Horizon |
 | `LARAVEL_REVERB` | `false` | Enable Laravel Reverb WebSockets |
 | `LARAVEL_QUEUE` | `false` | Enable queue workers |
 | `PHP_MEMORY_LIMIT` | `256M` | PHP memory limit |
 | `PHP_MAX_EXECUTION_TIME` | `30` | Max script execution time |
+
+---
+
+## User/Group Mapping (PUID/PGID)
+
+**The most common Docker problem:** files created inside the container are owned by `www-data` (UID 33), but your host user has a different UID (typically 1000). This causes permission denied errors on bind mounts, and files created in the container can't be edited on the host.
+
+**PUID/PGID solves this** by remapping the container's `www-data` user to match your host user.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PUID` | *(container default)* | Set the UID that `www-data` runs as |
+| `PGID` | *(container default)* | Set the GID that `www-data` runs as |
+| `APP_USER` | `www-data` | Application user name |
+| `APP_GROUP` | `www-data` | Application group name |
+
+### Find your host UID/GID
+
+```bash
+id -u    # Your UID (typically 1000)
+id -g    # Your GID (typically 1000)
+```
+
+### Basic usage
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    volumes:
+      - ./:/var/www/html
+    environment:
+      - PUID=1000
+      - PGID=1000
+```
+
+### Common scenarios
+
+**Linux with bind mounts** — the most common case. Without PUID/PGID, Laravel's `storage/` and `bootstrap/cache/` will be owned by UID 33, and your editor/IDE can't write to them:
+
+```yaml
+environment:
+  - PUID=1000
+  - PGID=1000
+```
+
+**NFS volumes** — NFS preserves the original UID/GID. Match them to avoid permission issues:
+
+```yaml
+environment:
+  - PUID=1001
+  - PGID=1001
+```
+
+**CI/CD pipelines** — GitHub Actions and GitLab CI run as UID 1001 or similar:
+
+```yaml
+environment:
+  - PUID=1001
+  - PGID=1001
+```
+
+### What happens when you set PUID/PGID
+
+1. The container's `www-data` user is remapped to the specified UID/GID
+2. Ownership of `/var/www/html` is updated to match
+3. Framework directories (`storage/`, `bootstrap/cache/`, `var/`) are chowned automatically
+4. PHP-FPM runs worker processes as the remapped user
+5. Files created by PHP have the correct ownership on your host
+
+### Important notes
+
+- **Requires root mode** — PUID/PGID only works in root images (the default). Rootless images skip PUID/PGID mapping since the container already runs as `www-data`.
+- **Docker Desktop (macOS/Windows)** — Docker Desktop handles permission translation automatically via its VM layer, so PUID/PGID is usually not needed. It won't break anything if set, though.
+- **Only set what you need** — if you only need to change the UID, just set `PUID`. If you only need the GID, just set `PGID`.
 
 ---
 
@@ -353,29 +430,6 @@ See [Reverse Proxy & mTLS Guide](../advanced/reverse-proxy-mtls#mtls-mutual-tls-
 
 ---
 
-## User/Group Mapping (PUID/PGID)
-
-Match container user/group IDs to your host filesystem for seamless permissions.
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PUID` | *(container default)* | User ID for application files |
-| `PGID` | *(container default)* | Group ID for application files |
-| `APP_USER` | `www-data` | Application user name |
-| `APP_GROUP` | `www-data` | Application group name |
-
-**Match host user permissions:**
-```yaml
-environment:
-  - PUID=1000
-  - PGID=1000
-```
-
-Useful for:
-- NFS volumes with user mapping
-- Host filesystem permissions on bind mounts
-- Rootless container environments
-
 ---
 
 ## Laravel .env Decryption
@@ -476,6 +530,8 @@ environment:
 
 ```yaml
 environment:
+  - PUID=1000
+  - PGID=1000
   - PHP_DISPLAY_ERRORS=On
   - PHP_OPCACHE_VALIDATE_TIMESTAMPS=1
 ```
@@ -484,6 +540,8 @@ environment:
 
 ```yaml
 environment:
+  - PUID=1000
+  - PGID=1000
   - LARAVEL_SCHEDULER=true
   - PHP_MEMORY_LIMIT=512M
 ```

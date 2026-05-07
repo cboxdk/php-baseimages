@@ -41,6 +41,9 @@ services:
       - "8000:80"
     volumes:
       - ./:/var/www/html
+    environment:
+      - PUID=1000  # Match your host user (run: id -u)
+      - PGID=1000  # Match your host group (run: id -g)
 ```
 
 Start your application:
@@ -63,22 +66,47 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 |------------|------------|-----------------|------|
 | `php:8.x-cli-bookworm` | Debian 12 (Bookworm) | apt | glibc |
 
-### Image Matrix
+### Image Types
 
-| Image Type | Available Tags | Use Case |
-|------------|----------------|----------|
-| **php-fpm-nginx** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | Multi-service container |
-| **php-fpm** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | Single-process PHP-FPM |
-| **php-cli** | `8.2-bookworm` `8.3-bookworm` `8.4-bookworm` `8.5-bookworm` | CLI workers, cron jobs |
-| **nginx** | `bookworm` | Standalone Nginx |
+| Image Type | Use Case |
+|------------|----------|
+| **php-fpm-nginx** | Multi-service container (PHP-FPM + Nginx + Cbox Init) |
+| **php-fpm** | Single-process PHP-FPM |
+| **php-cli** | CLI workers, cron jobs |
+| **nginx** | Standalone Nginx (`bookworm` tag only) |
 
-**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{tag}`
+**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{php}-bookworm[-tier][-rootless]`
+
+**PHP versions:** `8.2`, `8.3`, `8.4`, `8.5`
+
+### Available Tags
+
+Each PHP image type is available in all tier and rootless combinations:
+
+| Tier | Tag | Rootless Tag |
+|------|-----|--------------|
+| **Standard** (default) | `8.4-bookworm` | `8.4-bookworm-rootless` |
+| **Slim** | `8.4-bookworm-slim` | `8.4-bookworm-slim-rootless` |
+| **Chromium** | `8.4-bookworm-chromium` | `8.4-bookworm-chromium-rootless` |
+| **Dev** | `8.4-bookworm-dev` | `8.4-bookworm-dev-rootless` |
 
 ```bash
-# Standard images
+# Standard tier
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
-ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm
+
+# Slim tier
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+
+# Chromium tier
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+
+# Dev tier
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev
+
+# Rootless variants
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
+ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless
 ```
 
 ### Image Tiers: Slim / Standard / Chromium / Dev
@@ -252,6 +280,10 @@ Deep health validation:
 
 ```yaml
 environment:
+  # Fix file permission issues (match your host user)
+  - PUID=1000
+  - PGID=1000
+
   # PHP Settings
   - PHP_MEMORY_LIMIT=512M
   - PHP_MAX_EXECUTION_TIME=120
@@ -268,6 +300,18 @@ environment:
   - NGINX_GZIP=off               # Disable gzip compression
   - NGINX_OPEN_FILE_CACHE=off    # Disable file cache
 ```
+
+### PUID/PGID — Fix File Permission Issues
+
+The most common Docker problem: files created in the container can't be edited on your host. Set `PUID`/`PGID` to match your host user (`id -u` / `id -g`):
+
+```yaml
+environment:
+  - PUID=1000
+  - PGID=1000
+```
+
+This remaps the container's `www-data` user and automatically fixes ownership of your application files, `storage/`, `bootstrap/cache/`, and other framework directories.
 
 ### Configuration Categories
 
@@ -436,6 +480,8 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
+      - PUID=1000
+      - PGID=1000
       - LARAVEL_SCHEDULER=true
       - LARAVEL_AUTO_OPTIMIZE=true
     depends_on:
