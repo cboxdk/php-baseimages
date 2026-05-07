@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   check-updates:
-    runs-on: [self-hosted, linux, ax41]
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4

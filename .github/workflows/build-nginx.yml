@@ -20,7 +20,7 @@ env:
 
 jobs:
   build-matrix:
-    runs-on: [self-hosted, linux, ax41]
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
