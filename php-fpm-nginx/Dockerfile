@@ -45,9 +45,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories
+# Create nginx directories + forward access/error logs to docker log
+# collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Also remove the default site that conflicts with our configuration
@@ -105,10 +108,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories with www-data ownership
+# Create nginx directories with www-data ownership + forward access/error
+# logs to docker log collector (stdout/stderr) so kubectl logs / docker
+# logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Remove default site that conflicts with our configuration
@@ -169,9 +176,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories
+# Create nginx directories + forward access/error logs to docker log
+# collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Also remove the default site that conflicts with our configuration
@@ -229,10 +239,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories with www-data ownership
+# Create nginx directories with www-data ownership + forward access/error
+# logs to docker log collector (stdout/stderr) so kubectl logs / docker
+# logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Remove default site that conflicts with our configuration
@@ -293,9 +307,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories
+# Create nginx directories + forward access/error logs to docker log
+# collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Also remove the default site that conflicts with our configuration
@@ -353,10 +370,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories with www-data ownership
+# Create nginx directories with www-data ownership + forward access/error
+# logs to docker log collector (stdout/stderr) so kubectl logs / docker
+# logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Remove default site that conflicts with our configuration
@@ -417,9 +438,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories
+# Create nginx directories + forward access/error logs to docker log
+# collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Also remove the default site that conflicts with our configuration
@@ -477,10 +501,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Create nginx directories with www-data ownership
+# Create nginx directories with www-data ownership + forward access/error
+# logs to docker log collector (stdout/stderr) so kubectl logs / docker
+# logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx
+    chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx && \
+    ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Debian nginx uses www-data by default, but let's ensure it
 # Remove default site that conflicts with our configuration

@@ -456,7 +456,7 @@ jobs:
   # =====================================================================
   notify-security-updates:
     needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-chromium-matrix, build-chromium-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
-    runs-on: [self-hosted, linux, ax41]
+    runs-on: ubuntu-24.04
     if: github.event_name == 'schedule'
 
     steps:

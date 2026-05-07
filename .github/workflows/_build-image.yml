@@ -105,28 +105,24 @@ on:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Architecture: Split into parallel builds + manifest merge
 #
-#   build-amd64 (self-hosted ax41, native)              ──┐
+#   build-amd64 (GitHub-hosted ubuntu-24.04, native)    ──┐
 #                                                          ├── merge (GitHub-hosted, manifest + sign)
 #   build-arm64 (GitHub-hosted ARM runner, native)      ──┘
 #
-# AMD64 builds natively on self-hosted Hetzner AX41. ARM64 builds natively on
+# AMD64 builds natively on GitHub-hosted ubuntu-24.04. ARM64 builds natively on
 # GitHub-hosted ARM runners (ubuntu-24.04-arm). Both push by digest; the merge
-# job runs on GitHub-hosted ubuntu-24.04 to avoid token expiry and resource
-# contention on the self-hosted runner. For PRs, builds run but skip push;
-# merge is skipped.
+# job creates a multi-arch manifest, signs, and scans. For PRs, builds run but
+# skip push; merge is skipped.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
-  # AMD64 build (native on self-hosted Hetzner AX41)
+  # AMD64 build (native on GitHub-hosted runner)
   # ─────────────────────────────────────────────────────────────────────────────
   build-amd64:
     if: contains(inputs.platforms, 'linux/amd64')
-    runs-on: [self-hosted, linux, ax41]
+    runs-on: ubuntu-24.04
     timeout-minutes: ${{ inputs.timeout }}
-    concurrency:
-      group: amd64-build-${{ inputs.php-version }}
-      cancel-in-progress: false
 
     permissions:
       contents: read
