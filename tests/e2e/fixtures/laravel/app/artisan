@@ -2,7 +2,7 @@
 <?php
 /**
  * Minimal artisan stub for framework detection testing
- * PHPeek entrypoint detects Laravel by checking for this file
+ * cbox-init entrypoint detects Laravel by checking for this file
  */
 
 $command = $argv[1] ?? 'help';

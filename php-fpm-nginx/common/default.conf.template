@@ -1,5 +1,5 @@
 # ╔═══════════════════════════════════════════════════════════════════════════╗
-# ║  PHPeek Base Image - Nginx Configuration Template                          ║
+# ║  Cbox Base Image - Nginx Configuration Template                          ║
 # ║  Production-ready with security hardening                                  ║
 # ║  Variables substituted by envsubst at container startup                    ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝

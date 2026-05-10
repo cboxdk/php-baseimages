@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  PHPeek Base Image - ImageMagick Security Policy
+  Cbox Base Image - ImageMagick Security Policy
   Prevents common ImageMagick vulnerabilities:
   - SVG XXE attacks
   - PDF ghostscript vulnerabilities

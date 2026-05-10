@@ -1,6 +1,11 @@
 MIT License
 
-Copyright (c) 2024 PHPeek
+Copyright (c) 2024-2026 Cbox
+
+This project began as a fork of gophpeek/phpeek-pm and retains the
+upstream MIT license. Significant Cbox-specific changes have been
+contributed since the fork; the cbox-init binary is still pulled
+from the upstream phpeek-pm releases.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

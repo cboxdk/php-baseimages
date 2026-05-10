@@ -104,7 +104,7 @@ $composerVersion = trim(shell_exec("composer --version 2>&1") ?? "");
 test(strpos($composerVersion, "Composer") !== false, substr($composerVersion, 0, 50), "Composer NOT working");
 
 // === 8. Cbox Init ===
-echo "\n═══ 8. PHPEEK PM ═══\n";
+echo "\n═══ 8. CBOX INIT ═══\n";
 $pmVersion = trim(shell_exec("/usr/local/bin/cbox-pm --version 2>&1") ?? "");
 test(strpos($pmVersion, "cbox-pm") !== false || preg_match("/\d+\.\d+/", $pmVersion), "Cbox Init: $pmVersion", "Cbox Init NOT working: $pmVersion");
 
