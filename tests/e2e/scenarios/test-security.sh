@@ -137,6 +137,39 @@ else
     log_fail "composer.lock is accessible! (HTTP $CODE)"
 fi
 
+# RFC 8615 — /.well-known/ MUST reach the app, NOT be denied at nginx.
+# The test app may not have a route registered (→ 404 from PHP), but
+# anything other than 403 means nginx forwarded it, which is what
+# OIDC discovery, ACME, security.txt, etc. all rely on. A 403 here
+# means the catch-all dotfile block re-broke; a 404 from nginx (the
+# default error page, not Laravel's) also means it didn't reach PHP
+# — distinguish by checking the response body.
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/.well-known/openid-configuration" 2>/dev/null)
+if [ "$CODE" = "403" ]; then
+    log_fail "/.well-known/openid-configuration is denied at nginx (HTTP 403) — RFC 8615 violation, OIDC discovery breaks"
+else
+    log_success "/.well-known/openid-configuration is forwarded to app (HTTP $CODE)"
+fi
+
+# /.well-known/ paths MUST forward to PHP — confirm via response body.
+# Laravel's 404 page is HTML with Tailwind/Inertia content; nginx's
+# raw 404 is the bare "<center>nginx</center>" page. If we see the
+# nginx default-error body, the path was NOT forwarded.
+BODY=$(curl -s "http://localhost:8101/.well-known/openid-configuration" 2>/dev/null)
+if echo "$BODY" | grep -q "<center>nginx</center>"; then
+    log_fail "/.well-known/* hit nginx's default error page — the catch-all dotfile block is winning"
+else
+    log_success "/.well-known/* requests reach the app (no nginx default-error body)"
+fi
+
+# Confirm /.env STILL blocked — regression guard for the well-known fix.
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/.env" 2>/dev/null)
+if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
+    log_success ".env stays blocked after well-known allow (HTTP $CODE)"
+else
+    log_fail ".env became accessible — well-known allow over-broadened the rule! (HTTP $CODE)"
+fi
+
 # ═══════════════════════════════════════════════════════════════════════════
 # TEST 4: Directory Blocking
 # ═══════════════════════════════════════════════════════════════════════════
