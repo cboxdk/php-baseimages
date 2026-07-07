@@ -29,6 +29,17 @@ global:
   restart_backoff_max: 60s
   max_restart_attempts: 5
 
+  # Readiness: cbox-init is the supervisor, so it is the source of truth for
+  # "are we ready". It writes /tmp/cbox-ready once ALL tracked processes are
+  # healthy (nginx + php-fpm + any enabled workers) and removes it if any goes
+  # unhealthy. Kubernetes should probe THIS, not an nginx path:
+  #   readinessProbe: { exec: { command: ["test", "-f", "/tmp/cbox-ready"] } }
+  # This is why nginx no longer serves an app-facing /health — the app owns it.
+  readiness:
+    enabled: true
+    path: /tmp/cbox-ready
+    mode: all_healthy
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Process Definitions (DAG-based dependencies)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -73,8 +84,9 @@ processes:
     stdout: true
     stderr: true
     health_check:
+      # Internal, localhost-only infra path (NOT the app's /health).
       type: http
-      url: "http://127.0.0.1:80/health"
+      url: "http://127.0.0.1:80/healthz"
       period: 5
       timeout: 3
       failure_threshold: 3

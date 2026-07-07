@@ -156,10 +156,16 @@ ${NGINX_SECURITY_HEADERS}
     # }
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Health check — public so Kubernetes httpGet probes (which connect from the
-    # node/pod network, not 127.0.0.1) can reach it. Returns only a static string.
+    # Internal nginx liveness — for cbox-init's own nginx process check ONLY
+    # (localhost). The base image must NOT shadow app-facing routes: /health and
+    # /up belong to the application and fall through to it. Kubernetes readiness
+    # should probe cbox-init's supervisor signal instead:
+    #   readinessProbe: { exec: { command: ["test","-f","/tmp/cbox-ready"] } }
     # ─────────────────────────────────────────────────────────────────────────
-    location /health {
+    location = /healthz {
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;

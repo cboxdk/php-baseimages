@@ -80,16 +80,16 @@ fi
 # Nginx Check (HTTP health endpoint)
 # ─────────────────────────────────────────────────────────────────────────────
 if command -v check_http >/dev/null 2>&1; then
-    if check_http "http://127.0.0.1:${NGINX_PORT}/health" 3; then
+    if check_http "http://127.0.0.1:${NGINX_PORT}/healthz" 3; then
         check_passed "Nginx healthy on :${NGINX_PORT}"
     elif nc -z 127.0.0.1 ${NGINX_PORT} 2>/dev/null; then
         check_passed "Nginx listening on :${NGINX_PORT}"
     else
         _check_failed "Nginx not responding on :${NGINX_PORT}"
     fi
-elif wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${NGINX_PORT}/health" 2>/dev/null; then
+elif wget -q -O /dev/null --timeout=3 "http://127.0.0.1:${NGINX_PORT}/healthz" 2>/dev/null; then
     check_passed "Nginx healthy on :${NGINX_PORT}"
-elif curl -sf --max-time 3 "http://127.0.0.1:${NGINX_PORT}/health" >/dev/null 2>&1; then
+elif curl -sf --max-time 3 "http://127.0.0.1:${NGINX_PORT}/healthz" >/dev/null 2>&1; then
     check_passed "Nginx healthy on :${NGINX_PORT}"
 elif nc -z 127.0.0.1 ${NGINX_PORT} 2>/dev/null; then
     check_passed "Nginx listening on :${NGINX_PORT}"

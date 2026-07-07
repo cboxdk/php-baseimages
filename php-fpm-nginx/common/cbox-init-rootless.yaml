@@ -29,6 +29,14 @@ global:
   restart_backoff_max: 60s
   max_restart_attempts: 5
 
+  # Supervisor-owned readiness: /tmp/cbox-ready exists only when all tracked
+  # processes are healthy. Kubernetes should probe this (exec test -f), not an
+  # nginx/app path — /health and /up belong to the application.
+  readiness:
+    enabled: true
+    path: /tmp/cbox-ready
+    mode: all_healthy
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Process Definitions (DAG-based dependencies)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -75,7 +83,7 @@ processes:
     stderr: true
     health_check:
       type: http
-      url: "http://127.0.0.1:8080/health"
+      url: "http://127.0.0.1:8080/healthz"
       period: 5
       timeout: 3
       failure_threshold: 3

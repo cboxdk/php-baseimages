@@ -513,9 +513,12 @@ ${NGINX_SECURITY_HEADERS}
         fastcgi_param SSL_CLIENT_FINGERPRINT \$ssl_client_fingerprint;
     }
 
-    # Public so Kubernetes httpGet probes (which connect from the node/pod
-    # network, not 127.0.0.1) can reach it. Returns only a static string.
-    location /health {
+    # Internal nginx liveness (localhost only) for cbox-init's process check.
+    # The app owns /health and /up; k8s should probe cbox-init's /tmp/cbox-ready.
+    location = /healthz {
+        allow 127.0.0.1;
+        allow ::1;
+        deny all;
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;
