@@ -120,8 +120,11 @@ jobs:
   # AMD64 build (native on GitHub-hosted runner)
   # ─────────────────────────────────────────────────────────────────────────────
   build-amd64:
-    if: contains(inputs.platforms, 'linux/amd64')
-    runs-on: ubuntu-24.04
+    # Native amd64 on the self-hosted runner (no QEMU emulation). Guarded so it
+    # NEVER runs for a fork pull_request or a non-canonical repo — a self-hosted
+    # runner has host access, so untrusted PR code must not reach it.
+    if: contains(inputs.platforms, 'linux/amd64') && github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
+    runs-on: [self-hosted, linux, x64, buildx]
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
@@ -303,8 +306,10 @@ jobs:
   # ARM64 build (native on GitHub-hosted ARM runner)
   # ─────────────────────────────────────────────────────────────────────────────
   build-arm64:
-    if: contains(inputs.platforms, 'linux/arm64')
-    runs-on: ubuntu-24.04-arm
+    # arm64 via QEMU emulation on the self-hosted amd64 runner (no GitHub-hosted
+    # minutes). Same fork-PR / canonical-repo guard as amd64.
+    if: contains(inputs.platforms, 'linux/arm64') && github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
+    runs-on: [self-hosted, linux, x64, buildx]
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
@@ -486,7 +491,8 @@ jobs:
   # Merge: create multi-arch manifest from platform-specific digests
   # ─────────────────────────────────────────────────────────────────────────────
   merge:
-    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
+    runs-on: [self-hosted, linux, x64, buildx]
     timeout-minutes: 10
     if: github.event_name != 'pull_request'
     needs:
