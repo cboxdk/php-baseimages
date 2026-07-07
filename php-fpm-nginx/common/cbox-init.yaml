@@ -39,6 +39,7 @@ global:
     enabled: true
     path: /tmp/cbox-ready
     mode: all_healthy
+    http_port: 9091
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Process Definitions (DAG-based dependencies)
