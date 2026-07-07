@@ -38,7 +38,7 @@ map $forwarded_proto $forwarded_https {
 
 # HTTP Server Block
 server {
-    listen ${NGINX_HTTP_PORT};
+    listen ${NGINX_HTTP_PORT} ${NGINX_LISTEN_EXTRA};
     server_name _;
     root ${NGINX_WEBROOT};
     index ${NGINX_INDEX};

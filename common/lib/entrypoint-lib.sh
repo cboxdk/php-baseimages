@@ -94,7 +94,10 @@ detect_php_version() {
 detect_framework() {
     local workdir="${1:-/var/www/html}"
 
-    if [ -f "$workdir/artisan" ]; then
+    # Laravel: require an `artisan` file AND corroborating evidence (composer
+    # dependency or the framework bootstrap) so a stray file named `artisan`
+    # doesn't trigger migrate/optimize codepaths. (Statamic ships both.)
+    if [ -f "$workdir/artisan" ] && { grep -q 'laravel/framework' "$workdir/composer.json" 2>/dev/null || [ -f "$workdir/bootstrap/app.php" ]; }; then
         echo "laravel"
     elif [ -f "$workdir/bin/console" ] && [ -f "$workdir/symfony.lock" ]; then
         echo "symfony"

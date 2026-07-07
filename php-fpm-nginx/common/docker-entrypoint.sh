@@ -168,18 +168,21 @@ setup_user_permissions_extended() {
         fi
     fi
 
-    # Update ownership of common directories
+    # Update ownership only when it isn't already correct. `chown -R` over a
+    # large mounted volume (Statamic content, uploaded assets) on every start
+    # is O(files) and slows rollouts / trips startupProbes — so skip when the
+    # workdir is already owned by the target user.
     local workdir="${WORKDIR:-/var/www/html}"
     if [ -d "$workdir" ]; then
-        log_info "Updating ownership of $workdir"
-        chown -R "$app_user:$app_group" "$workdir" 2>/dev/null || true
-    fi
-
-    for dir in storage bootstrap/cache var/cache var/log; do
-        if [ -d "$workdir/$dir" ]; then
-            chown -R "$app_user:$app_group" "$workdir/$dir" 2>/dev/null || true
+        local numeric_uid
+        numeric_uid=$(id -u "$app_user" 2>/dev/null || echo "")
+        if [ -n "$numeric_uid" ] && [ "$(stat -c %u "$workdir" 2>/dev/null)" = "$numeric_uid" ]; then
+            log_info "Ownership of $workdir already correct - skipping recursive chown"
+        else
+            log_info "Updating ownership of $workdir"
+            chown -R "$app_user:$app_group" "$workdir" 2>/dev/null || true
         fi
-    done
+    fi
 
     log_info "User permissions configured successfully"
 }
@@ -256,7 +259,7 @@ apply_php_env_overrides() {
     [ -n "$PHP_OPCACHE_VALIDATE_TIMESTAMPS" ] && content="${content}\nopcache.validate_timestamps = $PHP_OPCACHE_VALIDATE_TIMESTAMPS"
     [ -n "$PHP_OPCACHE_JIT" ] && content="${content}\nopcache.jit = $PHP_OPCACHE_JIT"
     [ -n "$PHP_OPCACHE_JIT_BUFFER_SIZE" ] && content="${content}\nopcache.jit_buffer_size = $PHP_OPCACHE_JIT_BUFFER_SIZE"
-    printf '%b\n' "$content" > "$ini"
+    printf '%b\n' "$content" > "$ini" 2>/dev/null || log_warn "Could not write $ini (read-only rootfs? mount an emptyDir at /usr/local/etc/php/conf.d)"
 
     # PHP-FPM pool overrides
     content="; Auto-generated from environment variables\n[www]"
@@ -274,7 +277,7 @@ apply_php_env_overrides() {
     [ -n "$PHP_UPLOAD_MAX_FILESIZE" ] && content="${content}\nphp_admin_value[upload_max_filesize] = $PHP_UPLOAD_MAX_FILESIZE"
     [ -n "$PHP_POST_MAX_SIZE" ] && content="${content}\nphp_admin_value[post_max_size] = $PHP_POST_MAX_SIZE"
     [ -n "$PHP_OPEN_BASEDIR" ] && content="${content}\nphp_admin_value[open_basedir] = $PHP_OPEN_BASEDIR"
-    printf '%b\n' "$content" > "$fpm"
+    printf '%b\n' "$content" > "$fpm" 2>/dev/null || log_warn "Could not write $fpm (read-only rootfs? mount an emptyDir at /usr/local/etc/php-fpm.d)"
 }
 
 generate_runtime_configs() {
@@ -345,6 +348,16 @@ generate_runtime_configs() {
         : ${NGINX_TRUSTED_PROXIES:=}
         : ${NGINX_REAL_IP_HEADER:=X-Forwarded-For}
         : ${NGINX_REAL_IP_RECURSIVE:=on}
+        : ${NGINX_PROXY_PROTOCOL:=off}
+        # When fronted by an L4 proxy that speaks PROXY protocol (HAProxy TCP mode,
+        # AWS NLB, Fastly): accept it on the listen sockets and take the real client
+        # IP from the PROXY header. Otherwise nginx would 400 on the PROXY preamble.
+        if [ "${NGINX_PROXY_PROTOCOL}" = "on" ] || [ "${NGINX_PROXY_PROTOCOL}" = "true" ]; then
+            NGINX_LISTEN_EXTRA="proxy_protocol"
+            NGINX_REAL_IP_HEADER="proxy_protocol"
+        else
+            NGINX_LISTEN_EXTRA=""
+        fi
         : ${MTLS_ENABLED:=false}
         : ${MTLS_CLIENT_CA_FILE:=/etc/ssl/certs/client-ca.crt}
         : ${MTLS_VERIFY_CLIENT:=optional}
@@ -361,6 +374,7 @@ generate_runtime_configs() {
         export NGINX_GZIP NGINX_GZIP_VARY NGINX_GZIP_PROXIED NGINX_GZIP_COMP_LEVEL NGINX_GZIP_MIN_LENGTH NGINX_GZIP_TYPES
         export NGINX_OPEN_FILE_CACHE NGINX_OPEN_FILE_CACHE_VALID NGINX_OPEN_FILE_CACHE_MIN_USES NGINX_OPEN_FILE_CACHE_ERRORS
         export NGINX_TRUSTED_PROXIES NGINX_REAL_IP_HEADER NGINX_REAL_IP_RECURSIVE
+        export NGINX_PROXY_PROTOCOL NGINX_LISTEN_EXTRA
         export MTLS_ENABLED MTLS_CLIENT_CA_FILE MTLS_VERIFY_CLIENT MTLS_VERIFY_DEPTH
 
         # Trusted proxy configuration
@@ -408,7 +422,7 @@ generate_runtime_configs() {
         NGINX_SECURITY_HEADERS=$(printf '%b' "$NGINX_SECURITY_HEADERS")
         export NGINX_SECURITY_HEADERS
 
-        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS}' \
+        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
             log_error "Failed to generate Nginx config"
@@ -455,7 +469,7 @@ generate_ssl_config() {
     cat >> /etc/nginx/conf.d/default.conf <<EOF
 
 server {
-    listen ${NGINX_HTTPS_PORT:-443} ssl;
+    listen ${NGINX_HTTPS_PORT:-443} ssl ${NGINX_LISTEN_EXTRA};
     http2 on;
     server_name _;
     root ${NGINX_WEBROOT:-/var/www/html/public};
@@ -544,24 +558,31 @@ apply_cbox_init_env_overrides() {
 
     cp "$src" "$dst"
 
+    # Escape a value for safe use on the RHS of a sed s### replacement.
+    _sed_escape() { printf '%s' "$1" | sed 's/[&/\]/\\&/g'; }
+
     # Management API overrides
-    [ -n "$CBOX_INIT_API_ENABLED" ] && sed -i "s/^\(\s*\)api_enabled:.*/\1api_enabled: ${CBOX_INIT_API_ENABLED}/" "$dst"
-    [ -n "$CBOX_INIT_API_PORT" ] && sed -i "s/^\(\s*\)api_port:.*/\1api_port: ${CBOX_INIT_API_PORT}/" "$dst"
-    if [ -n "$CBOX_INIT_API_AUTH" ]; then
-        escaped_auth=$(printf '%s\n' "$CBOX_INIT_API_AUTH" | sed 's/[&/\]/\\&/g')
-        sed -i "s/^\(\s*\)api_auth:.*/\1api_auth: \"${escaped_auth}\"/" "$dst"
-    fi
+    [ -n "$CBOX_INIT_API_ENABLED" ] && sed -i "s/^\(\s*\)api_enabled:.*/\1api_enabled: $(_sed_escape "${CBOX_INIT_API_ENABLED}")/" "$dst"
+    [ -n "$CBOX_INIT_API_PORT" ] && sed -i "s/^\(\s*\)api_port:.*/\1api_port: $(_sed_escape "${CBOX_INIT_API_PORT}")/" "$dst"
+    [ -n "$CBOX_INIT_API_AUTH" ] && sed -i "s/^\(\s*\)api_auth:.*/\1api_auth: \"$(_sed_escape "${CBOX_INIT_API_AUTH}")\"/" "$dst"
 
     # Metrics overrides
-    [ -n "$CBOX_INIT_METRICS_ENABLED" ] && sed -i "s/^\(\s*\)metrics_enabled:.*/\1metrics_enabled: ${CBOX_INIT_METRICS_ENABLED}/" "$dst"
-    [ -n "$CBOX_INIT_METRICS_PORT" ] && sed -i "s/^\(\s*\)metrics_port:.*/\1metrics_port: ${CBOX_INIT_METRICS_PORT}/" "$dst"
+    [ -n "$CBOX_INIT_METRICS_ENABLED" ] && sed -i "s/^\(\s*\)metrics_enabled:.*/\1metrics_enabled: $(_sed_escape "${CBOX_INIT_METRICS_ENABLED}")/" "$dst"
+    [ -n "$CBOX_INIT_METRICS_PORT" ] && sed -i "s/^\(\s*\)metrics_port:.*/\1metrics_port: $(_sed_escape "${CBOX_INIT_METRICS_PORT}")/" "$dst"
 
     # Logging overrides
-    [ -n "$CBOX_INIT_LOG_LEVEL" ] && sed -i "s/^\(\s*\)log_level:.*/\1log_level: ${CBOX_INIT_LOG_LEVEL}/" "$dst"
-    [ -n "$CBOX_INIT_LOG_FORMAT" ] && sed -i "s/^\(\s*\)log_format:.*/\1log_format: ${CBOX_INIT_LOG_FORMAT}/" "$dst"
+    [ -n "$CBOX_INIT_LOG_LEVEL" ] && sed -i "s/^\(\s*\)log_level:.*/\1log_level: $(_sed_escape "${CBOX_INIT_LOG_LEVEL}")/" "$dst"
+    [ -n "$CBOX_INIT_LOG_FORMAT" ] && sed -i "s/^\(\s*\)log_format:.*/\1log_format: $(_sed_escape "${CBOX_INIT_LOG_FORMAT}")/" "$dst"
 
     # Shutdown timeout override
-    [ -n "$CBOX_INIT_SHUTDOWN_TIMEOUT" ] && sed -i "s/^\(\s*\)shutdown_timeout:.*/\1shutdown_timeout: ${CBOX_INIT_SHUTDOWN_TIMEOUT}/" "$dst"
+    [ -n "$CBOX_INIT_SHUTDOWN_TIMEOUT" ] && sed -i "s/^\(\s*\)shutdown_timeout:.*/\1shutdown_timeout: $(_sed_escape "${CBOX_INIT_SHUTDOWN_TIMEOUT}")/" "$dst"
+
+    # Keep the nginx health-check port in sync with NGINX_HTTP_PORT, otherwise
+    # cbox-init probes the hard-coded :80 and restart-loops nginx when the port
+    # is overridden.
+    if [ -n "${NGINX_HTTP_PORT}" ] && [ "${NGINX_HTTP_PORT}" != "80" ]; then
+        sed -i "s#http://127.0.0.1:80/health#http://127.0.0.1:$(_sed_escape "${NGINX_HTTP_PORT}")/health#" "$dst"
+    fi
 
     export CBOX_INIT_CONFIG="$dst"
 }

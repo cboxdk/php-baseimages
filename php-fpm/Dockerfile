@@ -44,6 +44,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy FPM-specific configurations (shared across root/rootless)
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
+COPY php-fpm/common/fpm-global.conf /usr/local/etc/php-fpm.d/zz-global.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
