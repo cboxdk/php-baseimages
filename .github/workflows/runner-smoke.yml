@@ -1,0 +1,23 @@
+name: Runner Smoke Test
+
+# Minimal diagnostic: a single non-reusable job pinned to the self-hosted
+# runner. Unlike the build workflows (which call reusable workflows that don't
+# appear in the run's /jobs API), this job IS enumerated — so it unambiguously
+# proves whether the self-hosted runner picks up jobs on this public repo.
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, linux, x64, buildx]
+    steps:
+      - name: Runner identity
+        run: |
+          echo "host: $(hostname)"
+          echo "user: $(whoami)"
+          echo "arch: $(uname -m)"
+      - name: Docker + buildx available
+        run: |
+          docker version --format 'server={{.Server.Version}}'
+          docker buildx version
+          docker buildx ls | head
