@@ -491,10 +491,9 @@ jobs:
   # Merge: create multi-arch manifest from platform-specific digests
   # ─────────────────────────────────────────────────────────────────────────────
   merge:
-    if: github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
     runs-on: [self-hosted, linux, x64, buildx]
     timeout-minutes: 10
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
     needs:
       - build-amd64
       - build-arm64
