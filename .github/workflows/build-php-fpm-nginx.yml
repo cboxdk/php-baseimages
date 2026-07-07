@@ -18,6 +18,10 @@ on:
         description: 'OS variant to build (bookworm or all)'
         required: false
         default: 'all'
+      tier:
+        description: 'Image tier to build (slim, standard, chromium, dev, or all)'
+        required: false
+        default: 'all'
   repository_dispatch:
     types: [php-fpm-updated]
   workflow_run:
