@@ -281,9 +281,10 @@ generate_runtime_configs() {
     # PHP environment variable overrides
     apply_php_env_overrides
 
-    # PHP custom templates (user-provided)
+    # PHP custom templates (user-provided). These images are source-built
+    # (php:*-fpm), so config lives under /usr/local/etc/php — the Debian-style
+    # /etc/php/${PHP_VERSION}/fpm path does not exist and was a silent no-op.
     generate_php_config "/usr/local/etc/php/conf.d/99-custom.ini.template" "/usr/local/etc/php/conf.d/99-custom.ini"
-    generate_php_config "/etc/php/${PHP_VERSION}/fpm/conf.d/99-custom.ini.template" "/etc/php/${PHP_VERSION}/fpm/conf.d/99-custom.ini"
 
     # Nginx configuration
     if [ -f /etc/nginx/conf.d/default.conf.template ]; then
@@ -370,6 +371,10 @@ generate_runtime_configs() {
                 NGINX_REAL_IP_CONFIG="${NGINX_REAL_IP_CONFIG}set_real_ip_from ${proxy};\n"
             done
             NGINX_REAL_IP_CONFIG="${NGINX_REAL_IP_CONFIG}real_ip_header ${NGINX_REAL_IP_HEADER};\nreal_ip_recursive ${NGINX_REAL_IP_RECURSIVE};"
+            # Convert \n to actual newlines (same as security headers below).
+            # Without this the literal "\n" ends up in the config and nginx
+            # aborts with: unknown directive "<newline>set_real_ip_from".
+            NGINX_REAL_IP_CONFIG=$(printf '%b' "$NGINX_REAL_IP_CONFIG")
             export NGINX_REAL_IP_CONFIG
         else
             export NGINX_REAL_IP_CONFIG="# No trusted proxies configured"
@@ -450,7 +455,8 @@ generate_ssl_config() {
     cat >> /etc/nginx/conf.d/default.conf <<EOF
 
 server {
-    listen ${NGINX_HTTPS_PORT:-443} ssl http2;
+    listen ${NGINX_HTTPS_PORT:-443} ssl;
+    http2 on;
     server_name _;
     root ${NGINX_WEBROOT:-/var/www/html/public};
     index ${NGINX_INDEX:-index.php index.html};
@@ -481,7 +487,9 @@ ${NGINX_SECURITY_HEADERS}
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
         fastcgi_param HTTP_X_FORWARDED_FOR \$proxy_add_x_forwarded_for;
-        fastcgi_param HTTP_X_FORWARDED_PROTO \$scheme;
+        fastcgi_param HTTP_X_FORWARDED_PROTO \$forwarded_proto;
+        fastcgi_param HTTP_X_FORWARDED_PORT \$forwarded_port;
+        fastcgi_param HTTPS \$forwarded_https;
         fastcgi_param HTTP_X_FORWARDED_HOST \$host;
         fastcgi_param HTTP_X_REAL_IP \$remote_addr;
         fastcgi_param SSL_CLIENT_VERIFY \$ssl_client_verify;
@@ -491,10 +499,9 @@ ${NGINX_SECURITY_HEADERS}
         fastcgi_param SSL_CLIENT_FINGERPRINT \$ssl_client_fingerprint;
     }
 
+    # Public so Kubernetes httpGet probes (which connect from the node/pod
+    # network, not 127.0.0.1) can reach it. Returns only a static string.
     location /health {
-        allow 127.0.0.1;
-        allow ::1;
-        deny all;
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;
@@ -505,8 +512,19 @@ ${NGINX_SECURITY_HEADERS}
 }
 EOF
 
+    # Redirect plaintext -> https, but ONLY for genuinely plaintext requests.
+    # Behind a TLS-terminating proxy (Traefik/Cloudflare) the forwarded proto is
+    # already https, so gating on $forwarded_proto avoids an infinite redirect loop.
     [ "$SSL_MODE" = "full" ] && cat > /etc/nginx/conf.d/http-redirect.conf <<EOF
-server { listen ${NGINX_HTTP_PORT:-80}; server_name _; return 301 https://\$host\$request_uri; }
+server {
+    listen ${NGINX_HTTP_PORT:-80};
+    server_name _;
+    # Redirect only genuine plaintext requests. If the forwarded proto is already
+    # https, TLS was terminated upstream (SSL_MODE=full is misconfigured behind a
+    # proxy) — return 404 instead of looping back to https.
+    if (\$forwarded_proto = "http") { return 301 https://\$host\$request_uri; }
+    return 404;
+}
 EOF
     return 0
 }
@@ -603,6 +621,14 @@ preflight_checks() {
             }
         fi
 
+        # Scaffold the Laravel storage tree first: a freshly-provisioned (empty)
+        # volume mounted over storage/ otherwise lacks framework/{cache,sessions,
+        # views} and logs/, and the app fatals ("directory does not exist").
+        for d in framework/cache framework/sessions framework/views app/public logs; do
+            mkdir -p "$workdir/storage/$d" 2>/dev/null || true
+        done
+        mkdir -p "$workdir/bootstrap/cache" 2>/dev/null || true
+
         # Auto-fix permissions if running as root (skip in rootless mode)
         if [ "$(id -u)" = "0" ] && ! is_rootless; then
             log_info "Auto-fixing Laravel directory permissions..."
@@ -672,10 +698,13 @@ if is_true "${LARAVEL_MIGRATE_ENABLED:-false}"; then
     [ -f "$WORKDIR/artisan" ] && {
         log_info "Running Laravel migrations..."
         migration_failed=0
+        # --isolated takes an atomic cache lock so that when several replicas boot
+        # together (rolling update) only ONE runs migrations; the others no-op
+        # instead of racing on the schema and crash-looping.
         if [ "${APP_ENV:-production}" = "production" ]; then
-            php artisan migrate --force --no-interaction 2>&1 || migration_failed=1
+            php artisan migrate --force --no-interaction --isolated 2>&1 || migration_failed=1
         else
-            php artisan migrate --no-interaction 2>&1 || migration_failed=1
+            php artisan migrate --no-interaction --isolated 2>&1 || migration_failed=1
         fi
         if [ "$migration_failed" = "1" ]; then
             if is_true "${LARAVEL_MIGRATE_ALLOW_FAILURE:-false}"; then

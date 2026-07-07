@@ -1,6 +1,11 @@
 {
   "php": {
-    "supported": ["8.2", "8.3", "8.4", "8.5"],
+    "supported": [
+      "8.2",
+      "8.3",
+      "8.4",
+      "8.5"
+    ],
     "default": "8.4",
     "eol": {
       "8.2": "2025-12-08",
@@ -23,7 +28,9 @@
   },
   "os": {
     "debian": {
-      "supported": ["bookworm"],
+      "supported": [
+        "bookworm"
+      ],
       "default": "bookworm",
       "eol": {
         "bookworm": "2028-06-30"
@@ -38,7 +45,6 @@
     "imagick": "3.8.1",
     "apcu": "5.1.27",
     "mongodb": "2.1.4",
-
     "msgpack": "3.0.0",
     "xdebug": "3.5.0",
     "pcov": "1.0.12",
@@ -48,7 +54,7 @@
   },
   "tools": {
     "composer": "2",
-    "cbox_init": "2.1.1"
+    "cbox_init": "2.2.0"
   },
   "deprecation_policy": {
     "php_removal_after_eol_months": 6,
