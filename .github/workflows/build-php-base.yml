@@ -50,11 +50,12 @@ jobs:
   # SLIM TIER - Minimal PHP with essential extensions only
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -75,11 +76,12 @@ jobs:
     secrets: inherit
 
   build-slim-rootless-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -102,11 +104,12 @@ jobs:
   # STANDARD TIER (DEFAULT) - ImageMagick, vips, Node.js included
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -129,11 +132,12 @@ jobs:
     secrets: inherit
 
   build-rootless-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -161,11 +165,12 @@ jobs:
   # CHROMIUM TIER - Includes Chromium for Browsershot/Dusk
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -189,11 +194,12 @@ jobs:
     secrets: inherit
 
   build-chromium-rootless-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -217,11 +223,12 @@ jobs:
   # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
@@ -245,11 +252,12 @@ jobs:
     secrets: inherit
 
   build-dev-rootless-matrix:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev' }}
     strategy:
       fail-fast: false
       matrix:
-        php_version: ['8.2', '8.3', '8.4', '8.5']
-        os_variant: ['bookworm']
+        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       image-name: php-base
