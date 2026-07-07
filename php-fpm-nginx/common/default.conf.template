@@ -16,9 +16,29 @@
 # ─────────────────────────────────────────────────────────────────────────────
 ${NGINX_REAL_IP_CONFIG}
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Client-facing scheme/port behind a TLS-terminating proxy.
+# Honor the upstream X-Forwarded-Proto/Port when present, else fall back to this
+# server's own values. Without this, TLS terminated upstream (Traefik/Cloudflare/
+# k8s ingress) is invisible to PHP → http:// URLs and a wrong $_SERVER['HTTPS'].
+# (nginx variables here survive envsubst — it only substitutes the NGINX_* list.)
+# ─────────────────────────────────────────────────────────────────────────────
+map $http_x_forwarded_proto $forwarded_proto {
+    default $scheme;
+    "~.+"   $http_x_forwarded_proto;
+}
+map $http_x_forwarded_port $forwarded_port {
+    default $server_port;
+    "~.+"   $http_x_forwarded_port;
+}
+map $forwarded_proto $forwarded_https {
+    https   on;
+    default "";
+}
+
 # HTTP Server Block
 server {
-    listen ${NGINX_HTTP_PORT};
+    listen ${NGINX_HTTP_PORT} ${NGINX_LISTEN_EXTRA};
     server_name _;
     root ${NGINX_WEBROOT};
     index ${NGINX_INDEX};
@@ -92,9 +112,12 @@ ${NGINX_SECURITY_HEADERS}
         # These enable Laravel TrustProxies, Symfony trusted_proxies, etc.
         # ─────────────────────────────────────────────────────────────────────
         fastcgi_param HTTP_X_FORWARDED_FOR $proxy_add_x_forwarded_for;
-        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+        fastcgi_param HTTP_X_FORWARDED_PROTO $forwarded_proto;
         fastcgi_param HTTP_X_FORWARDED_HOST $host;
-        fastcgi_param HTTP_X_FORWARDED_PORT $server_port;
+        fastcgi_param HTTP_X_FORWARDED_PORT $forwarded_port;
+        # Set HTTPS so PHP's $_SERVER['HTTPS'] is correct when TLS is terminated
+        # here OR upstream (empty string when not https — PHP treats it as off).
+        fastcgi_param HTTPS $forwarded_https;
         fastcgi_param HTTP_X_REAL_IP $remote_addr;
 
         # mTLS client certificate info (available when MTLS_ENABLED=true)
@@ -133,12 +156,10 @@ ${NGINX_SECURITY_HEADERS}
     # }
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Health check (SECURITY: localhost only)
+    # Health check — public so Kubernetes httpGet probes (which connect from the
+    # node/pod network, not 127.0.0.1) can reach it. Returns only a static string.
     # ─────────────────────────────────────────────────────────────────────────
     location /health {
-        allow 127.0.0.1;
-        allow ::1;
-        deny all;
         access_log off;
         return 200 "healthy\n";
         add_header Content-Type text/plain;
@@ -164,6 +185,9 @@ ${NGINX_SECURITY_HEADERS}
         try_files $uri ${NGINX_TRY_FILES};
         expires ${NGINX_STATIC_EXPIRES};
         add_header Cache-Control "${NGINX_STATIC_CACHE_CONTROL}";
+        # nginx add_header does NOT inherit across levels: adding Cache-Control here
+        # drops all server-level security headers, so re-emit them on static assets.
+${NGINX_SECURITY_HEADERS}
         access_log ${NGINX_STATIC_ACCESS_LOG};
 
         # Prevent execution of PHP in static locations

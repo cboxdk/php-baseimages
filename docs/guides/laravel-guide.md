@@ -79,7 +79,7 @@ Enable with environment variables:
 
 | Variable | Purpose |
 |----------|---------|
-| `LARAVEL_SCHEDULER=true` | Enable `schedule:run` cron |
+| `LARAVEL_SCHEDULER=true` | Run the scheduler as a long-lived `schedule:work` process. **Single replica only** — on a multi-replica Deployment every task fires once per pod. Prefer one dedicated scheduler pod or a k8s CronJob calling `schedule:run`. |
 | `LARAVEL_QUEUE=true` | Enable queue worker |
 | `LARAVEL_HORIZON=true` | Enable Horizon dashboard |
 | `LARAVEL_REVERB=true` | Enable WebSocket server |
