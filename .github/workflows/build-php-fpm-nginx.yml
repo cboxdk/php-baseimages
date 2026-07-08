@@ -75,7 +75,7 @@ jobs:
           sleep 1
         done
 
-        docker exec test-slim curl -sf http://127.0.0.1/health || { docker logs test-slim && exit 1; }
+        docker exec test-slim curl -sf http://127.0.0.1/healthz || { docker logs test-slim && exit 1; }
         docker exec test-slim php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-slim cbox-init --version || exit 1
         docker exec test-slim composer --version || exit 1
@@ -126,7 +126,7 @@ jobs:
         done
 
         docker exec test-slim-rootless id -u | grep -E "^(33|82)$"
-        docker exec test-slim-rootless curl -sf http://127.0.0.1:8080/health || { docker logs test-slim-rootless && exit 1; }
+        docker exec test-slim-rootless curl -sf http://127.0.0.1:8080/healthz || { docker logs test-slim-rootless && exit 1; }
         docker exec test-slim-rootless php -v | grep "PHP $PHP_VERSION" || exit 1
         docker stop test-slim-rootless && docker rm test-slim-rootless
     secrets: inherit
@@ -180,7 +180,7 @@ jobs:
 
         echo "=== Container logs ===" && docker logs test-multi || true
         echo "=== Container status ===" && docker ps -a --filter name=test-multi || true
-        docker exec test-multi curl -sf http://127.0.0.1/health || { echo "=== Health check failed, container logs ===" && docker logs test-multi && exit 1; }
+        docker exec test-multi curl -sf http://127.0.0.1/healthz || { echo "=== Health check failed, container logs ===" && docker logs test-multi && exit 1; }
         docker exec test-multi php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-multi cbox-init --version || exit 1
         docker exec test-multi composer --version || exit 1
@@ -235,7 +235,7 @@ jobs:
         echo "=== Container logs ===" && docker logs test-rootless || true
         echo "=== Container status ===" && docker ps -a --filter name=test-rootless || true
         docker exec test-rootless id -u | grep -E "^(33|82)$"
-        docker exec test-rootless curl -sf http://127.0.0.1:8080/health || { echo "=== Health check failed, container logs ===" && docker logs test-rootless && exit 1; }
+        docker exec test-rootless curl -sf http://127.0.0.1:8080/healthz || { echo "=== Health check failed, container logs ===" && docker logs test-rootless && exit 1; }
         docker exec test-rootless php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-rootless cbox-init --version || exit 1
         docker exec test-rootless composer --version || exit 1
@@ -286,7 +286,7 @@ jobs:
           sleep 1
         done
 
-        docker exec test-chromium curl -sf http://127.0.0.1/health || { docker logs test-chromium && exit 1; }
+        docker exec test-chromium curl -sf http://127.0.0.1/healthz || { docker logs test-chromium && exit 1; }
         docker exec test-chromium php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-chromium cbox-init --version || exit 1
         docker exec test-chromium composer --version || exit 1
@@ -338,7 +338,7 @@ jobs:
         done
 
         docker exec test-chromium-rootless id -u | grep -E "^(33|82)$"
-        docker exec test-chromium-rootless curl -sf http://127.0.0.1:8080/health || { docker logs test-chromium-rootless && exit 1; }
+        docker exec test-chromium-rootless curl -sf http://127.0.0.1:8080/healthz || { docker logs test-chromium-rootless && exit 1; }
         docker exec test-chromium-rootless php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-chromium-rootless cbox-init --version || exit 1
         docker exec test-chromium-rootless composer --version || exit 1
@@ -391,7 +391,7 @@ jobs:
           sleep 1
         done
 
-        docker exec test-dev curl -sf http://127.0.0.1/health || { docker logs test-dev && exit 1; }
+        docker exec test-dev curl -sf http://127.0.0.1/healthz || { docker logs test-dev && exit 1; }
         docker exec test-dev php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-dev php -m | grep -E "xdebug|pcov|spx" || exit 1
         docker exec test-dev cbox-init --version || exit 1
@@ -444,7 +444,7 @@ jobs:
         done
 
         docker exec test-dev-rootless id -u | grep -E "^(33|82)$"
-        docker exec test-dev-rootless curl -sf http://127.0.0.1:8080/health || { docker logs test-dev-rootless && exit 1; }
+        docker exec test-dev-rootless curl -sf http://127.0.0.1:8080/healthz || { docker logs test-dev-rootless && exit 1; }
         docker exec test-dev-rootless php -v | grep "PHP $PHP_VERSION" || exit 1
         docker exec test-dev-rootless php -m | grep -E "xdebug|pcov|spx" || exit 1
         docker exec test-dev-rootless cbox-init --version || exit 1
