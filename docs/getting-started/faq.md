@@ -43,7 +43,7 @@ environment:
   LARAVEL_SCHEDULER: "true"
 ```
 
-This automatically sets up cron to run `php artisan schedule:run` every minute. See the [Laravel Guide](../guides/laravel-guide) for all Laravel-specific features.
+This runs `php artisan schedule:work` as a long-lived process supervised by cbox-init (no cron) — it stays resident and dispatches due tasks every minute. Run it in exactly one place (a single replica or a dedicated scheduler pod). See the [Laravel Guide](../guides/laravel-guide) for all Laravel-specific features.
 
 ## Performance
 
@@ -65,9 +65,15 @@ environment:
 
 HTTP security headers, hidden file blocking, PHP execution prevention in upload directories, and ImageMagick policy hardening are all configured by default. See [Security Hardening](../advanced/security-hardening) for the full list and customization options.
 
-### Is the /health endpoint secure?
+### How do health checks work?
 
-Yes. The `/health` endpoint is restricted to localhost only, so it works for Docker and Kubernetes health checks but is not publicly accessible. See [Health Checks](../reference/health-checks) for details.
+There are three distinct endpoints — don't confuse them:
+
+- **nginx `/healthz`** — localhost-only (`allow 127.0.0.1; deny all`), used by the container `HEALTHCHECK` and cbox-init's internal nginx probe. Not reachable off-host, so **not** usable for a Kubernetes `httpGet` probe.
+- **cbox-init `/readyz` + `/livez` on port `9091`** — this is what Kubernetes probes. `/readyz` returns `200` only when every supervised process is ready; `/livez` returns `200` while the supervisor is responsive. There's also `/tmp/cbox-ready` for an `exec` probe.
+- **`/health` and `/up`** — these belong to *your application*; nginx passes them through to PHP. The base image does not serve `/health` itself.
+
+See [Health Checks](../reference/health-checks) for the k8s probe manifests.
 
 ## Troubleshooting
 

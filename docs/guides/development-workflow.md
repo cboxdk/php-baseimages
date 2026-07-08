@@ -49,7 +49,7 @@ services:
       - redis
 
   mysql:
-    image: mysql:8.3
+    image: mysql:8.0
     ports:
       - "3306:3306"
     environment:
@@ -275,7 +275,7 @@ docker-compose exec app ./vendor/bin/pest --coverage
 ```yaml
 services:
   mysql-test:
-    image: mysql:8.3
+    image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: testing

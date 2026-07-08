@@ -75,7 +75,7 @@ phpunit:
   stage: test
   image: $PHP_IMAGE
   services:
-    - mysql:8.3
+    - mysql:8.0
     - redis:7-alpine
   variables:
     DATABASE_URL: mysql://root:root@mysql:3306/symfony_test
@@ -106,7 +106,7 @@ integration:
   stage: test
   image: $PHP_IMAGE
   services:
-    - mysql:8.3
+    - mysql:8.0
     - redis:7-alpine
   variables:
     DATABASE_URL: mysql://root:root@mysql:3306/symfony_test

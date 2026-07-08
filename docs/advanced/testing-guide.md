@@ -288,7 +288,7 @@ Tests run automatically in GitHub Actions:
 # .github/workflows/test.yml
 jobs:
   test:
-    runs-on: linux-latest  # Use your CI provider's Linux runner
+    runs-on: ubuntu-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 

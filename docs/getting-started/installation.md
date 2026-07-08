@@ -204,7 +204,7 @@ spec:
 # .github/workflows/deploy.yml
 jobs:
   build:
-    runs-on: linux-latest  # Use your CI provider's Linux runner
+    runs-on: ubuntu-latest  # Use your CI provider's Linux runner
     steps:
       - uses: actions/checkout@v4
 

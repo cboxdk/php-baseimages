@@ -459,7 +459,7 @@ docker run --rm -p 8000:80 my-image:8.3-bookworm
 | [WordPress](examples/wordpress/) | WordPress with optimized uploads |
 | [API Only](examples/api-only/) | REST/GraphQL backend |
 | [Development](examples/development/) | Xdebug, Vite HMR, MailHog |
-| [Production](examples/production/) | Resource limits, security |
+| [Production](examples/laravel-production/) | Resource limits, security |
 | [Multi-Tenant](examples/multi-tenant/) | SaaS with database-per-tenant |
 | [Microservices](examples/microservices/) | Multiple PHP services |
 | [WebSockets](examples/reverb-websockets/) | Laravel Reverb real-time |
@@ -489,7 +489,7 @@ services:
       - redis
 
   mysql:
-    image: mysql:8.3
+    image: mysql:8.0
     environment:
       MYSQL_DATABASE: laravel
       MYSQL_ROOT_PASSWORD: secret

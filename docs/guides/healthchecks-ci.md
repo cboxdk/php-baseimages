@@ -37,7 +37,7 @@ services:
       start_period: 30s
 
   mysql:
-    image: mysql:8.3
+    image: mysql:8.0
     environment:
       MYSQL_DATABASE: app
       MYSQL_USER: app
