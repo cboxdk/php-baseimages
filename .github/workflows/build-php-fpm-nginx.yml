@@ -59,6 +59,8 @@ jobs:
       base-image-type: fpm
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-slim >/dev/null 2>&1 || true
+        trap "docker rm -f test-slim >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-slim -p 8080:80 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -109,6 +111,8 @@ jobs:
       base-image-type: fpm
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-slim-rootless >/dev/null 2>&1 || true
+        trap "docker rm -f test-slim-rootless >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-slim-rootless -p 8082:8080 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -162,6 +166,8 @@ jobs:
         VCS_REF=${{ github.sha }}
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-multi >/dev/null 2>&1 || true
+        trap "docker rm -f test-multi >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-multi -p 8080:80 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -216,6 +222,8 @@ jobs:
         VCS_REF=${{ github.sha }}
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-rootless >/dev/null 2>&1 || true
+        trap "docker rm -f test-rootless >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-rootless -p 8082:8080 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -270,6 +278,8 @@ jobs:
       base-image-type: fpm
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-chromium >/dev/null 2>&1 || true
+        trap "docker rm -f test-chromium >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-chromium -p 8080:80 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -321,6 +331,8 @@ jobs:
       base-image-type: fpm
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-chromium-rootless >/dev/null 2>&1 || true
+        trap "docker rm -f test-chromium-rootless >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-chromium-rootless -p 8082:8080 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -375,6 +387,8 @@ jobs:
       base-image-type: fpm
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-dev >/dev/null 2>&1 || true
+        trap "docker rm -f test-dev >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-dev -p 8080:80 $IMAGE
 
         echo "Waiting for container to become healthy..."
@@ -427,6 +441,8 @@ jobs:
       base-image-type: fpm
       test-script: |
         docker pull $IMAGE
+        docker rm -f test-dev-rootless >/dev/null 2>&1 || true
+        trap "docker rm -f test-dev-rootless >/dev/null 2>&1 || true" EXIT
         docker run -d --name test-dev-rootless -p 8082:8080 $IMAGE
 
         echo "Waiting for container to become healthy..."
