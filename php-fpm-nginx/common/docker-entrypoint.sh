@@ -762,10 +762,39 @@ if [ $# -gt 0 ] && [ "$1" != "cbox-init" ] && [ "${1#-}" = "$1" ]; then
     exec "$@"
 fi
 
+# --- PHP-FPM worker autotuning ----------------------------------------------
+# cbox-init sizes php-fpm workers from the container's memory/CPU limits when a
+# profile is set, exporting PHP_FPM_* which fpm-pool.conf expands. Autotune is on
+# by default (profile: medium); an explicit PHP_FPM_MAX_CHILDREN pins the count
+# and turns autotune off unless a profile is also given. The fallbacks below make
+# the pool resolve even with autotune disabled (cbox-init overrides them when it
+# runs, so the tuned values win).
+if [ -n "${PHP_FPM_MAX_CHILDREN:-}" ]; then
+    export PHP_FPM_AUTOTUNE_PROFILE="${PHP_FPM_AUTOTUNE_PROFILE:-}"   # manual sizing wins
+else
+    export PHP_FPM_AUTOTUNE_PROFILE="${PHP_FPM_AUTOTUNE_PROFILE-medium}"
+fi
+export PHP_FPM_MAX_CHILDREN="${PHP_FPM_MAX_CHILDREN:-10}"
+export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
+export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
+export PHP_FPM_MAX_REQUESTS="${PHP_FPM_MAX_REQUESTS:-500}"
+[ -n "$PHP_FPM_AUTOTUNE_PROFILE" ] && log_info "PHP-FPM autotune: profile=$PHP_FPM_AUTOTUNE_PROFILE (memory-derived worker sizing)"
+
+# --- Live config reload ------------------------------------------------------
+# Watch mode reloads changed processes when the config file changes, and
+# `cbox-init reload-config` / `scale` / `restart` apply changes over the Unix
+# socket — daemons reload without a container restart. Disable with CBOX_INIT_WATCH=false.
+CBOX_INIT_SERVE_ARGS=""
+if is_true "${CBOX_INIT_WATCH:-true}"; then
+    CBOX_INIT_SERVE_ARGS="--watch"
+    log_info "Live config reload enabled (watch mode)"
+fi
+
 # Start Cbox Init
 CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 apply_cbox_init_env_overrides
 log_info "Starting Cbox Init process manager"
 log_info "Config: $CBOX_INIT_CONFIG"
 
-exec /usr/local/bin/cbox-init serve --config "$CBOX_INIT_CONFIG" "$@"
+exec /usr/local/bin/cbox-init serve --config "$CBOX_INIT_CONFIG" $CBOX_INIT_SERVE_ARGS "$@"
