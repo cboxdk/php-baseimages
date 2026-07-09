@@ -81,7 +81,7 @@ services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/healthz"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -95,7 +95,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 
 # Custom health check
 HEALTHCHECK --interval=15s --timeout=10s --retries=5 \
-    CMD curl -f http://localhost/health || exit 1
+    CMD curl -f http://localhost/healthz || exit 1
 ```
 
 ### Disabling Health Check
@@ -125,8 +125,8 @@ spec:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     livenessProbe:
       httpGet:
-        path: /health
-        port: 80
+        path: /livez
+        port: 9091
       initialDelaySeconds: 10
       periodSeconds: 30
       timeoutSeconds: 5
@@ -146,8 +146,8 @@ spec:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     readinessProbe:
       httpGet:
-        path: /health
-        port: 80
+        path: /readyz
+        port: 9091
       initialDelaySeconds: 5
       periodSeconds: 10
       timeoutSeconds: 3
@@ -168,8 +168,8 @@ spec:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     startupProbe:
       httpGet:
-        path: /health
-        port: 80
+        path: /readyz
+        port: 9091
       initialDelaySeconds: 0
       periodSeconds: 5
       timeoutSeconds: 3
@@ -202,8 +202,8 @@ spec:
         # Restart if completely stuck
         livenessProbe:
           httpGet:
-            path: /health
-            port: 80
+            path: /livez
+            port: 9091
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 5
@@ -212,8 +212,8 @@ spec:
         # Remove from service if not ready
         readinessProbe:
           httpGet:
-            path: /health
-            port: 80
+            path: /readyz
+            port: 9091
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 3
@@ -222,8 +222,8 @@ spec:
         # Allow slow startup (migrations, cache warming)
         startupProbe:
           httpGet:
-            path: /health
-            port: 80
+            path: /readyz
+            port: 9091
           periodSeconds: 5
           failureThreshold: 60  # 5 minutes max
 ```
@@ -286,36 +286,19 @@ public function health(
 }
 ```
 
-## Nginx Health Endpoint
+## The three health endpoints
 
-Cbox images include a built-in `/health` endpoint in Nginx:
+Cbox images expose **three distinct** health surfaces — don't confuse them:
 
-```nginx
-# Included in default.conf
-location /health {
-    access_log off;
-    return 200 "healthy\n";
-    add_header Content-Type text/plain;
-}
-```
+| Endpoint | Port | Reachable from | Purpose |
+|---|---|---|---|
+| nginx `/healthz` | 80 (8080 rootless) | **localhost only** (`allow 127.0.0.1; deny all`) | The container `HEALTHCHECK` and cbox-init's internal nginx probe. Returns `200 healthy`, no PHP. **Not** reachable off-host, so **not** usable for a Kubernetes `httpGet` probe. |
+| cbox-init `/readyz` + `/livez` | **9091** | anywhere (bound `0.0.0.0`) | What Kubernetes probes. `/readyz` → `200` only when every supervised process (nginx + php-fpm + workers) is ready; `/livez` → `200` while the supervisor is responsive. cbox-init also writes `/tmp/cbox-ready` for an `exec` probe. |
+| `/health`, `/up` | 80/8080 | public (via your app) | **Owned by your application.** nginx passes them through to PHP — the base image does not serve `/health` itself. Use these for app-level health (spatie/laravel-health, Laravel's `/up`). |
 
-This endpoint:
-- Returns HTTP 200 with "healthy" text
-- Does NOT require PHP (fast, low overhead)
-- Disabled access logging (reduces noise)
+Enable the cbox-init HTTP endpoints with `global.readiness.http_port: 9091` (shipped in the default `cbox-init.yaml`). Kubernetes probes should target `9091` (`/readyz`, `/livez`) — see the Deployment example above — **not** nginx `/health`.
 
-### Custom Nginx Health Check
-
-Override in your custom config:
-
-```nginx
-location /health {
-    access_log off;
-
-    # Detailed health with PHP
-    try_files $uri /health.php;
-}
-```
+> Earlier image versions served a public nginx `/health`; that was removed so it no longer shadows the application's own `/health`/`/up` routes.
 
 ## Cbox Init Health Checks
 

@@ -166,17 +166,48 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_OPCACHE_JIT` | `tracing` | JIT mode: `tracing`, `function`, `off` |
 | `PHP_OPCACHE_JIT_BUFFER_SIZE` | `128M` | JIT buffer size |
 
-### PHP-FPM Pool
+### PHP-FPM worker auto-tuning
+
+By default the worker pool is **auto-tuned by cbox-init from the container's cgroup
+memory and CPU limits** — it reads `memory.max`, reserves headroom for nginx/opcache/system,
+and derives `pm.max_children` (and the other PM values). A 512 MB container yields ~4 workers,
+768 MB ~6, etc. This replaces guessing a static `pm.max_children` and prevents OOM-kills.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `PHP_FPM_AUTOTUNE_PROFILE` | `medium` | Sizing profile: `dev`, `light`, `medium`, `heavy`, `bursty`. Set to empty (`""`) to disable auto-tuning and use the static values below. |
+
+**To size manually**, set `PHP_FPM_MAX_CHILDREN` (this pins the count and turns auto-tuning off),
+or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly:
+
+| Variable | Fallback | Description |
+|----------|---------|-------------|
 | `PHP_FPM_PM` | `dynamic` | Process manager: `dynamic`, `static`, `ondemand` |
-| `PHP_FPM_PM_MAX_CHILDREN` | `50` | Max concurrent child processes |
-| `PHP_FPM_PM_START_SERVERS` | `5` | Initial child count (dynamic mode) |
-| `PHP_FPM_PM_MIN_SPARE_SERVERS` | `5` | Min idle processes (dynamic mode) |
-| `PHP_FPM_PM_MAX_SPARE_SERVERS` | `35` | Max idle processes (dynamic mode) |
-| `PHP_FPM_PM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
+| `PHP_FPM_MAX_CHILDREN` | *(auto)* | Max concurrent child processes. Setting this pins sizing and disables auto-tuning. |
+| `PHP_FPM_START_SERVERS` | `2` | Initial child count (dynamic mode) |
+| `PHP_FPM_MIN_SPARE` | `1` | Min idle processes (dynamic mode) |
+| `PHP_FPM_MAX_SPARE` | `6` | Max idle processes (dynamic mode) |
+| `PHP_FPM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | Max request execution time before kill |
+
+### Live config reload
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_INIT_WATCH` | `true` | Watch the generated config and reload changed processes **without a container restart**. |
+
+Beyond watch mode, cbox-init exposes live process control over its Unix socket — no restart needed:
+
+```bash
+cbox-init reload-config          # re-read config from disk and apply
+cbox-init scale queue-default 8  # change a worker's replica count
+cbox-init restart horizon        # restart one supervised process
+cbox-init start|stop <process>   # start/stop a daemon on the fly
+```
+
+This is how you run and manage standalone daemons (queue workers, scheduler, Horizon, Reverb, or
+your own) — via cbox-init, with or without nginx/php-fpm (the `php-cli` tier ships the same
+supervisor for daemon-only containers).
 
 ---
 
