@@ -309,6 +309,6 @@ jobs:
       contents: write
     steps:
       - name: Trigger php-fpm-nginx build
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v4
         with:
           event-type: php-fpm-updated
