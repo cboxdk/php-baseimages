@@ -1,4 +1,4 @@
-FROM nginx:1.27-bookworm
+FROM nginx:1.29-bookworm
 
 LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
