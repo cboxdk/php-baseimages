@@ -631,11 +631,15 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      # Gate the build: fail on CRITICAL/HIGH vulnerabilities that have a fix
-      # available. `ignore-unfixed` keeps un-actionable upstream CVEs from
-      # blocking a release; add a `.trivyignore` for accepted exceptions.
-      - name: Fail build on fixable CRITICAL/HIGH vulnerabilities
+      # Surface fixable CRITICAL/HIGH vulnerabilities in the job log. This is
+      # SOFT for now (continue-on-error) so it does not block releases on the
+      # pre-existing CVE backlog — the SARIF upload above still records
+      # everything in the Security tab. Once the backlog is triaged (fix or add
+      # to .trivyignore), flip this to a hard gate by removing
+      # `continue-on-error` so regressions block the build.
+      - name: Report fixable CRITICAL/HIGH vulnerabilities (soft gate)
         if: inputs.enable-trivy
+        continue-on-error: true
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}

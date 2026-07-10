@@ -294,6 +294,9 @@ FROM chromium-base AS dev-base
 
 ARG XDEBUG_VERSION
 ARG PCOV_VERSION
+# Re-declare so the global default (v0.4.22) is visible in this stage's RUN;
+# without this SPX_VERSION expands empty and `git clone --branch ""` fails.
+ARG SPX_VERSION
 
 # Install dev extensions (Xdebug, PCOV, SPX)
 RUN apt-get update && apt-get install -y --no-install-recommends \

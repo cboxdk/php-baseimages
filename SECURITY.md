@@ -45,8 +45,10 @@ cosign verify \
   ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm
 ```
 
-Every published tag is also scanned with Trivy (CRITICAL/HIGH); results appear
-in the repository's Security tab and gate the build on fixable findings.
+Every published tag is also scanned with Trivy (CRITICAL/HIGH) across all image
+families; results appear in the repository's Security tab, and fixable findings
+are surfaced in the build logs (soft gate, being ratcheted to blocking as the
+CVE backlog is triaged).
 
 ## Hardening Guidance
 
