@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # GitHub Actions used across all build/test workflows. Keeps third-party
+  # actions (including aquasecurity/trivy-action) current and lets us move from
+  # floating tags toward pinned SHAs.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"
+
+  # Base images referenced in Dockerfiles (php:*, node:*, composer:*).
+  - package-ecosystem: "docker"
+    directories:
+      - "/php-base"
+      - "/php-fpm"
+      - "/php-cli"
+      - "/php-fpm-nginx"
+      - "/nginx"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "docker"

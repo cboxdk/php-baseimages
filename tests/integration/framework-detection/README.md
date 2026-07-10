@@ -4,8 +4,9 @@ Comprehensive integration tests for Cbox's automatic framework detection system.
 
 ## Test Coverage
 
-- ✅ Laravel detection (artisan file presence)
-- ✅ Symfony detection (bin/console + var/cache presence)
+- ✅ Laravel detection (artisan + composer.json `laravel/framework` or bootstrap/app.php)
+- ✅ Stray-artisan regression (lone artisan file must fall through to generic)
+- ✅ Symfony detection (bin/console + symfony.lock)
 - ✅ WordPress detection (wp-config.php presence)
 - ✅ Generic PHP detection (no framework markers)
 - ✅ Detection priority (framework-specific wins over generic)

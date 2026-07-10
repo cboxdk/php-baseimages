@@ -42,10 +42,14 @@ info() {
 test_laravel_detection() {
     info "Testing Laravel framework detection..."
 
-    # Create temporary Laravel structure
+    # Create temporary Laravel structure. Detection requires `artisan` PLUS
+    # corroborating evidence (laravel/framework in composer.json or
+    # bootstrap/app.php) so a stray file named `artisan` doesn't trigger
+    # Laravel codepaths — see detect_framework in entrypoint-lib.sh.
     TEMP_DIR=$(mktemp -d)
     mkdir -p "$TEMP_DIR/var/www/html"
     touch "$TEMP_DIR/var/www/html/artisan"
+    echo '{"require": {"laravel/framework": "^11.0"}}' > "$TEMP_DIR/var/www/html/composer.json"
 
     # Run detection using the sourced function
     RESULT=$(detect_framework "$TEMP_DIR/var/www/html" 2>/dev/null || echo "error")
@@ -54,9 +58,29 @@ test_laravel_detection() {
     rm -rf "$TEMP_DIR"
 
     if [ "$RESULT" = "laravel" ]; then
-        pass "Laravel detection with artisan file"
+        pass "Laravel detection with artisan + composer.json"
     else
-        fail "Laravel detection with artisan file" "laravel" "$RESULT"
+        fail "Laravel detection with artisan + composer.json" "laravel" "$RESULT"
+    fi
+}
+
+# Regression: a lone `artisan` file (e.g. Statamic, or a coincidental name)
+# must NOT be detected as Laravel — it should fall through to generic.
+test_stray_artisan_is_generic() {
+    info "Testing that a stray artisan file is not misdetected as Laravel..."
+
+    TEMP_DIR=$(mktemp -d)
+    mkdir -p "$TEMP_DIR/var/www/html"
+    touch "$TEMP_DIR/var/www/html/artisan"
+
+    RESULT=$(detect_framework "$TEMP_DIR/var/www/html" 2>/dev/null || echo "error")
+
+    rm -rf "$TEMP_DIR"
+
+    if [ "$RESULT" = "generic" ]; then
+        pass "Stray artisan file falls through to generic"
+    else
+        fail "Stray artisan file falls through to generic" "generic" "$RESULT"
     fi
 }
 
@@ -135,8 +159,9 @@ test_detection_priority() {
 
     # Create temporary structure with both Laravel and generic files
     TEMP_DIR=$(mktemp -d)
-    mkdir -p "$TEMP_DIR/var/www/html"
+    mkdir -p "$TEMP_DIR/var/www/html/bootstrap"
     touch "$TEMP_DIR/var/www/html/artisan"
+    touch "$TEMP_DIR/var/www/html/bootstrap/app.php"
     touch "$TEMP_DIR/var/www/html/index.php"
 
     # Run detection using the sourced function
@@ -160,6 +185,7 @@ main() {
     echo ""
 
     test_laravel_detection
+    test_stray_artisan_is_generic
     test_symfony_detection
     test_wordpress_detection
     test_generic_detection
