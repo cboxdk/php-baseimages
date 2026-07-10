@@ -523,14 +523,14 @@ jobs:
 
     steps:
       - name: Download amd64 digest
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${{ inputs.tag-suffix || 'standard' }}-amd64
           path: /tmp/digests
 
       - name: Download arm64 digest
         if: contains(inputs.platforms, 'linux/arm64')
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${{ inputs.tag-suffix || 'standard' }}-arm64
           path: /tmp/digests
