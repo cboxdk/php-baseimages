@@ -1,0 +1,27 @@
+# Build-context hygiene. The image Dockerfiles COPY only from cbox-init/,
+# common/lib/, nginx/, and */common/ — everything below is never COPYed, so
+# excluding it shrinks the context and keeps VCS/docs/test material out of
+# builds. Do NOT add */common/, cbox-init/, common/, or nginx/ here.
+
+# Version control & tooling
+.git
+.gitignore
+.github
+.claude
+.DS_Store
+**/.DS_Store
+
+# Docs, examples, templates, and local test apps (not part of any image)
+docs
+examples
+templates
+superpowers
+observability
+test-app
+tests
+
+# Repo metadata & local dev
+*.md
+docker-compose*.yml
+LICENSE*
+Makefile

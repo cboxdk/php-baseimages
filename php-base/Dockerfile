@@ -31,6 +31,8 @@ ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
 ARG XDEBUG_VERSION=3.5.0
 ARG PCOV_VERSION=1.0.12
+# SPX is not on PECL; pin the git tag for reproducible dev builds.
+ARG SPX_VERSION=v0.4.22
 
 # Stage 1: Get Node.js from official image
 ARG NODE_VERSION=22
@@ -299,8 +301,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && pecl install xdebug-${XDEBUG_VERSION} \
     && pecl install pcov-${PCOV_VERSION} \
     && docker-php-ext-enable xdebug pcov \
-    # SPX from GitHub (not on PECL)
-    && git clone --depth=1 https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
+    # SPX from GitHub (not on PECL) — pinned to a tag for reproducibility
+    && git clone --depth=1 --branch "${SPX_VERSION}" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
     && cd /tmp/php-spx \
     && phpize && ./configure && make && make install \
     && docker-php-ext-enable spx \

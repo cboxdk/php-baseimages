@@ -162,7 +162,7 @@ Never commit secrets to git. Add to `.gitignore`:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     secrets:
       - app_key
       - db_password
@@ -192,11 +192,28 @@ For Kubernetes secrets and Vault integration, see the [Kubernetes Secrets docume
 
 ### Run as Non-Root User
 
-Cbox images already run as non-root by default:
+Every image tier ships in two variants:
+
+| Variant | Tag suffix | Runs as | Web port | Use when |
+|---------|-----------|---------|----------|----------|
+| Root | *(none)* — e.g. `8.4-bookworm`, `latest` | `root` (PID 1, nginx master), workers drop to `www-data` | 80 / 443 | You need to bind privileged ports or remap PUID/PGID |
+| Rootless | `-rootless` — e.g. `8.4-bookworm-rootless` | `www-data` throughout | 8080 | **Recommended** — no root anywhere |
+
+> ⚠️ The **default/`latest` tags run their init process and nginx master as
+> root** (workers still drop to `www-data`). If you don't need to bind port 80
+> or remap ownership, prefer the `-rootless` variant, or drop capabilities and
+> add `no-new-privileges` (below) to a root image.
 
 ```bash
-docker exec <container> whoami
-# Output: www-data
+# Rootless variant — nothing runs as root
+docker run -p 8080:8080 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
+docker exec <container> whoami          # -> www-data
+```
+
+For a root image, verify the reduced privileges you've applied:
+
+```bash
+docker exec <container> ps -o user,comm   # workers should show www-data
 ```
 
 ### Read-Only Root Filesystem
@@ -204,7 +221,7 @@ docker exec <container> whoami
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
     read_only: true
     tmpfs:
       - /tmp
@@ -215,18 +232,35 @@ services:
       - app-storage:/var/www/html/storage
 ```
 
-### Drop Unnecessary Capabilities
+### Drop Unnecessary Capabilities & Block Privilege Escalation
 
 ```yaml
 services:
   app:
+    security_opt:
+      - no-new-privileges:true   # process can never gain more privileges
     cap_drop:
       - ALL
     cap_add:
-      - NET_BIND_SERVICE  # Only if binding to port <1024
-      - CHOWN
-      - SETGID
-      - SETUID
+      - NET_BIND_SERVICE  # Only if binding to port <1024 (root image on :80)
+      - CHOWN             # Only if using PUID/PGID remap
+      - SETGID            # Only if dropping from root to www-data
+      - SETUID            # Only if dropping from root to www-data
+```
+
+The **rootless** variant needs none of these — it binds :8080 and never
+switches user, so you can run it with `cap_drop: [ALL]` and no `cap_add`:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    ports:
+      - "8080:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 ```
 
 ### Network Isolation
@@ -250,6 +284,49 @@ networks:
     internal: true  # No external access
 ```
 
+### Pin Images by Digest
+
+Rolling tags (`8.4-bookworm`) get weekly security rebuilds — great for staying
+patched, but the tag moves. For reproducible, tamper-evident deployments, pin
+the digest and update it deliberately:
+
+```yaml
+services:
+  app:
+    # Resolve once: docker buildx imagetools inspect ghcr.io/.../php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm@sha256:<digest>
+```
+
+Verify the image signature before trusting a digest (images are cosign-signed
+with keyless OIDC — see [SECURITY.md](https://github.com/cboxdk/php-baseimages/blob/main/SECURITY.md)):
+
+```bash
+cosign verify \
+  --certificate-identity-regexp 'https://github.com/cboxdk/php-baseimages/.github/workflows/.+' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+```
+
+### Protect the cbox-init Management API
+
+The multi-service image bundles the cbox-init process manager, which can expose
+a REST management API and Prometheus metrics. Both are **disabled by default**.
+If you enable them:
+
+```yaml
+services:
+  app:
+    environment:
+      - CBOX_INIT_API_ENABLED=true
+      - CBOX_INIT_API_AUTH=${CBOX_INIT_API_TOKEN}   # always set a token
+    # Never publish the API/metrics ports to untrusted networks. Prefer a
+    # local-only bind (api_host: 127.0.0.1) and scrape metrics via a sidecar.
+```
+
+Never expose the management API on `0.0.0.0` without a bearer token — it can
+start/stop/scale processes. See the cbox-init docs for `api_host`/`metrics_host`
+and ACL/TLS options.
+
 ## CVE Management
 
 ### Weekly Security Updates
@@ -258,7 +335,7 @@ Cbox images are automatically rebuilt weekly (Mondays 03:00 UTC) with the latest
 
 ```bash
 # Pull latest image and restart
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 docker-compose build --pull
 docker-compose up -d
 ```

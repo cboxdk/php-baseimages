@@ -98,7 +98,7 @@ PM_VERSION=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>&1 || echo "unk
 if [[ "$PM_VERSION" =~ ^cbox-init\ version\ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
     log_success "Cbox Init version format is correct: $PM_VERSION"
 else
-    log_warning "Cbox Init version format unexpected: $PM_VERSION"
+    log_warn "Cbox Init version format unexpected: $PM_VERSION"
 fi
 
 log_section "Cbox Init Configuration Tests"
@@ -114,19 +114,19 @@ CONFIG_CONTENT=$(docker exec "$CONTAINER_NAME" cat /etc/cbox-init/cbox-init.yaml
 if echo "$CONFIG_CONTENT" | grep -q "processes:"; then
     log_success "Cbox Init config has processes section"
 else
-    log_failure "Cbox Init config missing processes section"
+    log_fail "Cbox Init config missing processes section"
 fi
 
 if echo "$CONFIG_CONTENT" | grep -q "php-fpm:"; then
     log_success "Cbox Init config has php-fpm process"
 else
-    log_failure "Cbox Init config missing php-fpm process"
+    log_fail "Cbox Init config missing php-fpm process"
 fi
 
 if echo "$CONFIG_CONTENT" | grep -q "nginx:"; then
     log_success "Cbox Init config has nginx process"
 else
-    log_failure "Cbox Init config missing nginx process"
+    log_fail "Cbox Init config missing nginx process"
 fi
 
 log_section "Cbox Init Process Management Tests"
@@ -142,7 +142,7 @@ PID1_CMD=$(docker exec "$CONTAINER_NAME" cat /proc/1/comm 2>&1 || echo "unknown"
 if [[ "$PID1_CMD" == "cbox-init" ]]; then
     log_success "Cbox Init is PID 1 (init process)"
 else
-    log_warning "PID 1 is: $PID1_CMD (expected cbox-init)"
+    log_warn "PID 1 is: $PID1_CMD (expected cbox-init)"
 fi
 
 log_section "Cbox Init Metrics Tests"
@@ -163,7 +163,7 @@ if [[ -n "$METRICS_OUTPUT" ]]; then
         log_success "Cbox Init exports process metrics"
     fi
 else
-    log_warning "Cbox Init metrics endpoint not responding (may be disabled)"
+    log_warn "Cbox Init metrics endpoint not responding (may be disabled)"
 fi
 
 # Test metrics from host (exposed port)
@@ -199,7 +199,7 @@ FASTCGI_TEST=$(docker exec "$CONTAINER_NAME" curl -sf http://127.0.0.1/ 2>&1 || 
 if [[ "$FASTCGI_TEST" != "failed" ]]; then
     log_success "Nginx successfully proxies to PHP-FPM"
 else
-    log_warning "FastCGI proxy test inconclusive"
+    log_warn "FastCGI proxy test inconclusive"
 fi
 
 log_section "Cbox Init Graceful Shutdown Test"
@@ -216,7 +216,7 @@ SHUTDOWN_DURATION=$((SHUTDOWN_END - SHUTDOWN_START))
 if [[ $SHUTDOWN_DURATION -le 15 ]]; then
     log_success "Container stopped gracefully in ${SHUTDOWN_DURATION}s"
 else
-    log_warning "Container shutdown took ${SHUTDOWN_DURATION}s (may indicate ungraceful shutdown)"
+    log_warn "Container shutdown took ${SHUTDOWN_DURATION}s (may indicate ungraceful shutdown)"
 fi
 
 # Restart for remaining tests
@@ -227,9 +227,9 @@ sleep 5
 if docker exec "$CONTAINER_NAME" true 2>/dev/null; then
     log_success "Container restarted successfully"
     # Cbox Init waits for PHP-FPM TCP health check (can take 35s+), so use longer timeout
-    wait_for_healthy "$CONTAINER_NAME" 60 || log_warning "Container health check timed out (non-blocking)"
+    wait_for_healthy "$CONTAINER_NAME" 60 || log_warn "Container health check timed out (non-blocking)"
 else
-    log_warning "Container restart check skipped"
+    log_warn "Container restart check skipped"
 fi
 
 log_section "Cbox Init Log Format Tests"

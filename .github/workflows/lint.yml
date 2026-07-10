@@ -1,0 +1,57 @@
+name: Lint
+
+# Static analysis for shell scripts, Dockerfiles, and workflow YAML.
+# Tool versions are pinned for reproducibility; bump them via Dependabot/PR.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: shellcheck / hadolint / actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # --- Shell scripts (fail on real bugs; style warnings are advisory) ---
+      - name: ShellCheck
+        run: |
+          echo "Using $(shellcheck --version | grep version:)"
+          # -S error: fail only on errors so the gate is stable; run at warning
+          # locally (make/README) to see style suggestions.
+          find . -name '*.sh' -not -path './.git/*' -print0 \
+            | xargs -0 -r shellcheck -S error
+
+      # --- Dockerfiles ---
+      - name: hadolint
+        env:
+          HADOLINT_VERSION: "2.14.0"
+        run: |
+          curl -fsSL -o /tmp/hadolint \
+            "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64"
+          chmod +x /tmp/hadolint
+          rc=0
+          for df in php-base/Dockerfile php-fpm/Dockerfile php-cli/Dockerfile php-fpm-nginx/Dockerfile nginx/Dockerfile; do
+            echo "::group::hadolint $df"
+            /tmp/hadolint --failure-threshold error "$df" || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc
+
+      # --- GitHub Actions workflows ---
+      - name: actionlint
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+        run: |
+          curl -fsSL -o /tmp/actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
+          # Ignore low-value shellcheck style hints in run: blocks (SC2086 et al.);
+          # real workflow errors and unknown-label checks still gate.
+          /tmp/actionlint -ignore 'SC2086' -ignore 'SC2129' -ignore 'SC2046'

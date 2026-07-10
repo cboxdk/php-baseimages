@@ -382,6 +382,10 @@ generate_runtime_configs() {
             log_info "Configuring trusted proxies for real IP detection"
             NGINX_REAL_IP_CONFIG=""
             for proxy in ${NGINX_TRUSTED_PROXIES}; do
+                # Proxies are IPs/CIDRs; strip characters that could break out
+                # of the directive and inject arbitrary nginx config.
+                proxy=$(sanitize_nginx_value "$proxy")
+                [ -z "$proxy" ] && continue
                 NGINX_REAL_IP_CONFIG="${NGINX_REAL_IP_CONFIG}set_real_ip_from ${proxy};\n"
             done
             NGINX_REAL_IP_CONFIG="${NGINX_REAL_IP_CONFIG}real_ip_header ${NGINX_REAL_IP_HEADER};\nreal_ip_recursive ${NGINX_REAL_IP_RECURSIVE};"
@@ -432,6 +436,18 @@ generate_runtime_configs() {
 
     # SSL configuration
     [ -n "${SSL_MODE}" ] && [ "${SSL_MODE}" != "off" ] && generate_ssl_config
+
+    # Fail closed: validate the generated nginx config so a bad env-supplied
+    # value surfaces here with a clear message instead of crash-looping nginx
+    # under cbox-init. `nginx -t` only checks syntax, not upstream liveness, so
+    # it is safe to run before php-fpm is up.
+    if command -v nginx >/dev/null 2>&1; then
+        if ! nginx -t 2>/tmp/nginx-test.err; then
+            log_error "Generated Nginx configuration is invalid:"
+            cat /tmp/nginx-test.err >&2 || true
+            exit 1
+        fi
+    fi
     return 0
 }
 
@@ -459,6 +475,9 @@ generate_ssl_config() {
 
     : ${SSL_PROTOCOLS:=TLSv1.2 TLSv1.3}
     : ${SSL_CIPHERS:=ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384}
+    # Cipher strings never legitimately contain shell/nginx metacharacters;
+    # strip them so a supplied value can't inject directives.
+    SSL_CIPHERS=$(sanitize_nginx_value "$SSL_CIPHERS")
 
     local ssl_mtls_config=""
     [ "${MTLS_ENABLED}" = "true" ] && [ -f "${MTLS_CLIENT_CA_FILE}" ] && \
@@ -559,7 +578,12 @@ apply_cbox_init_env_overrides() {
 
     [ ! -f "$src" ] && return 0
 
-    cp "$src" "$dst"
+    # The rendered config holds the management-API bearer token, so it must not
+    # be world-readable. Create it 0600 (umask for the copy, chmod to be sure)
+    # so other UIDs in the container — e.g. a compromised php-fpm worker — can't
+    # read the token from /tmp.
+    (umask 077 && cp "$src" "$dst")
+    chmod 600 "$dst" 2>/dev/null || true
 
     # Escape a value for safe use on the RHS of a sed s### replacement.
     _sed_escape() { printf '%s' "$1" | sed 's/[&/\]/\\&/g'; }
@@ -586,6 +610,10 @@ apply_cbox_init_env_overrides() {
     if [ -n "${NGINX_HTTP_PORT}" ] && [ "${NGINX_HTTP_PORT}" != "80" ]; then
         sed -i "s#http://127.0.0.1:80/health#http://127.0.0.1:$(_sed_escape "${NGINX_HTTP_PORT}")/health#" "$dst"
     fi
+
+    # Re-assert 0600 in case an in-place edit reset the mode (defence in depth;
+    # GNU sed -i preserves it, but don't rely on that for a secret-bearing file).
+    chmod 600 "$dst" 2>/dev/null || true
 
     export CBOX_INIT_CONFIG="$dst"
 }

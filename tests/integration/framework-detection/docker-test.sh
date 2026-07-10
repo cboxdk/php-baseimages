@@ -41,9 +41,11 @@ trap cleanup EXIT
 test_laravel_container() {
     info "Testing Laravel detection in Bookworm container..."
 
-    # Create test Laravel structure
+    # Create test Laravel structure. Detection requires artisan PLUS
+    # laravel/framework in composer.json (or bootstrap/app.php).
     mkdir -p tests/integration/framework-detection/fixtures/laravel
     touch tests/integration/framework-detection/fixtures/laravel/artisan
+    echo '{"require": {"laravel/framework": "^11.0"}}' > tests/integration/framework-detection/fixtures/laravel/composer.json
     echo "<?php echo 'Laravel Test';" > tests/integration/framework-detection/fixtures/laravel/index.php
 
     # Run container with timeout to prevent hangs

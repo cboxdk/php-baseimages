@@ -76,10 +76,12 @@ on:
         type: boolean
         default: true
       enable-trivy:
-        description: 'Enable Trivy vulnerability scanning'
+        description: 'Enable Trivy vulnerability scanning (scans + gates the build)'
         required: false
         type: boolean
-        default: false
+        # On by default so every image family is scanned and gated. Callers can
+        # still pass `enable-trivy: false` to opt a specific tier out.
+        default: true
       # --- Test configuration ---
       test-script:
         description: 'Shell script for testing the built image (receives IMAGE env var)'
@@ -612,6 +614,19 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+
+      # Gate the build: fail on CRITICAL/HIGH vulnerabilities that have a fix
+      # available. `ignore-unfixed` keeps un-actionable upstream CVEs from
+      # blocking a release; add a `.trivyignore` for accepted exceptions.
+      - name: Fail build on fixable CRITICAL/HIGH vulnerabilities
+        if: inputs.enable-trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
 
       - name: Test built image
         if: inputs.test-script != ''

@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./php-fpm/Dockerfile
       args:
-        PHP_VERSION: "8.3"
+        PHP_VERSION: "8.4"
     container_name: cbox-fpm
     volumes:
       - ./test-app:/var/www/html
@@ -16,9 +16,10 @@ services:
   php-fpm-dev:
     build:
       context: .
-      dockerfile: ./php-fpm/Dockerfile.dev
+      dockerfile: ./php-fpm/Dockerfile
+      target: dev-root
       args:
-        PHP_VERSION: "8.3"
+        PHP_VERSION: "8.4"
     container_name: cbox-fpm-dev
     volumes:
       - ./test-app:/var/www/html
@@ -36,7 +37,7 @@ services:
       context: .
       dockerfile: ./php-cli/Dockerfile
       args:
-        PHP_VERSION: "8.3"
+        PHP_VERSION: "8.4"
     container_name: cbox-cli
     volumes:
       - ./test-app:/var/www/html
@@ -65,7 +66,7 @@ services:
       context: .
       dockerfile: ./php-fpm-nginx/Dockerfile
       args:
-        PHP_VERSION: "8.3"
+        PHP_VERSION: "8.4"
     container_name: cbox-fpm-nginx
     ports:
       - "8081:80"
