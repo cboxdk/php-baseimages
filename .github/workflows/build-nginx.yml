@@ -73,7 +73,8 @@ jobs:
         with:
           context: ${{ steps.dockerfile.outputs.context }}
           file: ${{ steps.dockerfile.outputs.path }}
-          platforms: linux/amd64,linux/arm64
+          # arm64 disabled for now (QEMU emulation); re-enable with a native ARM runner.
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

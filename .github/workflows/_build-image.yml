@@ -97,7 +97,12 @@ on:
         description: 'Build platforms (comma-separated, e.g., linux/amd64,linux/arm64)'
         required: false
         type: string
-        default: 'linux/amd64,linux/arm64'
+        # arm64 is disabled for now: it builds via QEMU emulation on the x64
+        # self-hosted runner, which regularly exceeds the 60-minute job timeout
+        # (especially the chromium tier). Re-enable by setting this back to
+        # 'linux/amd64,linux/arm64' once a native ARM runner is available (and
+        # point the build-arm64 job's runs-on at it).
+        default: 'linux/amd64'
       timeout:
         description: 'Job timeout in minutes'
         required: false
@@ -107,14 +112,17 @@ on:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Architecture: Split into parallel builds + manifest merge
 #
-#   build-amd64 (GitHub-hosted ubuntu-24.04, native)    ──┐
-#                                                          ├── merge (GitHub-hosted, manifest + sign)
-#   build-arm64 (GitHub-hosted ARM runner, native)      ──┘
+#   build-amd64 (self-hosted x64, native)    ──┐
+#                                               ├── merge (manifest + sign + scan)
+#   build-arm64 (self-hosted x64, QEMU) [off] ──┘
 #
-# AMD64 builds natively on GitHub-hosted ubuntu-24.04. ARM64 builds natively on
-# GitHub-hosted ARM runners (ubuntu-24.04-arm). Both push by digest; the merge
-# job creates a multi-arch manifest, signs, and scans. For PRs, builds run but
-# skip push; merge is skipped.
+# AMD64 builds natively on the self-hosted x64 runner. ARM64 currently builds
+# via QEMU emulation on the same x64 runner — it is DISABLED by default (see the
+# `platforms` input) because emulated builds exceed the job timeout. The merge
+# job creates a manifest (single-arch amd64 while arm64 is off; multi-arch when
+# re-enabled), signs, and scans. For PRs, builds run but skip push; merge is
+# skipped. Re-enable arm64 by adding it to `platforms` once a native ARM runner
+# exists.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
@@ -495,7 +503,14 @@ jobs:
   merge:
     runs-on: [self-hosted, linux, x64, buildx]
     timeout-minutes: 10
-    if: github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
+    # Run once amd64 has succeeded, regardless of whether arm64 built (it may be
+    # disabled or skipped). always() is required so a skipped build-arm64 does
+    # not skip the merge; the result check gates on amd64 actually succeeding.
+    if: >-
+      always() &&
+      needs.build-amd64.result == 'success' &&
+      github.event_name != 'pull_request' &&
+      github.repository == 'cboxdk/php-baseimages'
     needs:
       - build-amd64
       - build-arm64
@@ -514,6 +529,7 @@ jobs:
           path: /tmp/digests
 
       - name: Download arm64 digest
+        if: contains(inputs.platforms, 'linux/arm64')
         uses: actions/download-artifact@v4
         with:
           name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${{ inputs.tag-suffix || 'standard' }}-arm64
