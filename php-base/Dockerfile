@@ -34,9 +34,11 @@ ARG PCOV_VERSION=1.0.12
 # SPX is not on PECL; pin the git tag for reproducible dev builds.
 ARG SPX_VERSION=v0.4.22
 
-# Stage 1: Get Node.js from official image
-ARG NODE_VERSION=22
-FROM node:${NODE_VERSION}-bookworm-slim AS node
+# JS runtimes are installed via RUN (official tarball/zip), not `COPY --from`,
+# because copying from an external image stage triggers a buildx blob-mount
+# failure on our self-hosted runner (the layer gets dropped on push to ghcr).
+ARG NODE_VERSION=22.23.1
+ARG BUN_VERSION=1.3.14
 
 # ============================================================================
 # Cbox Init binary selection (multi-stage to avoid dead layers)
@@ -189,14 +191,40 @@ FROM slim-base AS standard-base
 ARG IMAGICK_VERSION
 ARG VIPS_VERSION
 ARG MONGODB_VERSION
+ARG NODE_VERSION
+ARG BUN_VERSION
 
-# Copy Node.js binaries from official node image
-COPY --from=node /usr/local/bin/node /usr/local/bin/node
-COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
-
-# Create npm/npx symlinks
-RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
-    ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+# JS runtimes: Node.js (+ npm/npx) and Bun. Installed from official release
+# artifacts via RUN (checksum-verified, arch-aware) rather than `COPY --from=`
+# an external image — the latter is dropped on push by buildx on our runner.
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        amd64) node_arch='x64';    bun_arch='x64' ;; \
+        arm64) node_arch='arm64';  bun_arch='aarch64' ;; \
+        *) echo "unsupported architecture: $arch" >&2; exit 1 ;; \
+    esac; \
+    cd /tmp; \
+    # --- Node.js (official binary tarball) ---
+    curl -fsSLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${node_arch}.tar.gz"; \
+    curl -fsSL  "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt" -o node-SHASUMS256.txt; \
+    node_sum="$(grep " node-v${NODE_VERSION}-linux-${node_arch}.tar.gz\$" node-SHASUMS256.txt)"; \
+    [ -n "$node_sum" ] || { echo "no checksum found for node asset" >&2; exit 1; }; \
+    echo "$node_sum" | sha256sum -c -; \
+    tar -xzf "node-v${NODE_VERSION}-linux-${node_arch}.tar.gz" -C /usr/local --strip-components=1 --no-same-owner \
+        --exclude='*/CHANGELOG.md' --exclude='*/LICENSE' --exclude='*/README.md'; \
+    # --- Bun (official release zip) ---
+    curl -fsSLO "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-${bun_arch}.zip"; \
+    curl -fsSL  "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/SHASUMS256.txt" -o bun-SHASUMS256.txt; \
+    bun_sum="$(grep " bun-linux-${bun_arch}.zip\$" bun-SHASUMS256.txt)"; \
+    [ -n "$bun_sum" ] || { echo "no checksum found for bun asset" >&2; exit 1; }; \
+    echo "$bun_sum" | sha256sum -c -; \
+    unzip -q "bun-linux-${bun_arch}.zip"; \
+    install -m 0755 "bun-linux-${bun_arch}/bun" /usr/local/bin/bun; \
+    ln -sf /usr/local/bin/bun /usr/local/bin/bunx; \
+    # --- cleanup + smoke test ---
+    rm -rf /tmp/node-v* /tmp/node-SHASUMS256.txt /tmp/bun-linux-* /tmp/bun-SHASUMS256.txt; \
+    node --version; npm --version; npx --version; bun --version
 
 # ============================================================================
 # STANDARD: Additional runtime deps + ImageMagick/vips extensions

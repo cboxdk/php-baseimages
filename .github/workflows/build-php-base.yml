@@ -128,6 +128,7 @@ jobs:
         docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE bun --version
         docker run --rm $IMAGE cbox-init --version
     secrets: inherit
 
@@ -158,6 +159,7 @@ jobs:
         docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE bun --version
         docker run --rm $IMAGE cbox-init --version
     secrets: inherit
 
@@ -188,6 +190,7 @@ jobs:
         docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE bun --version
         docker run --rm $IMAGE cbox-init --version
         # Verify Chromium is installed
         docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser
@@ -246,6 +249,7 @@ jobs:
         docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips|xdebug|pcov|spx"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
+        docker run --rm $IMAGE bun --version
         docker run --rm $IMAGE cbox-init --version
         # Verify Chromium is installed (inherited from chromium tier)
         docker run --rm $IMAGE which chromium || docker run --rm $IMAGE which chromium-browser

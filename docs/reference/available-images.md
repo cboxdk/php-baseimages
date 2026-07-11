@@ -144,7 +144,8 @@ Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 | **Core Extensions** | ✅ 25+ | ✅ 25+ | ✅ 25+ | ✅ 25+ |
 | **ImageMagick** | ❌ | ✅ | ✅ | ✅ |
 | **vips** | ❌ | ✅ | ✅ | ✅ |
-| **Node.js 22** | ❌ | ✅ | ✅ | ✅ |
+| **Node.js 22 (+ npm/npx)** | ❌ | ✅ | ✅ | ✅ |
+| **Bun** | ❌ | ✅ | ✅ | ✅ |
 | **Chromium** | ❌ | ❌ | ✅ | ✅ |
 | **Xdebug/PCOV/SPX** | ❌ | ❌ | ❌ | ✅ |
 | **Best For** | APIs, microservices | Most apps | Browser automation | Development, CI/CD |
