@@ -1,7 +1,7 @@
 ---
 title: "Changelog"
 description: "What's new in Cbox PHP Base Images - features, improvements, and security updates"
-weight: 99
+weight: 90
 ---
 
 # Changelog

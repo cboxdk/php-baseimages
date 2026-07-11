@@ -1,7 +1,7 @@
 ---
 title: "5-Minute Quickstart"
 description: "Get your PHP application running with Cbox in 5 minutes"
-weight: 1
+weight: 3
 ---
 
 # 5-Minute Quickstart
@@ -100,10 +100,10 @@ curl localhost:8000/health    # Health check
 
 | Goal | Guide |
 |------|-------|
-| Laravel setup | [Laravel Guide](../guides/laravel-guide.md) |
-| Add PHP extensions | [Extending Images](../advanced/extending-images.md) |
-| Production deployment | [Production Guide](../guides/production-deployment.md) |
-| All environment variables | [Environment Variables](../reference/environment-variables.md) |
+| Laravel setup | [Laravel Guide](../guides/laravel-guide) |
+| Add PHP extensions | [Extending Images](../advanced/extending-images) |
+| Production deployment | [Production Guide](../guides/production-deployment) |
+| All environment variables | [Environment Variables](../reference/environment-variables) |
 
 ## Available Images
 
@@ -131,4 +131,4 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 
 **Permission errors?** Cbox auto-fixes Laravel directories. Manual: `docker compose exec app chown -R www-data:www-data storage`
 
-**More help?** See [Common Issues](../troubleshooting/common-issues.md)
+**More help?** See [Common Issues](../troubleshooting/common-issues)

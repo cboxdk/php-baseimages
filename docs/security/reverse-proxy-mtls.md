@@ -1,7 +1,7 @@
 ---
 title: "Reverse Proxy & mTLS"
 description: "Configure Cbox behind Cloudflare, HAProxy, Traefik, Tailscale, Nginx, or Fastly with optional mTLS client certificate authentication"
-weight: 15
+weight: 3
 ---
 
 # Reverse Proxy & mTLS Configuration

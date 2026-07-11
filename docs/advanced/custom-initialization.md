@@ -1,7 +1,7 @@
 ---
 title: "Custom Initialization"
 description: "Startup scripts, wait-for-dependency patterns, database migrations, and dynamic configuration"
-weight: 6
+weight: 3
 ---
 
 # Custom Initialization
@@ -476,6 +476,6 @@ services:
 
 ## Next Steps
 
-- **[Extending Images](extending-images.md)** - Custom Dockerfiles
-- **[Custom Extensions](custom-extensions.md)** - Add PHP extensions
-- **[Performance Tuning](performance-tuning.md)** - Optimize startup time
+- **[Extending Images](./extending-images)** - Custom Dockerfiles
+- **[Custom Extensions](./custom-extensions)** - Add PHP extensions
+- **[Performance Tuning](./performance-tuning)** - Optimize startup time

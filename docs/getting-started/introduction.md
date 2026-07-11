@@ -31,11 +31,11 @@ Cbox provides production-ready containers with:
 - **Weekly security rebuilds** - Automatic CVE patching
 - **Framework auto-detection** - Laravel, Symfony, WordPress optimizations
 
-See [Cbox Init Integration](../cbox-init-integration.md) for advanced configuration.
+See [Cbox Init Integration](../observability/cbox-init-integration) for advanced configuration.
 
 ## Four Image Tiers
 
-Cbox images come in four tiers -- Slim (~120 MiB), Standard (~250 MiB), Chromium (~700 MiB), and Dev (~750 MiB) -- to match your exact needs. See [Choosing Your Image](choosing-your-image) for the full size matrix and decision guide.
+Cbox images come in four tiers -- Slim (~120 MiB), Standard (~250 MiB), Chromium (~700 MiB), and Dev (~750 MiB) -- to match your exact needs. See [Choosing Your Image](./choosing-your-image) for the full size matrix and decision guide.
 
 ## Cbox vs Alternatives
 
@@ -53,7 +53,7 @@ Cbox images come in four tiers -- Slim (~120 MiB), Standard (~250 MiB), Chromium
 
 **When to choose ServerSideUp**: You want established community support, proven S6 Overlay patterns, or Laravel-focused optimizations.
 
-Both are production-ready. See [Cbox vs ServerSideUp](../guides/cbox-vs-serversideup.md) for detailed comparison.
+Both are production-ready. See [Cbox vs ServerSideUp](../guides/cbox-vs-serversideup) for detailed comparison.
 
 ### vs Official PHP Images
 
@@ -105,7 +105,7 @@ Cbox uses a lightweight Go-based process manager:
 - Automatic process restart on failure
 - Custom scripts via `/docker-entrypoint-init.d/`
 
-See [Cbox Init Integration](../cbox-init-integration.md) for configuration options.
+See [Cbox Init Integration](../observability/cbox-init-integration) for configuration options.
 
 ### Framework Auto-Detection
 
@@ -151,15 +151,15 @@ No Dockerfile changes needed!
 
 ## Architecture Overview
 
-For the full image size matrix, tier contents, rootless variants, and single-service vs multi-service comparison, see [Choosing Your Image](choosing-your-image).
+For the full image size matrix, tier contents, rootless variants, and single-service vs multi-service comparison, see [Choosing Your Image](./choosing-your-image).
 
 ## Getting Started
 
 Ready to try Cbox?
 
-1. **[5-Minute Quickstart](quickstart.md)** - Get running immediately
-2. **[Laravel Guide](../guides/laravel-guide.md)** - Complete Laravel setup
-3. **[Choosing Your Image](choosing-your-image)** - Which tier to use
+1. **[5-Minute Quickstart](./quickstart)** - Get running immediately
+2. **[Laravel Guide](../guides/laravel-guide)** - Complete Laravel setup
+3. **[Choosing Your Image](./choosing-your-image)** - Which tier to use
 
 ## Requirements
 

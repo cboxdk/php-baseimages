@@ -1,7 +1,7 @@
 ---
 title: "Performance Tuning Guide"
 description: "Optimize PHP-FPM, OPcache, and Nginx for maximum performance in Cbox PHP Base Images"
-weight: 22
+weight: 4
 ---
 
 # Performance Tuning Guide
@@ -728,11 +728,11 @@ services:
 
 ## Related Documentation
 
-- [Environment Variables](../reference/environment-variables.md) - Configuration options
-- [Configuration Options](../reference/configuration-options.md) - Detailed config
-- [Production Deployment](../guides/production-deployment.md) - Production setup
-- [Security Hardening](security-hardening.md) - Security optimizations
+- [Environment Variables](../reference/environment-variables) - Configuration options
+- [Configuration Options](../reference/configuration-options) - Detailed config
+- [Production Deployment](../guides/production-deployment) - Production setup
+- [Security Hardening](../security/security-hardening) - Security optimizations
 
 ---
 
-**Questions?** Check [common issues](../troubleshooting/common-issues.md) or ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).
+**Questions?** Check [common issues](../troubleshooting/common-issues) or ask in [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

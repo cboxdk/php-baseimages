@@ -278,7 +278,7 @@ environment:
   - NGINX_HEADER_CSP=       # Disable Content-Security-Policy
 ```
 
-See [Security Hardening](../advanced/security-hardening#content-security-policy) for customization examples.
+See [Security Hardening](../security/security-hardening#content-security-policy) for customization examples.
 
 ### Gzip Compression
 
@@ -395,7 +395,7 @@ When proxies are configured, these headers are available in PHP:
 | `$_SERVER['HTTP_X_FORWARDED_HOST']` | Original hostname |
 | `$_SERVER['HTTP_X_REAL_IP']` | Real client IP |
 
-See [Reverse Proxy & mTLS Guide](../advanced/reverse-proxy-mtls.md) for detailed setup.
+See [Reverse Proxy & mTLS Guide](../security/reverse-proxy-mtls) for detailed setup.
 
 ---
 
@@ -457,7 +457,7 @@ services:
       - ./certs/server.key:/etc/ssl/private/cbox-selfsigned.key:ro
 ```
 
-See [Reverse Proxy & mTLS Guide](../advanced/reverse-proxy-mtls#mtls-mutual-tls-client-authentication) for complete setup.
+See [Reverse Proxy & mTLS Guide](../security/reverse-proxy-mtls#mtls-mutual-tls-client-authentication) for complete setup.
 
 ---
 
@@ -510,7 +510,7 @@ services:
       CBOX_INIT_API_AUTH: "my-secret"
 ```
 
-See [Cbox Init Integration](../cbox-init-integration#-management-api) for endpoints, CLI commands, and examples.
+See [Cbox Init Integration](../observability/cbox-init-integration#-management-api) for endpoints, CLI commands, and examples.
 
 ---
 

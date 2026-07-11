@@ -1,7 +1,7 @@
 ---
 title: "Security Hardening Guide"
 description: "Comprehensive security best practices for Cbox containers including CVE management, secrets handling, and production hardening"
-weight: 23
+weight: 1
 ---
 
 # Security Hardening Guide
@@ -410,7 +410,7 @@ For detailed TLS configuration, use the [Mozilla SSL Configuration Generator](ht
 
 - [Production Deployment](../guides/production-deployment) - Production setup
 - [Environment Variables](../reference/environment-variables) - Configuration options
-- [Performance Tuning](performance-tuning) - Performance optimization
+- [Performance Tuning](../advanced/performance-tuning) - Performance optimization
 
 ---
 

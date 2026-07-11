@@ -50,7 +50,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 
 - [Extending Images](advanced/extending-images) -- Custom extensions and packages
 - [Performance Tuning](advanced/performance-tuning) -- PHP-FPM, OPcache, Nginx
-- [Security Hardening](advanced/security-hardening) -- CVE management, secrets
+- [Security Hardening](security/security-hardening) -- CVE management, secrets
 
 ### Reference
 
@@ -58,11 +58,11 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 - [Environment Variables](reference/environment-variables) -- Complete env var list
 - [Configuration Options](reference/configuration-options) -- PHP, FPM, Nginx settings
 - [Available Extensions](reference/available-extensions) -- 40+ extensions by tier
-- [Health Checks](reference/health-checks) -- Monitoring and probes
+- [Health Checks](observability/health-checks) -- Monitoring and probes
 
 ### Help
 
 - [Common Issues](troubleshooting/common-issues) -- FAQ-style solutions
 - [Debugging Guide](troubleshooting/debugging-guide) -- Systematic debugging
-- [Migration Guide](troubleshooting/migration-guide) -- From ServerSideUp, Bitnami, custom images
-- [Changelog](changelog) -- What's new
+- [Migration Guide](getting-started/migration-guide) -- From ServerSideUp, Bitnami, custom images
+- [Changelog](./changelog) -- What's new

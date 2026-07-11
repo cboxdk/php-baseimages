@@ -1,7 +1,7 @@
 ---
 title: "Framework Guides"
 description: "Complete setup guides for Laravel, Symfony, WordPress, and other popular PHP frameworks using Cbox PHP Base Images"
-weight: 10
+weight: 20
 ---
 
 # Framework & Workflow Guides
@@ -12,19 +12,19 @@ Step-by-step guides for popular PHP frameworks and development workflows.
 
 ### Framework-Specific Guides
 
-- **[Laravel Complete Guide](laravel-guide.md)** ⭐ Most Popular
+- **[Laravel Complete Guide](./laravel-guide)** ⭐ Most Popular
   - Full Laravel setup with MySQL, Redis, and Scheduler
   - Development environment with Xdebug and MailHog
   - Production deployment configuration
   - Common mistakes and solutions
 
-- **[Symfony Complete Guide](symfony-guide.md)**
+- **[Symfony Complete Guide](./symfony-guide)**
   - Complete Symfony setup with PostgreSQL and Redis
   - Cache pools and session configuration
   - Doctrine migrations and database management
   - Production optimization
 
-- **[WordPress Complete Guide](wordpress-guide.md)**
+- **[WordPress Complete Guide](./wordpress-guide)**
   - WordPress installation with MySQL
   - WP-CLI usage and plugin development
   - Redis Object Cache setup
@@ -32,41 +32,33 @@ Step-by-step guides for popular PHP frameworks and development workflows.
 
 ### Workflow Guides
 
-- **[Development Workflow](development-workflow.md)**
+- **[Development Workflow](./development-workflow)**
   - Local development with hot-reload
   - Xdebug setup and debugging tips
   - Testing and quality assurance
   - Git workflow integration
 
-- **[Image Processing Guide](image-processing.md)** 🖼️ New
+- **[Image Processing Guide](./image-processing)** 🖼️ New
   - GD, ImageMagick, and libvips comparison
   - HEIC/HEIF conversion (iPhone photos)
   - PDF generation and SVG rendering
   - Browsershot setup for screenshots/PDFs
   - Laravel integration (Intervention, Spatie Media)
 
-- **[Production Deployment](production-deployment.md)**
+- **[Production Deployment](./production-deployment)**
   - Security hardening checklist
   - Performance optimization
   - Monitoring and logging
   - CI/CD integration
   - Zero-downtime deployments
 
-- **[Cbox vs ServerSideUp](cbox-vs-serversideup.md)** ✨ New
+- **[Cbox vs ServerSideUp](./cbox-vs-serversideup)** ✨ New
   - DX, docs, and feature scorecard
   - Actionable follow-ups to widen the gap
   - Talking points for stakeholders
 
-- **[Observability & Health Checks](observability.md)** ✨ New
-  - Application health checks with `cboxdk/laravel-health`
-  - Queue metrics and Prometheus export with `cboxdk/laravel-queue-metrics`
-  - Dynamic queue autoscaling with `cboxdk/laravel-queue-autoscale`
-  - Combined Prometheus scrape config
-
-- **[Health Checks & CI Templates](healthchecks-ci.md)**
-  - Docker Compose health-check override file
-  - GitHub Actions workflow for `php artisan test`
-  - Deployment-ready verification checklist
+> Health checks, metrics, and the management API now live in their own
+> **[Observability & Health](../observability)** section.
 
 ## What You'll Learn
 
@@ -82,7 +74,7 @@ Step-by-step guides for popular PHP frameworks and development workflows.
 
 Before starting these guides, you should:
 
-1. Complete the [5-Minute Quickstart](../getting-started/quickstart.md)
+1. Complete the [5-Minute Quickstart](../getting-started/quickstart)
 2. Have Docker and Docker Compose installed
 3. Have your framework application ready (or create a new one)
 
@@ -99,16 +91,16 @@ All framework guides follow these principles:
 
 ## Need Help?
 
-- **Quick answers**: Check [Common Issues](../troubleshooting/common-issues.md)
-- **Debugging**: Use our [Debugging Guide](../troubleshooting/debugging-guide.md)
-- **Migration**: See our [Migration Guide](../troubleshooting/migration-guide.md)
+- **Quick answers**: Check [Common Issues](../troubleshooting/common-issues)
+- **Debugging**: Use our [Debugging Guide](../troubleshooting/debugging-guide)
+- **Migration**: See our [Migration Guide](../getting-started/migration-guide)
 - **Community**: Join [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 
 ## Other Frameworks
 
 These frameworks work out of the box with Cbox PHP Base Images:
 
-- **Statamic** -- Runs on Laravel. Use the [Laravel Guide](laravel-guide).
+- **Statamic** -- Runs on Laravel. Use the [Laravel Guide](./laravel-guide).
 - **Drupal / TYPO3 / Magento** -- Use the standard tier with the [Quickstart](../getting-started/quickstart). No framework-specific configuration needed.
 
 ---

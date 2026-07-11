@@ -1,7 +1,7 @@
 ---
 title: "Observability & Health Checks"
 description: "Application-level health checks, queue metrics, and autoscaling with cboxdk packages"
-weight: 8
+weight: 1
 ---
 
 # Observability & Health Checks

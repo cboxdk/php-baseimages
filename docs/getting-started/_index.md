@@ -1,7 +1,7 @@
 ---
 title: "Getting Started"
 description: "Get started with Cbox PHP Base Images - installation, quickstart guides, and choosing the right tier for your project"
-weight: 1
+weight: 10
 ---
 
 # Getting Started with Cbox
@@ -10,10 +10,10 @@ New to Cbox? This section will help you get up and running quickly.
 
 ## Start Here
 
-1. **[5-Minute Quickstart](quickstart.md)** - Get your first PHP application running in just 5 minutes
-2. **[Introduction](introduction.md)** - Learn why Cbox exists and how it compares to alternatives
-3. **[Installation](installation.md)** - Detailed installation instructions for all platforms
-4. **[Choosing Your Image](choosing-your-image)** - Tiers, sizes, root vs rootless, single vs multi-service
+1. **[5-Minute Quickstart](./quickstart)** - Get your first PHP application running in just 5 minutes
+2. **[Introduction](./introduction)** - Learn why Cbox exists and how it compares to alternatives
+3. **[Installation](./installation)** - Detailed installation instructions for all platforms
+4. **[Choosing Your Image](./choosing-your-image)** - Tiers, sizes, root vs rootless, single vs multi-service
 
 ## Quick Decision Guide
 
@@ -50,10 +50,10 @@ What do you need?
 
 Once you've completed the getting started guides:
 
-- **Framework Users**: Check out our [Laravel Guide](../guides/laravel-guide.md), [Symfony Guide](../guides/symfony-guide.md), or [WordPress Guide](../guides/wordpress-guide.md)
-- **Customization Needs**: Learn how to [extend images](../advanced/extending-images.md) with custom extensions
-- **Production Deployment**: Read our [production deployment](../guides/production-deployment.md) best practices
+- **Framework Users**: Check out our [Laravel Guide](../guides/laravel-guide), [Symfony Guide](../guides/symfony-guide), or [WordPress Guide](../guides/wordpress-guide)
+- **Customization Needs**: Learn how to [extend images](../advanced/extending-images) with custom extensions
+- **Production Deployment**: Read our [production deployment](../guides/production-deployment) best practices
 
 ---
 
-**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues.md) or [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).
+**Questions?** Check our [troubleshooting guides](../troubleshooting/common-issues) or [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions).

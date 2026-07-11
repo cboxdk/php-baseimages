@@ -1,7 +1,7 @@
 ---
 title: "Multi-Architecture Builds"
 description: "Build and deploy Cbox images for AMD64 and ARM64 platforms including Apple Silicon and AWS Graviton"
-weight: 50
+weight: 5
 ---
 
 # Multi-Architecture Builds
@@ -355,4 +355,4 @@ spec:
 
 ---
 
-**Need help?** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions) | [Performance Tuning](performance-tuning.md)
+**Need help?** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions) | [Performance Tuning](./performance-tuning)

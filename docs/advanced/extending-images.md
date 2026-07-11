@@ -1,7 +1,7 @@
 ---
 title: "Extending Cbox Images"
 description: "Learn how to customize Cbox PHP Base Images to add custom PHP extensions, system packages, and initialization scripts"
-weight: 21
+weight: 1
 ---
 
 # Extending Cbox Images
@@ -773,11 +773,11 @@ RUN chmod -R 755 storage bootstrap/cache && \
 
 ## Next Steps
 
-- **[Custom Extensions Guide](custom-extensions.md)** - Deep dive into PECL extensions
-- **[Performance Tuning](performance-tuning.md)** - Optimize PHP/Nginx for production
-- **[Security Hardening](security-hardening.md)** - Secure your custom images
-- **[Production Deployment](../guides/production-deployment.md)** - Deploy with CI/CD
+- **[Custom Extensions Guide](./custom-extensions)** - Deep dive into PECL extensions
+- **[Performance Tuning](./performance-tuning)** - Optimize PHP/Nginx for production
+- **[Security Hardening](../security/security-hardening)** - Secure your custom images
+- **[Production Deployment](../guides/production-deployment)** - Deploy with CI/CD
 
 ---
 
-**Questions or Issues?** Check our [Troubleshooting Guide](../troubleshooting/common-issues.md) or [open an issue on GitHub](https://github.com/cboxdk/php-baseimages/issues).
+**Questions or Issues?** Check our [Troubleshooting Guide](../troubleshooting/common-issues) or [open an issue on GitHub](https://github.com/cboxdk/php-baseimages/issues).

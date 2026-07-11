@@ -315,6 +315,6 @@ docker pull --platform linux/amd64 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8
 
 ## Next Steps
 
-- **[5-Minute Quickstart](quickstart.md)** - Get a Laravel app running
-- **[Choosing Your Image](choosing-your-image)** - Tiers, sizes, and when to use each
-- **[Laravel Guide](../guides/laravel-guide.md)** - Complete Laravel setup
+- **[5-Minute Quickstart](./quickstart)** - Get a Laravel app running
+- **[Choosing Your Image](./choosing-your-image)** - Tiers, sizes, and when to use each
+- **[Laravel Guide](../guides/laravel-guide)** - Complete Laravel setup

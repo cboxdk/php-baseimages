@@ -1,7 +1,7 @@
 ---
 title: "Available Extensions"
 description: "Complete list of PHP extensions by image tier - Slim, Standard, Chromium, and Dev"
-weight: 30
+weight: 4
 ---
 
 # Available Extensions
@@ -15,7 +15,7 @@ Cbox images come in four tiers with different extension sets:
 | Tier | Extensions | Best For |
 |------|-----------|----------|
 | **Slim** | 25+ core | APIs, microservices |
-| **Standard** | Slim + ImageMagick, vips, Node.js | Most apps (DEFAULT) |
+| **Standard** | Slim + ImageMagick, vips, Node.js, Bun | Most apps (DEFAULT) |
 | **Chromium** | Standard + Chromium | Browsershot, Dusk, PDF |
 | **Dev** | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
@@ -76,7 +76,7 @@ These extensions are added in the standard tier (and inherited by chromium/dev):
 
 ## Standard Tier Extensions
 
-The Standard tier includes everything in Slim, plus image processing and Node.js.
+The Standard tier includes everything in Slim, plus image processing, Node.js, and Bun.
 
 ### Additional Extensions (on top of Slim)
 
@@ -91,7 +91,8 @@ The Standard tier includes everything in Slim, plus image processing and Node.js
 | Tool | Purpose |
 |------|---------|
 | Node.js 22 | JavaScript runtime |
-| npm | Node package manager |
+| npm / npx | Node package manager |
+| Bun | Fast JavaScript runtime & package manager |
 | exiftool | Advanced image metadata |
 | ghostscript | PDF/PostScript support |
 | librsvg | SVG rendering |
@@ -141,7 +142,7 @@ The Dev tier includes everything in Chromium, plus development and profiling too
 |-----------|------|---------|---------|
 | `xdebug` | PECL | 3.5.0 | Step debugging, code coverage, profiling |
 | `pcov` | PECL | 1.0.12 | Fast code coverage (10x faster than Xdebug) |
-| `spx` | GitHub | latest | Simple performance profiler with web UI |
+| `spx` | GitHub | 0.4.22 | Simple performance profiler with web UI |
 
 ### Xdebug Configuration
 
@@ -246,7 +247,8 @@ docker run --rm -e XDEBUG_MODE=debug \
 | gettext | ❌ | ✅ | ✅ | ✅ |
 | shmop | ❌ | ✅ | ✅ | ✅ |
 | sysvmsg, sysvsem, sysvshm | ❌ | ✅ | ✅ | ✅ |
-| **Node.js 22** | ❌ | ✅ | ✅ | ✅ |
+| **Node.js 22 (+ npm/npx)** | ❌ | ✅ | ✅ | ✅ |
+| **Bun** | ❌ | ✅ | ✅ | ✅ |
 | **Chromium** | ❌ | ❌ | ✅ | ✅ |
 | **Xdebug** | ❌ | ❌ | ❌ | ✅ |
 | **PCOV** | ❌ | ❌ | ❌ | ✅ |
@@ -266,7 +268,7 @@ All PECL extensions use pinned versions for reproducibility:
 | vips | 1.0.13 |
 | xdebug | 3.5.0 |
 | pcov | 1.0.12 |
-| spx | latest (from GitHub) |
+| spx | 0.4.22 (from GitHub) |
 
 ## Checking Installed Extensions
 
@@ -415,4 +417,4 @@ docker exec myapp php -r "foreach(get_loaded_extensions() as \$ext) echo \$ext.'
 
 ---
 
-**Need a specific extension?** See [Extending Images](../advanced/extending-images.md) | [Choosing Your Image](../getting-started/choosing-your-image)
+**Need a specific extension?** See [Extending Images](../advanced/extending-images) | [Choosing Your Image](../getting-started/choosing-your-image)

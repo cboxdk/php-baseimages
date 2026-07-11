@@ -1,7 +1,7 @@
 ---
 title: "Choosing Your Image"
 description: "Image tiers, sizes, root vs rootless, and single-service vs multi-service explained"
-weight: 3
+weight: 4
 ---
 
 ## Image Size Matrix
@@ -130,6 +130,6 @@ services:
 
 ## Next Steps
 
-- [5-Minute Quickstart](quickstart) -- Get running immediately
+- [5-Minute Quickstart](./quickstart) -- Get running immediately
 - [Laravel Guide](../guides/laravel-guide) -- Complete Laravel setup
 - [Available Extensions](../reference/available-extensions) -- Full extension list by tier

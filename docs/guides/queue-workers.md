@@ -1,7 +1,7 @@
 ---
 title: "Queue Workers Guide"
 description: "Running background jobs with Laravel queues, Horizon, and PHP workers"
-weight: 5
+weight: 4
 ---
 
 # Queue Workers Guide

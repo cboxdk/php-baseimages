@@ -28,32 +28,32 @@ Cbox images come in four tiers:
   - Tier comparison (Slim / Standard / Chromium / Dev)
   - Root vs rootless, single-service vs multi-service
 
-- **[Available Images](available-images.md)**
+- **[Available Images](./available-images)**
   - All image tags and variants
   - Image sizes and architecture
   - Version support matrix
   - Rootless variants
 
-- **[Tagging Strategy](tagging-strategy.md)**
+- **[Tagging Strategy](./tagging-strategy)**
   - Tag format and naming conventions
   - Rolling vs immutable tags
   - Deprecation policy
 
 ### Configuration & Settings
 
-- **[Environment Variables](environment-variables.md)**
+- **[Environment Variables](./environment-variables)**
   - Complete list of all environment variables
   - Framework-specific variables
   - PHP, PHP-FPM, and Nginx configuration
   - Default values and examples
 
-- **[Configuration Options](configuration-options.md)**
+- **[Configuration Options](./configuration-options)**
   - PHP.ini customization
   - PHP-FPM pool configuration
   - Nginx server blocks and includes
   - Custom configuration patterns
 
-- **[Available Extensions](available-extensions.md)**
+- **[Available Extensions](./available-extensions)**
   - Extensions by tier (Slim/Standard/Chromium/Dev)
   - Extension usage examples
   - Version information
@@ -61,11 +61,8 @@ Cbox images come in four tiers:
 
 ### Monitoring & Operations
 
-- **[Health Checks](health-checks.md)**
-  - Built-in health check internals
-  - Docker healthcheck configuration
-  - Kubernetes liveness/readiness probes
-  - Custom health check scripts
+- **[Observability & Health](../observability)** — health checks, metrics,
+  readiness probes, and the Cbox Init management API.
 
 ## Quick Tier Selection
 
@@ -93,10 +90,10 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 Looking for a specific setting or variable?
 
 - **Image tier**: Check [Choosing Your Image](../getting-started/choosing-your-image)
-- **Environment variable**: Check [Environment Variables](environment-variables.md)
-- **PHP setting**: Check [Configuration Options](configuration-options.md#php-ini)
-- **Extension availability**: Check [Available Extensions](available-extensions.md)
-- **Image tag**: Check [Available Images](available-images.md)
+- **Environment variable**: Check [Environment Variables](./environment-variables)
+- **PHP setting**: Check [Configuration Options](./configuration-options#php-ini)
+- **Extension availability**: Check [Available Extensions](./available-extensions)
+- **Image tag**: Check [Available Images](./available-images)
 
 ### Integration Examples
 
@@ -130,4 +127,4 @@ Found an undocumented variable or option?
 
 ---
 
-**Need more help?** Check the [guides](../guides/_index.md) for practical examples or [troubleshooting](../troubleshooting/common-issues.md) for common issues.
+**Need more help?** Check the [guides](../guides) for practical examples or [troubleshooting](../troubleshooting/common-issues) for common issues.

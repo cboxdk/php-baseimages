@@ -1,7 +1,7 @@
 ---
 title: "Symfony Guide"
 description: "Symfony setup with PostgreSQL, Redis, and production deployment"
-weight: 12
+weight: 2
 ---
 
 # Symfony Guide
@@ -75,7 +75,7 @@ framework:
         handler_id: '%env(REDIS_URL)%'
 ```
 
-See [Environment Variables](../reference/environment-variables.md) for all options.
+See [Environment Variables](../reference/environment-variables) for all options.
 
 ---
 
@@ -93,7 +93,7 @@ services:
       - XDEBUG_CONFIG=client_host=host.docker.internal
 ```
 
-See [Development Workflow](development-workflow.md) for Xdebug setup.
+See [Development Workflow](./development-workflow) for Xdebug setup.
 
 ---
 
@@ -119,7 +119,7 @@ php bin/console cache:warmup --env=prod
 php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
-See [Production Deployment](production-deployment.md) for full guide.
+See [Production Deployment](./production-deployment) for full guide.
 
 ---
 
@@ -158,7 +158,7 @@ docker compose exec app php bin/phpunit
 
 | Topic | Guide |
 |-------|-------|
-| Development workflow | [Development Workflow](development-workflow.md) |
-| Production deploy | [Production Deployment](production-deployment.md) |
-| Add extensions | [Extending Images](../advanced/extending-images.md) |
-| All env vars | [Environment Variables](../reference/environment-variables.md) |
+| Development workflow | [Development Workflow](./development-workflow) |
+| Production deploy | [Production Deployment](./production-deployment) |
+| Add extensions | [Extending Images](../advanced/extending-images) |
+| All env vars | [Environment Variables](../reference/environment-variables) |

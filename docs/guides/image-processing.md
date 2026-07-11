@@ -1,7 +1,7 @@
 ---
 title: "Image Processing Guide"
 description: "Complete guide to image manipulation with GD, ImageMagick, libvips, and Browsershot in Cbox"
-weight: 50
+weight: 5
 ---
 
 # Image Processing Guide
@@ -475,4 +475,4 @@ docker exec myapp gs --version
 
 ---
 
-**Related Guides**: [Available Extensions](../reference/available-extensions.md) | [Laravel Guide](laravel-guide.md) | [Performance Tuning](../advanced/performance-tuning.md)
+**Related Guides**: [Available Extensions](../reference/available-extensions) | [Laravel Guide](./laravel-guide) | [Performance Tuning](../advanced/performance-tuning)

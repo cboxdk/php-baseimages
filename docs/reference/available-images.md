@@ -1,7 +1,7 @@
 ---
 title: "Available Images"
 description: "Complete matrix of all Cbox base image tags, variants, and architectures"
-weight: 40
+weight: 3
 ---
 
 # Available Images

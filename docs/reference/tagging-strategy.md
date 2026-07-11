@@ -1,7 +1,7 @@
 ---
 title: "Image Tagging Strategy"
 description: "Comprehensive guide to Cbox image tagging, versioning, and deprecation policies"
-weight: 40
+weight: 5
 ---
 
 # Image Tagging Strategy
@@ -182,5 +182,5 @@ services:
 
 ## See Also
 
-- [Available Images](available-images.md) - Complete list of all images
+- [Available Images](./available-images) - Complete list of all images
 - [Choosing Your Image](../getting-started/choosing-your-image) - Tiers, sizes, and when to use each

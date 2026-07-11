@@ -1,7 +1,7 @@
 ---
 title: "Testing Guide"
 description: "Comprehensive guide to testing Cbox PHP Base Images with E2E and unit tests"
-weight: 50
+weight: 6
 ---
 
 # Testing Guide
@@ -347,7 +347,7 @@ bash -x ./tests/e2e/scenarios/test-laravel.sh
 
 | Topic | Guide |
 |-------|-------|
-| Image customization | [Extending Images](extending-images.md) |
-| Performance testing | [Performance Tuning](performance-tuning.md) |
-| Security testing | [Security Hardening](security-hardening.md) |
-| CI/CD setup | [Production Deployment](../guides/production-deployment.md) |
+| Image customization | [Extending Images](./extending-images) |
+| Performance testing | [Performance Tuning](./performance-tuning) |
+| Security testing | [Security Hardening](../security/security-hardening) |
+| CI/CD setup | [Production Deployment](../guides/production-deployment) |

@@ -1,7 +1,7 @@
 ---
 title: "Cbox vs ServerSideUp"
 description: "Technical comparison of Cbox and ServerSideUp PHP Docker images"
-weight: 60
+weight: 8
 ---
 
 # Cbox vs ServerSideUp

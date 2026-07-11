@@ -1,7 +1,7 @@
 ---
 title: "Production Deployment Guide"
 description: "Deploy Cbox containers to production with security hardening, performance optimization, and zero-downtime deployment strategies"
-weight: 14
+weight: 7
 ---
 
 # Production Deployment Guide
@@ -18,7 +18,7 @@ Guide for deploying Cbox containers to production environments with security, pe
 - [ ] **Monitoring** set up
 - [ ] **Backup strategy** in place
 - [ ] **Rollback plan** documented
-- [ ] **Security hardening** completed (see [Security Hardening](../advanced/security-hardening))
+- [ ] **Security hardening** completed (see [Security Hardening](../security/security-hardening))
 
 ## Production Environment Variables
 
@@ -66,7 +66,7 @@ Never commit `.env` files to git. Add to `.gitignore`:
 .env.*.local
 ```
 
-For Docker Swarm secrets, Kubernetes secrets, and vault integration, see [Security Hardening](../advanced/security-hardening#secrets-management).
+For Docker Swarm secrets, Kubernetes secrets, and vault integration, see [Security Hardening](../security/security-hardening#secrets-management).
 
 ## Performance Optimization
 
@@ -352,10 +352,10 @@ find ${BACKUP_DIR} -name "db_*.sql.gz" -mtime +7 -delete
 
 ## Related Documentation
 
-- [Security Hardening](../advanced/security-hardening) - Detailed security guide
+- [Security Hardening](../security/security-hardening) - Detailed security guide
 - [Performance Tuning](../advanced/performance-tuning) - Optimization deep dive
 - [Environment Variables](../reference/environment-variables) - Configuration reference
-- [Health Checks](../reference/health-checks) - Monitoring guide
+- [Health Checks](../observability/health-checks) - Monitoring guide
 
 ---
 

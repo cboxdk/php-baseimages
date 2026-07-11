@@ -1,7 +1,7 @@
 ---
 title: "Custom Extensions"
 description: "Add PECL extensions, compile from source, and manage extension versions in Cbox images"
-weight: 5
+weight: 2
 ---
 
 # Custom PHP Extensions
@@ -344,6 +344,6 @@ RUN composer install --no-dev --optimize-autoloader
 
 ## Next Steps
 
-- **[Extending Images](extending-images.md)** - Complete customization guide
-- **[Custom Initialization](custom-initialization.md)** - Startup scripts
-- **[Performance Tuning](performance-tuning.md)** - Optimize your extensions
+- **[Extending Images](./extending-images)** - Complete customization guide
+- **[Custom Initialization](./custom-initialization)** - Startup scripts
+- **[Performance Tuning](./performance-tuning)** - Optimize your extensions

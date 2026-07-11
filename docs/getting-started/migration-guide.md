@@ -1,7 +1,7 @@
 ---
 title: "Migration Guide"
 description: "Migrate to Cbox PHP Base Images from ServerSideUp, Bitnami, or custom images with step-by-step instructions"
-weight: 43
+weight: 5
 ---
 
 # Migration Guide
@@ -334,16 +334,16 @@ docker-compose exec app php -m | grep extension_name
 
 Need help with migration?
 
-1. **Check examples:** See [guides section](../guides/_index.md) for your framework
+1. **Check examples:** See [guides section](../guides) for your framework
 2. **Search issues:** [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
 3. **Ask community:** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 
 ## Related Documentation
 
-- [Extending Images](../advanced/extending-images.md) - Customization guide
-- [Laravel Guide](../guides/laravel-guide.md) - Laravel-specific setup
-- [Environment Variables](../reference/environment-variables.md) - Configuration options
-- [Common Issues](common-issues.md) - Troubleshooting
+- [Extending Images](../advanced/extending-images) - Customization guide
+- [Laravel Guide](../guides/laravel-guide) - Laravel-specific setup
+- [Environment Variables](../reference/environment-variables) - Configuration options
+- [Common Issues](../troubleshooting/common-issues) - Troubleshooting
 
 ---
 

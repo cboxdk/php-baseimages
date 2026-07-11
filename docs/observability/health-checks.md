@@ -1,7 +1,7 @@
 ---
 title: "Health Checks"
 description: "Configure Docker, Kubernetes, and custom health checks for Cbox PHP Base Images"
-weight: 50
+weight: 2
 ---
 
 # Health Checks
@@ -401,4 +401,4 @@ healthcheck:
 
 ---
 
-**Need more help?** [Common Issues](../troubleshooting/common-issues.md) | [Cbox Init Integration](../cbox-init-integration.md)
+**Need more help?** [Common Issues](../troubleshooting/common-issues) | [Cbox Init Integration](./cbox-init-integration)

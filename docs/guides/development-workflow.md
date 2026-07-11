@@ -1,7 +1,7 @@
 ---
 title: "Development Workflow Guide"
 description: "Optimize your local development workflow with Cbox including Xdebug setup, hot-reload, testing, and debugging strategies"
-weight: 15
+weight: 6
 ---
 
 # Development Workflow Guide
@@ -320,8 +320,8 @@ For common issues with containers not starting, permission problems, Xdebug conn
 
 ## Related Documentation
 
-- [Laravel Guide](laravel-guide) - Laravel-specific development
-- [Symfony Guide](symfony-guide) - Symfony-specific development
+- [Laravel Guide](./laravel-guide) - Laravel-specific development
+- [Symfony Guide](./symfony-guide) - Symfony-specific development
 - [Extending Images](../advanced/extending-images) - Custom development images
 - [Debugging Guide](../troubleshooting/debugging-guide) - Advanced debugging
 

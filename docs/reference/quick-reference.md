@@ -1,7 +1,7 @@
 ---
 title: "Quick Reference"
 description: "Copy-paste ready snippets for Cbox PHP Base Images"
-weight: 1
+weight: 6
 ---
 
 # Quick Reference
@@ -132,4 +132,4 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
 ```
 
-See [Available Extensions](available-extensions) for the full extension list by tier.
+See [Available Extensions](./available-extensions) for the full extension list by tier.

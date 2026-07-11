@@ -1,7 +1,7 @@
 ---
 title: "Common Issues & Solutions"
 description: "Quick solutions to common problems with Cbox PHP Base Images including connection errors, permission issues, and configuration problems"
-weight: 41
+weight: 1
 ---
 
 # Common Issues & Solutions
@@ -380,10 +380,10 @@ When something isn't working:
 
 ## Related Documentation
 
-- [Debugging Guide](debugging-guide.md) - Systematic troubleshooting
-- [Development Workflow](../guides/development-workflow.md) - Development setup
-- [Laravel Guide](../guides/laravel-guide.md) - Laravel-specific issues
-- [Environment Variables](../reference/environment-variables.md) - Configuration reference
+- [Debugging Guide](./debugging-guide) - Systematic troubleshooting
+- [Development Workflow](../guides/development-workflow) - Development setup
+- [Laravel Guide](../guides/laravel-guide) - Laravel-specific issues
+- [Environment Variables](../reference/environment-variables) - Configuration reference
 
 ---
 

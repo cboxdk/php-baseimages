@@ -1,7 +1,7 @@
 ---
 title: "Cbox Init Integration"
 description: "Cbox Process Manager - advanced multi-process orchestration for PHP containers"
-weight: 15
+weight: 4
 ---
 
 # Cbox Process Manager
@@ -339,7 +339,7 @@ services:
 
 ## Environment Variables
 
-Complete reference: [Environment Variables](./reference/environment-variables)
+Complete reference: [Environment Variables](../reference/environment-variables)
 
 **Quick reference**:
 
@@ -727,7 +727,7 @@ Cbox Init includes:
 ## Resources
 
 - **Cbox Init Repository**: https://github.com/cboxdk/init
-- **Environment Variables**: See [Environment Variables](./reference/environment-variables)
+- **Environment Variables**: See [Environment Variables](../reference/environment-variables)
 - **Example Configs**: See examples throughout this documentation
 
 ## Support

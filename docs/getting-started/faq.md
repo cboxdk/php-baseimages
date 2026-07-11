@@ -1,7 +1,7 @@
 ---
 title: "Frequently Asked Questions"
 description: "Common questions and answers about Cbox PHP Base Images, troubleshooting, and best practices"
-weight: 10
+weight: 6
 ---
 
 # Frequently Asked Questions
@@ -10,17 +10,17 @@ weight: 10
 
 ### What is Cbox PHP Base Images?
 
-Production-ready PHP Docker containers with 25+ extensions pre-installed, four tiers (Slim/Standard/Chromium/Dev), framework auto-detection, and Cbox Init process management. See the [Introduction](introduction) for details.
+Production-ready PHP Docker containers with 25+ extensions pre-installed, four tiers (Slim/Standard/Chromium/Dev), framework auto-detection, and Cbox Init process management. See the [Introduction](./introduction) for details.
 
 ### Which image should I use?
 
-See [Choosing Your Image](choosing-your-image) for the full decision matrix with image sizes, tier comparisons, and root vs rootless guidance.
+See [Choosing Your Image](./choosing-your-image) for the full decision matrix with image sizes, tier comparisons, and root vs rootless guidance.
 
 ## Installation & Setup
 
 ### How do I get started quickly?
 
-See the [5-Minute Quickstart](quickstart) for a step-by-step guide with docker-compose.
+See the [5-Minute Quickstart](./quickstart) for a step-by-step guide with docker-compose.
 
 ### How do I use the development image with Xdebug?
 
@@ -63,7 +63,7 @@ environment:
 
 ### What security features are included?
 
-HTTP security headers, hidden file blocking, PHP execution prevention in upload directories, and ImageMagick policy hardening are all configured by default. See [Security Hardening](../advanced/security-hardening) for the full list and customization options.
+HTTP security headers, hidden file blocking, PHP execution prevention in upload directories, and ImageMagick policy hardening are all configured by default. See [Security Hardening](../security/security-hardening) for the full list and customization options.
 
 ### How do health checks work?
 
@@ -73,7 +73,7 @@ There are three distinct endpoints — don't confuse them:
 - **cbox-init `/readyz` + `/livez` on port `9091`** — this is what Kubernetes probes. `/readyz` returns `200` only when every supervised process is ready; `/livez` returns `200` while the supervisor is responsive. There's also `/tmp/cbox-ready` for an `exec` probe.
 - **`/health` and `/up`** — these belong to *your application*; nginx passes them through to PHP. The base image does not serve `/health` itself.
 
-See [Health Checks](../reference/health-checks) for the k8s probe manifests.
+See [Health Checks](../observability/health-checks) for the k8s probe manifests.
 
 ## Troubleshooting
 
