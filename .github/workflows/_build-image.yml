@@ -667,4 +667,11 @@ jobs:
           PHP_VERSION: ${{ inputs.php-version }}
           TIER: ${{ inputs.tier }}
           ROOTLESS: ${{ inputs.rootless }}
-        run: ${{ inputs.test-script }}
+        run: |
+          # Pull the just-pushed image so the test exercises it, not a stale
+          # copy left in the runner's local Docker store by an earlier build.
+          # Without this, `docker run $IMAGE ...` can silently use an old image
+          # and report false failures (e.g. "node: not found") even when the
+          # pushed image is correct.
+          docker pull -q "$IMAGE"
+          ${{ inputs.test-script }}
