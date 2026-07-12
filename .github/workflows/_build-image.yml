@@ -290,7 +290,12 @@ jobs:
           platforms: linux/amd64
           provenance: false
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-amd64
-          cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-amd64
+          # cache-to (gha, mode=max) disabled: with cache export enabled,
+          # buildkit on the self-hosted runner pushed images MISSING a layer
+          # (the Node/Bun layer) — the build reported success but the pushed
+          # image lacked the blob, so `node`/`bun` were absent at runtime.
+          # Removing the cache export forces the push to include every blob.
+          # Re-enable once the runner's buildkit is upgraded.
           build-args: ${{ steps.buildargs.outputs.args }}
           # For pushes: push by digest only (no tags yet — tags applied during merge)
           # For PRs: build only (no push), validates the build still works
@@ -475,7 +480,8 @@ jobs:
           platforms: linux/arm64
           provenance: false
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-arm64
-          cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-arm64
+          # cache-to disabled — see the amd64 build step for the rationale
+          # (cache export caused buildkit to push images with a missing layer).
           build-args: ${{ steps.buildargs.outputs.args }}
           # For pushes: push by digest only (no tags yet — tags applied during merge)
           # For PRs: build only (no push), validates the build still works
