@@ -112,17 +112,17 @@ on:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Architecture: Split into parallel builds + manifest merge
 #
-#   build-amd64 (self-hosted x64, native)    ──┐
-#                                               ├── merge (manifest + sign + scan)
-#   build-arm64 (self-hosted x64, QEMU) [off] ──┘
+#   build-amd64 (GitHub-hosted ubuntu-latest, native)  ──┐
+#                                                         ├── merge (manifest + sign + scan)
+#   build-arm64 (QEMU) [off]                           ──┘
 #
-# AMD64 builds natively on the self-hosted x64 runner. ARM64 currently builds
-# via QEMU emulation on the same x64 runner — it is DISABLED by default (see the
-# `platforms` input) because emulated builds exceed the job timeout. The merge
-# job creates a manifest (single-arch amd64 while arm64 is off; multi-arch when
-# re-enabled), signs, and scans. For PRs, builds run but skip push; merge is
-# skipped. Re-enable arm64 by adding it to `platforms` once a native ARM runner
-# exists.
+# AMD64 builds natively on GitHub-hosted ubuntu-latest runners (moved off the
+# self-hosted runner, whose buildkit intermittently pushed images with a missing
+# layer). ARM64 is DISABLED by default (see the `platforms` input) — it would
+# need QEMU emulation and exceeds the job timeout. The merge job creates a
+# manifest (single-arch amd64 while arm64 is off; multi-arch when re-enabled),
+# signs, and scans. Re-enable arm64 by adding it to `platforms` once a native
+# ARM runner is available.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
@@ -130,11 +130,11 @@ jobs:
   # AMD64 build (native on GitHub-hosted runner)
   # ─────────────────────────────────────────────────────────────────────────────
   build-amd64:
-    # Native amd64 on the self-hosted runner (no QEMU emulation). Guarded so it
-    # NEVER runs for a fork pull_request or a non-canonical repo — a self-hosted
-    # runner has host access, so untrusted PR code must not reach it.
+    # Native amd64 on a GitHub-hosted runner. Guarded so it does not run for
+    # fork pull requests or non-canonical repos (keeps ghcr push credentials off
+    # untrusted PRs).
     if: contains(inputs.platforms, 'linux/amd64') && github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
-    runs-on: [self-hosted, linux, x64, buildx]
+    runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
@@ -146,6 +146,16 @@ jobs:
       digest: ${{ steps.build.outputs.digest }}
 
     steps:
+      - name: Free up disk space
+        run: |
+          # GitHub-hosted runners have ~14 GB free on / — not enough headroom for
+          # the chromium/dev tiers plus build cache. Reclaim ~25 GB by dropping
+          # preinstalled toolchains we don't use.
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          sudo docker image prune -af || true
+          df -h /
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -326,7 +336,7 @@ jobs:
     # arm64 via QEMU emulation on the self-hosted amd64 runner (no GitHub-hosted
     # minutes). Same fork-PR / canonical-repo guard as amd64.
     if: contains(inputs.platforms, 'linux/arm64') && github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
-    runs-on: [self-hosted, linux, x64, buildx]
+    runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
@@ -513,7 +523,7 @@ jobs:
   # Merge: create multi-arch manifest from platform-specific digests
   # ─────────────────────────────────────────────────────────────────────────────
   merge:
-    runs-on: [self-hosted, linux, x64, buildx]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     # Run once amd64 has succeeded, regardless of whether arm64 built (it may be
     # disabled or skipped). always() is required so a skipped build-arm64 does
