@@ -157,7 +157,7 @@ jobs:
           df -h /
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -349,7 +349,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Get build lifecycle state
         id: lifecycle
