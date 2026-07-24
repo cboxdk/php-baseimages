@@ -257,7 +257,17 @@ apply_php_env_overrides() {
     [ -n "$PHP_OPCACHE_MAX_ACCELERATED_FILES" ] && content="${content}\nopcache.max_accelerated_files = $PHP_OPCACHE_MAX_ACCELERATED_FILES"
     [ -n "$PHP_OPCACHE_REVALIDATE_FREQ" ] && content="${content}\nopcache.revalidate_freq = $PHP_OPCACHE_REVALIDATE_FREQ"
     [ -n "$PHP_OPCACHE_VALIDATE_TIMESTAMPS" ] && content="${content}\nopcache.validate_timestamps = $PHP_OPCACHE_VALIDATE_TIMESTAMPS"
-    [ -n "$PHP_OPCACHE_JIT" ] && content="${content}\nopcache.jit = $PHP_OPCACHE_JIT"
+    if [ -n "$PHP_OPCACHE_JIT" ]; then
+        content="${content}\nopcache.jit = $PHP_OPCACHE_JIT"
+        # Turning JIT off must ALSO zero the buffer. opcache.jit=off/disable alone
+        # still allocates the RWX JIT arena at module init, which (a) wastes the
+        # configured buffer and (b) leaves the process un-checkpointable — CRIU
+        # cannot parasite-inject through JIT'd executable memory, so scale-to-zero
+        # suspend/resume silently fails. Set jit=off to make a service snapshotable.
+        case "$PHP_OPCACHE_JIT" in
+            off | disable | 0) content="${content}\nopcache.jit_buffer_size = 0" ;;
+        esac
+    fi
     [ -n "$PHP_OPCACHE_JIT_BUFFER_SIZE" ] && content="${content}\nopcache.jit_buffer_size = $PHP_OPCACHE_JIT_BUFFER_SIZE"
     printf '%b\n' "$content" > "$ini" 2>/dev/null || log_warn "Could not write $ini (read-only rootfs? mount an emptyDir at /usr/local/etc/php/conf.d)"
 
