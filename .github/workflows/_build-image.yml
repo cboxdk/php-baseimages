@@ -97,12 +97,17 @@ on:
         description: 'Build platforms (comma-separated, e.g., linux/amd64,linux/arm64)'
         required: false
         type: string
-        # arm64 is disabled for now: it builds via QEMU emulation on the x64
-        # self-hosted runner, which regularly exceeds the 60-minute job timeout
-        # (especially the chromium tier). Re-enable by setting this back to
-        # 'linux/amd64,linux/arm64' once a native ARM runner is available (and
-        # point the build-arm64 job's runs-on at it).
-        default: 'linux/amd64'
+        # Both, natively. arm64 was off while it meant QEMU emulation on an
+        # x64 runner, which regularly exceeded the job timeout; it now builds on
+        # a GitHub-hosted `ubuntu-24.04-arm` runner, which is free for public
+        # repositories and is real ARM hardware rather than an emulator.
+        #
+        # It matters beyond tidiness: an amd64-only image cannot run on Apple
+        # silicon at all. containerd refuses the pull with `no match for platform
+        # in manifest`, and side-loading does not help because CRI filters by
+        # platform too — so every developer on a Mac was locked out of running
+        # the images this repository exists to publish.
+        default: 'linux/amd64,linux/arm64'
       timeout:
         description: 'Job timeout in minutes'
         required: false
@@ -112,17 +117,15 @@ on:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Architecture: Split into parallel builds + manifest merge
 #
-#   build-amd64 (GitHub-hosted ubuntu-latest, native)  ──┐
+#   build-amd64 (GitHub-hosted ubuntu-latest, native)   ──┐
 #                                                         ├── merge (manifest + sign + scan)
-#   build-arm64 (QEMU) [off]                           ──┘
+#   build-arm64 (GitHub-hosted ubuntu-24.04-arm, native) ──┘
 #
-# AMD64 builds natively on GitHub-hosted ubuntu-latest runners (moved off the
-# self-hosted runner, whose buildkit intermittently pushed images with a missing
-# layer). ARM64 is DISABLED by default (see the `platforms` input) — it would
-# need QEMU emulation and exceeds the job timeout. The merge job creates a
-# manifest (single-arch amd64 while arm64 is off; multi-arch when re-enabled),
-# signs, and scans. Re-enable arm64 by adding it to `platforms` once a native
-# ARM runner is available.
+# BOTH ARE NATIVE. amd64 moved off the self-hosted runner, whose buildkit
+# intermittently pushed images with a missing layer; arm64 runs on a
+# GitHub-hosted ARM runner, free for public repositories, rather than under QEMU
+# on an x64 machine — which is what made it slow enough to be turned off. The
+# merge job creates the multi-arch manifest, signs, and scans.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
@@ -333,10 +336,11 @@ jobs:
   # ARM64 build (native on GitHub-hosted ARM runner)
   # ─────────────────────────────────────────────────────────────────────────────
   build-arm64:
-    # arm64 via QEMU emulation on the self-hosted amd64 runner (no GitHub-hosted
-    # minutes). Same fork-PR / canonical-repo guard as amd64.
+    # Native arm64 on a GitHub-hosted ARM runner — free for public repositories,
+    # and real hardware rather than QEMU. Same fork-PR / canonical-repo guard as
+    # amd64.
     if: contains(inputs.platforms, 'linux/arm64') && github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:

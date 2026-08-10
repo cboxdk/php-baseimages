@@ -90,7 +90,8 @@
       "Bash(gh run watch:*)",
       "Bash(gh api:*)",
       "Bash(gh run cancel:*)",
-      "Bash(timeout 60 docker run:*)"
+      "Bash(timeout 60 docker run:*)",
+      "Bash(git pull *)"
     ],
     "deny": [],
     "ask": []
