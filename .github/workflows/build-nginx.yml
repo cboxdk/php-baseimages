@@ -73,8 +73,13 @@ jobs:
         with:
           context: ${{ steps.dockerfile.outputs.context }}
           file: ${{ steps.dockerfile.outputs.path }}
-          # arm64 disabled for now (QEMU emulation); re-enable with a native ARM runner.
-          platforms: linux/amd64
+          # Both: this one builds directly rather than through
+          # `_build-image.yml`, and an amd64-only image cannot run on Apple
+          # silicon at all. QEMU on an amd64 runner is what made this slow;
+          # buildx here still emulates, and nginx is small enough that it does
+          # not matter — the PHP tiers, which are not, build natively per
+          # architecture in `_build-image.yml`.
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
