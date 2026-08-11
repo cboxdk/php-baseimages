@@ -634,7 +634,7 @@ jobs:
 
       - name: Install cosign
         if: inputs.enable-cosign
-        uses: sigstore/cosign-installer@v4
+        uses: sigstore/cosign-installer@v4.1.2
 
       - name: Sign image with cosign
         if: inputs.enable-cosign
@@ -644,7 +644,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         if: inputs.enable-trivy
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
           format: 'sarif'
@@ -666,7 +666,7 @@ jobs:
       - name: Report fixable CRITICAL/HIGH vulnerabilities (soft gate)
         if: inputs.enable-trivy
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
           format: 'table'
