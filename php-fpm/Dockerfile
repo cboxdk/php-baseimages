@@ -51,13 +51,21 @@ FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
 # which it could not before (PHP-FPM takes the first definition, and the static
 # pool always won).
 #
+# READ OFF THE COLLECTOR, NOT GUESSED. The first version of this list was the
+# files I thought system-metrics needed, and it was still short: a real request
+# through a real image threw on `/etc/os-release`, which it reads to name the
+# operating system. Everything here now comes from grepping that package for the
+# paths it opens — the /etc release files, /proc/1/cgroup for container
+# detection, and the rest — so the next missing one is a change in the collector
+# rather than a gap in my imagination.
+#
 # A LIST, NOT `/proc`. `/proc/1/environ` is deliberately absent: PID 1's
 # environment is every secret the container holds, and a file-read primitive in
 # an application that could reach it would have the database password.
 # `/proc/self/environ` and `/proc/*/cmdline` are absent for the same reason.
 # system-metrics probes `/proc/1/environ` for container detection and degrades
 # cleanly without it.
-ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/"
+ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/proc/1/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/:/etc/os-release:/etc/lsb-release:/etc/debian_version:/etc/redhat-release:/etc/system-release"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
