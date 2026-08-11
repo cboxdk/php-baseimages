@@ -33,6 +33,31 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev AS base-
 ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
 
+# open_basedir: THE READ-ONLY KERNEL STATISTICS ARE IN IT, AND THE SECRETS ARE
+# NOT.
+#
+# The default was `/var/www/html:/tmp:/var/tmp`, which is right about the
+# filesystem and wrong about /proc — and it silently broke this organisation's
+# own observability. `cboxdk/system-metrics`, which `cboxdk/laravel-telemetry`
+# reads CPU, memory, load and cgroup limits through, got NOTHING under FPM:
+# every one of those files refused, the collector degrading to empty, and
+# telemetry reporting a healthy application with no metrics rather than an error
+# anybody would notice. Measured through a real request on a real application.
+# The CLI has no open_basedir, so a scheduler or queue worker collected fine —
+# which is exactly why nobody noticed.
+#
+# HERE rather than in php-base, because php-fpm does not build FROM php-base: it
+# copies artifacts out of it, and ENV is metadata rather than a file. Set there,
+# it reached nothing.
+#
+# A LIST, NOT `/proc`, and that is the whole point. `/proc/1/environ` is
+# deliberately absent: PID 1's environment is every secret the container holds,
+# and a file-read primitive in an application that could reach it would have the
+# database password. system-metrics reads it as one of several
+# container-detection probes and degrades cleanly without it.
+# `/proc/self/environ` and `/proc/*/cmdline` are absent for the same reason.
+ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/"
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
     cron \
