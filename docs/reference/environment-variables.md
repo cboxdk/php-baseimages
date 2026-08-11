@@ -151,7 +151,20 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_ERROR_LOG` | `/dev/stderr` | Error log destination |
 | `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
-| `PHP_OPEN_BASEDIR` | `/var/www/html:/tmp:/var/tmp` + read-only kernel statistics (see below) | Restrict filesystem access (FPM only) |
+| `PHP_OPEN_BASEDIR` | — | **Does nothing today.** See below. |
+
+#### `PHP_OPEN_BASEDIR` does not work, and what does
+
+Setting it has no effect on the directive. cbox-init writes the value into
+`zz-env-overrides.conf` as documented — and also writes a narrow default into
+`zz-custom.conf`, which PHP-FPM parses first. **PHP-FPM takes the first
+definition of a `php_admin_value`, not the last**, so the generated comment
+saying the variable "loads after this pool and wins" is wrong. Measured in a
+request: the variable is set, the override file carries it, and
+`ini_get('open_basedir')` returns the narrow value.
+
+Until cbox-init stops writing that line (or writes it last), the image ships
+`za-cbox-open-basedir.conf`, which sorts before it and therefore wins.
 
 #### What the default lets through, and what it does not
 
