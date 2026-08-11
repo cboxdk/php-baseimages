@@ -130,8 +130,11 @@ disable_functions = exec,passthru,shell_exec,system,proc_open,popen,curl_exec,cu
 ; Hide PHP version
 expose_php = Off
 
-; Restrict file access
-open_basedir = /var/www/html:/tmp
+; open_basedir is NOT set here. The FPM pool sets it as a `php_admin_value`,
+; which overrides php.ini — so a value in this file is silently ignored in web
+; requests. Use `PHP_OPEN_BASEDIR` instead, and keep the read-only kernel
+; statistics in it or `cboxdk/laravel-telemetry` collects nothing:
+; see docs/reference/environment-variables.md.
 
 ; Session security
 session.cookie_secure = 1

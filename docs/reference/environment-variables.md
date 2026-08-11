@@ -151,20 +151,36 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_ERROR_LOG` | `/dev/stderr` | Error log destination |
 | `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
-| `PHP_OPEN_BASEDIR` | — | **Does nothing today.** See below. |
+| `PHP_OPEN_BASEDIR` | the app's directories + read-only kernel statistics (below) | `open_basedir` for the FPM pool. Empty means no restriction — which is what the **dev** tier sets. |
 
-#### `PHP_OPEN_BASEDIR` does not work, and what does
+#### One definition, and why that took three attempts
 
-Setting it has no effect on the directive. cbox-init writes the value into
-`zz-env-overrides.conf` as documented — and also writes a narrow default into
-`zz-custom.conf`, which PHP-FPM parses first. **PHP-FPM takes the first
-definition of a `php_admin_value`, not the last**, so the generated comment
-saying the variable "loads after this pool and wins" is wrong. Measured in a
-request: the variable is set, the override file carries it, and
-`ini_get('open_basedir')` returns the narrow value.
+`open_basedir` is set in exactly one place: the entrypoint writes
+`zz-env-overrides.conf` from `PHP_OPEN_BASEDIR`, which the image always sets. The
+static pool defines it nowhere.
 
-Until cbox-init stops writing that line (or writes it last), the image ships
-`za-cbox-open-basedir.conf`, which sorts before it and therefore wins.
+It has to be that way. **PHP-FPM takes the FIRST definition of a
+`php_admin_value`, not the last** — the opposite of php.ini's `conf.d` rule — and
+pool files load alphabetically. So while `fpm-pool.conf` (installed as
+`zz-custom.conf`) carried a narrow default, no override could ever win, and the
+comment beside it claiming the variable "loads after this pool and wins" was
+simply false. Setting the variable did nothing, on both the php-fpm and
+php-fpm-nginx images.
+
+**Empty is a value.** With `PHP_OPEN_BASEDIR=""` no directive is written at all
+and the pool runs unrestricted. That is how the **dev** tier turns it off: a
+package sandbox reads fixtures, writes caches and dumps profiler traces at paths
+nobody can enumerate in advance, and a restriction widened once per surprise is
+one that ends up at `/`. No other tier does this, and the dev tier is never a
+base for a deployed application.
+
+Verify it in a request rather than in a file — the CLI has no `open_basedir` at
+all, so `php -i` will tell you nothing:
+
+```bash
+docker exec -e SCRIPT_FILENAME=/var/www/html/probe.php -e REQUEST_METHOD=GET \
+    <container> cgi-fcgi -bind -connect 127.0.0.1:9000
+```
 
 #### What the default lets through, and what it does not
 
