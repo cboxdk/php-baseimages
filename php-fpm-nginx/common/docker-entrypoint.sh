@@ -250,7 +250,16 @@ apply_php_env_overrides() {
     [ -n "$PHP_ERROR_LOG" ] && content="${content}\nerror_log = $PHP_ERROR_LOG"
     [ -n "$PHP_SESSION_COOKIE_SECURE" ] && content="${content}\nsession.cookie_secure = $PHP_SESSION_COOKIE_SECURE"
     [ -n "$PHP_REALPATH_CACHE_TTL" ] && content="${content}\nrealpath_cache_ttl = $PHP_REALPATH_CACHE_TTL"
-    [ -n "$PHP_OPEN_BASEDIR" ] && content="${content}\nopen_basedir = $PHP_OPEN_BASEDIR"
+    # NOT open_basedir. It belongs to the FPM pool alone — see below — and this
+    # file is php.ini, which the CLI reads too. Composer lives at
+    # /usr/bin/composer, artisan runs from a scheduler, a queue worker opens
+    # files all over the image: restricting the CLI to the document root breaks
+    # every one of them with "open_basedir restriction in effect", and the
+    # symptom composer gives is a phar error that names no cause.
+    #
+    # The line was here before and was harmless only because nothing set the
+    # variable. Giving the image a default woke it up, and the post-push smoke
+    # test caught it on `composer --version`.
     [ -n "$PHP_OPCACHE_ENABLE" ] && content="${content}\nopcache.enable = $PHP_OPCACHE_ENABLE"
     [ -n "$PHP_OPCACHE_MEMORY_CONSUMPTION" ] && content="${content}\nopcache.memory_consumption = $PHP_OPCACHE_MEMORY_CONSUMPTION"
     [ -n "$PHP_OPCACHE_INTERNED_STRINGS_BUFFER" ] && content="${content}\nopcache.interned_strings_buffer = $PHP_OPCACHE_INTERNED_STRINGS_BUFFER"
