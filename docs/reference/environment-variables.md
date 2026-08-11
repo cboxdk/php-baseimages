@@ -151,7 +151,26 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_ERROR_LOG` | `/dev/stderr` | Error log destination |
 | `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
-| `PHP_OPEN_BASEDIR` | `/var/www/html:/tmp:/var/tmp` | Restrict filesystem access (FPM only) |
+| `PHP_OPEN_BASEDIR` | `/var/www/html:/tmp:/var/tmp` + read-only kernel statistics (see below) | Restrict filesystem access (FPM only) |
+
+#### What the default lets through, and what it does not
+
+The default is the application's own directories **plus the read-only kernel
+statistics** `cboxdk/system-metrics` reads — `/proc/stat`, `/proc/loadavg`,
+`/proc/meminfo`, `/proc/uptime`, `/proc/cpuinfo`, `/proc/diskstats`,
+`/proc/mounts`, `/proc/net/`, `/proc/self/cgroup`, `/sys/fs/cgroup` and
+`/sys/class/dmi/id/`.
+
+Without them `cboxdk/laravel-telemetry` collects nothing from a web request and
+says so nowhere: the collector degrades to empty and reports a healthy
+application with no metrics.
+
+**`/proc/1/environ` is deliberately absent**, and it is why this is a list rather
+than plain `/proc`: PID 1's environment is every secret the container holds, and
+a file-read primitive in an application that could reach it would have the
+database password. system-metrics reads it as one of several container-detection
+probes and degrades cleanly without it. `/proc/self/environ` and
+`/proc/*/cmdline` are absent for the same reason.
 
 ### OPcache
 

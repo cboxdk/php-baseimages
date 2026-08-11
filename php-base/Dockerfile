@@ -151,6 +151,32 @@ RUN chmod +x /usr/local/bin/cbox-init && \
 # ============================================================================
 COPY php-base/common/php.ini /usr/local/etc/php/conf.d/99-cbox.ini
 
+# open_basedir: THE READ-ONLY KERNEL STATISTICS ARE IN IT, AND THE SECRETS ARE
+# NOT.
+#
+# The default was `/var/www/html:/tmp:/var/tmp`, which is right about the
+# filesystem and wrong about /proc — and it silently broke this organisation's
+# own observability. `cboxdk/system-metrics`, which `cboxdk/laravel-telemetry`
+# reads CPU, memory, load and cgroup limits through, gets NOTHING under FPM:
+# every one of those files is refused, the collector degrades to empty, and
+# telemetry reports a healthy application with no metrics rather than an error
+# anybody would notice. Measured through a real request on a real application.
+#
+# So the specific files are allowed, and only those. What is deliberately NOT
+# here is the reason this is a list rather than `/proc`:
+#
+#   /proc/1/environ  — PID 1's environment is every secret the container has.
+#                      system-metrics reads it as one of several
+#                      container-detection probes and degrades cleanly without
+#                      it; a file-read primitive in an application that could
+#                      reach it would have the database password.
+#   /proc/self/environ, /proc/*/cmdline — the same, for this process.
+#
+# `/proc/self/cgroup` and `/proc/net/` are prefixes, and both are prefixes of
+# nothing sensitive. An application that genuinely needs more sets
+# PHP_OPEN_BASEDIR itself, deliberately.
+ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/"
+
 # ============================================================================
 # Cbox Shared Libraries (entrypoint helpers, lifecycle checks)
 # ============================================================================
