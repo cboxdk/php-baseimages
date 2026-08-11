@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup dependencies
         run: |
@@ -75,7 +75,7 @@ jobs:
 
       - name: Create Version Updates PR
         if: steps.update.outputs.has_updates == 'true'
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore(deps): update versions.json with latest releases"
@@ -118,7 +118,7 @@ jobs:
 
       - name: Create EOL Warning Issue
         if: steps.eol.outputs.eol_exit_code == '2'
-        uses: peter-evans/create-issue-from-file@v4
+        uses: peter-evans/create-issue-from-file@v6
         with:
           title: "🚨 CRITICAL: Components past EOL require removal"
           content-filepath: eol-output.txt

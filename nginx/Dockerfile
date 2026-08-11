@@ -1,8 +1,8 @@
-FROM nginx:1.27-bookworm
+FROM nginx:1.29-bookworm
 
 LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
-LABEL org.opencontainers.image.description="Nginx 1.27 Debian Bookworm - Optimized for PHP"
+LABEL org.opencontainers.image.description="Nginx 1.29 Debian Bookworm - Optimized for PHP"
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM

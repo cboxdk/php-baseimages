@@ -24,12 +24,8 @@ on:
         default: 'all'
   repository_dispatch:
     types: [php-fpm-updated]
-  workflow_run:
-    workflows: ["Build and Push PHP-FPM Images"]
-    types: [completed]
-    branches: [main]
   schedule:
-    # Weekly security rebuild - Monday 04:00 UTC (fallback; workflow_run trigger fires on completion)
+    # Weekly security rebuild - Monday 04:00 UTC (fallback; php-fpm dispatches php-php-fpm-updated on success)
     - cron: '0 4 * * 1'
 
 jobs:
@@ -37,7 +33,7 @@ jobs:
   # SLIM TIER - Minimal PHP + essential extensions
   # =====================================================================
   build-slim-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim') }}
     strategy:
       fail-fast: false
       matrix:
@@ -88,7 +84,7 @@ jobs:
     secrets: inherit
 
   build-slim-rootless-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim') }}
     strategy:
       fail-fast: false
       matrix:
@@ -139,7 +135,7 @@ jobs:
   # STANDARD TIER (DEFAULT) - + ImageMagick, vips, Node.js
   # =====================================================================
   build-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard') }}
     strategy:
       fail-fast: false
       matrix:
@@ -195,7 +191,7 @@ jobs:
     secrets: inherit
 
   build-rootless-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard') }}
     strategy:
       fail-fast: false
       matrix:
@@ -255,7 +251,7 @@ jobs:
   # CHROMIUM TIER - + Chromium for Browsershot/Dusk/Puppeteer
   # =====================================================================
   build-chromium-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium') }}
     strategy:
       fail-fast: false
       matrix:
@@ -307,7 +303,7 @@ jobs:
     secrets: inherit
 
   build-chromium-rootless-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium') }}
     strategy:
       fail-fast: false
       matrix:
@@ -364,7 +360,7 @@ jobs:
   # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
   # =====================================================================
   build-dev-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev') }}
     strategy:
       fail-fast: false
       matrix:
@@ -417,7 +413,7 @@ jobs:
     secrets: inherit
 
   build-dev-rootless-matrix:
-    if: ${{ (github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run') && (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev') }}
     strategy:
       fail-fast: false
       matrix:
