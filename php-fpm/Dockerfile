@@ -350,6 +350,22 @@ CMD ["php-fpm"]
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-chromium-deps AS dev-root
 
+# THE DEV TIER RUNS WITHOUT open_basedir, and that is the difference between it
+# and every other tier.
+#
+# Not laziness — a deliberate tier property. This image exists to develop a
+# package that is not an application: `cbox sandbox` builds a throwaway Laravel
+# app, installs the package into it from a path repository, and overlays the
+# developer's own checkout on top. That checkout's tests read fixtures, its
+# tooling writes caches, and a profiler writes traces, all at paths nobody can
+# enumerate in advance. A restriction that has to be widened for each of them is
+# a restriction that will be widened to `/` by the second afternoon.
+#
+# Empty means no definition at all: the entrypoint writes the directive only
+# when the variable has a value. Every other tier keeps the default, and this
+# one is never a base for a deployed application.
+ENV PHP_OPEN_BASEDIR=""
+
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Dev)"
@@ -388,6 +404,22 @@ CMD ["php-fpm"]
 # DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-chromium-deps AS dev-rootless
+
+# THE DEV TIER RUNS WITHOUT open_basedir, and that is the difference between it
+# and every other tier.
+#
+# Not laziness — a deliberate tier property. This image exists to develop a
+# package that is not an application: `cbox sandbox` builds a throwaway Laravel
+# app, installs the package into it from a path repository, and overlays the
+# developer's own checkout on top. That checkout's tests read fixtures, its
+# tooling writes caches, and a profiler writes traces, all at paths nobody can
+# enumerate in advance. A restriction that has to be widened for each of them is
+# a restriction that will be widened to `/` by the second afternoon.
+#
+# Empty means no definition at all: the entrypoint writes the directive only
+# when the variable has a value. Every other tier keeps the default, and this
+# one is never a base for a deployed application.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 

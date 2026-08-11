@@ -52,6 +52,9 @@ resolve_fpm_sizing() {
 # because php-fpm is run directly too, and without it that image would have no
 # open_basedir at all.
 write_env_overrides() {
+    # Empty is a value: no definition is written, so the tier runs without any
+    # open_basedir. That is how the dev image turns it off, and the only way to
+    # turn it off — there is no second directive to fight with.
     [ -n "${PHP_OPEN_BASEDIR:-}" ] || return 0
 
     local fpm="/usr/local/etc/php-fpm.d/zz-env-overrides.conf"
