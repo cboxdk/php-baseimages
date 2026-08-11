@@ -21,6 +21,49 @@ else
     }
 fi
 
+# Worker sizing, which the pool file expands from the environment.
+#
+# THE IMAGE DID NOT START WITHOUT THIS. `fpm-pool.conf` is shared with
+# php-fpm-nginx, whose entrypoint exports these five variables; this one never
+# did, so `pm.max_children = ${PHP_FPM_MAX_CHILDREN}` expanded to nothing and
+# php-fpm refused to boot with "pm.max_children must be a positive value" —
+# `docker run ghcr.io/cboxdk/php-baseimages/php-fpm:8.4` exited on start, every
+# tag, for anybody not setting the variables themselves.
+#
+# Defaults only. Anything already in the environment wins, including the sizing
+# cbox-init derives from the container's memory limit.
+resolve_fpm_sizing() {
+    export PHP_FPM_MAX_CHILDREN="${PHP_FPM_MAX_CHILDREN:-10}"
+    export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
+    export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+    export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
+    export PHP_FPM_MAX_REQUESTS="${PHP_FPM_MAX_REQUESTS:-500}"
+}
+
+# Write the pool settings that come from the environment.
+#
+# ONLY open_basedir today, and it has to be here rather than in the static pool:
+# PHP-FPM takes the FIRST definition of a `php_admin_value`, so a directive set
+# in `zz-custom.conf` can never be overridden by anything. The static pool no
+# longer sets it, this writes the single definition, and `PHP_OPEN_BASEDIR` —
+# which the image always sets — is therefore an override that works.
+#
+# The php-fpm-nginx image has its own, larger version of this; this one exists
+# because php-fpm is run directly too, and without it that image would have no
+# open_basedir at all.
+write_env_overrides() {
+    [ -n "${PHP_OPEN_BASEDIR:-}" ] || return 0
+
+    local fpm="/usr/local/etc/php-fpm.d/zz-env-overrides.conf"
+
+    printf '%s\n' \
+        "; Auto-generated from environment variables" \
+        "[www]" \
+        "php_admin_value[open_basedir] = ${PHP_OPEN_BASEDIR}" \
+        > "$fpm" 2>/dev/null \
+        || log_warn "Could not write $fpm (read-only rootfs? mount an emptyDir at /usr/local/etc/php-fpm.d)"
+}
+
 # Validate PHP-FPM configuration
 validate_fpm_config() {
     log_info "Validating PHP-FPM configuration..."
@@ -104,7 +147,11 @@ if command -v cbox-init >/dev/null 2>&1; then
     log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
-# Run startup checks
+# Run startup checks. The environment's pool settings go in BEFORE validation:
+# php-fpm -t reads what is on disk, so writing them after would validate a
+# configuration the process is not going to run.
+resolve_fpm_sizing
+write_env_overrides
 validate_fpm_config
 setup_fpm_permissions
 

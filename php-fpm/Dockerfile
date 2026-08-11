@@ -33,13 +33,31 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev AS base-
 ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
 
-# open_basedir, as a pool file that sorts BEFORE the one cbox-init generates.
+# open_basedir: THE READ-ONLY KERNEL STATISTICS ARE IN IT, AND THE SECRETS ARE
+# NOT.
 #
-# PHP-FPM takes the FIRST definition of a `php_admin_value`, and cbox-init writes
-# a narrow `open_basedir` into `zz-custom.conf` whose own comment claims the
-# `PHP_OPEN_BASEDIR` variable "loads after this pool and wins". Measured: it does
-# not. The file itself explains the rest, and says when to delete it.
-COPY php-fpm/common/open-basedir.conf /usr/local/etc/php-fpm.d/za-cbox-open-basedir.conf
+# The old default was `/var/www/html:/tmp:/var/tmp`, which is right about the
+# filesystem and wrong about /proc — and it silently broke this organisation's
+# own observability. `cboxdk/system-metrics`, which `cboxdk/laravel-telemetry`
+# reads CPU, memory, load and cgroup limits through, was refused every file it
+# needs under FPM: the collector degrades to empty, so telemetry reported a
+# healthy application with no metrics rather than an error anybody would notice.
+# The CLI has no open_basedir, so a scheduler or queue worker collected fine,
+# which is exactly why nobody noticed.
+#
+# THE ONLY DEFINITION. The pool file no longer sets the directive, and both
+# entrypoints write `zz-env-overrides.conf` from this variable — so the default
+# is right AND an application that needs something else can actually override it,
+# which it could not before (PHP-FPM takes the first definition, and the static
+# pool always won).
+#
+# A LIST, NOT `/proc`. `/proc/1/environ` is deliberately absent: PID 1's
+# environment is every secret the container holds, and a file-read primitive in
+# an application that could reach it would have the database password.
+# `/proc/self/environ` and `/proc/*/cmdline` are absent for the same reason.
+# system-metrics probes `/proc/1/environ` for container detection and degrades
+# cleanly without it.
+ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
