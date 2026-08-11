@@ -27,9 +27,33 @@ map $http_x_forwarded_proto $forwarded_proto {
     default $scheme;
     "~.+"   $http_x_forwarded_proto;
 }
+# The port the CLIENT reached, which is not this server's own. $server_port is
+# 80 in every one of these containers — TLS is terminated a hop earlier — so
+# using it as the fallback told a trusting application it had been reached at
+# `https://host:80`. The default now follows the forwarded scheme, and only an
+# explicit X-Forwarded-Port overrides it.
+map $forwarded_proto $scheme_default_port {
+    https   443;
+    default 80;
+}
 map $http_x_forwarded_port $forwarded_port {
-    default $server_port;
+    default $scheme_default_port;
     "~.+"   $http_x_forwarded_port;
+}
+
+# What HTTP_HOST must carry so a framework builds URLs somebody can click.
+#
+# Empty on the standard ports, which is every production deployment. On a
+# development machine where the gateway is on 18443 because something else holds
+# 443, a redirect to `https://app.cbox.test/login` goes to that something else —
+# and Gateway API strips the port from :authority, so the application cannot see
+# it any other way. It cannot come from X-Forwarded-Port alone either: that is
+# only read from a proxy the framework trusts by IP, and real_ip has already
+# replaced the proxy's address with the client's, so the trust never matches.
+map "$forwarded_proto:$forwarded_port" $forwarded_host_port {
+    "https:443" "";
+    "http:80"   "";
+    default     ":$forwarded_port";
 }
 map $forwarded_proto $forwarded_https {
     https   on;
@@ -115,6 +139,7 @@ ${NGINX_SECURITY_HEADERS}
         fastcgi_param HTTP_X_FORWARDED_PROTO $forwarded_proto;
         fastcgi_param HTTP_X_FORWARDED_HOST $host;
         fastcgi_param HTTP_X_FORWARDED_PORT $forwarded_port;
+        fastcgi_param HTTP_HOST $host$forwarded_host_port;
         # Set HTTPS so PHP's $_SERVER['HTTPS'] is correct when TLS is terminated
         # here OR upstream (empty string when not https — PHP treats it as off).
         fastcgi_param HTTPS $forwarded_https;
