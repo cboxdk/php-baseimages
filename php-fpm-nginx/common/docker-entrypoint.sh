@@ -228,6 +228,22 @@ generate_php_config() {
     [ -f "$template" ] && envsubst < "$template" > "$output" 2>/dev/null || true
 }
 
+# WHAT A CONSUMER NEEDS ON TOP, without restating what it does not own.
+#
+# A platform that mounts something else into the container — a sibling package a
+# developer is editing, an extra data directory — has to widen open_basedir to
+# reach it, and the only way to do that used to be to set the WHOLE list. So a
+# consumer copied this image's default into its own source, and the copy went
+# stale the first time the default changed: the paths system-metrics reads were
+# added here and the consumer kept overriding them away.
+#
+# `PHP_OPEN_BASEDIR_EXTRA` is appended instead. One owner for the default, one
+# place for the addition.
+if [ -n "${PHP_OPEN_BASEDIR_EXTRA:-}" ]; then
+    PHP_OPEN_BASEDIR="${PHP_OPEN_BASEDIR:-}${PHP_OPEN_BASEDIR:+:}${PHP_OPEN_BASEDIR_EXTRA}"
+    export PHP_OPEN_BASEDIR
+fi
+
 apply_php_env_overrides() {
     local ini="/usr/local/etc/php/conf.d/zz-env-overrides.ini"
     local fpm="/usr/local/etc/php-fpm.d/zz-env-overrides.conf"
