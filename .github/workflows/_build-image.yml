@@ -632,8 +632,23 @@ jobs:
         run: |
           docker buildx imagetools inspect ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
 
+      # TRIED TWICE, BECAUSE THIS IS THE STEP THAT KEEPS FAILING. The installer
+      # fetches cosign over the network, and a 5xx from the release host has now
+      # failed this pipeline three times — once at curl 56, twice at curl 22 —
+      # taking five merge jobs down with it after every image had already built
+      # and pushed. Nothing was wrong with the release; the download was.
+      #
+      # A second attempt rather than a retry action: no new dependency, the same
+      # verified installer, and a genuinely unreachable host still fails the job
+      # instead of being papered over.
       - name: Install cosign
+        id: cosign
         if: inputs.enable-cosign
+        uses: sigstore/cosign-installer@v4.1.2
+        continue-on-error: true
+
+      - name: Install cosign (second attempt)
+        if: inputs.enable-cosign && steps.cosign.outcome == 'failure'
         uses: sigstore/cosign-installer@v4.1.2
 
       - name: Sign image with cosign
