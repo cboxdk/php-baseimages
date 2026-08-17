@@ -117,15 +117,16 @@ on:
 # ═══════════════════════════════════════════════════════════════════════════════
 # Architecture: Split into parallel builds + manifest merge
 #
-#   build-amd64 (GitHub-hosted ubuntu-latest, native)   ──┐
-#                                                         ├── merge (manifest + sign + scan)
-#   build-arm64 (GitHub-hosted ubuntu-24.04-arm, native) ──┘
+#   build-amd64 (GitHub-hosted ubuntu-latest, native)  ──┐
+#                                                        ├── merge (manifest + sign + scan)
+#   build-arm64 (self-hosted ARM64, native)            ──┘
 #
-# BOTH ARE NATIVE. amd64 moved off the self-hosted runner, whose buildkit
-# intermittently pushed images with a missing layer; arm64 runs on a
-# GitHub-hosted ARM runner, free for public repositories, rather than under QEMU
-# on an x64 machine — which is what made it slow enough to be turned off. The
-# merge job creates the multi-arch manifest, signs, and scans.
+# BOTH ARE NATIVE, on different fleets, and the split is evidence rather than
+# taste. amd64 was moved OFF the self-hosted runner because its buildkit
+# intermittently pushed images with a missing layer — a published image that
+# pulls and then fails — so it stays on GitHub's, along with the merge job that
+# pushes the manifest. arm64 runs on our own ARM hardware; it was under QEMU on
+# an x64 machine once, which is what made it slow enough to be switched off.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 jobs:
@@ -340,7 +341,17 @@ jobs:
     # and real hardware rather than QEMU. Same fork-PR / canonical-repo guard as
     # amd64.
     if: contains(inputs.platforms, 'linux/arm64') && github.event_name != 'pull_request' && github.repository == 'cboxdk/php-baseimages'
-    runs-on: ubuntu-24.04-arm
+    # OUR OWN ARM HARDWARE, and only this job. amd64 and the merge stay on
+    # GitHub's runners deliberately: the self-hosted X64 buildkit intermittently
+    # pushed images with a MISSING LAYER, which is worse than slow — it publishes
+    # something that pulls and then fails. Nothing says that has been fixed, and
+    # this is not the place to find out.
+    #
+    # SELF-HOSTED IS ONLY SAFE HERE BECAUSE THIS JOB CANNOT RUN FOR A FORK. The
+    # `if` above is what makes that true; a public repository whose
+    # pull_request jobs land on your own hardware is a stranger's code on your
+    # own hardware, which is why lint and the test workflows stay hosted.
+    runs-on: [self-hosted, ARM64]
     timeout-minutes: ${{ inputs.timeout }}
 
     permissions:
