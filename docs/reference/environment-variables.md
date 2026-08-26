@@ -338,6 +338,7 @@ See [Security Hardening](../security/security-hardening#content-security-policy)
 | `NGINX_GZIP_COMP_LEVEL` | `6` | Compression level (1-9) |
 | `NGINX_GZIP_MIN_LENGTH` | `1000` | Min size to compress (bytes) |
 | `NGINX_GZIP_TYPES` | *(see below)* | MIME types to compress |
+| `NGINX_GZIP_STATIC` | `on` | Serve pre-compressed `.gz` files from disk (`on`/`off`) |
 
 **Default gzip types:**
 ```
@@ -349,6 +350,12 @@ text/plain text/css text/xml text/javascript application/json application/javasc
 environment:
   - NGINX_GZIP=off
 ```
+
+**Pre-compressed assets** (`gzip_static`, enabled by default): when your build
+pipeline emits `.gz` files next to the originals (Vite, Webpack, Rollup, and
+esbuild all have plugins for this), nginx serves `app.css.gz` directly from disk
+for a request to `app.css` — no per-request compression CPU at all. When no
+`.gz` file exists, nginx falls back to dynamic gzip transparently.
 
 ### Open File Cache
 
@@ -382,6 +389,7 @@ environment:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NGINX_ACCESS_LOG` | `/var/log/nginx/access.log` | Access log path (`off` or `false` to disable) |
+| `NGINX_LOG_FORMAT` | `combined` | Access log format: `combined`, `combined_no_query`, or `json` |
 | `NGINX_ERROR_LOG` | `/var/log/nginx/error.log` | Error log path |
 | `NGINX_ERROR_LOG_LEVEL` | `warn` | Error log level |
 
@@ -392,6 +400,52 @@ environment:
   # or
   - NGINX_ACCESS_LOG=off
 ```
+
+**Access log formats** (`NGINX_LOG_FORMAT`):
+
+- `combined` (default) — nginx's standard format, full request line including
+  query string. Unchanged for backwards compatibility.
+- `combined_no_query` — same layout, but logs the path only. Query strings
+  (magic-link tokens, OAuth `code=...` callbacks, search terms) never reach
+  disk or downstream log shippers. The privacy/GDPR-friendly choice.
+- `json` — structured logging for Loki, Datadog, ELK, and friends. Path only
+  (no query string), plus timing fields for latency analysis.
+
+Example log lines per format for `GET /index.php?token=SECRET`:
+
+```
+# combined
+172.18.0.1 - - [26/Aug/2026:09:09:07 +0000] "GET /index.php?token=SECRET HTTP/1.1" 200 1024 "-" "curl/8.7.1"
+
+# combined_no_query
+172.18.0.1 - - [26/Aug/2026:09:09:07 +0000] "GET /index.php HTTP/1.1" 200 1024 "-" "curl/8.7.1"
+
+# json
+{"time":"2026-08-26T09:09:07+00:00","remote_addr":"172.18.0.1","method":"GET","path":"/index.php","status":200,"body_bytes_sent":1024,"request_time":0.127,"upstream_response_time":"0.127","referer":"","user_agent":"curl/8.7.1","host":"example.com"}
+```
+
+Custom formats remain possible by volume-mounting your own server config.
+
+### Server Header
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NGINX_SERVER_HEADER` | *(unset)* | Replace the `Server` response header, or `none` to remove it entirely |
+
+The default `Server: nginx` (version hidden via `server_tokens off`) can be
+rebranded or stripped — something plain `add_header` cannot do:
+
+```yaml
+environment:
+  - NGINX_SERVER_HEADER=Acme API    # Server: Acme API
+  # or
+  - NGINX_SERVER_HEADER=none        # no Server header at all
+```
+
+This is powered by the [headers-more module](https://github.com/openresty/headers-more-nginx-module),
+which is loaded in all `php-fpm-nginx` images. Custom configs mounted into
+`/etc/nginx/conf.d/` can therefore also use `more_set_headers` /
+`more_clear_headers` directly, e.g. to strip noisy upstream headers.
 
 ### Static Files
 

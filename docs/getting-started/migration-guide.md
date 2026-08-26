@@ -272,8 +272,17 @@ environment:
 ```yaml
 # Add Symfony-specific settings
 environment:
-  - SYMFONY_AUTO_WARMUP=true
   - APP_ENV=prod
+```
+
+Symfony is auto-detected (via `bin/console` + `symfony.lock`) and `var/`
+permissions are fixed automatically. For cache warmup on startup, drop an init
+script into `/docker-entrypoint-init.d/` — it runs before the services start:
+
+```bash
+# docker-entrypoint-init.d/10-warmup.sh
+#!/bin/sh
+php bin/console cache:warmup --env=prod
 ```
 
 ### WordPress

@@ -359,6 +359,14 @@ generate_runtime_configs() {
         : ${NGINX_ACCESS_LOG:=/var/log/nginx/access.log}
         : ${NGINX_ERROR_LOG:=/var/log/nginx/error.log}
         : ${NGINX_ERROR_LOG_LEVEL:=warn}
+        : ${NGINX_LOG_FORMAT:=combined}
+        case "${NGINX_LOG_FORMAT}" in
+            combined|combined_no_query|json) ;;
+            *)
+                log_warn "Unknown NGINX_LOG_FORMAT '${NGINX_LOG_FORMAT}' (valid: combined, combined_no_query, json) - using combined"
+                NGINX_LOG_FORMAT="combined"
+                ;;
+        esac
         : ${NGINX_TRY_FILES:=/index.php?\$query_string}
         : ${NGINX_FASTCGI_PASS:=127.0.0.1:9000}
         : ${NGINX_FASTCGI_BUFFERS:=8 8k}
@@ -376,6 +384,7 @@ generate_runtime_configs() {
         : ${NGINX_GZIP_COMP_LEVEL:=6}
         : ${NGINX_GZIP_MIN_LENGTH:=1000}
         : ${NGINX_GZIP_TYPES:=text/plain text/css text/xml text/javascript application/json application/javascript application/xml application/xml+rss application/x-javascript image/svg+xml}
+        : ${NGINX_GZIP_STATIC:=on}
         : ${NGINX_OPEN_FILE_CACHE:=max=10000 inactive=20s}
         : ${NGINX_OPEN_FILE_CACHE_VALID:=30s}
         : ${NGINX_OPEN_FILE_CACHE_MIN_USES:=2}
@@ -406,7 +415,7 @@ generate_runtime_configs() {
         export NGINX_FASTCGI_PASS NGINX_FASTCGI_BUFFERS NGINX_FASTCGI_BUFFER_SIZE NGINX_FASTCGI_BUSY_BUFFERS_SIZE
         export NGINX_FASTCGI_CONNECT_TIMEOUT NGINX_FASTCGI_SEND_TIMEOUT NGINX_FASTCGI_READ_TIMEOUT
         export NGINX_STATIC_EXPIRES NGINX_STATIC_CACHE_CONTROL NGINX_STATIC_ACCESS_LOG
-        export NGINX_GZIP NGINX_GZIP_VARY NGINX_GZIP_PROXIED NGINX_GZIP_COMP_LEVEL NGINX_GZIP_MIN_LENGTH NGINX_GZIP_TYPES
+        export NGINX_GZIP NGINX_GZIP_VARY NGINX_GZIP_PROXIED NGINX_GZIP_COMP_LEVEL NGINX_GZIP_MIN_LENGTH NGINX_GZIP_TYPES NGINX_GZIP_STATIC
         export NGINX_OPEN_FILE_CACHE NGINX_OPEN_FILE_CACHE_VALID NGINX_OPEN_FILE_CACHE_MIN_USES NGINX_OPEN_FILE_CACHE_ERRORS
         export NGINX_TRUSTED_PROXIES NGINX_REAL_IP_HEADER NGINX_REAL_IP_RECURSIVE
         export NGINX_PROXY_PROTOCOL NGINX_LISTEN_EXTRA
@@ -461,7 +470,44 @@ generate_runtime_configs() {
         NGINX_SECURITY_HEADERS=$(printf '%b' "$NGINX_SECURITY_HEADERS")
         export NGINX_SECURITY_HEADERS
 
-        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA}' \
+        # Access log format definitions. `combined` is nginx's built-in, so only
+        # the alternatives render a log_format directive. `combined_no_query`
+        # logs $uri (path only) so query strings — magic-link tokens, OAuth
+        # codes, search terms — never reach disk or downstream log shippers.
+        case "${NGINX_LOG_FORMAT}" in
+            combined_no_query)
+                NGINX_LOG_FORMAT_CONFIG='log_format combined_no_query '\''$remote_addr - $remote_user [$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent "$http_referer" "$http_user_agent"'\'';'
+                ;;
+            json)
+                NGINX_LOG_FORMAT_CONFIG='log_format json escape=json '\''{"time":"$time_iso8601","remote_addr":"$remote_addr","method":"$request_method","path":"$uri","status":$status,"body_bytes_sent":$body_bytes_sent,"request_time":$request_time,"upstream_response_time":"$upstream_response_time","referer":"$http_referer","user_agent":"$http_user_agent","host":"$host"}'\'';'
+                ;;
+            *)
+                NGINX_LOG_FORMAT_CONFIG="# combined (nginx built-in)"
+                ;;
+        esac
+        export NGINX_LOG_FORMAT_CONFIG
+        # Append the format name to the access_log directives (invalid after "off")
+        [ "${NGINX_ACCESS_LOG}" != "off" ] && NGINX_ACCESS_LOG="${NGINX_ACCESS_LOG} ${NGINX_LOG_FORMAT}"
+        [ "${NGINX_STATIC_ACCESS_LOG}" != "off" ] && NGINX_STATIC_ACCESS_LOG="${NGINX_STATIC_ACCESS_LOG} ${NGINX_LOG_FORMAT}"
+
+        # Server header rebrand/removal via headers-more (more_set_headers can
+        # replace or strip headers, which add_header cannot). Operator-supplied
+        # value, but sanitize anyway: strip config metacharacters AND double
+        # quotes — a stray quote would terminate the argument and let extra
+        # quoted tokens smuggle in additional response headers.
+        if [ -n "${NGINX_SERVER_HEADER:-}" ]; then
+            _server_header=$(sanitize_nginx_value "${NGINX_SERVER_HEADER}" | tr -d '"')
+            if [ "${_server_header}" = "none" ]; then
+                NGINX_SERVER_HEADER_CONFIG='    more_clear_headers Server;'
+            else
+                NGINX_SERVER_HEADER_CONFIG="    more_set_headers \"Server: ${_server_header}\";"
+            fi
+        else
+            NGINX_SERVER_HEADER_CONFIG='    # Server header unchanged (server_tokens applies)'
+        fi
+        export NGINX_SERVER_HEADER_CONFIG
+
+        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
             log_error "Failed to generate Nginx config"

@@ -42,7 +42,7 @@ ENV CBOX_IMAGE_TIER=slim
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories + forward access/error logs to docker log
@@ -105,7 +105,7 @@ USER root
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories with www-data ownership + forward access/error
@@ -173,7 +173,7 @@ ENV CBOX_IMAGE_TIER=standard
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories + forward access/error logs to docker log
@@ -236,7 +236,7 @@ USER root
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories with www-data ownership + forward access/error
@@ -304,7 +304,7 @@ ENV CBOX_IMAGE_TIER=chromium
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories + forward access/error logs to docker log
@@ -367,7 +367,7 @@ USER root
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories with www-data ownership + forward access/error
@@ -435,7 +435,7 @@ ENV CBOX_IMAGE_TIER=dev
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories + forward access/error logs to docker log
@@ -498,7 +498,7 @@ USER root
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx gettext-base \
+    nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
 # Create nginx directories with www-data ownership + forward access/error

@@ -60,6 +60,12 @@ map $forwarded_proto $forwarded_https {
     default "";
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Access log format — NGINX_LOG_FORMAT: combined (default) | combined_no_query
+# (privacy: query strings never hit disk) | json (structured, for log shippers)
+# ─────────────────────────────────────────────────────────────────────────────
+${NGINX_LOG_FORMAT_CONFIG}
+
 # HTTP Server Block
 server {
     listen ${NGINX_HTTP_PORT} ${NGINX_LISTEN_EXTRA};
@@ -74,6 +80,10 @@ server {
 
     # Hide Nginx version
     server_tokens ${NGINX_SERVER_TOKENS};
+
+    # Server header rebrand/removal via headers-more module
+    # (NGINX_SERVER_HEADER: custom value, or "none" to strip the header)
+${NGINX_SERVER_HEADER_CONFIG}
 
     # ─────────────────────────────────────────────────────────────────────────
     # Security Headers (Modern Best Practices)
@@ -100,6 +110,11 @@ ${NGINX_SECURITY_HEADERS}
     gzip_comp_level ${NGINX_GZIP_COMP_LEVEL};
     gzip_min_length ${NGINX_GZIP_MIN_LENGTH};
     gzip_types ${NGINX_GZIP_TYPES};
+
+    # Serve pre-compressed .gz files straight from disk when the build produced
+    # them (Vite/Webpack/esbuild) — skips per-request compression entirely.
+    # Falls back to dynamic gzip when no .gz file exists.
+    gzip_static ${NGINX_GZIP_STATIC};
 
     # Logging
     access_log ${NGINX_ACCESS_LOG};
