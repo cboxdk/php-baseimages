@@ -27,6 +27,37 @@ FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev AS base-d
 FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev-rootless AS base-dev-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
+# BROTLI-BUILDER: ngx_brotli dynamic modules for Debian's nginx
+#
+# Bookworm does not package ngx_brotli, so compile it against the exact nginx
+# version apt installs. --with-compat makes the modules ABI-compatible with
+# Debian's differently-configured binary; brotli itself is statically linked,
+# so the tiers need no extra runtime library. Debian stable keeps one nginx
+# version (1.22.1) for its whole lifetime, so weekly rebuilds stay stable.
+# ═══════════════════════════════════════════════════════════════════════════
+FROM debian:bookworm-slim AS brotli-builder
+
+# Keep in sync with tools.ngx_brotli in versions.json
+ARG NGX_BROTLI_COMMIT=a71f9312c2deb28875acc7bacfdd5695a111aa53
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx ca-certificates curl git build-essential cmake libpcre2-dev zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && NGINX_VERSION=$(nginx -v 2>&1 | sed 's|.*nginx/||') \
+    && curl -fsSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar -xz -C /usr/src \
+    && git clone https://github.com/google/ngx_brotli.git /usr/src/ngx_brotli \
+    && git -C /usr/src/ngx_brotli checkout "${NGX_BROTLI_COMMIT}" \
+    && git -C /usr/src/ngx_brotli submodule update --init --depth 1 \
+    && cmake -S /usr/src/ngx_brotli/deps/brotli -B /usr/src/ngx_brotli/deps/brotli/out \
+        -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-fPIC -O2" \
+    && cmake --build /usr/src/ngx_brotli/deps/brotli/out --config Release --target brotlienc -- -j"$(nproc)" \
+    && cd "/usr/src/nginx-${NGINX_VERSION}" \
+    && ./configure --with-compat --add-dynamic-module=/usr/src/ngx_brotli \
+    && make -j"$(nproc)" modules \
+    && mkdir -p /out \
+    && cp objs/ngx_http_brotli_filter_module.so objs/ngx_http_brotli_static_module.so /out/
+
+# ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim AS slim-root
@@ -44,6 +75,11 @@ ENV CBOX_IMAGE_TIER=slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
+
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
@@ -107,6 +143,11 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
+
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
@@ -176,6 +217,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
+
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
@@ -238,6 +284,11 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
+
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
@@ -307,6 +358,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
+
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
@@ -369,6 +425,11 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
+
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
@@ -438,6 +499,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
+
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
 RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
@@ -500,6 +566,11 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
     && rm -rf /var/lib/apt/lists/*
+
+# Brotli modules (built in brotli-builder against this exact nginx version)
+COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
+RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
+    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker

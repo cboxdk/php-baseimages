@@ -116,6 +116,18 @@ ${NGINX_SECURITY_HEADERS}
     # Falls back to dynamic gzip when no .gz file exists.
     gzip_static ${NGINX_GZIP_STATIC};
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # Brotli Compression (15-20% smaller than gzip at the same CPU budget;
+    # ngx_brotli module). Clients that support br get brotli, others gzip.
+    # Set NGINX_BROTLI=off to disable
+    # ─────────────────────────────────────────────────────────────────────────
+    brotli ${NGINX_BROTLI};
+    brotli_comp_level ${NGINX_BROTLI_COMP_LEVEL};
+    brotli_types ${NGINX_BROTLI_TYPES};
+
+    # Serve pre-compressed .br files straight from disk (mirrors gzip_static)
+    brotli_static ${NGINX_BROTLI_STATIC};
+
     # Logging
     access_log ${NGINX_ACCESS_LOG};
     error_log ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL};

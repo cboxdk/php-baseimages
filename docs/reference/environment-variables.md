@@ -357,6 +357,25 @@ esbuild all have plugins for this), nginx serves `app.css.gz` directly from disk
 for a request to `app.css` — no per-request compression CPU at all. When no
 `.gz` file exists, nginx falls back to dynamic gzip transparently.
 
+### Brotli Compression
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NGINX_BROTLI` | `on` | Enable brotli (`on`/`off`) |
+| `NGINX_BROTLI_COMP_LEVEL` | `6` | Compression level (0-11) |
+| `NGINX_BROTLI_TYPES` | *(mirrors `NGINX_GZIP_TYPES`)* | MIME types to compress |
+| `NGINX_BROTLI_STATIC` | `on` | Serve pre-compressed `.br` files from disk (`on`/`off`) |
+
+Brotli typically compresses 15-20% smaller than gzip at the same CPU budget and
+is supported by every modern browser. The [ngx_brotli](https://github.com/google/ngx_brotli)
+module is compiled into all `php-fpm-nginx` images (statically linked — no
+extra runtime dependencies). Content negotiation is automatic: clients sending
+`Accept-Encoding: br` get brotli, everyone else gets gzip.
+
+**Pre-compressed `.br` assets** work exactly like `.gz` ones: emit them from
+your build pipeline and nginx serves them straight from disk, preferring `.br`
+over `.gz` when the client supports both.
+
 ### Open File Cache
 
 | Variable | Default | Description |

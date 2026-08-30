@@ -51,6 +51,7 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
   - Management API now binds loopback-only by default (plus Unix socket); new `CBOX_INIT_API_HOST` env var (set `0.0.0.0` + `CBOX_INIT_API_AUTH` to expose via a published port) - **breaking** if you previously published port 9180
   - REST log endpoints renamed fields to match the SSE stream (`timestamp`, `process`, `instance`) - **breaking** for API log consumers
   - Strict config validation: unknown YAML keys are rejected at load (shipped configs validated)
+- **Brotli compression** in all php-fpm-nginx tiers - ngx_brotli compiled against Debian's exact nginx, statically linked. On by default (`NGINX_BROTLI`, `NGINX_BROTLI_COMP_LEVEL`, `NGINX_BROTLI_TYPES`, `NGINX_BROTLI_STATIC`); pre-compressed `.br` assets served straight from disk
 - **headers-more nginx module** in all php-fpm-nginx tiers; `NGINX_SERVER_HEADER` rebrands the Server header (`none` removes it)
 - **`NGINX_LOG_FORMAT`** - `combined` (default), `combined_no_query` (privacy: no query strings on disk), `json` (structured)
 - **`gzip_static on`** by default (`NGINX_GZIP_STATIC`) - pre-compressed `.gz` assets served straight from disk

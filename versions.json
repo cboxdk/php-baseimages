@@ -56,7 +56,8 @@
   "tools": {
     "composer": "2",
     "cbox_init": "3.0.0",
-    "bun": "1.3.14"
+    "bun": "1.3.14",
+    "ngx_brotli": "a71f9312c2deb28875acc7bacfdd5695a111aa53"
   },
   "deprecation_policy": {
     "php_removal_after_eol_months": 6,
