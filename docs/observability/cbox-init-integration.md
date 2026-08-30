@@ -134,9 +134,18 @@ REST API for runtime process control (disabled by default for security).
 ```yaml
 environment:
   CBOX_INIT_API_ENABLED: "true"
+  CBOX_INIT_API_HOST: "127.0.0.1"     # Default: loopback only (see below)
   CBOX_INIT_API_PORT: "9180"          # Default: 9180
   CBOX_INIT_API_AUTH: "my-secret"     # Optional: Bearer token authentication
 ```
+
+> **Loopback by default (cbox-init 3.0+):** the API's TCP listener binds
+> `127.0.0.1` only, so it is reachable from *inside* the container (and via
+> the Unix socket at `/var/run/cbox-init.sock`, which the `cbox-init` CLI
+> auto-discovers) but **not** through a published port. This is intentional:
+> the API can start/stop/scale processes. To reach it from outside the
+> container, set `CBOX_INIT_API_HOST=0.0.0.0` **and** set
+> `CBOX_INIT_API_AUTH` — never expose an unauthenticated API.
 
 **Expose the port in docker-compose:**
 ```yaml
@@ -148,6 +157,7 @@ services:
       - "9180:9180"   # Management API
     environment:
       CBOX_INIT_API_ENABLED: "true"
+      CBOX_INIT_API_HOST: "0.0.0.0"   # Required for access via the published port
       CBOX_INIT_API_AUTH: "my-secret"
 ```
 

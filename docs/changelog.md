@@ -44,6 +44,16 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 ```
 
 ### Added
+- **Cbox Init v3.0.0** - env-defined lifecycle hooks, full init signal plane, hardened API
+  - Application warmup hooks via env vars (`CBOX_INIT_HOOK_PRE_START_<N>_COMMAND`, `_TIMEOUT`, `_ALLOW_FAILURE`) - run supervised pre-flight work (Statamic stache warm, Symfony cache warmup) before health checks start succeeding
+  - `SIGHUP` reloads config; `SIGUSR1`/`SIGUSR2` forwarded to all managed process groups (`docker kill -s USR2` = php-fpm graceful reload)
+  - Per-process signal action via CLI/API (e.g. nginx config reload without touching the stack)
+  - Management API now binds loopback-only by default (plus Unix socket); new `CBOX_INIT_API_HOST` env var (set `0.0.0.0` + `CBOX_INIT_API_AUTH` to expose via a published port) - **breaking** if you previously published port 9180
+  - REST log endpoints renamed fields to match the SSE stream (`timestamp`, `process`, `instance`) - **breaking** for API log consumers
+  - Strict config validation: unknown YAML keys are rejected at load (shipped configs validated)
+- **headers-more nginx module** in all php-fpm-nginx tiers; `NGINX_SERVER_HEADER` rebrands the Server header (`none` removes it)
+- **`NGINX_LOG_FORMAT`** - `combined` (default), `combined_no_query` (privacy: no query strings on disk), `json` (structured)
+- **`gzip_static on`** by default (`NGINX_GZIP_STATIC`) - pre-compressed `.gz` assets served straight from disk
 - PHP 8.5 support
 - Laravel Reverb WebSocket support (`LARAVEL_REVERB=true`)
 - mTLS client certificate authentication

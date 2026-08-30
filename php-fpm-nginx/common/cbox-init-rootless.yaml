@@ -15,7 +15,12 @@ global:
   log_format: json
 
   # Management API (disabled by default for security)
+  # Since cbox-init 3.0 the TCP listener binds loopback-only by default; a
+  # Unix socket at /var/run/cbox-init.sock is also served. To reach the API
+  # from outside the container, set api_host: 0.0.0.0 (or the
+  # CBOX_INIT_API_HOST env var) AND set api_auth.
   api_enabled: false
+  api_host: 127.0.0.1
   api_port: 9180
   api_auth: ""
 

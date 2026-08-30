@@ -14,6 +14,16 @@ echo "Downloading Cbox Init v${VERSION}..."
 
 mkdir -p "$DEST_DIR"
 
+# Cached binaries carry no version information, so a version bump in
+# versions.json used to be silently ignored ("already exists, skipping" kept
+# the old binaries AND the old checksums.txt, which then verified clean).
+# Stamp the version alongside the binaries and wipe the cache on mismatch.
+STAMP_FILE="$DEST_DIR/.version"
+if [ "$(cat "$STAMP_FILE" 2>/dev/null)" != "$VERSION" ]; then
+    rm -f "$DEST_DIR"/cbox-init-linux-* "$DEST_DIR/checksums.txt"
+fi
+printf '%s\n' "$VERSION" > "$STAMP_FILE"
+
 for ARCH in amd64 arm64; do
     URL="${BASE_URL}/cbox-init-linux-${ARCH}"
     DEST="$DEST_DIR/cbox-init-linux-${ARCH}"

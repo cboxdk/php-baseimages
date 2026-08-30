@@ -311,8 +311,13 @@ LARAVEL_MIGRATE_ENABLED=false     # Auto-run migrations (dangerous in prod!)
 
 # Cbox Init Management API
 CBOX_INIT_API_ENABLED=true        # Enable REST API on port 9180
+CBOX_INIT_API_HOST=127.0.0.1      # Bind address (loopback-only default since cbox-init 3.0; 0.0.0.0 + AUTH to publish)
 CBOX_INIT_API_PORT=9180           # API port (default: 9180)
 CBOX_INIT_API_AUTH=my-secret      # Bearer token for API auth
+
+# Application Warmup Hooks (cbox-init 3.0+, run before health checks pass)
+CBOX_INIT_HOOK_PRE_START_0_COMMAND=php,please,stache:warm
+CBOX_INIT_HOOK_PRE_START_0_ALLOW_FAILURE=true
 
 # Cbox Init Global Config Overrides
 CBOX_INIT_METRICS_ENABLED=true    # Prometheus metrics (default: true)

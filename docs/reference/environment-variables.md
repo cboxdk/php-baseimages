@@ -598,6 +598,7 @@ The Management API provides runtime control over container processes. It is **di
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CBOX_INIT_API_ENABLED` | `false` | Enable the Management API |
+| `CBOX_INIT_API_HOST` | `127.0.0.1` | API bind address. Loopback-only by default (cbox-init 3.0+); set `0.0.0.0` + `CBOX_INIT_API_AUTH` to reach it via a published port |
 | `CBOX_INIT_API_PORT` | `9180` | Port the API listens on |
 | `CBOX_INIT_API_AUTH` | *(empty)* | Bearer token for API authentication |
 
@@ -626,6 +627,46 @@ See [Cbox Init Integration](../observability/cbox-init-integration#-management-a
 | `CBOX_INIT_LOG_FORMAT` | `json` | Log format: `json`, `text` |
 | `CBOX_INIT_SHUTDOWN_TIMEOUT` | `30` | Seconds to wait for graceful process shutdown |
 | `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Path to cbox-init config file |
+
+---
+
+## Application Warmup Hooks (cbox-init 3.0+)
+
+Run app-specific pre-flight work — Statamic `stache:warm`, Symfony
+`cache:warmup`, custom seeding — **before** the services start and health
+checks begin succeeding. Hooks are executed by cbox-init itself: supervised,
+with a timeout, and logged with structured fields (name, duration, exit code).
+
+Define hooks entirely via environment variables, no YAML mount needed:
+
+```
+CBOX_INIT_HOOK_PRE_START_<N>_NAME           # Optional (defaults to pre-start-<N>)
+CBOX_INIT_HOOK_PRE_START_<N>_COMMAND        # Required, comma-separated argv or JSON array
+CBOX_INIT_HOOK_PRE_START_<N>_TIMEOUT        # Seconds
+CBOX_INIT_HOOK_PRE_START_<N>_ALLOW_FAILURE  # true = log the failure, continue startup
+```
+
+```yaml
+# Example: Statamic stache warm + best-effort event cache
+environment:
+  CBOX_INIT_HOOK_PRE_START_0_NAME: "stache-warm"
+  CBOX_INIT_HOOK_PRE_START_0_COMMAND: "php,please,stache:warm"
+  CBOX_INIT_HOOK_PRE_START_0_TIMEOUT: "300"
+  CBOX_INIT_HOOK_PRE_START_1_COMMAND: "php,artisan,event:cache"
+  CBOX_INIT_HOOK_PRE_START_1_ALLOW_FAILURE: "true"
+```
+
+Notes:
+
+- A hook that fails (or times out) **aborts container startup** unless
+  `ALLOW_FAILURE` is `true` — right for migrations, opt out for best-effort
+  warmup (a cold cache is degraded, not down).
+- For a full shell line, wrap it: `COMMAND: "/bin/sh,-c,php please stache:warm && php please static:warm"`.
+- Hooks needing the web server up (HTTP-based warming) belong in
+  `hooks.post-start` in a mounted cbox-init.yaml instead.
+- Simpler alternative for scripts: drop a `*.sh` file into
+  `/docker-entrypoint-init.d/` — it runs before cbox-init starts, but without
+  cbox-init's supervision, timeout, or structured logging.
 
 ---
 

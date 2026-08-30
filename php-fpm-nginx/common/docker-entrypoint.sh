@@ -671,6 +671,7 @@ apply_cbox_init_env_overrides() {
 
     # Management API overrides
     [ -n "$CBOX_INIT_API_ENABLED" ] && sed -i "s/^\(\s*\)api_enabled:.*/\1api_enabled: $(_sed_escape "${CBOX_INIT_API_ENABLED}")/" "$dst"
+    [ -n "$CBOX_INIT_API_HOST" ] && sed -i "s/^\(\s*\)api_host:.*/\1api_host: $(_sed_escape "${CBOX_INIT_API_HOST}")/" "$dst"
     [ -n "$CBOX_INIT_API_PORT" ] && sed -i "s/^\(\s*\)api_port:.*/\1api_port: $(_sed_escape "${CBOX_INIT_API_PORT}")/" "$dst"
     [ -n "$CBOX_INIT_API_AUTH" ] && sed -i "s/^\(\s*\)api_auth:.*/\1api_auth: \"$(_sed_escape "${CBOX_INIT_API_AUTH}")\"/" "$dst"
 
