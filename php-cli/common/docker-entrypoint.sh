@@ -171,13 +171,26 @@ fi
 map_env_aliases
 
 if [ "$1" = "cbox-init" ]; then
-    # Explicit cbox-init command: start the process manager
     shift
-    CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
-    apply_cbox_init_env_overrides
-    log_info "Starting Cbox Init process manager"
-    log_info "Config: $CBOX_INIT_CONFIG"
-    exec /usr/local/bin/cbox-init serve --config "$CBOX_INIT_CONFIG" "$@"
+    case "${1:-}" in
+        --version|-v|--help|-h)
+            # Informational flags target the CLI itself, not the serve
+            # subcommand — cbox-init 3.x rejects them under `serve`.
+            exec /usr/local/bin/cbox-init "$@"
+            ;;
+        ""|-*)
+            # No args, or serve flags (--watch, --dry-run, ...): start the manager
+            CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
+            apply_cbox_init_env_overrides
+            log_info "Starting Cbox Init process manager"
+            log_info "Config: $CBOX_INIT_CONFIG"
+            exec /usr/local/bin/cbox-init serve --config "$CBOX_INIT_CONFIG" "$@"
+            ;;
+        *)
+            # Subcommand (status, logs, check-config, version, ...): real CLI
+            exec /usr/local/bin/cbox-init "$@"
+            ;;
+    esac
 elif [ -z "$1" ] && has_cbox_init_processes; then
     # No command given but cbox-init processes are enabled: auto-start cbox-init
     CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"

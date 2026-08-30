@@ -877,6 +877,19 @@ if [ $# -gt 0 ] && [ "$1" != "cbox-init" ] && [ "${1#-}" = "$1" ]; then
     exec "$@"
 fi
 
+# The image CMD is ["cbox-init"]. Strip it so it is not handed to `serve` as
+# a stray positional arg. Anything following it other than serve flags is a
+# real cbox-init CLI invocation (--version, check-config, status, ...) — exec
+# the binary directly; cbox-init 3.x rejects such args under `serve`.
+if [ "${1:-}" = "cbox-init" ]; then
+    shift
+    case "${1:-}" in
+        --version|-v|--help|-h) exec /usr/local/bin/cbox-init "$@" ;;
+        ""|-*) : ;;  # serve flags (e.g. --watch) continue to the serve exec below
+        *) exec /usr/local/bin/cbox-init "$@" ;;
+    esac
+fi
+
 # --- PHP-FPM worker autotuning ----------------------------------------------
 # cbox-init sizes php-fpm workers from the container's memory/CPU limits when a
 # profile is set, exporting PHP_FPM_* which fpm-pool.conf expands. Autotune is on
