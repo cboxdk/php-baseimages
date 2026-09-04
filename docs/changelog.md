@@ -10,6 +10,10 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [1.0.0] - 2026-09-05
+
 ### Breaking Changes
 - **OS Variant Simplification** - Only Debian 12 (Bookworm) is now supported
   - Removed Alpine variant
