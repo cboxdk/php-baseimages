@@ -223,15 +223,15 @@ and derives `pm.max_children` (and the other PM values). A 512 MB container yiel
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHP_FPM_AUTOTUNE_PROFILE` | *(adaptive, see below)* | Sizing profile: `dev`, `light`, `medium`, `heavy`, `bursty`. Set to empty (`""`) to disable auto-tuning and use the static values below. |
+| `PHP_FPM_AUTOTUNE_PROFILE` | `medium` | Sizing profile: `dev`, `light`, `medium`, `heavy`, `bursty`. Set to empty (`""`) to disable auto-tuning and use the static values below. |
+| `PHP_FPM_AUTOTUNE_STRICT` | `0` | `1` = refuse to boot when the memory limit cannot fit the profile, instead of clamping. Useful as a deploy-time misconfiguration check. |
 
-**Adaptive default:** each profile has a memory floor below which cbox-init refuses
-to start (medium needs ≥512 MB, light ≥384 MB, heavy ≥2 GB). When you don't set a
-profile, the entrypoint picks one that fits the container's memory limit: ≥512 MB
-(or no limit) → `medium`, ≥384 MB → `light`, below that auto-tuning is disabled
-with a warning and the static fallbacks below apply. An **explicitly** set profile
-is never rewritten — if it doesn't fit the limit, the container exits with a clear
-error so the misconfiguration is caught at deploy time.
+**Small containers:** when the memory limit cannot fit the profile, cbox-init
+(3.1.2+) **clamps** the worker count with a warning naming the smallest limit
+that would run the profile, and boots anyway — the runtime tuner (below) then
+refines the number from live measurements. Set `PHP_FPM_AUTOTUNE_STRICT=1` if
+you'd rather fail hard at deploy time; on very small containers, consider a
+lighter profile plus `CBOX_FPM_TUNE=true`.
 
 **To size manually**, set `PHP_FPM_MAX_CHILDREN` (this pins the count and turns auto-tuning off),
 or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly:
