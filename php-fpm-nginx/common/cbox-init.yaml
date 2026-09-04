@@ -29,6 +29,18 @@ global:
   metrics_port: 9090
   metrics_path: /metrics
 
+  # Runtime PHP-FPM autotuning (embedded cboxdk/fpm-tune, cbox-init 3.1+).
+  # Measures live per-worker memory (PSS) and resizes the pool via an atomic
+  # drop-in + graceful SIGUSR2 reload (never a restart). The boot-time profile
+  # (PHP_FPM_AUTOTUNE_PROFILE) seeds pm.max_children; this loop refines it as
+  # real traffic arrives. Off by default — enable with CBOX_FPM_TUNE=true
+  # (or CBOX_INIT_FPM_TUNE_ENABLED=true).
+  fpm_tune:
+    enabled: false
+    mode: apply          # apply = write drop-ins + reload; advisory = recommend only
+    interval: 30s
+    metrics_addr: ""     # e.g. ":9110" to expose fpm_tune_* Prometheus metrics
+
   # Restart configuration with exponential backoff
   restart_backoff_initial: 1s
   restart_backoff_max: 60s

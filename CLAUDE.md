@@ -319,6 +319,11 @@ CBOX_INIT_API_AUTH=my-secret      # Bearer token for API auth
 CBOX_INIT_HOOK_PRE_START_0_COMMAND=php,please,stache:warm
 CBOX_INIT_HOOK_PRE_START_0_ALLOW_FAILURE=true
 
+# Runtime PHP-FPM Tuning (embedded fpm-tune, cbox-init 3.1+; off by default)
+CBOX_FPM_TUNE=true                # Measure live worker PSS, resize pool via drop-in + graceful reload
+CBOX_INIT_FPM_TUNE_MODE=apply     # apply (default) or advisory
+CBOX_INIT_FPM_TUNE_METRICS_ADDR=:9110  # fpm_tune_* Prometheus metrics (empty = off)
+
 # Cbox Init Global Config Overrides
 CBOX_INIT_METRICS_ENABLED=true    # Prometheus metrics (default: true)
 CBOX_INIT_METRICS_PORT=9090       # Metrics port (default: 9090)

@@ -44,6 +44,8 @@ RUN apt-get update && apt-get install -y package-name && rm -rf /var/lib/apt/lis
 ```
 
 ### Added
+- **Cbox Init v3.1.1 with runtime PHP-FPM tuning (fpm-tune)** - measures live per-worker memory (PSS) and resizes the pool via an atomic drop-in + graceful SIGUSR2 reload (master PID unchanged, zero dropped connections - verified under saturated load through 20 reloads). Off by default; enable with `CBOX_FPM_TUNE=true` (`CBOX_INIT_FPM_TUNE_MODE/INTERVAL/METRICS_ADDR` for mode, cadence and Prometheus metrics). Works in root and rootless variants
+- **Adaptive boot-autotune default** - fixes a crash-loop: cbox-init refuses to start when the memory limit is below the profile floor, and the previous fixed `medium` default killed every container under ~512MB at boot. The default now adapts to the cgroup limit (>=512MB medium, >=384MB light, below that autotune off with static fallbacks). An explicitly set profile is never rewritten. Upstream clamp requested in cboxdk/init#133
 - **Cbox Init v3.0.0** - env-defined lifecycle hooks, full init signal plane, hardened API
   - Application warmup hooks via env vars (`CBOX_INIT_HOOK_PRE_START_<N>_COMMAND`, `_TIMEOUT`, `_ALLOW_FAILURE`) - run supervised pre-flight work (Statamic stache warm, Symfony cache warmup) before health checks start succeeding
   - `SIGHUP` reloads config; `SIGUSR1`/`SIGUSR2` forwarded to all managed process groups (`docker kill -s USR2` = php-fpm graceful reload)

@@ -202,6 +202,14 @@ map_env_aliases() {
     [ -n "$LARAVEL_QUEUE" ] && validate_boolean "$LARAVEL_QUEUE" && export CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
     [ -n "$LARAVEL_QUEUE_HIGH" ] && validate_boolean "$LARAVEL_QUEUE_HIGH" && export CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
     [ -n "$CBOX_QUEUE_AUTOSCALER" ] && validate_boolean "$CBOX_QUEUE_AUTOSCALER" && export CBOX_INIT_PROCESS_AUTOSCALER_ENABLED="$CBOX_QUEUE_AUTOSCALER"
+    # Runtime PHP-FPM autotuning (embedded fpm-tune, cbox-init 3.1+). Short
+    # spellings map onto cbox-init's native CBOX_INIT_GLOBAL_* overrides,
+    # which win over the fpm_tune block in cbox-init.yaml.
+    [ -n "$CBOX_FPM_TUNE" ] && validate_boolean "$CBOX_FPM_TUNE" && export CBOX_INIT_GLOBAL_FPM_TUNE_ENABLED="$CBOX_FPM_TUNE"
+    [ -n "$CBOX_INIT_FPM_TUNE_ENABLED" ] && export CBOX_INIT_GLOBAL_FPM_TUNE_ENABLED="$CBOX_INIT_FPM_TUNE_ENABLED"
+    [ -n "$CBOX_INIT_FPM_TUNE_MODE" ] && export CBOX_INIT_GLOBAL_FPM_TUNE_MODE="$CBOX_INIT_FPM_TUNE_MODE"
+    [ -n "$CBOX_INIT_FPM_TUNE_INTERVAL" ] && export CBOX_INIT_GLOBAL_FPM_TUNE_INTERVAL="$CBOX_INIT_FPM_TUNE_INTERVAL"
+    [ -n "$CBOX_INIT_FPM_TUNE_METRICS_ADDR" ] && export CBOX_INIT_GLOBAL_FPM_TUNE_METRICS_ADDR="$CBOX_INIT_FPM_TUNE_METRICS_ADDR"
     # Backward compatibility
     [ -n "$LARAVEL_SCHEDULER_ENABLED" ] && export CBOX_INIT_PROCESS_SCHEDULER_ENABLED="$LARAVEL_SCHEDULER_ENABLED"
     [ -n "$LARAVEL_AUTO_OPTIMIZE" ] && export LARAVEL_OPTIMIZE_ENABLED="$LARAVEL_AUTO_OPTIMIZE"
@@ -897,10 +905,42 @@ fi
 # and turns autotune off unless a profile is also given. The fallbacks below make
 # the pool resolve even with autotune disabled (cbox-init overrides them when it
 # runs, so the tuned values win).
+# Default profile adapts to the container's memory limit. cbox-init's boot
+# calculator refuses to start (PID 1 exits 1) when the limit cannot fit the
+# profile's floor, so a fixed default of "medium" crash-loops small containers.
+# Verified floors on cbox-init 3.1.1: medium boots at 512MB (448MB refused),
+# light at 384MB (320MB refused); below that even dev refuses at 256MB, so
+# autotune is disabled and the static PHP_FPM_* fallbacks below apply.
+# An EXPLICITLY set profile is passed through untouched — a deliberate choice
+# should fail loudly, not be silently rewritten.
+# TODO: drop this ladder when cboxdk/init clamps instead of exiting.
+_cgroup_limit_mb() {
+    local bytes=""
+    if [ -r /sys/fs/cgroup/memory.max ]; then
+        bytes=$(cat /sys/fs/cgroup/memory.max 2>/dev/null)
+    elif [ -r /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+        bytes=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null)
+    fi
+    case "$bytes" in
+        ''|max|*[!0-9]*) echo 0 ;;   # unlimited or unreadable
+        *) if [ "$bytes" -gt 4611686018427387904 ]; then echo 0; else echo $((bytes / 1048576)); fi ;;
+    esac
+}
 if [ -n "${PHP_FPM_MAX_CHILDREN:-}" ]; then
     export PHP_FPM_AUTOTUNE_PROFILE="${PHP_FPM_AUTOTUNE_PROFILE:-}"   # manual sizing wins
+elif [ -z "${PHP_FPM_AUTOTUNE_PROFILE+x}" ]; then
+    _mem_mb=$(_cgroup_limit_mb)
+    if [ "$_mem_mb" -eq 0 ] || [ "$_mem_mb" -ge 512 ]; then
+        export PHP_FPM_AUTOTUNE_PROFILE="medium"
+    elif [ "$_mem_mb" -ge 384 ]; then
+        export PHP_FPM_AUTOTUNE_PROFILE="light"
+        log_info "Memory limit ${_mem_mb}MB < 512MB — defaulting autotune profile to light"
+    else
+        export PHP_FPM_AUTOTUNE_PROFILE=""
+        log_warn "Memory limit ${_mem_mb}MB is below the light profile floor (384MB) — boot autotune disabled, static PHP_FPM_* fallbacks apply. Set PHP_FPM_AUTOTUNE_PROFILE explicitly to override."
+    fi
 else
-    export PHP_FPM_AUTOTUNE_PROFILE="${PHP_FPM_AUTOTUNE_PROFILE-medium}"
+    export PHP_FPM_AUTOTUNE_PROFILE="${PHP_FPM_AUTOTUNE_PROFILE}"
 fi
 export PHP_FPM_MAX_CHILDREN="${PHP_FPM_MAX_CHILDREN:-10}"
 export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"

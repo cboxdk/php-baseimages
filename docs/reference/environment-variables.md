@@ -214,7 +214,7 @@ probes and degrades cleanly without it. `/proc/self/environ` and
 | `PHP_OPCACHE_JIT` | `tracing` | JIT mode: `tracing`, `function`, `off` |
 | `PHP_OPCACHE_JIT_BUFFER_SIZE` | `128M` | JIT buffer size |
 
-### PHP-FPM worker auto-tuning
+### PHP-FPM worker auto-tuning (boot seed)
 
 By default the worker pool is **auto-tuned by cbox-init from the container's cgroup
 memory and CPU limits** — it reads `memory.max`, reserves headroom for nginx/opcache/system,
@@ -223,7 +223,15 @@ and derives `pm.max_children` (and the other PM values). A 512 MB container yiel
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHP_FPM_AUTOTUNE_PROFILE` | `medium` | Sizing profile: `dev`, `light`, `medium`, `heavy`, `bursty`. Set to empty (`""`) to disable auto-tuning and use the static values below. |
+| `PHP_FPM_AUTOTUNE_PROFILE` | *(adaptive, see below)* | Sizing profile: `dev`, `light`, `medium`, `heavy`, `bursty`. Set to empty (`""`) to disable auto-tuning and use the static values below. |
+
+**Adaptive default:** each profile has a memory floor below which cbox-init refuses
+to start (medium needs ≥512 MB, light ≥384 MB, heavy ≥2 GB). When you don't set a
+profile, the entrypoint picks one that fits the container's memory limit: ≥512 MB
+(or no limit) → `medium`, ≥384 MB → `light`, below that auto-tuning is disabled
+with a warning and the static fallbacks below apply. An **explicitly** set profile
+is never rewritten — if it doesn't fit the limit, the container exits with a clear
+error so the misconfiguration is caught at deploy time.
 
 **To size manually**, set `PHP_FPM_MAX_CHILDREN` (this pins the count and turns auto-tuning off),
 or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly:
@@ -237,6 +245,41 @@ or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly
 | `PHP_FPM_MAX_SPARE` | `6` | Max idle processes (dynamic mode) |
 | `PHP_FPM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | Max request execution time before kill |
+
+### Runtime PHP-FPM tuning (fpm-tune, cbox-init 3.1+)
+
+The boot profile above is a **seed** — it sizes the pool once, before traffic.
+cbox-init 3.1 embeds [fpm-tune](https://github.com/cboxdk/fpm-tune) as a runtime
+loop: it measures live per-worker memory (PSS, which does not double-count shared
+OPcache), and when the right size has moved it rewrites a pool drop-in
+(`zz-fpm-tune.conf`) and reloads php-fpm gracefully with SIGUSR2 — never a
+restart, the master PID stays. Every change is validated against a throwaway
+copy, written atomically, and rolled back if the master does not come back.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_FPM_TUNE` | `false` | Enable the runtime tuner (`true`/`false`) |
+| `CBOX_INIT_FPM_TUNE_ENABLED` | `false` | Same switch, long spelling |
+| `CBOX_INIT_FPM_TUNE_MODE` | `apply` | `apply` = write drop-ins + reload; `advisory` = observe and recommend only |
+| `CBOX_INIT_FPM_TUNE_INTERVAL` | `30s` | Measurement interval |
+| `CBOX_INIT_FPM_TUNE_METRICS_ADDR` | *(empty)* | e.g. `:9110` to expose `fpm_tune_*` Prometheus metrics (worker PSS, budget, recommended vs configured workers) |
+
+```yaml
+# Example: runtime tuning on, with metrics
+environment:
+  CBOX_FPM_TUNE: "true"
+  CBOX_INIT_FPM_TUNE_METRICS_ADDR: ":9110"
+```
+
+These map onto cbox-init's native `CBOX_INIT_GLOBAL_FPM_TUNE_*` overrides, which
+also work directly and win over the `fpm_tune` block in cbox-init.yaml. Works in
+both root and rootless variants. Do not run a separate standalone `fpm-tune`
+daemon against the same pools — the embedded loop holds a lock on its state file.
+
+**Reloads are connection-lossless.** php-fpm's graceful SIGUSR2 reload keeps the
+listening socket open while workers respawn, so nginx needs no retry
+configuration: measured on these images, 4,900+ requests (sequential and
+saturated-concurrent) through 20 forced reloads produced zero non-200 responses.
 
 ### Live config reload
 
