@@ -706,7 +706,7 @@ jobs:
       - name: Resolve verification image ref
         id: verify_ref
         run: |
-          DIGEST=$(ls /tmp/digest-amd64 | head -1)
+          DIGEST=$(basename "$(find /tmp/digest-amd64 -type f | head -1)")
           echo "ref=ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@sha256:${DIGEST}" >> $GITHUB_OUTPUT
           echo "Verifying against digest sha256:${DIGEST}"
 
