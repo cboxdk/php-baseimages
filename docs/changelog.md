@@ -10,6 +10,10 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [1.1.0] - 2026-09-05
+
 ### Added
 - **Release channel tags (`-vN`)** - e.g. `8.4-bookworm-v1`: rebuilt weekly with OS security patches, but never crossing a tooling major. The recommended production pin: stable behavior without CVE rot. Rolling tags keep following the latest release; SHA/digest tags remain the immutable option. Channel comes from `release.channel` in versions.json; previous majors stay supported for 6 months after a new major (see docs/reference/tagging-strategy.md)
 - **SLSA provenance + SPDX SBOM attestations** on every image (BuildKit `mode=max`; verified to survive the multi-arch manifest merge). Inspect with `docker buildx imagetools inspect --format '{{ json .Provenance }}'`
