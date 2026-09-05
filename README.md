@@ -40,7 +40,8 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    # -v1 = release channel: behavior pinned, security patches keep flowing
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     ports:
       - "8000:80"
     volumes:

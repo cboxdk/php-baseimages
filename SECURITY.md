@@ -1,64 +1,43 @@
 # Security Policy
 
-Cbox PHP Base Images ship production PHP runtimes (PHP-FPM, CLI, Nginx, and the
-multi-service PHP-FPM + Nginx image) used as the base for many applications. A
-vulnerability here can affect every downstream image, so we take reports
-seriously and rebuild weekly to pick up upstream security patches.
+## Reporting a vulnerability
 
-## Supported Versions
+Report vulnerabilities through
+[GitHub private vulnerability reporting](https://github.com/cboxdk/php-baseimages/security/advisories/new)
+on this repository. Please do not open public issues for security problems.
 
-Security-patched, rolling tags are published for all currently-supported PHP
-versions (see `versions.json` → `php.supported`). EOL PHP versions are removed
-per the deprecation policy in `versions.json`.
+This is an open-source project maintained by a small team. We read reports and
+respond as fast as we realistically can, but we do not promise a formal SLA.
 
-| PHP | Status |
-|-----|--------|
-| 8.4, 8.5 | ✅ supported (rolling `8.x-bookworm` tags rebuilt weekly) |
-| 8.2, 8.3 | ✅ supported until EOL (see `versions.json`) |
-| < 8.2 | ❌ end of life |
+## How these images stay patched
 
-## Reporting a Vulnerability
+- **Weekly rebuilds** (Mondays 03:00 UTC) pull the latest upstream PHP and
+  Debian base layers, so OS and PHP security patches reach every rolling and
+  release-channel tag automatically. `docker pull` weekly to receive them.
+- **Release-channel tags** (`8.4-bookworm-v1`) receive the same weekly security
+  rebuilds without ever crossing a tooling major — pin these in production.
+- **Immutable digests / SHA tags** are never rebuilt and age by design.
 
-**Do not open a public GitHub issue for security vulnerabilities.**
+## What every published image carries
 
-Report privately via:
+- Cosign signature (keyless, GitHub OIDC) on the manifest list
+- SLSA provenance attestation (BuildKit `mode=max`)
+- SPDX SBOM attestation per platform
 
-- GitHub [private vulnerability reporting](https://github.com/cboxdk/php-baseimages/security/advisories/new) (preferred), or
-- Email **security@cbox.dk**.
+Verify with `cosign verify` or
+`docker buildx imagetools inspect <image> --format '{{ json .Provenance }}'`.
 
-Include: affected image(s) and tag(s), tier (slim/standard/chromium/dev, root or
-rootless), a description and impact, and reproduction steps.
+## CI vulnerability gate
 
-We aim to acknowledge within 3 business days and to ship a fix or mitigation
-prioritised by severity, credited in the release notes unless you prefer
-anonymity.
+Every build fails before any production tag moves if a fixable CRITICAL/HIGH
+CVE appears that is not in the repository's triaged [`.trivyignore`](.trivyignore)
+baseline (each entry annotated with its fix path). Full unfiltered scan results
+are published to this repository's Security tab.
 
-## Verifying Image Integrity
+## Supported versions
 
-Images (php-base, php-fpm, php-fpm-nginx) are signed with
-[cosign](https://github.com/sigstore/cosign) using keyless (OIDC) signing:
-
-```bash
-cosign verify \
-  --certificate-identity-regexp 'https://github.com/cboxdk/php-baseimages/.github/workflows/.+' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm
-```
-
-Every published tag is also scanned with Trivy (CRITICAL/HIGH) across all image
-families; results appear in the repository's Security tab, and fixable findings
-are surfaced in the build logs (soft gate, being ratcheted to blocking as the
-CVE backlog is triaged).
-
-## Hardening Guidance
-
-- **Run rootless where possible** — use the `-rootless` image variants; they run
-  as `www-data` and listen on port 8080.
-- **Drop capabilities** — run with `--cap-drop=ALL --security-opt=no-new-privileges`
-  and add back only what you need.
-- **Pin by digest** for reproducibility (`...@sha256:...`) and use rolling tags
-  for automatic weekly security updates.
-- **Protect the cbox-init management API** — it is disabled by default; if you
-  enable it, set a bearer token and bind it to a trusted interface.
-
-See `docs/` for full guidance.
+Images follow the upstream PHP lifecycle: versions receive weekly rebuilds
+until six months after their php.net **security support** end date. Current
+dates live in [`versions.json`](versions.json); the tagging and deprecation
+policy is documented in
+[docs/reference/tagging-strategy.md](docs/reference/tagging-strategy.md).

@@ -690,7 +690,78 @@ jobs:
             type=ref,event=branch,suffix=${{ steps.tags.outputs.branch_suffix }}
             type=ref,event=pr,suffix=${{ steps.tags.outputs.branch_suffix }}
 
-      - name: Create manifest list and push
+      # ─────────────────────────────────────────────────────────────────────────
+      # DIGEST PROMOTION: everything below verifies the pushed-by-digest image
+      # BEFORE any production tag moves. If the CVE gate or the smoke test
+      # fails, the job stops here and the previous good image stays live under
+      # every tag. Verification runs against the amd64 digest (the runner's
+      # architecture); arm64 shares the exact same Dockerfile and build args.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Download amd64 digest for pre-promotion verification
+        uses: actions/download-artifact@v8
+        with:
+          name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${{ inputs.tag-suffix || 'standard' }}-amd64
+          path: /tmp/digest-amd64
+
+      - name: Resolve verification image ref
+        id: verify_ref
+        run: |
+          DIGEST=$(ls /tmp/digest-amd64 | head -1)
+          echo "ref=ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@sha256:${DIGEST}" >> $GITHUB_OUTPUT
+          echo "Verifying against digest sha256:${DIGEST}"
+
+      - name: Scan for vulnerabilities (SARIF, pre-promotion)
+        if: inputs.enable-trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ steps.verify_ref.outputs.ref }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        if: inputs.enable-trivy
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      # REGRESSION GATE: fail BEFORE promotion when a fixable CRITICAL/HIGH
+      # CVE appears that is not in the .trivyignore baseline. The baseline
+      # holds the triaged backlog (each entry annotated with its fix path);
+      # the SARIF upload above records everything — baseline included — in
+      # the Security tab. A failure here means no tag moves: the security
+      # posture of the published tags cannot regress.
+      - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (pre-promotion gate)
+        if: inputs.enable-trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ steps.verify_ref.outputs.ref }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
+          trivyignores: '.trivyignore'
+
+      - name: Smoke-test image (pre-promotion)
+        if: inputs.test-script != ''
+        env:
+          IMAGE: ${{ steps.verify_ref.outputs.ref }}
+          PHP_VERSION: ${{ inputs.php-version }}
+          TIER: ${{ inputs.tier }}
+          ROOTLESS: ${{ inputs.rootless }}
+        run: |
+          # Pull the digest so the test exercises exactly what would be
+          # promoted, never a stale local copy.
+          docker pull -q "$IMAGE"
+          ${{ inputs.test-script }}
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # PROMOTE: verification passed — move the production tags to the new
+      # digests. imagetools create is a pure manifest operation, so the
+      # promoted bits are byte-identical to what was just verified, and
+      # BuildKit attestations (provenance/SBOM) carry over per platform.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Promote - create manifest list and push tags
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create \
@@ -725,51 +796,3 @@ jobs:
         run: |
           # Sign using the version tag (manifest list)
           cosign sign --yes "ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}"
-
-      - name: Run Trivy vulnerability scanner
-        if: inputs.enable-trivy
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy results to GitHub Security
-        if: inputs.enable-trivy
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-      # REGRESSION GATE: fail the build when a fixable CRITICAL/HIGH CVE
-      # appears that is not in the .trivyignore baseline. The baseline holds
-      # the triaged pre-existing backlog (each entry annotated with its fix
-      # path); the SARIF upload above still records EVERYTHING — including
-      # baselined CVEs — in the Security tab. Honest claim this gate makes:
-      # the security posture cannot regress. Prune the baseline as fixes land.
-      - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (regression gate)
-        if: inputs.enable-trivy
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
-          format: 'table'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          exit-code: '1'
-          trivyignores: '.trivyignore'
-
-      - name: Test built image
-        if: inputs.test-script != ''
-        env:
-          IMAGE: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
-          PHP_VERSION: ${{ inputs.php-version }}
-          TIER: ${{ inputs.tier }}
-          ROOTLESS: ${{ inputs.rootless }}
-        run: |
-          # Pull the just-pushed image so the test exercises it, not a stale
-          # copy left in the runner's local Docker store by an earlier build.
-          # Without this, `docker run $IMAGE ...` can silently use an old image
-          # and report false failures (e.g. "node: not found") even when the
-          # pushed image is correct.
-          docker pull -q "$IMAGE"
-          ${{ inputs.test-script }}

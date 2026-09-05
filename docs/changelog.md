@@ -15,6 +15,8 @@ _Nothing yet._
 ## [1.1.0] - 2026-09-05
 
 ### Added
+- **Digest promotion** - production tags now move only AFTER verification: the CVE regression gate and the per-image smoke test run against the pushed-by-digest image, and a failure leaves every tag pointing at the previous good image. Attestations carry over unchanged (promotion is a pure manifest operation)
+- **SECURITY.md** - honest security policy: private vulnerability reporting via GitHub, the weekly-rebuild patch model, signature/attestation verification, and the supported-versions policy
 - **Release channel tags (`-vN`)** - e.g. `8.4-bookworm-v1`: rebuilt weekly with OS security patches, but never crossing a tooling major. The recommended production pin: stable behavior without CVE rot. Rolling tags keep following the latest release; SHA/digest tags remain the immutable option. Channel comes from `release.channel` in versions.json; previous majors stay supported for 6 months after a new major (see docs/reference/tagging-strategy.md)
 - **SLSA provenance + SPDX SBOM attestations** on every image (BuildKit `mode=max`; verified to survive the multi-arch manifest merge). Inspect with `docker buildx imagetools inspect --format '{{ json .Provenance }}'`
 - **Trivy regression gate** - builds now FAIL on any new fixable CRITICAL/HIGH CVE not in the triaged `.trivyignore` baseline (84 pre-existing entries, each annotated with its fix path). Full unfiltered scans still go to the Security tab
