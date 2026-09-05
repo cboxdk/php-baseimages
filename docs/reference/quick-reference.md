@@ -118,7 +118,7 @@ docker compose exec app php artisan test
 
 For the full image size matrix, tier descriptions, and rootless variants, see [Choosing Your Image](../getting-started/choosing-your-image).
 
-```
+```text
 # Standard tier (DEFAULT)
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 

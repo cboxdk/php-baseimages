@@ -118,7 +118,7 @@ services:
 
 **Formula:**
 
-```
+```text
 max_children = Available RAM / Average Process Memory
 ```
 
@@ -292,7 +292,7 @@ find /var/www/html -type f -name "*.php" | wc -l
 
 **OPcache memory calculation:**
 
-```
+```text
 Average file size * Number of files * 2 = Memory needed
 10KB * 5000 * 2 = 100MB
 
@@ -596,7 +596,7 @@ services:
 
 **Calculate safe limits:**
 
-```
+```text
 Total container memory: 4GB
 PHP-FPM processes: 50
 Safe memory per process: 4GB / 50 = ~80MB

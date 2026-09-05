@@ -12,7 +12,7 @@ Complete reference of all available Cbox base image tags and variants.
 
 All images are published to GitHub Container Registry:
 
-```
+```text
 ghcr.io/cboxdk/php-baseimages/{image-type}:{tag}
 ```
 
@@ -77,7 +77,7 @@ Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 
 ## Tag Format
 
-```
+```text
 {type}:{php_version}-{os}[-tier][-rootless]
 
 Examples:

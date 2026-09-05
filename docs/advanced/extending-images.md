@@ -86,7 +86,7 @@ docker-compose exec app php -m | grep mongodb
 ```
 
 **Expected Output:**
-```
+```text
 mongodb
 ```
 
@@ -211,7 +211,7 @@ docker-compose exec app php -i | grep memory_limit
 ```
 
 **Expected Output:**
-```
+```text
 memory_limit => 512M => 512M
 ```
 
@@ -282,7 +282,7 @@ docker-compose exec app nginx -t
 ```
 
 **Expected Output:**
-```
+```text
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 ```
@@ -746,7 +746,7 @@ docker images my-app:test
 3. Not using multi-stage builds
 
 **Create `.dockerignore`:**
-```
+```text
 node_modules/
 .git/
 .env

@@ -153,7 +153,7 @@ server {
 
 Never commit secrets to git. Add to `.gitignore`:
 
-```
+```text
 .env
 .env.*
 !.env.example
@@ -391,7 +391,7 @@ Cbox CI workflows already include Trivy scanning. For setting up Trivy in your o
 
 Create a `.trivyignore` file for accepted risks:
 
-```
+```text
 # False positive in dev dependency
 CVE-2024-12345
 

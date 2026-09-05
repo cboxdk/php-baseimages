@@ -17,7 +17,7 @@ New to Cbox? This section will help you get up and running quickly.
 
 ## Quick Decision Guide
 
-```
+```text
 What do you need?
 │
 ├─ Local development with Xdebug, PCOV, SPX?

@@ -526,7 +526,7 @@ server {
 
 ### Directory Structure
 
-```
+```text
 project/
 ├── docker/
 │   ├── php/
@@ -643,7 +643,7 @@ server {
 
 **Example precedence:**
 
-```
+```text
 php.ini:                memory_limit = 128M
 zz-custom.ini:         memory_limit = 256M  ← Overrides php.ini
 php-fpm pool:          memory_limit = 512M  ← Overrides zz-custom.ini

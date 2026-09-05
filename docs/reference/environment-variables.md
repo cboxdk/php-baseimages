@@ -339,12 +339,12 @@ supervisor for daemon-only containers).
 | `NGINX_HEADER_PERMISSIONS_POLICY` | *(see below)* | Browser feature permissions |
 
 **Default CSP:**
-```
+```text
 default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'
 ```
 
 **Default Permissions-Policy:**
-```
+```text
 accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
 ```
 
@@ -384,7 +384,7 @@ See [Security Hardening](../security/security-hardening#content-security-policy)
 | `NGINX_GZIP_STATIC` | `on` | Serve pre-compressed `.gz` files from disk (`on`/`off`) |
 
 **Default gzip types:**
-```
+```text
 text/plain text/css text/xml text/javascript application/json application/javascript application/xml application/xml+rss application/x-javascript image/svg+xml
 ```
 
@@ -475,7 +475,7 @@ environment:
 
 Example log lines per format for `GET /index.php?token=SECRET`:
 
-```
+```text
 # combined
 172.18.0.1 - - [26/Aug/2026:09:09:07 +0000] "GET /index.php?token=SECRET HTTP/1.1" 200 1024 "-" "curl/8.7.1"
 
@@ -701,7 +701,7 @@ with a timeout, and logged with structured fields (name, duration, exit code).
 
 Define hooks entirely via environment variables, no YAML mount needed:
 
-```
+```text
 CBOX_INIT_HOOK_PRE_START_<N>_NAME           # Optional (defaults to pre-start-<N>)
 CBOX_INIT_HOOK_PRE_START_<N>_COMMAND        # Required, comma-separated argv or JSON array
 CBOX_INIT_HOOK_PRE_START_<N>_TIMEOUT        # Seconds

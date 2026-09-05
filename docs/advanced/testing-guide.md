@@ -82,7 +82,7 @@ Available test scenarios in `tests/e2e/scenarios/`:
 
 Test fixtures are located in `tests/e2e/fixtures/`:
 
-```
+```text
 fixtures/
 ├── laravel/          # Minimal Laravel app
 │   ├── app/

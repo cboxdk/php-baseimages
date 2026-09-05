@@ -94,12 +94,12 @@ environment:
 ### Connection Refused (Laravel/Symfony)
 
 ❌ **WRONG:**
-```
+```text
 DB_HOST=localhost  # Don't use localhost!
 ```
 
 ✅ **CORRECT:**
-```
+```text
 DB_HOST=mysql  # Use Docker service name
 ```
 

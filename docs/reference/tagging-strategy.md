@@ -10,7 +10,7 @@ Cbox PHP Base Images follow a clear, predictable tagging strategy with four imag
 
 ## Tag Format
 
-```
+```text
 {image-type}:{php-version}-{os}[-tier][-rootless][-vN]
 ```
 
@@ -56,7 +56,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 
 Most applications should use standard tier:
 
-```
+```text
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
@@ -67,7 +67,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 
 For APIs and microservices with minimal footprint:
 
-```
+```text
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-slim
@@ -78,7 +78,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
 
 For Browsershot, Dusk, Puppeteer, and PDF generation:
 
-```
+```text
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-chromium
@@ -89,7 +89,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-chromium
 
 All tiers support rootless execution (runs as `www-data` user):
 
-```
+```text
 # Standard + rootless
 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
 

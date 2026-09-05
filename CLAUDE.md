@@ -376,7 +376,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 - `8.3-bookworm` - Rolling (follows latest release, rebuilt weekly)
 - `8.3-bookworm-v1` - Release channel (recommended for production: behavior locked to tooling major v1, still rebuilt weekly with security patches; never crosses a major)
 - `8.3-bookworm-sha256:abc...` - Immutable (for reproducibility; ages by design)
-- `latest` - Points to newest stable (8.4-bookworm)
+- `latest` - Follows `php.newest` in versions.json (currently 8.5-bookworm); `php.default` (8.4) is the documented recommendation
 
 GitHub releases (vX.Y.Z) version the image tooling (entrypoints, cbox-init, modules), not PHP. The channel comes from `release.channel` in versions.json — bump it when cutting a new MAJOR release, and keep the previous major building from a `release/vN` branch for 6 months.
 

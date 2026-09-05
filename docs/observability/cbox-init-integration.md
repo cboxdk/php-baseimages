@@ -259,7 +259,7 @@ When the container starts:
 
 ### Configuration Flow
 
-```
+```text
 cbox-init.yaml (template)
     ↓ (environment variable substitution)
 /tmp/cbox-init.yaml (runtime config)
@@ -427,7 +427,7 @@ environment:
 
 Standard 5-field format (minute, hour, day, month, weekday):
 
-```
+```text
 ┌───────────── minute (0 - 59)
 │ ┌───────────── hour (0 - 23)
 │ │ ┌───────────── day of the month (1 - 31)
@@ -550,7 +550,7 @@ Cbox Init provides enterprise-grade log processing with intelligent parsing and 
 
 Detects log levels from various formats automatically:
 
-```
+```text
 [ERROR] Database connection failed      → ERROR
 2024-11-20 ERROR: Query timeout         → ERROR
 {"level":"warn","msg":"Slow query"}     → WARN
@@ -563,7 +563,7 @@ Supports: `ERROR`, `WARN/WARNING`, `INFO`, `DEBUG`, `TRACE`, `FATAL`, `CRITICAL`
 
 Stack traces and multi-line errors are automatically reassembled:
 
-```
+```text
 [ERROR] Exception in Controller
     at App\Http\Controllers\UserController->store()
     at Illuminate\Routing\Controller->callAction()
@@ -588,7 +588,7 @@ Extracts structured fields from JSON logs:
 ```
 
 Becomes:
-```
+```text
 ERROR [query_failed] Query failed (duration: 5000ms, query: SELECT *)
 ```
 
@@ -610,7 +610,7 @@ environment:
 - Credit cards: Card number patterns
 
 **Example:**
-```
+```text
 Before: {"password":"secret123","api_key":"sk_live_abc"}
 After:  {"password":"***REDACTED***","api_key":"***REDACTED***"}
 ```

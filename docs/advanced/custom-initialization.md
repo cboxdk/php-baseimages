@@ -23,7 +23,7 @@ RUN chmod +x /docker-entrypoint-init.d/*.sh
 
 **Execution order**: Scripts run alphabetically by filename.
 
-```
+```text
 /docker-entrypoint-init.d/
   01-wait-for-db.sh      # Runs first
   02-run-migrations.sh   # Runs second
@@ -286,7 +286,7 @@ services:
 
 ### Init Scripts Directory
 
-```
+```text
 docker/
   init/
     01-wait-for-services.sh
@@ -424,7 +424,7 @@ docker logs myapp 2>&1 | grep -i "init\|migration\|cache"
 
 ### 1. Use Numbered Prefixes
 
-```
+```text
 01-wait.sh      # Dependencies first
 02-migrate.sh   # Database changes
 03-seed.sh      # Data population

@@ -60,7 +60,7 @@ For a complete docker-compose setup with MySQL and Redis, see [Quickstart](../ge
 
 Never commit `.env` files to git. Add to `.gitignore`:
 
-```
+```text
 .env
 .env.production
 .env.*.local
@@ -94,7 +94,7 @@ environment:
 
 Calculate `max_children`:
 
-```
+```text
 Available RAM for PHP-FPM: 2GB = 2048MB
 Average PHP process memory: 50MB
 Max children = 2048MB / 50MB = ~40 processes

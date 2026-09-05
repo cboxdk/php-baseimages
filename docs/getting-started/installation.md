@@ -21,7 +21,7 @@ docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm php -v
 ```
 
 **Expected output**:
-```
+```text
 PHP 8.4.x (cli) (built: ...)
 Copyright (c) The PHP Group
 Zend Engine v4.4.x, Copyright (c) Zend Technologies

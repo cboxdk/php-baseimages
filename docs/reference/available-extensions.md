@@ -127,7 +127,7 @@ The Chromium tier includes everything in Standard, plus Chromium for browser aut
 
 ### Environment Variables (auto-set)
 
-```
+```text
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ```
@@ -193,7 +193,7 @@ spx.http_ip_whitelist=*
 ```
 
 **Access the SPX UI:**
-```
+```text
 http://your-app/?SPX_KEY=dev&SPX_UI_URI=/
 ```
 
