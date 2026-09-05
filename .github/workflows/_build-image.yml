@@ -262,6 +262,17 @@ jobs:
           ARGS_FILE=$(mktemp)
           # All images need PHP_VERSION as a build arg (used in FROM lines)
           echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
+          # Lifecycle state goes to EVERY image build: php-fpm/php-fpm-nginx
+          # declare these ARGs themselves (they COPY from php-base and cannot
+          # inherit its baked ENV) — keeping these inside the php-base branch
+          # left downstream banners permanently 'stable' with empty dates.
+          cat >> "$ARGS_FILE" <<'LIFECYCLE'
+          CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+          CBOX_PHP_VERSION=${{ inputs.php-version }}
+          CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+          CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+          CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+          LIFECYCLE
           # php-base images need versions from versions.json as build-args
           if [ "${{ inputs.image-type }}" = "php-base" ]; then
             cat >> "$ARGS_FILE" <<'VERSIONS'
@@ -272,11 +283,6 @@ jobs:
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
           VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-          CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-          CBOX_PHP_VERSION=${{ inputs.php-version }}
-          CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-          CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-          CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
           VERSIONS
             # Dev tier also needs xdebug/pcov versions
             if [ "${{ inputs.tier }}" = "dev" ]; then
@@ -473,6 +479,17 @@ jobs:
           ARGS_FILE=$(mktemp)
           # All images need PHP_VERSION as a build arg (used in FROM lines)
           echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
+          # Lifecycle state goes to EVERY image build: php-fpm/php-fpm-nginx
+          # declare these ARGs themselves (they COPY from php-base and cannot
+          # inherit its baked ENV) — keeping these inside the php-base branch
+          # left downstream banners permanently 'stable' with empty dates.
+          cat >> "$ARGS_FILE" <<'LIFECYCLE'
+          CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
+          CBOX_PHP_VERSION=${{ inputs.php-version }}
+          CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
+          CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
+          CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
+          LIFECYCLE
           # php-base images need versions from versions.json as build-args
           if [ "${{ inputs.image-type }}" = "php-base" ]; then
             cat >> "$ARGS_FILE" <<'VERSIONS'
@@ -483,11 +500,6 @@ jobs:
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
           VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
-          CBOX_LIFECYCLE=${{ steps.lifecycle.outputs.LIFECYCLE }}
-          CBOX_PHP_VERSION=${{ inputs.php-version }}
-          CBOX_PHP_EOL=${{ steps.lifecycle.outputs.PHP_EOL }}
-          CBOX_REMOVAL_DATE=${{ steps.lifecycle.outputs.REMOVAL_DATE }}
-          CBOX_PREVIEW_STATUS=${{ steps.lifecycle.outputs.PREVIEW_STATUS }}
           VERSIONS
             # Dev tier also needs xdebug/pcov versions
             if [ "${{ inputs.tier }}" = "dev" ]; then
