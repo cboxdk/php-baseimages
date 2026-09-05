@@ -373,9 +373,12 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 **Users**: Simply `docker pull` weekly to get security patches
 
 **Tags**:
-- `8.3-bookworm` - Rolling (recommended for most users)
-- `8.3-bookworm-sha256:abc...` - Immutable (for reproducibility)
+- `8.3-bookworm` - Rolling (follows latest release, rebuilt weekly)
+- `8.3-bookworm-v1` - Release channel (recommended for production: behavior locked to tooling major v1, still rebuilt weekly with security patches; never crosses a major)
+- `8.3-bookworm-sha256:abc...` - Immutable (for reproducibility; ages by design)
 - `latest` - Points to newest stable (8.4-bookworm)
+
+GitHub releases (vX.Y.Z) version the image tooling (entrypoints, cbox-init, modules), not PHP. The channel comes from `release.channel` in versions.json — bump it when cutting a new MAJOR release, and keep the previous major building from a `release/vN` branch for 6 months.
 
 ## Image Publishing
 

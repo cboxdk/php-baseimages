@@ -11,7 +11,34 @@ Cbox PHP Base Images follow a clear, predictable tagging strategy with four imag
 ## Tag Format
 
 ```
-{image-type}:{php-version}-{os}[-tier][-rootless]
+{image-type}:{php-version}-{os}[-tier][-rootless][-vN]
+```
+
+## Release Channels & Pinning
+
+A tag can promise one of two things — **identical bits** (reproducibility) or a
+**stable behavior contract** (no breaking changes) — and no single tag can stay
+CVE-free while promising identical bits. So we publish three kinds of tags:
+
+| Kind | Example | Rebuilt weekly? | Crosses tooling majors? | Use when |
+|------|---------|-----------------|------------------------|----------|
+| Rolling | `8.4-bookworm` | ✅ yes | ✅ yes (follows latest release) | You track upstream and want everything newest |
+| **Channel** | `8.4-bookworm-v1` | ✅ yes | ❌ never | **Recommended for production**: entrypoint/tooling behavior locked to major v1, OS security patches keep flowing |
+| Digest / SHA | `8.4-bookworm-sha-abc1234` or `@sha256:…` | ❌ immutable | — | Audits, reproductions, byte-exact rollbacks. Ages by design — contains the CVEs of its build day |
+
+GitHub releases (`vX.Y.Z`) version the **image tooling** — entrypoint behavior,
+cbox-init version, nginx modules, the extension set — not PHP itself. The
+channel tag `-vN` follows the newest release within major `N`.
+
+**Support policy:** the current major's channel tags are rebuilt weekly. When a
+new major ships, the previous major's channel keeps receiving weekly security
+rebuilds for **6 months** (from a `release/vN` maintenance branch), then goes
+EOL. Which majors are in support is recorded in `versions.json` under
+`release.supported_majors`.
+
+```yaml
+# Recommended production pin: behavior locked, security patches current
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 ```
 
 ## Image Tiers

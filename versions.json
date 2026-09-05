@@ -70,5 +70,12 @@
     "last_updated": "2026-01-22",
     "update_frequency": "weekly",
     "auto_pr_enabled": true
+  },
+  "release": {
+    "channel": "1",
+    "supported_majors": [
+      "1"
+    ],
+    "_policy": "Channel tags (\u2026-vN) are rebuilt weekly with OS security patches but never cross a tooling major. Previous major receives rebuilds for 6 months after a new major ships (built from its release/vN branch). Bump 'channel' when cutting a new MAJOR release."
   }
 }

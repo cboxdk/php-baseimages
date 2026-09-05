@@ -587,6 +587,30 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       # ─────────────────────────────────────────────────────────────────────────
+      # Release channel tag (-vN): versions.json release.channel names the
+      # tooling major this ref builds. Channel tags are REBUILT weekly (fresh
+      # OS security patches) but never cross a tooling major — pin them for
+      # stable behavior without CVE rot. Exact reproducibility = SHA tags.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Checkout versions.json for release channel
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: versions.json
+          sparse-checkout-cone-mode: false
+
+      - name: Resolve release channel
+        id: channel
+        run: |
+          CHANNEL=$(jq -r '.release.channel // empty' versions.json)
+          if [ -n "$CHANNEL" ]; then
+            echo "suffix=-v${CHANNEL}" >> $GITHUB_OUTPUT
+            echo "Release channel: v${CHANNEL}"
+          else
+            echo "suffix=" >> $GITHUB_OUTPUT
+            echo "No release channel configured - channel tag skipped"
+          fi
+
+      # ─────────────────────────────────────────────────────────────────────────
       # Tag generation: compute the tag suffix string for metadata action
       # For standard root tier: tag-suffix is empty, so tags are like 8.4-bookworm
       # For other tiers: tag-suffix is e.g. "slim", "rootless", "chromium-rootless"
@@ -628,6 +652,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}
           tags: |
             type=raw,value=${{ steps.tags.outputs.version_tag }},enable={{is_default_branch}}
+            type=raw,value=${{ steps.tags.outputs.version_tag }}${{ steps.channel.outputs.suffix }},enable=${{ steps.channel.outputs.suffix != '' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/heads/release/v')) }}
             type=raw,value=${{ steps.php_patch.outputs.version }}${{ steps.tags.outputs.patch_tag }},enable=${{ inputs.enable-patch-tags && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
             type=raw,value=${{ steps.tags.outputs.latest_tag }},enable=${{ inputs.enable-latest-tag && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ steps.tags.outputs.convenience_tag }},enable=${{ inputs.enable-convenience-tags && github.ref == 'refs/heads/main' }}
