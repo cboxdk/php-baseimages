@@ -33,6 +33,23 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev AS base-
 ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
 
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
 # open_basedir: THE READ-ONLY KERNEL STATISTICS ARE IN IT, AND THE SECRETS ARE
 # NOT.
 #

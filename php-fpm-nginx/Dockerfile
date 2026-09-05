@@ -71,6 +71,24 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=slim
 
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -135,6 +153,24 @@ LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=slim
+
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
 
 # Switch to root temporarily for setup
 USER root
@@ -212,6 +248,24 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=standard
 
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -276,6 +330,24 @@ LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=standard
+
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
 
 # Switch to root temporarily for setup
 USER root
@@ -353,6 +425,24 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=chromium
 
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -417,6 +507,24 @@ LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=chromium
+
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
 
 # Switch to root temporarily for setup
 USER root
@@ -494,6 +602,24 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=dev
 
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -558,6 +684,24 @@ LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=dev
+
+# ============================================================================
+# Lifecycle State (set at build time via CI; drives startup banners)
+# Declared here because this image COPIES from php-base rather than building
+# FROM it - ENV does not survive COPY, so php-base's baked values never
+# reach this image. The CI passes these build-args to every image build.
+# ============================================================================
+ARG CBOX_LIFECYCLE=stable
+ARG CBOX_PHP_VERSION=
+ARG CBOX_PHP_EOL=
+ARG CBOX_REMOVAL_DATE=
+ARG CBOX_PREVIEW_STATUS=
+ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
+    CBOX_PHP_VERSION=${CBOX_PHP_VERSION} \
+    CBOX_PHP_EOL=${CBOX_PHP_EOL} \
+    CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
+    CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
+
 
 # Switch to root temporarily for setup
 USER root
