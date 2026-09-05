@@ -19,7 +19,8 @@ set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-VERSIONS_FILE="$REPO_ROOT/versions.json"
+# Overridable for tests (point at a fixture with synthetic dates)
+VERSIONS_FILE="${VERSIONS_FILE:-$REPO_ROOT/versions.json}"
 
 # Colors
 RED='\033[0;31m'
@@ -135,8 +136,11 @@ if [[ "$JSON_OUTPUT" != true ]]; then
     echo -e "${CYAN}PHP Versions${NC}"
 fi
 
+# PHP has two lifecycle dates; the EOL check keys off SECURITY support —
+# that is when running the version becomes unsafe. Versions past active
+# support but inside security support are a normal, supported state.
 for version in $(echo "$VERSIONS" | jq -r '.php.supported[]'); do
-    eol=$(echo "$VERSIONS" | jq -r ".php.eol[\"$version\"]")
+    eol=$(echo "$VERSIONS" | jq -r ".php.security_support_until[\"$version\"]")
     check_eol "PHP" "$version" "$eol" "$PHP_REMOVAL_MONTHS" || true
 done
 

@@ -53,10 +53,10 @@ on:
         type: boolean
         default: false
       latest-php-version:
-        description: 'The PHP version that gets the latest tag (e.g., 8.4)'
+        description: 'Override which PHP version gets the latest tag. Empty (default) resolves php.newest from versions.json — the single source of truth.'
         required: false
         type: string
-        default: '8.4'
+        default: ''
       # --- Base image for patch version lookup ---
       base-image-type:
         description: 'Base image type for PHP patch version (fpm or cli)'
@@ -307,7 +307,12 @@ jobs:
           file: ${{ steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
           platforms: linux/amd64
-          provenance: false
+          # SLSA provenance + SPDX SBOM attestations. These survive the
+          # imagetools-create manifest merge per platform (verified against a
+          # test registry before enabling). mode=max is safe: public repo,
+          # no secret build-args.
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-amd64
           # Re-enabled: the incomplete-push bug (buildkit dropping the Node/Bun layer
           # when gha cache export was on) was a buildkit v0.30 bug. The builder is now
@@ -513,7 +518,9 @@ jobs:
           file: ${{ steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
           platforms: linux/arm64
-          provenance: false
+          # SLSA provenance + SPDX SBOM (see the amd64 build step)
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-arm64
           # Re-enabled — buildkit pinned to v0.31.1 (see the amd64 build step).
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-arm64
@@ -592,10 +599,12 @@ jobs:
       # OS security patches) but never cross a tooling major — pin them for
       # stable behavior without CVE rot. Exact reproducibility = SHA tags.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: Checkout versions.json for release channel
+      - name: Checkout versions.json and CVE baseline
         uses: actions/checkout@v7
         with:
-          sparse-checkout: versions.json
+          sparse-checkout: |
+            versions.json
+            .trivyignore
           sparse-checkout-cone-mode: false
 
       - name: Resolve release channel
@@ -609,6 +618,14 @@ jobs:
             echo "suffix=" >> $GITHUB_OUTPUT
             echo "No release channel configured - channel tag skipped"
           fi
+          # `latest` follows the NEWEST stable PHP (php.newest), while
+          # php.default stays the recommended version docs point at. Two
+          # deliberately distinct concepts — the caller input remains as an
+          # override, but versions.json is the single source of truth.
+          NEWEST="${{ inputs.latest-php-version }}"
+          [ -z "$NEWEST" ] && NEWEST=$(jq -r '.php.newest // .php.default // empty' versions.json)
+          echo "newest=$NEWEST" >> $GITHUB_OUTPUT
+          echo "Newest PHP (gets the latest tag): $NEWEST"
 
       # ─────────────────────────────────────────────────────────────────────────
       # Tag generation: compute the tag suffix string for metadata action
@@ -654,9 +671,9 @@ jobs:
             type=raw,value=${{ steps.tags.outputs.version_tag }},enable={{is_default_branch}}
             type=raw,value=${{ steps.tags.outputs.version_tag }}${{ steps.channel.outputs.suffix }},enable=${{ steps.channel.outputs.suffix != '' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/heads/release/v')) }}
             type=raw,value=${{ steps.php_patch.outputs.version }}${{ steps.tags.outputs.patch_tag }},enable=${{ inputs.enable-patch-tags && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=raw,value=${{ steps.tags.outputs.latest_tag }},enable=${{ inputs.enable-latest-tag && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.tags.outputs.latest_tag }},enable=${{ inputs.enable-latest-tag && inputs.php-version == steps.channel.outputs.newest && github.ref == 'refs/heads/main' }}
             type=raw,value=${{ steps.tags.outputs.convenience_tag }},enable=${{ inputs.enable-convenience-tags && github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ inputs.enable-convenience-tags && inputs.tag-suffix == '' && inputs.php-version == inputs.latest-php-version && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ inputs.enable-convenience-tags && inputs.tag-suffix == '' && inputs.php-version == steps.channel.outputs.newest && github.ref == 'refs/heads/main' }}
             type=sha,prefix=${{ steps.tags.outputs.sha_prefix }},enable={{is_default_branch}}
             type=ref,event=branch,suffix=${{ steps.tags.outputs.branch_suffix }}
             type=ref,event=pr,suffix=${{ steps.tags.outputs.branch_suffix }}
@@ -712,15 +729,14 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      # Surface fixable CRITICAL/HIGH vulnerabilities in the job log. This is
-      # SOFT for now (continue-on-error) so it does not block releases on the
-      # pre-existing CVE backlog — the SARIF upload above still records
-      # everything in the Security tab. Once the backlog is triaged (fix or add
-      # to .trivyignore), flip this to a hard gate by removing
-      # `continue-on-error` so regressions block the build.
-      - name: Report fixable CRITICAL/HIGH vulnerabilities (soft gate)
+      # REGRESSION GATE: fail the build when a fixable CRITICAL/HIGH CVE
+      # appears that is not in the .trivyignore baseline. The baseline holds
+      # the triaged pre-existing backlog (each entry annotated with its fix
+      # path); the SARIF upload above still records EVERYTHING — including
+      # baselined CVEs — in the Security tab. Honest claim this gate makes:
+      # the security posture cannot regress. Prune the baseline as fixes land.
+      - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (regression gate)
         if: inputs.enable-trivy
-        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}:${{ steps.tags.outputs.version_tag }}
@@ -728,6 +744,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
           exit-code: '1'
+          trivyignores: '.trivyignore'
 
       - name: Test built image
         if: inputs.test-script != ''

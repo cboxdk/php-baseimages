@@ -16,7 +16,7 @@ set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-VERSIONS_FILE="$REPO_ROOT/versions.json"
+VERSIONS_FILE="${VERSIONS_FILE:-$REPO_ROOT/versions.json}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -56,31 +56,36 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 fetch_github_latest() {
     local repo="$1"
-    curl -fsSL "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null | jq -r '.tag_name // empty' | sed 's/^v//'
+    # `|| true`: a failed fetch must return empty, not kill the script under
+    # set -e/pipefail — a dead endpoint silently aborted the weekly update
+    # for months before the final file write.
+    curl -fsSL "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null | jq -r '.tag_name // empty' | sed 's/^v//' || true
 }
 
 fetch_pecl_latest() {
     local package="$1"
     # Get stable version (not RC/alpha/beta)
     local version
-    version=$(curl -fsSL "https://pecl.php.net/rest/r/${package,,}/latest.txt" 2>/dev/null | tr -d '[:space:]')
+    local package_lc
+    package_lc=$(printf '%s' "$package" | tr '[:upper:]' '[:lower:]')
+    version=$(curl -fsSL "https://pecl.php.net/rest/r/${package_lc}/latest.txt" 2>/dev/null | tr -d '[:space:]' || true)
 
     # Skip if it's a pre-release (RC, alpha, beta)
     if [[ "$version" =~ (RC|alpha|beta|dev) ]]; then
         # Try to get stable from allreleases instead (cross-platform sed)
-        version=$(curl -fsSL "https://pecl.php.net/rest/r/${package,,}/allreleases.xml" 2>/dev/null \
-            | sed -n 's/.*<v>\([0-9]*\.[0-9]*\.[0-9]*\)<\/v>.*/\1/p' | head -1)
+        version=$(curl -fsSL "https://pecl.php.net/rest/r/${package_lc}/allreleases.xml" 2>/dev/null \
+            | sed -n 's/.*<v>\([0-9]*\.[0-9]*\.[0-9]*\)<\/v>.*/\1/p' | head -1 || true)
     fi
     echo "$version"
 }
 
 fetch_php_latest_patch() {
     local minor_version="$1"
-    curl -fsSL "https://www.php.net/releases/index.php?json&version=$minor_version" 2>/dev/null | jq -r '.version // empty'
+    curl -fsSL "https://www.php.net/releases/index.php?json&version=$minor_version" 2>/dev/null | jq -r '.version // empty' || true
 }
 
 fetch_node_lts() {
-    curl -fsSL "https://nodejs.org/dist/index.json" 2>/dev/null | jq -r '[.[] | select(.lts != false)] | .[0].version' | sed 's/^v//' | cut -d. -f1
+    curl -fsSL "https://nodejs.org/dist/index.json" 2>/dev/null | jq -r '[.[] | select(.lts != false)] | .[0].version' | sed 's/^v//' | cut -d. -f1 || true
 }
 
 # ============================================================================
@@ -116,62 +121,14 @@ for ext in redis imagick apcu mongodb msgpack xdebug pcov uuid excimer vips; do
     fi
 done
 
-# Swoole (GitHub - not standard PECL)
-current=$(echo "$CURRENT" | jq -r ".extensions.swoole")
-latest=$(fetch_github_latest "swoole/swoole-src")
-if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
-    if [[ "$current" != "$latest" ]]; then
-        UPDATE_COUNT=$((UPDATE_COUNT + 1))
-        UPDATE_LIST="${UPDATE_LIST}  - extensions.swoole: $current -> $latest\n"
-        log_update "extensions.swoole: $current -> $latest"
-        UPDATED=$(echo "$UPDATED" | jq ".extensions.swoole = \"$latest\"")
-    else
-        log_success "extensions.swoole: $current (up to date)"
-    fi
-else
-    log_error "Failed to fetch swoole, keeping $current"
-fi
-
-# OpenSwoole (GitHub)
-current=$(echo "$CURRENT" | jq -r ".extensions.openswoole")
-latest=$(fetch_github_latest "openswoole/swoole-src")
-if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
-    if [[ "$current" != "$latest" ]]; then
-        UPDATE_COUNT=$((UPDATE_COUNT + 1))
-        UPDATE_LIST="${UPDATE_LIST}  - extensions.openswoole: $current -> $latest\n"
-        log_update "extensions.openswoole: $current -> $latest"
-        UPDATED=$(echo "$UPDATED" | jq ".extensions.openswoole = \"$latest\"")
-    else
-        log_success "extensions.openswoole: $current (up to date)"
-    fi
-else
-    log_error "Failed to fetch openswoole, keeping $current"
-fi
-
 echo ""
 
 # --- Tools ---
 log_info "Checking tools..."
 
-# FrankenPHP
-current=$(echo "$CURRENT" | jq -r ".tools.frankenphp")
-latest=$(fetch_github_latest "dunglas/frankenphp")
-if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
-    if [[ "$current" != "$latest" ]]; then
-        UPDATE_COUNT=$((UPDATE_COUNT + 1))
-        UPDATE_LIST="${UPDATE_LIST}  - tools.frankenphp: $current -> $latest\n"
-        log_update "tools.frankenphp: $current -> $latest"
-        UPDATED=$(echo "$UPDATED" | jq ".tools.frankenphp = \"$latest\"")
-    else
-        log_success "tools.frankenphp: $current (up to date)"
-    fi
-else
-    log_error "Failed to fetch frankenphp, keeping $current"
-fi
-
 # Cbox Init
 current=$(echo "$CURRENT" | jq -r ".tools.cbox_init")
-latest=$(fetch_github_latest "gophpeek/phpeek-pm")
+latest=$(fetch_github_latest "cboxdk/init")
 if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
     if [[ "$current" != "$latest" ]]; then
         UPDATE_COUNT=$((UPDATE_COUNT + 1))
@@ -190,7 +147,7 @@ echo ""
 # --- PHP Versions ---
 log_info "Checking PHP patch versions..."
 
-for version in 8.2 8.3 8.4; do
+for version in $(echo "$CURRENT" | jq -r '.php.supported[]'); do
     current=$(echo "$CURRENT" | jq -r ".php.latest_patch[\"$version\"]")
     latest=$(fetch_php_latest_patch "$version")
 

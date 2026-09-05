@@ -113,7 +113,15 @@ All variants also available with `-rootless` suffix.
 
 ## Alias Tags
 
-**Latest stable**:
+Two deliberately distinct concepts, both defined in `versions.json`:
+
+- **Newest** (`php.newest`, currently **8.5**): the newest stable PHP. This is
+  what the `latest` tag follows, per Docker ecosystem convention.
+- **Recommended default** (`php.default`, currently **8.4**): what the
+  documentation examples use and what we suggest for new projects — one minor
+  behind newest, with the widest extension/ecosystem compatibility.
+
+**Latest (follows `php.newest`)**:
 - `latest` → `8.5-bookworm`
 - `8.5` → `8.5-bookworm`
 
@@ -121,21 +129,37 @@ All variants also available with `-rootless` suffix.
 - `slim` → `8.5-bookworm-slim`
 - `chromium` → `8.5-bookworm-chromium`
 
+Don't use `latest` in production — pin a release channel tag
+(`8.4-bookworm-v1`) instead.
+
 ## Deprecation Policy
 
 Cbox follows a predictable deprecation schedule based on upstream EOL dates.
 
+**PHP has two lifecycle dates**, and our policy keys off the second one:
+
+- **Active support end**: php.net stops shipping bug fixes; security fixes
+  continue for two more years. This is a *normal, supported state* — images
+  keep building weekly, no warnings. Roughly half the PHP fleet is in this
+  phase at any given time.
+- **Security support end**: the date that matters. 90 days before it, images
+  enter the deprecation warning phase; after it, the removal countdown starts.
+
+Both dates live in `versions.json` (`php.active_support_until` and
+`php.security_support_until`, sourced from
+[php.net/supported-versions](https://www.php.net/supported-versions.php)).
+
 ### Timeline
 
-| Component | Removal After EOL | Warning Period |
-|-----------|-------------------|----------------|
+| Component | Removal After Security EOL | Warning Period |
+|-----------|---------------------------|----------------|
 | PHP       | 6 months          | 90 days        |
 | Debian    | 3 months          | 90 days        |
 | Node.js   | 6 months          | 90 days        |
 
 ### Current EOL Dates
 
-Check `versions.json` for current EOL dates, or run:
+Check `versions.json` for current support dates, or run:
 
 ```bash
 ./scripts/check-eol.sh

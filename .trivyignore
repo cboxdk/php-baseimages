@@ -1,0 +1,185 @@
+# Trivy CVE baseline - accepted backlog as of 2026-09-05.
+#
+# PURPOSE: the CI vulnerability gate blocks NEW fixable HIGH/CRITICAL CVEs
+# from being introduced, without failing every build on this pre-existing
+# backlog. Entries here are NOT 'ignored forever': remove entries as their
+# fixes land (weekly rebuilds pick up bookworm-security; Go CVEs need a
+# cbox-init rebuild upstream; npm CVEs follow Node bumps).
+# Regenerate/audit: scan the published images with
+#   trivy image --severity CRITICAL,HIGH --ignore-unfixed <image>
+# and prune entries that no longer appear.
+
+# --- Debian packages - fixed automatically by weekly rebuilds once patches land in bookworm-security ---
+# [HIGH] libssl3: openssl: OpenSSL: Remote code execution or Denial of Service via oversized Initi
+CVE-2025-15467
+# [HIGH] libpam-modules: linux-pam: Linux-pam directory Traversal
+CVE-2025-6020
+# [HIGH] libpng16-16: libpng: LIBPNG buffer overflow
+CVE-2025-64720
+# [HIGH] libpng16-16: libpng: LIBPNG heap buffer overflow
+CVE-2025-65018
+# [HIGH] libpng16-16: libpng: LIBPNG out-of-bounds read in png_image_read_composite
+CVE-2025-66293
+# [HIGH] gpgv: GnuPG: GnuPG: Information disclosure and potential arbitrary code execution via 
+CVE-2025-68973
+# [HIGH] libssl3: openssl: OpenSSL: Denial of Service via malformed PKCS#12 file processing
+CVE-2025-69421
+# [HIGH] libpq5: postgresql: PostgreSQL code execution in restore operation
+CVE-2025-8714
+# [HIGH] libtiff6: libtiff: Libtiff Write-What-Where
+CVE-2025-9900
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via integer wraparound in tsvec
+CVE-2026-14662
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via heap buffer overflow in reg
+CVE-2026-14664
+# [HIGH] libpq5: postgresql: PostgreSQL: Information disclosure via type confusion in ctid select
+CVE-2026-14668
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via long POSIX timezone abbrevi
+CVE-2026-14669
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via plperl tied hash heap buffe
+CVE-2026-14670
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via type confusion in 'refint' 
+CVE-2026-14671
+# [HIGH] libpq5: postgresql: pltcl: plperl: PostgreSQL: Arbitrary code execution in 32-bit pltcl 
+CVE-2026-14677
+# [HIGH] libpq5: postgresql: PostgreSQL: Stack buffer overflow via OUT parameter count manipulati
+CVE-2026-14679
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via type confusion with "intern
+CVE-2026-14680
+# [HIGH] libpq5: postgresql: PostgreSQL: Privilege escalation via SQL injection in EXTRACT() depa
+CVE-2026-15741
+# [HIGH] libpq5: postgresql-fuzzystrmatch: PostgreSQL fuzzystrmatch: Arbitrary code execution via
+CVE-2026-15742
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via type confusion in cursor li
+CVE-2026-16239
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via untrusted data inclusion in
+CVE-2026-18408
+# [HIGH] libpq5: postgresql: PostgreSQL pg_dump: Arbitrary code execution via crafted transform l
+CVE-2026-19385
+# [HIGH] libpng16-16: libpng: libpng: Denial of service and information disclosure via heap buffer ove
+CVE-2026-22695
+# [HIGH] libpng16-16: libpng: libpng: Information disclosure and denial of service via integer truncat
+CVE-2026-22801
+# [HIGH] libpng16-16: libpng: LIBPNG has a heap buffer overflow in png_set_quantize
+CVE-2026-25646
+# [HIGH] libnghttp2-14: nghttp2: nghttp2: Denial of Service via malformed HTTP/2 frames after session te
+CVE-2026-27135
+# [HIGH] libssl3: openssl: OpenSSL: Arbitrary code execution due to use-after-free in DANE TLSA au
+CVE-2026-28387
+# [HIGH] libssl3: openssl: OpenSSL: Denial of Service due to NULL pointer dereference in delta CRL
+CVE-2026-28388
+# [HIGH] libssl3: openssl: OpenSSL: Denial of Service vulnerability in CMS processing
+CVE-2026-28389
+# [HIGH] libssl3: openssl: OpenSSL: Denial of Service due to NULL pointer dereference in CMS Envel
+CVE-2026-28390
+# [CRITICAL] libssl3: openssl: OpenSSL: Heap buffer overflow on 32-bit systems from large X.509 certif
+CVE-2026-31789
+# [CRITICAL] libgnutls30: gnutls: GnuTLS: Denial of Service via DTLS zero-length fragment
+CVE-2026-33845
+# [HIGH] libgnutls30: gnutls: GnuTLS: Denial of Service via heap buffer overflow in DTLS handshake fra
+CVE-2026-33846
+# [HIGH] libgnutls30: gnutls: GnuTLS: Policy bypass due to case-sensitive nameConstraints comparison
+CVE-2026-3833
+# [HIGH] libgssapi-krb5-2: krb5: MIT Kerberos 5: Denial of Service via NULL pointer dereference in NegoEx m
+CVE-2026-40355
+# [HIGH] libgssapi-krb5-2: krb5: MIT Kerberos 5 (krb5): Denial of Service via integer underflow and out-of-
+CVE-2026-40356
+# [HIGH] libgnutls30: gnutls: gnutls: Denial of Service via DTLS packet reordering vulnerability
+CVE-2026-42009
+# [CRITICAL] libgnutls30: gnutls: gnutls: Authentication Bypass via NUL Character in Username
+CVE-2026-42010
+# [HIGH] libssl3: openssl: Heap Use-After-Free in OpenSSL PKCS7_verify()
+CVE-2026-45447
+# [HIGH] libtiff6: libtiff: libtiff: Arbitrary code execution or denial of service via signed integ
+CVE-2026-4775
+# [HIGH] libcap2: libcap: libcap: Privilege escalation via TOCTOU race condition in cap_set_file()
+CVE-2026-4878
+# [HIGH] libpq5: postgresql: PostgreSQL psql: Arbitrary command execution via untrusted data in C
+CVE-2026-6464
+# [HIGH] libpq5: postgresql: PostgreSQL: Arbitrary code execution via logical decoding plugin
+CVE-2026-6471
+# [HIGH] libpq5: postgresql: integer overflow can cause an undersized allocation and an out-of-bo
+CVE-2026-6473
+
+# --- Go binaries (cbox-init et al.) - fixed by rebuilding with patched Go/deps upstream (cboxdk/init) ---
+# [HIGH] go.opentelemetry.io/otel/sdk: opentelemetry-go: OpenTelemetry-Go Affected by Arbitrary Code Execution via PATH
+CVE-2026-24051
+# [HIGH] stdlib: net/url: Incorrect parsing of IPv6 host literals in net/url
+CVE-2026-25679
+# [HIGH] golang.org/x/net: golang.org/x/net/html: golang.org/x/net/html: Arbitrary code execution via Cross
+CVE-2026-25681
+# [HIGH] golang.org/x/net: golang.org/x/net/html: golang: golang.org/x/net/html: Cross-Site Scripting via H
+CVE-2026-27136
+# [HIGH] stdlib: crypto/x509: golang: golang crypto/x509: Denial of Service via excessive process
+CVE-2026-27145
+# [HIGH] go.opentelemetry.io/otel: github.com/open-telemetry/opentelemetry-go: OpenTelemetry-Go: Denial of Service 
+CVE-2026-29181
+# [HIGH] stdlib: crypto/x509: crypto/tls: golang: Go: Denial of Service vulnerability in certific
+CVE-2026-32280
+# [HIGH] stdlib: crypto/x509: golang: Go crypto/x509: Denial of Service via inefficient certifica
+CVE-2026-32281
+# [HIGH] stdlib: crypto/tls: golang: Go crypto/tls: Denial of Service via multiple TLS 1.3 key up
+CVE-2026-32283
+# [CRITICAL] google.golang.org/grpc: google.golang.org/grpc/grpc-go: google.golang.org/grpc/authz: gRPC-Go: Authoriza
+CVE-2026-33186
+# [HIGH] stdlib: net: golang: Go net package: Denial of Service via long CNAME response in Lookup
+CVE-2026-33811
+# [HIGH] golang.org/x/net: net/http/internal/http2: golang: golang.org/x/net: Go HTTP/2: Denial of Service 
+CVE-2026-33814
+# [HIGH] stdlib: encoding/asn1: golang: Go encoding/asn1: Denial of Service via excessive recursi
+CVE-2026-33818
+# [HIGH] stdlib: net/mail: golang: Go net/mail: Denial of Service via crafted email inputs
+CVE-2026-39820
+# [HIGH] golang.org/x/net: golang.org/x/net/idna: golang: net/http: golang.org/x/net/idna: Privilege escala
+CVE-2026-39821
+# [HIGH] stdlib: golang: Go os.Root: Symlink following vulnerability allows directory traversal
+CVE-2026-39822
+# [HIGH] stdlib: net: golang: Go net package: Denial of Service via NUL byte in Dial and LookupPo
+CVE-2026-39836
+# [HIGH] go.opentelemetry.io/otel/sdk: github.com/open-telemetry/opentelemetry-go: OpenTelemetry-Go: Arbitrary code exe
+CVE-2026-39883
+# [HIGH] stdlib: net/mail: golang: net/mail: Denial of Service via pathological email address par
+CVE-2026-42499
+# [HIGH] stdlib: mime: golang: Golang MIME: Denial of Service via maliciously-crafted MIME header
+CVE-2026-42504
+# [HIGH] golang.org/x/net: golang.org/x/net/dns/dnsmessage: golang.org/x/net/dns/dnsmessage: Denial of Serv
+CVE-2026-46600
+# [HIGH] sigstore: sigstore: Sigstore: Unauthorized certificates accepted due to ignored `certifica
+CVE-2026-48815
+# [HIGH] golang.org/x/text: golang.org/x/text: golang.org/x/text: Denial of Service via invalid UTF-8 input
+CVE-2026-56852
+# [HIGH] stdlib: net/http: golang: Go net/http: Unencrypted HTTP/2 connections vulnerable to Deni
+CVE-2026-56853
+# [HIGH] stdlib: html/template: golang: Go html/template: Cross-Site Scripting via pathological i
+CVE-2026-56858
+# [HIGH] stdlib: encoding/xml: golang: Go: Denial of Service via XML decoding recursion depth iss
+CVE-2026-56859
+# [HIGH] stdlib: net/url: golang: golang net/url: Denial of Service from quadratic complexity in 
+CVE-2026-56860
+# [HIGH] stdlib: crypto/tls: golang: Golang crypto/tls: Denial of Service via indefinite KeyUpdat
+CVE-2026-56862
+# [HIGH] google.golang.org/grpc: gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, in ...
+CVE-2026-84304
+# [HIGH] google.golang.org/grpc: gRPC-Go: xDS RBAC and HTTP/2 Vulnerabilities
+GHSA-hrxh-6v49-42gf
+
+# --- npm packages bundled with Node.js - fixed by Node version bumps (weekly update PR) ---
+# [HIGH] brace-expansion: brace-expansion: Brace-expansion: Denial of Service due to exponential-time comp
+CVE-2026-13149
+# [HIGH] brace-expansion: brace-expansion: Brace-expansion: Denial of Service via memory exhaustion in exp
+CVE-2026-14257
+# [HIGH] picomatch: picomatch: Picomatch: Regular Expression Denial of Service via crafted extglob p
+CVE-2026-33671
+# [CRITICAL] tar: tar: node-tar: Denial of Service via crafted gzip bomb
+CVE-2026-59873
+# [HIGH] tar: tar: Node-tar: Denial of Service via malformed tar archive header
+CVE-2026-59874
+# [HIGH] brace-expansion: brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-1
+CVE-2026-69152
+# [HIGH] ip-address: ip-address: ip-address: Inconsistent IP address parsing leads to Server-Side Req
+CVE-2026-69192
+# [HIGH] tar: tar: node-tar: Denial of Service via crafted long-path tar archive
+CVE-2026-73566
+# [HIGH] pacote: Versions of the package pacote from 11.2.7 and before 21.5.1 are vulne ...
+CVE-2026-9496
+

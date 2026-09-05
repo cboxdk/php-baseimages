@@ -12,9 +12,9 @@
 #
 # Output (JSON):
 #   {
-#     "lifecycle": "stable|deprecated|eol|preview",
-#     "php_eol": "2025-12-08",
-#     "days_to_eol": 6,
+#     "lifecycle": "stable|security-only|deprecated|eol|removed|preview",
+#     "php_eol": "2026-12-31",
+#     "days_to_eol": 117,
 #     "removal_date": "2026-06-08",
 #     "days_to_removal": 188,
 #     "labels": { ... },
@@ -27,7 +27,8 @@ set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-VERSIONS_FILE="$REPO_ROOT/versions.json"
+# Overridable for tests (point at a fixture with synthetic dates)
+VERSIONS_FILE="${VERSIONS_FILE:-$REPO_ROOT/versions.json}"
 
 # Arguments
 PHP_VERSION="${1:-}"
@@ -99,8 +100,12 @@ EOF
     exit 0
 fi
 
-# Get EOL dates
-PHP_EOL=$(echo "$VERSIONS" | jq -r ".php.eol[\"$PHP_VERSION\"] // empty")
+# Get support dates. PHP versions have TWO lifecycle dates (php.net policy):
+# active support (bug fixes) ends two years before security support does.
+# Security-only is a normal, supported state — no startup warning. Warnings
+# key off the SECURITY date: that is when running the version becomes unsafe.
+PHP_ACTIVE_UNTIL=$(echo "$VERSIONS" | jq -r ".php.active_support_until[\"$PHP_VERSION\"] // empty")
+PHP_EOL=$(echo "$VERSIONS" | jq -r ".php.security_support_until[\"$PHP_VERSION\"] // empty")
 
 if [[ -z "$PHP_EOL" ]]; then
     echo "Error: Unknown PHP version $PHP_VERSION" >&2
@@ -111,6 +116,8 @@ fi
 DAYS_TO_PHP_EOL=$(days_until "$PHP_EOL")
 PHP_REMOVAL_DATE=$(add_months "$PHP_EOL" "$PHP_REMOVAL_MONTHS")
 DAYS_TO_REMOVAL=$(days_until "$PHP_REMOVAL_DATE")
+DAYS_TO_ACTIVE_END=9999
+[[ -n "$PHP_ACTIVE_UNTIL" ]] && DAYS_TO_ACTIVE_END=$(days_until "$PHP_ACTIVE_UNTIL")
 
 # Determine lifecycle state
 LIFECYCLE="stable"
@@ -121,29 +128,36 @@ TAGS_SUFFIX=""
 if [[ $DAYS_TO_REMOVAL -lt 0 ]]; then
     # Past removal date
     LIFECYCLE="removed"
-    WARNING_MESSAGE="🚨 CRITICAL: PHP $PHP_VERSION support ended. This image should be removed. Please upgrade immediately."
+    WARNING_MESSAGE="🚨 CRITICAL: PHP $PHP_VERSION security support ended. This image should be removed. Please upgrade immediately."
     SHOW_WARNING=true
 elif [[ $DAYS_TO_PHP_EOL -lt 0 ]]; then
-    # Past EOL, in grace period
+    # Past security EOL, in grace period
     LIFECYCLE="eol"
-    WARNING_MESSAGE="🚨 WARNING: PHP $PHP_VERSION reached End-of-Life on $PHP_EOL. This image will be removed on $PHP_REMOVAL_DATE ($DAYS_TO_REMOVAL days). Please upgrade to a supported PHP version."
+    WARNING_MESSAGE="🚨 WARNING: PHP $PHP_VERSION security support ended on $PHP_EOL. This image will be removed on $PHP_REMOVAL_DATE ($DAYS_TO_REMOVAL days). Please upgrade to a supported PHP version."
     SHOW_WARNING=true
     TAGS_SUFFIX="-eol"
 elif [[ $DAYS_TO_PHP_EOL -lt $WARNING_DAYS ]]; then
-    # Within warning period
+    # Within warning period before security support ends
     LIFECYCLE="deprecated"
-    WARNING_MESSAGE="⚠️  DEPRECATION WARNING: PHP $PHP_VERSION reaches End-of-Life on $PHP_EOL ($DAYS_TO_PHP_EOL days). Please plan your upgrade to PHP 8.4 or 8.5."
+    WARNING_MESSAGE="⚠️  DEPRECATION WARNING: PHP $PHP_VERSION security support ends on $PHP_EOL ($DAYS_TO_PHP_EOL days). Please plan your upgrade."
     SHOW_WARNING=true
     TAGS_SUFFIX="-deprecated"
+elif [[ $DAYS_TO_ACTIVE_END -lt 0 ]]; then
+    # Past active support, security support ongoing: normal supported state.
+    # Recorded in labels but NO startup warning — this describes half the
+    # PHP fleet at any given time and is not actionable urgency.
+    LIFECYCLE="security-only"
 fi
 
-# Build labels
+# Build labels. Note: security-only is NOT deprecated — the deprecation
+# label block only applies once a warning state is reached.
 cat <<EOF
 {
   "lifecycle": "$LIFECYCLE",
   "php_version": "$PHP_VERSION",
   "os_variant": "$OS_VARIANT",
   "php_eol": "$PHP_EOL",
+  "php_active_support_until": "$PHP_ACTIVE_UNTIL",
   "days_to_eol": $DAYS_TO_PHP_EOL,
   "removal_date": "$PHP_REMOVAL_DATE",
   "days_to_removal": $DAYS_TO_REMOVAL,
@@ -151,8 +165,10 @@ cat <<EOF
     "org.opencontainers.image.version": "${PHP_VERSION}-${OS_VARIANT}",
     "io.cbox.lifecycle": "$LIFECYCLE",
     "io.cbox.php.version": "$PHP_VERSION",
+    "io.cbox.php.active_support_until": "$PHP_ACTIVE_UNTIL",
+    "io.cbox.php.security_support_until": "$PHP_EOL",
     "io.cbox.php.eol": "$PHP_EOL",
-    "io.cbox.os.variant": "$OS_VARIANT"$(if [[ "$LIFECYCLE" != "stable" ]]; then echo ",
+    "io.cbox.os.variant": "$OS_VARIANT"$(if [[ "$LIFECYCLE" == "deprecated" || "$LIFECYCLE" == "eol" || "$LIFECYCLE" == "removed" ]]; then echo ",
     \"io.cbox.deprecated\": \"true\",
     \"io.cbox.deprecated.message\": \"$WARNING_MESSAGE\",
     \"io.cbox.removal.date\": \"$PHP_REMOVAL_DATE\""; fi)

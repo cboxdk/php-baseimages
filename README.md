@@ -1,31 +1,35 @@
 # Cbox PHP Base Images
 
-Clean, minimal, and production-ready PHP Docker base images for modern PHP applications. Built with comprehensive extensions on Debian 12 (Bookworm) and no unnecessary complexity.
+**Production PHP containers with an actual runtime control plane.** They
+supervise their own processes, understand their memory budget, and stay
+security-patched without silently changing their runtime contract.
 
 [![PHP-FPM-Nginx](https://github.com/cboxdk/php-baseimages/actions/workflows/build-php-fpm-nginx.yml/badge.svg)](https://github.com/cboxdk/php-baseimages/actions/workflows/build-php-fpm-nginx.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## 🎯 Philosophy
+Official PHP images give you PHP. These images give you a container that
+understands *how it is being run*:
 
-- **Four Tiers**: Slim (~120 MiB), Standard (~250 MiB), Chromium (~700 MiB), Dev (~750 MiB) - choose your needs
-- **Cbox Process Manager**: Production-grade Go-based process manager built-in
-- **Flexible Architecture**: Choose single-process OR multi-service containers
-- **Debian 12 (Bookworm)**: Stable, glibc-based images with excellent compatibility
-- **Framework Optimized**: Auto-detection for Laravel, Symfony, WordPress
-- **Production Ready**: Optimized configurations for real-world applications
+- **A control plane as PID 1** — [Cbox Init](https://github.com/cboxdk/init)
+  supervises PHP-FPM, Nginx, queue workers, Horizon, Reverb, and schedulers
+  as a dependency graph, with health-check-driven restarts, supervisor-owned
+  readiness (`/readyz`, `/livez`), warmup hooks that gate traffic, Prometheus
+  metrics, structured JSON logs, and a management API/CLI.
+- **Capacity that measures instead of guesses** — `pm.max_children` is seeded
+  from the container's real cgroup limits at boot, and (opt-in) re-sized at
+  runtime from live per-worker memory via [fpm-tune](https://github.com/cboxdk/fpm-tune):
+  atomic drop-in, graceful reload, zero dropped connections.
+- **Pin your behavior, not your vulnerabilities** — release-channel tags
+  (`8.4-bookworm-v1`) lock the runtime contract to a major while weekly
+  rebuilds keep OS security patches flowing. Rolling tags and immutable
+  digests exist too. [Tagging strategy →](docs/reference/tagging-strategy.md)
+- **Frameworks handled at startup** — Laravel, Symfony, and WordPress are
+  auto-detected; permissions, schedulers, and workers configured accordingly.
+- **Four tiers, root and rootless** — Slim (~120 MiB) → Standard → Chromium
+  (Browsershot/Dusk) → Dev (Xdebug/PCOV/SPX), on Debian 12, amd64 + arm64,
+  Cosign-signed and Trivy-scanned.
 
-### 🔧 Cbox Process Manager
-
-All `php-fpm-nginx` images include [Cbox Init](https://github.com/cboxdk/init) - a production-grade Go-based process manager with:
-
-- ✅ Multi-process orchestration (PHP-FPM + Nginx + Horizon + Reverb + Queue Workers)
-- ✅ Structured JSON logging with process segmentation
-- ✅ Lifecycle hooks for Laravel optimizations
-- ✅ Health checks (TCP, HTTP, exec) with auto-restart
-- ✅ Prometheus metrics for observability
-- ✅ Graceful shutdown with configurable timeouts
-
-📖 **[Cbox Init Documentation →](docs/cbox-init-integration.md)**
+📖 **[Cbox Init Documentation →](docs/observability/cbox-init-integration.md)**
 
 ## 🚀 Quick Start (5 Minutes)
 
@@ -195,23 +199,23 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 - [Custom Extensions](docs/advanced/custom-extensions.md) - PECL extension examples
 - [Custom Initialization](docs/advanced/custom-initialization.md) - Startup scripts
 - [Performance Tuning](docs/advanced/performance-tuning.md) - Optimization guide
-- [Security Hardening](docs/advanced/security-hardening.md) - Security best practices
-- [Rootless Containers](docs/advanced/rootless-containers.md) - Non-root execution
+- [Security Hardening](docs/security/security-hardening.md) - Security best practices
+- [Rootless Containers](docs/security/rootless-containers.md) - Non-root execution
 - **[Multi-Architecture Builds](docs/advanced/multi-architecture.md)** - AMD64 + ARM64 support
 
 ### Reference
-- **[Cbox Init Integration](docs/cbox-init-integration.md)** - Process manager guide
+- **[Cbox Init Integration](docs/observability/cbox-init-integration.md)** - Process manager guide
 - **[Environment Variables](docs/reference/environment-variables.md)** - All configuration options including Cbox Init
 - [Environment Variables](docs/reference/environment-variables.md) - All configuration options
 - [Configuration Options](docs/reference/configuration-options.md) - PHP/FPM/Nginx configs
 - [Available Extensions](docs/reference/available-extensions.md) - Complete extension list
-- [Health Checks](docs/reference/health-checks.md) - Monitoring guide
+- [Health Checks](docs/observability/health-checks.md) - Monitoring guide
 - [Choosing Your Image](docs/getting-started/choosing-your-image.md) - Architecture decision (single vs multi-service)
 
 ### Help & Troubleshooting
 - [Common Issues](docs/troubleshooting/common-issues.md) - FAQ and solutions
 - [Debugging Guide](docs/troubleshooting/debugging-guide.md) - Systematic debugging
-- [Migration Guide](docs/troubleshooting/migration-guide.md) - From other images
+- [Migration Guide](docs/getting-started/migration-guide.md) - From other images
 
 ## ✨ Key Features
 
@@ -393,7 +397,7 @@ services:
     # Runs as www-data user, not root
 ```
 
-📖 **Security guide:** [Security Documentation →](docs/advanced/security-hardening.md)
+📖 **Security guide:** [Security Documentation →](docs/security/security-hardening.md)
 
 ## 📊 Image Sizes
 
@@ -594,7 +598,7 @@ Inspired by the PHP community's need for clean, no-nonsense base images without 
 
 ## 💬 Support
 
-- **Documentation:** [docs/](docs/)
+- **Documentation:** [docs/](docs/getting-started/introduction.md)
 - **Issues:** [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/cboxdk/php-baseimages/discussions)
 - **Security:** [GitHub Security Advisories](https://github.com/cboxdk/php-baseimages/security)

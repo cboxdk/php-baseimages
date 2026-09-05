@@ -12,6 +12,14 @@ All notable changes to Cbox PHP Base Images.
 
 ### Added
 - **Release channel tags (`-vN`)** - e.g. `8.4-bookworm-v1`: rebuilt weekly with OS security patches, but never crossing a tooling major. The recommended production pin: stable behavior without CVE rot. Rolling tags keep following the latest release; SHA/digest tags remain the immutable option. Channel comes from `release.channel` in versions.json; previous majors stay supported for 6 months after a new major (see docs/reference/tagging-strategy.md)
+- **SLSA provenance + SPDX SBOM attestations** on every image (BuildKit `mode=max`; verified to survive the multi-arch manifest merge). Inspect with `docker buildx imagetools inspect --format '{{ json .Provenance }}'`
+- **Trivy regression gate** - builds now FAIL on any new fixable CRITICAL/HIGH CVE not in the triaged `.trivyignore` baseline (84 pre-existing entries, each annotated with its fix path). Full unfiltered scans still go to the Security tab
+
+### Fixed
+- **PHP lifecycle data corrected** - `versions.json` carried pre-2022-policy EOL dates (e.g. 8.2: 2025-12-08; actual security support runs to 2026-12-31), so images showed FALSE deprecation banners for 8.2/8.3. Now modeled as `active_support_until` + `security_support_until` (php.net verified); a new `security-only` lifecycle state is banner-free (it is a normal, supported phase), and warnings key off security EOL
+- **Weekly version automation repaired** - the update script died silently every week on a dead pre-rebrand endpoint (`gophpeek/phpeek-pm`) before writing its result, masked by `|| true`; it also tried to re-add removed swoole/frankenphp keys and skipped PHP 8.5 in patch checks. `latest_patch` and `_meta` are current again
+- **`latest` tag concept clarified** - `latest` now follows `php.newest` (8.5) from versions.json instead of a hardcoded workflow default (8.4); `php.default` (8.4) remains the documented recommendation. Docs and CI agree again
+- **ServerSideUp comparison page rewritten** - previous version claimed ServerSideUp lacks health checks (they ship native health checks); now an honest comparison verified against their current docs
 
 ## [1.0.0] - 2026-09-05
 

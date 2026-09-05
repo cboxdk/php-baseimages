@@ -331,6 +331,32 @@ Never expose the management API on `0.0.0.0` without a bearer token — it can
 start/stop/scale processes. See the cbox-init docs for `api_host`/`metrics_host`
 and ACL/TLS options.
 
+## Supply Chain
+
+Every published image carries, verifiable straight from the registry:
+
+- **Cosign signature** (keyless, GitHub OIDC) on the manifest list
+- **SLSA provenance attestation** (BuildKit `mode=max`): which workflow, commit,
+  and build steps produced the image
+- **SPDX SBOM attestation** per platform: the full package inventory
+
+```bash
+# Inspect provenance and SBOM
+docker buildx imagetools inspect \
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm \
+  --format '{{ json .Provenance }}'
+
+docker buildx imagetools inspect \
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm \
+  --format '{{ json .SBOM }}'
+```
+
+**CI vulnerability regression gate:** every build fails if a fixable
+CRITICAL/HIGH CVE appears that is not in the repository's triaged
+`.trivyignore` baseline — the security posture cannot silently regress.
+The full (unfiltered) scan result is always uploaded to the GitHub Security
+tab, baseline included.
+
 ## CVE Management
 
 ### Weekly Security Updates

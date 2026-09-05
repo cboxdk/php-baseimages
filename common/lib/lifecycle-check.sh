@@ -42,16 +42,23 @@ cbox_lifecycle_check() {
             return 0
             ;;
 
+        security-only)
+            # Past active support but inside security support: a normal,
+            # supported state (php.net gives every release two years of
+            # security-only). Not actionable urgency — no banner.
+            return 0
+            ;;
+
         deprecated)
             echo -e "${YELLOW}"
             echo "╔══════════════════════════════════════════════════════════════════╗"
             echo "║  ⚠️   DEPRECATION WARNING                                         ║"
             echo "╠══════════════════════════════════════════════════════════════════╣"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} reaches End-of-Life on ${CBOX_PHP_EOL:-unknown}"
+            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} security support ends on ${CBOX_PHP_EOL:-unknown}"
             printf "║  %-64s ║\n" "This image will be removed on ${CBOX_REMOVAL_DATE:-unknown}"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "Please upgrade to PHP 8.4 or 8.5"
+            printf "║  %-64s ║\n" "Please plan your upgrade to a supported PHP version"
             printf "║  %-64s ║\n" "Migration guide: https://cbox.com/docs/migration"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "Suppress: CBOX_SUPPRESS_WARNINGS=true"
@@ -65,13 +72,13 @@ cbox_lifecycle_check() {
             echo "║  🚨  END-OF-LIFE WARNING                                         ║"
             echo "╠══════════════════════════════════════════════════════════════════╣"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} has reached End-of-Life!"
-            printf "║  %-64s ║\n" "EOL Date: ${CBOX_PHP_EOL:-unknown}"
+            printf "║  %-64s ║\n" "PHP ${CBOX_PHP_VERSION:-} security support has ended!"
+            printf "║  %-64s ║\n" "Security support ended: ${CBOX_PHP_EOL:-unknown}"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "⚠️  No security updates are being provided"
+            printf "║  %-64s ║\n" "⚠️  No security updates are being provided by PHP"
             printf "║  %-64s ║\n" "This image will be REMOVED on ${CBOX_REMOVAL_DATE:-unknown}"
             echo "║                                                                  ║"
-            printf "║  %-64s ║\n" "URGENT: Upgrade to PHP 8.4 or 8.5 immediately"
+            printf "║  %-64s ║\n" "URGENT: Upgrade to a supported PHP version immediately"
             printf "║  %-64s ║\n" "Migration guide: https://cbox.com/docs/migration"
             echo "║                                                                  ║"
             printf "║  %-64s ║\n" "Suppress: CBOX_SUPPRESS_WARNINGS=true"
