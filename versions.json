@@ -29,7 +29,7 @@
     "preview": {}
   },
   "node": {
-    "version": "22.23.1",
+    "version": "24",
     "lts_name": "Jod",
     "eol": "2027-04-30"
   },
@@ -50,14 +50,14 @@
   "extensions": {
     "redis": "6.3.0",
     "imagick": "3.8.1",
-    "apcu": "5.1.27",
-    "mongodb": "2.1.4",
-    "msgpack": "3.0.0",
-    "xdebug": "3.5.0",
+    "apcu": "5.1.28",
+    "mongodb": "2.5.2",
+    "msgpack": "3.0.1",
+    "xdebug": "3.5.3",
     "pcov": "1.0.12",
     "spx": "v0.4.22",
-    "uuid": "1.2.1",
-    "excimer": "1.2.4",
+    "uuid": "1.3.0",
+    "excimer": "1.2.6",
     "vips": "1.0.13"
   },
   "tools": {
@@ -74,7 +74,7 @@
     "deprecated": []
   },
   "_meta": {
-    "last_updated": "2026-09-05",
+    "last_updated": "2026-09-07",
     "update_frequency": "weekly",
     "auto_pr_enabled": true
   },
@@ -83,6 +83,6 @@
     "supported_majors": [
       "1"
     ],
-    "_policy": "Channel tags (\u2026-vN) are rebuilt weekly with OS security patches but never cross a tooling major. Previous major receives rebuilds for 6 months after a new major ships (built from its release/vN branch). Bump 'channel' when cutting a new MAJOR release."
+    "_policy": "Channel tags (…-vN) are rebuilt weekly with OS security patches but never cross a tooling major. Previous major receives rebuilds for 6 months after a new major ships (built from its release/vN branch). Bump 'channel' when cutting a new MAJOR release."
   }
 }
