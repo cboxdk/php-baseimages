@@ -79,7 +79,7 @@ Override in docker-compose.yml:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/healthz"]
       interval: 15s
@@ -91,7 +91,7 @@ services:
 Or in Dockerfile:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 
 # Custom health check
 HEALTHCHECK --interval=15s --timeout=10s --retries=5 \
@@ -105,7 +105,7 @@ For CI/CD or testing scenarios:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     healthcheck:
       disable: true
 ```
@@ -122,7 +122,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     livenessProbe:
       httpGet:
         path: /livez
@@ -143,7 +143,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     readinessProbe:
       httpGet:
         path: /readyz
@@ -165,7 +165,7 @@ kind: Pod
 spec:
   containers:
   - name: app
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     startupProbe:
       httpGet:
         path: /readyz
@@ -195,7 +195,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
         ports:
         - containerPort: 80
 

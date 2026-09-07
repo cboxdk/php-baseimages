@@ -12,6 +12,12 @@ All notable changes to Cbox PHP Base Images.
 
 _Nothing yet._
 
+## [1.1.1] - 2026-09-07
+
+### Fixed
+- **Docs, templates and examples now use the release channel tag** - v1.1.0 introduced `-v1` channel tags but 250+ image references across the documentation, Dockerfile templates and example stacks still showed rolling tags. Every example now pins `-v1` (the recommended production pin), the tag-format references document the `[-vN]` dimension, and Available Images explains all three tag kinds
+- **Stray root Dockerfile relocated** - an app template (Statamic/Laravel + Vite with composer-auth build secrets) sat at the repository root referencing a non-existent private tag; now lives at `templates/Dockerfile.statamic` with correct channel tags
+
 ## [1.1.0] - 2026-09-05
 
 ### Added

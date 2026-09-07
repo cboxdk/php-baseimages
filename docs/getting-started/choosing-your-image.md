@@ -112,16 +112,16 @@ Rootless variants append `-rootless` to any tag: `8.4-bookworm-slim-rootless`, `
 # Multi-service (recommended for most projects)
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     ports:
       - "80:80"
 
 # Single-service (Kubernetes / independent scaling)
 services:
   php:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-v1
   nginx:
-    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm
+    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm-v1
     ports:
       - "80:80"
     depends_on:

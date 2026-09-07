@@ -80,7 +80,9 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 | **php-cli** | CLI workers, cron jobs |
 | **nginx** | Standalone Nginx (`bookworm` tag only) |
 
-**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{php}-bookworm[-tier][-rootless]`
+**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{php}-bookworm[-tier][-rootless][-vN]`
+
+Append `-v1` to any tag for the **release channel** — behavior pinned to tooling major v1, weekly security rebuilds. That is the recommended production pin.
 
 **PHP versions:** `8.2`, `8.3`, `8.4`, `8.5`
 
@@ -97,21 +99,21 @@ Each PHP image type is available in all tier and rootless combinations:
 
 ```bash
 # Standard tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
 
 # Slim tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
 
 # Chromium tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
 
 # Dev tier
-ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev-v1
 
 # Rootless variants
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
-ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
+ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
 ```
 
 ### Image Tiers: Slim / Standard / Chromium / Dev
@@ -132,6 +134,7 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless
 | Chromium | `{version}-bookworm-chromium` | `8.4-bookworm-chromium` |
 | Dev | `{version}-bookworm-dev` | `8.4-bookworm-dev` |
 | Rootless variants | Add `-rootless` | `8.4-bookworm-rootless`, `8.4-bookworm-dev-rootless` |
+| **Release channel** | Add `-vN` (recommended in production) | `8.4-bookworm-v1`, `8.4-bookworm-slim-v1` |
 
 **What's included:**
 
@@ -150,9 +153,9 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 
 | Production | Development |
 |------------|-------------|
-| `php-fpm-nginx:8.4-bookworm` | `php-fpm-nginx:8.4-bookworm-dev` |
-| `php-fpm:8.3-bookworm` | `php-fpm:8.3-bookworm-dev` |
-| `php-fpm:8.2-bookworm` | `php-fpm:8.2-bookworm-dev` |
+| `php-fpm-nginx:8.4-bookworm-v1` | `php-fpm-nginx:8.4-bookworm-dev-v1` |
+| `php-fpm:8.3-bookworm-v1` | `php-fpm:8.3-bookworm-dev-v1` |
+| `php-fpm:8.2-bookworm-v1` | `php-fpm:8.2-bookworm-dev-v1` |
 
 **Dev images include:**
 - **Xdebug 3.5** - Step debugging, code coverage, profiling
@@ -167,6 +170,7 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 **NEW:** Pre-built Dockerfile templates for common scenarios:
 
 - **[Dockerfile.production](templates/Dockerfile.production)** - Multi-stage production build (AMD64 + ARM64)
+- **[Dockerfile.statamic](templates/Dockerfile.statamic)** - Statamic/Laravel + Vite with composer auth via build secrets
 - **[Dockerfile.node](templates/Dockerfile.node)** - PHP + Node.js for Laravel + Vite, full-stack apps
 - **[Dockerfile.dev](templates/Dockerfile.dev)** - Development with Xdebug, SPX profiler, debugging tools
 - **[Dockerfile.ci](templates/Dockerfile.ci)** - CI/CD optimized for GitHub Actions, GitLab CI
@@ -348,7 +352,7 @@ This remaps the container's `www-data` user and automatically fixes ownership of
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 docker-compose up -d
 ```
 
@@ -370,7 +374,7 @@ docker-compose up -d
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     # ImageMagick, vips, Node.js included
 ```
 
@@ -378,7 +382,7 @@ services:
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
     # Minimal size (~120 MiB), core extensions only
 ```
 
@@ -386,7 +390,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
     # Includes Chromium for Browsershot/Dusk
 ```
 
@@ -394,7 +398,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
     # Runs as www-data user, not root
 ```
 
@@ -447,7 +451,7 @@ docker run --rm -p 8000:80 my-image:8.3-bookworm
 ./tests/e2e/run-all-tests.sh --specific security
 
 # Run extension tests
-./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
+./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
 ```
 
 📖 **Test documentation:** [tests/README.md](tests/README.md)
@@ -479,7 +483,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     ports:
       - "8000:80"
     volumes:
@@ -517,12 +521,12 @@ version: '3.8'
 
 services:
   php-fpm:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
     volumes:
       - ./:/var/www/html
 
   nginx:
-    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm
+    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm-v1
     ports:
       - "80:80"
     volumes:
@@ -536,7 +540,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev-v1
     volumes:
       - ./:/var/www/html
     environment:
@@ -549,7 +553,7 @@ services:
 ```bash
 # 10x faster than Xdebug coverage
 docker run --rm -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-dev \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-dev-v1 \
   php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 ```
 

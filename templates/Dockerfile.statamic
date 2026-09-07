@@ -6,7 +6,7 @@
 # Runs on the BUILD host's native arch (e.g. arm64 on Apple Silicon) so composer
 # and vite aren't emulated. vendor/ and public/build are arch-independent, so the
 # amd64 runtime image below just COPYs them — no cross-emulation needed.
-FROM --platform=$BUILDPLATFORM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-audit1 AS build
+FROM --platform=$BUILDPLATFORM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1 AS build
 WORKDIR /var/www/html
 
 # PHP deps first (better layer caching). auth.json (Statamic license / private
@@ -25,7 +25,7 @@ COPY . .
 RUN npm run build && rm -rf node_modules auth.json
 
 # ---- runtime image ----
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-audit1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 WORKDIR /var/www/html
 COPY --from=build --chown=www-data:www-data /var/www/html /var/www/html
 

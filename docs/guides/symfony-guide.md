@@ -15,7 +15,7 @@ See [Quickstart](../getting-started/quickstart) for the base docker-compose setu
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     depends_on:
       - postgres
       - redis
@@ -86,7 +86,7 @@ Use dev image with Xdebug:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev-v1
     environment:
       - APP_ENV=dev
       - XDEBUG_MODE=debug,develop,coverage
@@ -102,7 +102,7 @@ See [Development Workflow](./development-workflow) for Xdebug setup.
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     volumes:
       - .:/var/www/html:ro
       - ./var:/var/www/html/var

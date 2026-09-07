@@ -15,7 +15,7 @@ See [Quickstart](../getting-started/quickstart) for the base docker-compose setu
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     environment:
       - LARAVEL_SCHEDULER=true
     depends_on:
@@ -109,7 +109,7 @@ Use dev image with Xdebug:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev-v1
     environment:
       - XDEBUG_MODE=debug,develop,coverage
       - XDEBUG_CONFIG=client_host=host.docker.internal
@@ -125,7 +125,7 @@ See [Development Workflow](./development-workflow) for Xdebug setup.
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm  # No -dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1  # No -dev
     volumes:
       - ./:/var/www/html:ro  # Read-only
       - ./storage:/var/www/html/storage

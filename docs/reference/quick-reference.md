@@ -14,7 +14,7 @@ Copy-paste ready snippets. No configuration needed.
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     ports:
       - "8000:80"
     volumes:
@@ -120,16 +120,16 @@ For the full image size matrix, tier descriptions, and rootless variants, see [C
 
 ```text
 # Standard tier (DEFAULT)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 
 # Slim tier (APIs, microservices)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
 
 # Chromium tier (Browsershot, Dusk)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
 
 # Development (with Xdebug)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev-v1
 ```
 
 See [Available Extensions](./available-extensions) for the full extension list by tier.

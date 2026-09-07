@@ -52,6 +52,9 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 
 ## Complete Tag Examples
 
+Every tag below also exists with the `-v1` release-channel suffix (e.g.
+`8.4-bookworm-slim-v1`) — the recommended production pin.
+
 ### Standard Tier (Default)
 
 Most applications should use standard tier:

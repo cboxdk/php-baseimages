@@ -78,34 +78,52 @@ Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 ## Tag Format
 
 ```text
-{type}:{php_version}-{os}[-tier][-rootless]
+{type}:{php_version}-{os}[-tier][-rootless][-vN]
 
 Examples:
-php-fpm-nginx:8.4-bookworm              # Standard tier (default)
-php-fpm-nginx:8.4-bookworm-slim         # Slim tier
-php-fpm-nginx:8.4-bookworm-chromium     # Chromium tier
-php-fpm-nginx:8.4-bookworm-rootless     # Standard + rootless
-php-fpm-nginx:8.4-bookworm-slim-rootless  # Slim + rootless
-php-fpm-nginx:8.4-bookworm-chromium-rootless  # Chromium + rootless
+php-fpm-nginx:8.4-bookworm-v1           # Standard tier, release channel (RECOMMENDED)
+php-fpm-nginx:8.4-bookworm-slim-v1      # Slim tier, release channel
+php-fpm-nginx:8.4-bookworm-chromium-v1  # Chromium tier, release channel
+php-fpm-nginx:8.4-bookworm-rootless-v1  # Standard + rootless, release channel
+php-fpm-nginx:8.4-bookworm              # Standard tier, rolling (follows latest release)
+php-fpm-nginx:8.4-bookworm-slim-rootless  # Slim + rootless, rolling
 ```
 
-## Rolling Tags (Recommended)
+Every tag in the matrices above also exists with the `-v1` release-channel
+suffix — that is the variant to pin in production.
 
-Rolling tags receive weekly security updates:
+## Release Channel Tags (Recommended for Production)
+
+Channel tags are rebuilt weekly with OS security patches but never cross a
+tooling major — your runtime contract stays put, the machine underneath
+stays patched:
 
 ```yaml
-# Automatically gets security patches every Monday
+# Behavior pinned to major v1, security patches keep flowing
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+```
+
+## Rolling Tags
+
+Rolling tags also receive weekly security updates, but follow the newest
+tooling release — including future majors:
+
+```yaml
+# Follows the latest release, rebuilt every Monday
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
 ```
 
-## Immutable SHA Tags
+## Immutable Digests
 
-For reproducible builds, use SHA-pinned tags:
+For byte-exact reproduction, pin the digest (ages by design — it contains
+the CVEs of its build day):
 
 ```yaml
-# Locked to specific build
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm@sha256:abc123...
+# Locked to a specific build
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1@sha256:abc123...
 ```
+
+See [Tagging Strategy](tagging-strategy) for the full policy.
 
 ## Architecture Support
 
@@ -120,7 +138,7 @@ Docker automatically pulls the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 ```
 
 ## OS Information
@@ -167,17 +185,17 @@ Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 
 ```bash
 # Pull standard tier (most Laravel/PHP apps)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 
 # Pull slim tier (APIs, microservices)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
 
 # Pull chromium tier (Browsershot, Dusk)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
 
 # Run with volume mount
 docker run -p 8000:80 -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 ```
 
 ### Docker Compose
@@ -186,7 +204,7 @@ docker run -p 8000:80 -v $(pwd):/var/www/html \
 services:
   # Standard tier - most Laravel apps
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
     ports:
       - "8000:80"
     volumes:
@@ -194,13 +212,13 @@ services:
 
   # Slim tier - API service
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
     ports:
       - "8001:80"
 
   # Chromium tier - PDF generation service
   pdf:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -209,7 +227,7 @@ services:
 
 ```dockerfile
 # Standard tier for most apps
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -218,7 +236,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 ```dockerfile
 # Chromium tier for Browsershot
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -238,7 +256,7 @@ All images are automatically rebuilt every Monday at 03:00 UTC:
 
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 docker-compose up -d --pull always
 ```
 

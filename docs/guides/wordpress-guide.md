@@ -15,7 +15,7 @@ See [Quickstart](../getting-started/quickstart) for the base docker-compose setu
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     depends_on:
       - mysql
 
@@ -61,7 +61,7 @@ Add Redis for faster caching:
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     depends_on:
       - mysql
       - redis
@@ -87,7 +87,7 @@ Use dev image with Xdebug:
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-dev-v1
     environment:
       - XDEBUG_MODE=debug,develop
       - XDEBUG_CONFIG=client_host=host.docker.internal
@@ -108,7 +108,7 @@ define('SCRIPT_DEBUG', true);
 ```yaml
 services:
   wordpress:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
     volumes:
       - .:/var/www/html:ro
       - ./wp-content/uploads:/var/www/html/wp-content/uploads
