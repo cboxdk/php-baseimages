@@ -10,6 +10,9 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Fixed
+- **Weekly security rebuilds now actually refresh packages** - the CI layer cache had no cache busting, so a scheduled rebuild replayed cached apt layers whenever nothing else invalidated them: the "rebuilt weekly with security patches" promise only held when upstream PHP happened to push a new digest. Exposed by the pre-promotion CVE gate catching a libssh2 fix already published in bookworm-security that a fresh build did not contain. Root stages now take an ISO-week CACHE_REFRESH build-arg: scheduled rebuilds bust once per week, intra-week pushes keep full cache speed
+
 ### Changed
 - **Default PHP version is now 8.5** - `php.default`, every Dockerfile's `ARG PHP_VERSION` default, docker-compose, and 260+ documentation/template/example references moved from 8.4 to 8.5. Version-matrix enumerations keep listing all supported versions. `latest` already followed 8.5
 

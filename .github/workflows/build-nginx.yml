@@ -51,6 +51,7 @@ jobs:
           else
             echo "suffix=" >> $GITHUB_OUTPUT
           fi
+          echo "week=$(date -u +%G-W%V)" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -96,6 +97,10 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Weekly cache refresh - see _build-image.yml: without it, scheduled
+          # security rebuilds replay cached apt layers and patch nothing.
+          build-args: |
+            CACHE_REFRESH=${{ steps.channel.outputs.week }}
           cache-from: type=gha,scope=nginx-${{ matrix.os_variant }}
           cache-to: type=gha,mode=max,scope=nginx-${{ matrix.os_variant }}
 

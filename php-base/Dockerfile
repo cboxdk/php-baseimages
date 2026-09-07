@@ -72,6 +72,15 @@ FROM php:${PHP_VERSION}-cli-bookworm AS slim-base
 
 ARG PHP_VERSION
 
+# Weekly cache refresh: referencing this arg invalidates every later layer in
+# the stage chain once per ISO week, so scheduled security rebuilds install
+# fresh apt packages instead of replaying cached layers. Found when the CVE
+# gate caught a libssh2 fix already published in bookworm-security that a
+# "fresh" build did not contain. CI passes the current ISO week; local builds
+# default to a static value (fast rebuilds, bust manually with --build-arg).
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+
 LABEL org.opencontainers.image.title="Cbox PHP Base ${PHP_VERSION} Debian"
 LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"

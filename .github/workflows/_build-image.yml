@@ -277,6 +277,10 @@ jobs:
           ARGS_FILE=$(mktemp)
           # All images need PHP_VERSION as a build arg (used in FROM lines)
           echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
+          # Weekly cache refresh (ISO week) - busts the root apt layers once
+          # per week so scheduled security rebuilds actually install fresh
+          # packages; intra-week pushes keep full layer-cache speed.
+          echo "CACHE_REFRESH=$(date -u +%G-W%V)" >> "$ARGS_FILE"
           # Lifecycle state goes to EVERY image build: php-fpm/php-fpm-nginx
           # declare these ARGs themselves (they COPY from php-base and cannot
           # inherit its baked ENV) — keeping these inside the php-base branch
@@ -509,6 +513,10 @@ jobs:
           ARGS_FILE=$(mktemp)
           # All images need PHP_VERSION as a build arg (used in FROM lines)
           echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
+          # Weekly cache refresh (ISO week) - busts the root apt layers once
+          # per week so scheduled security rebuilds actually install fresh
+          # packages; intra-week pushes keep full layer-cache speed.
+          echo "CACHE_REFRESH=$(date -u +%G-W%V)" >> "$ARGS_FILE"
           # Lifecycle state goes to EVERY image build: php-fpm/php-fpm-nginx
           # declare these ARGs themselves (they COPY from php-base and cannot
           # inherit its baked ENV) — keeping these inside the php-base branch

@@ -89,6 +89,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
     CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
 
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -174,6 +179,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 
 # Switch to root temporarily for setup
 USER root
+
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -266,6 +276,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
     CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
 
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -351,6 +366,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 
 # Switch to root temporarily for setup
 USER root
+
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -443,6 +463,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
     CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
 
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -528,6 +553,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 
 # Switch to root temporarily for setup
 USER root
+
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -620,6 +650,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
     CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
 
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx libnginx-mod-http-headers-more-filter gettext-base \
@@ -705,6 +740,11 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 
 # Switch to root temporarily for setup
 USER root
+
+# Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
+# without a new base digest replays cached apt layers with stale packages
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \

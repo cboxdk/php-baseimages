@@ -1,5 +1,14 @@
 FROM nginx:1.29-bookworm
 
+# Weekly cache refresh: referencing this arg invalidates every later layer in
+# the stage chain once per ISO week, so scheduled security rebuilds install
+# fresh apt packages instead of replaying cached layers. Found when the CVE
+# gate caught a libssh2 fix already published in bookworm-security that a
+# "fresh" build did not contain. CI passes the current ISO week; local builds
+# default to a static value (fast rebuilds, bust manually with --build-arg).
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+
 LABEL maintainer="Sylvester Damgaard <sn@cbox.dk>"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 LABEL org.opencontainers.image.description="Nginx 1.29 Debian Bookworm - Optimized for PHP"
