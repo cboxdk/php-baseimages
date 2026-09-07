@@ -10,6 +10,12 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Changed
+- **Extension bumps from the first working weekly PR** - apcu 5.1.28, mongodb 2.5.2, msgpack 3.0.1, xdebug 3.5.3, uuid 1.3.0, excimer 1.2.6 (all verified on PECL)
+
+### Fixed
+- **Weekly update automation hardened after its first live run** - the workflow committed its own log files (eol-output.txt/update-output.txt) into the PR (outputs now live in runner temp and the PR only adds versions.json), and the Node.js fetcher wrote a bare major ("24") that would break the image build (the Dockerfile downloads node-v${NODE_VERSION}-linux-*.tar.gz) while silently jumping LTS lines - it now tracks patches on the current LTS line and warns when a newer LTS exists (lts_name/eol must move with a manual major bump)
+
 ## [1.2.0] - 2026-09-07
 
 ### Added

@@ -85,6 +85,15 @@ fetch_php_latest_patch() {
 }
 
 fetch_node_lts() {
+    # Latest release on the SAME LTS line as the current major - full semver.
+    # The Dockerfile downloads node-v${NODE_VERSION}-linux-*.tar.gz, so a bare
+    # major here breaks the build; and jumping LTS lines is a manual decision
+    # (lts_name and eol in versions.json must change with it).
+    local major="$1"
+    curl -fsSL "https://nodejs.org/dist/index.json" 2>/dev/null | jq -r --arg m "v${major}." '[.[] | select(.lts != false) | select(.version | startswith($m))] | .[0].version // empty' | sed 's/^v//' || true
+}
+
+fetch_node_newest_lts_major() {
     curl -fsSL "https://nodejs.org/dist/index.json" 2>/dev/null | jq -r '[.[] | select(.lts != false)] | .[0].version' | sed 's/^v//' | cut -d. -f1 || true
 }
 
@@ -172,8 +181,13 @@ echo ""
 log_info "Checking Node.js LTS..."
 
 current=$(echo "$CURRENT" | jq -r ".node.version")
-latest=$(fetch_node_lts)
-if [[ -n "$latest" && "$latest" =~ ^[0-9]+$ ]]; then
+current_major="${current%%.*}"
+latest=$(fetch_node_lts "$current_major")
+newest_major=$(fetch_node_newest_lts_major)
+if [[ -n "$newest_major" && "$newest_major" =~ ^[0-9]+$ && "$newest_major" -gt "$current_major" ]]; then
+    log_warn "Newer Node.js LTS available: v${newest_major} (current line: v${current_major}) - bump manually with lts_name and eol"
+fi
+if [[ -n "$latest" && "$latest" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     if [[ "$current" != "$latest" ]]; then
         UPDATE_COUNT=$((UPDATE_COUNT + 1))
         UPDATE_LIST="${UPDATE_LIST}  - node.version: $current -> $latest\n"

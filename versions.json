@@ -50,14 +50,14 @@
   "extensions": {
     "redis": "6.3.0",
     "imagick": "3.8.1",
-    "apcu": "5.1.27",
-    "mongodb": "2.1.4",
-    "msgpack": "3.0.0",
-    "xdebug": "3.5.0",
+    "apcu": "5.1.28",
+    "mongodb": "2.5.2",
+    "msgpack": "3.0.1",
+    "xdebug": "3.5.3",
     "pcov": "1.0.12",
     "spx": "v0.4.22",
-    "uuid": "1.2.1",
-    "excimer": "1.2.4",
+    "uuid": "1.3.0",
+    "excimer": "1.2.6",
     "vips": "1.0.13"
   },
   "tools": {

@@ -27,7 +27,7 @@ jobs:
           chmod +x scripts/check-eol.sh
 
           # Run EOL check and capture output
-          ./scripts/check-eol.sh 2>&1 | tee eol-output.txt || true
+          ./scripts/check-eol.sh 2>&1 | tee ${RUNNER_TEMP}/eol-output.txt || true
           EOL_EXIT=$?
 
           # Store results
@@ -37,7 +37,7 @@ jobs:
           if [[ $EOL_EXIT -ge 1 ]]; then
             echo "has_eol_warnings=true" >> $GITHUB_OUTPUT
             # Create GitHub warning annotations
-            grep -E "CRITICAL|WARNING" eol-output.txt | while read -r line; do
+            grep -E "CRITICAL|WARNING" ${RUNNER_TEMP}/eol-output.txt | while read -r line; do
               echo "::warning::$line"
             done
           else
@@ -50,7 +50,7 @@ jobs:
           chmod +x scripts/update-versions.sh
 
           # Capture output for PR body
-          ./scripts/update-versions.sh 2>&1 | tee update-output.txt || true
+          ./scripts/update-versions.sh 2>&1 | tee ${RUNNER_TEMP}/update-output.txt || true
 
           # Apply updates
           ./scripts/update-versions.sh --apply 2>&1 || true
@@ -78,6 +78,7 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: versions.json
           commit-message: "chore(deps): update versions.json with latest releases"
           title: "chore(deps): Weekly dependency updates"
           body: |
@@ -121,7 +122,7 @@ jobs:
         uses: peter-evans/create-issue-from-file@v6
         with:
           title: "🚨 CRITICAL: Components past EOL require removal"
-          content-filepath: eol-output.txt
+          content-filepath: ${{ runner.temp }}/eol-output.txt
           labels: |
             critical
             deprecation
@@ -134,14 +135,14 @@ jobs:
 
           echo "### EOL Status" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          cat eol-output.txt >> $GITHUB_STEP_SUMMARY
+          cat ${RUNNER_TEMP}/eol-output.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "### Version Updates" >> $GITHUB_STEP_SUMMARY
-          if [ -f update-output.txt ]; then
+          if [ -f ${RUNNER_TEMP}/update-output.txt ]; then
             echo '```' >> $GITHUB_STEP_SUMMARY
-            cat update-output.txt >> $GITHUB_STEP_SUMMARY
+            cat ${RUNNER_TEMP}/update-output.txt >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "No updates found" >> $GITHUB_STEP_SUMMARY
