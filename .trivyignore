@@ -183,3 +183,15 @@ CVE-2026-73566
 # [HIGH] pacote: Versions of the package pacote from 11.2.7 and before 21.5.1 are vulne ...
 CVE-2026-9496
 
+
+# --- fpm-exporter v3.1.0 Go binary - TEMPORARY baseline, remove when v3.1.1
+# ships rebuilt with a current Go toolchain (cboxdk/fpm-exporter#19).
+# Exposure context: the binary is a disabled-by-default supervised process,
+# loopback-scoped, and makes no TLS server connections in the image's
+# default configuration. Added 2026-09-07.
+# [HIGH] stdlib: golang: net/url: Memory exhaustion in query parameter parsing in net/url
+CVE-2025-61726
+# [HIGH] stdlib: crypto/x509: golang: Denial of Service due to excessive resource consumption via
+CVE-2025-61729
+# [CRITICAL] stdlib: crypto/tls: crypto/tls: Incorrect certificate validation during TLS session resu
+CVE-2025-68121

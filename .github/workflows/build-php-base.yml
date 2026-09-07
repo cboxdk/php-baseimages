@@ -7,6 +7,7 @@ on:
       - 'php-base/**'
       - 'common/**'
       - 'versions.json'
+      - '.trivyignore'
       - '.github/workflows/build-php-base.yml'
       - '.github/workflows/_build-image.yml'
     tags:
@@ -17,6 +18,7 @@ on:
       - 'php-base/**'
       - 'common/**'
       - 'versions.json'
+      - '.trivyignore'
   workflow_dispatch:
     inputs:
       php_version:
