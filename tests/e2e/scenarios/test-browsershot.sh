@@ -1,5 +1,6 @@
 #!/bin/bash
 # E2E Test: Browsershot/Puppeteer PDF Generation
+# requires: chromium
 # Tests Node.js, npm, Chromium and PDF generation capability
 
 set -euo pipefail
@@ -62,8 +63,15 @@ sleep 2
 # Test main endpoint (this runs the full PDF generation test)
 assert_http_code "$BASE_URL/" 200 "Main endpoint returns 200"
 
-# Get full response for detailed checks
-RESPONSE=$(curl -s "$BASE_URL/" 2>/dev/null || echo '{}')
+# Get full response for detailed checks. The endpoint runs a real PDF
+# generation per request; the first Chromium launch after container start is
+# slow and can exceed the fixture's internal timeout, so retry a few times.
+RESPONSE='{}'
+for attempt in 1 2 3 4 5; do
+    RESPONSE=$(curl -s "$BASE_URL/" 2>/dev/null || echo '{}')
+    echo "$RESPONSE" | grep -q '"status": "ok"' && break
+    sleep 5
+done
 
 # Test overall status
 if echo "$RESPONSE" | grep -q '"status": "ok"'; then
@@ -128,7 +136,7 @@ if [ -n "$PDF_PATH" ]; then
         else
             echo 'not_found'
         fi
-    " 2>&1)
+    " 2>&1) || true
 
     if echo "$PDF_CHECK" | grep -q "^exists:"; then
         ACTUAL_SIZE=$(echo "$PDF_CHECK" | cut -d: -f2)
@@ -154,14 +162,14 @@ else
     log_info "No file path in response, searching for PDF files..."
     PDF_SEARCH=$(docker exec "$CONTAINER_NAME" sh -c "
         find /var/www/html/storage -name '*.pdf' -type f 2>/dev/null | head -1
-    " 2>&1)
+    " 2>&1) || true
 
     if [ -n "$PDF_SEARCH" ]; then
         PDF_VERIFY=$(docker exec "$CONTAINER_NAME" sh -c "
             SIZE=\$(stat -c%s '$PDF_SEARCH' 2>/dev/null || stat -f%z '$PDF_SEARCH' 2>/dev/null)
             FILE_TYPE=\$(file '$PDF_SEARCH' 2>/dev/null | head -1)
             echo \"size:\$SIZE type:\$FILE_TYPE\"
-        " 2>&1)
+        " 2>&1) || true
         log_success "Found PDF in storage: $PDF_SEARCH"
         log_info "PDF details: $PDF_VERIFY"
 
@@ -195,7 +203,7 @@ SCREENSHOT_TEST=$(docker exec "$CONTAINER_NAME" sh -c "
             console.log('screenshot_ok');
         })();
     \" 2>&1
-" 2>&1)
+" 2>&1) || true
 
 if echo "$SCREENSHOT_TEST" | grep -q "screenshot_ok"; then
     # Verify screenshot file exists
@@ -207,7 +215,7 @@ if echo "$SCREENSHOT_TEST" | grep -q "screenshot_ok"; then
         else
             echo 'not_found'
         fi
-    " 2>&1)
+    " 2>&1) || true
 
     if echo "$SS_CHECK" | grep -qE "ok:[1-9][0-9]*"; then
         SS_SIZE=$(echo "$SS_CHECK" | cut -d: -f2)

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App;
 
 /**
  * Simple calculator for testing Pest PHP framework
  */
-class Calculator
+final class Calculator
 {
     public function add(int|float $a, int|float $b): int|float
     {

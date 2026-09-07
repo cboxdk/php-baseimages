@@ -110,7 +110,7 @@ wait_for_http "http://localhost:8096/" 200 30
 log_info "Verifying PHP configuration values..."
 
 # Memory limit
-MEMORY_LIMIT=$(docker exec e2e-env-full php -r "echo ini_get('memory_limit');")
+MEMORY_LIMIT=$(docker exec e2e-env-full php -r "echo ini_get('memory_limit');") || true
 if [ "$MEMORY_LIMIT" = "256M" ]; then
     log_success "PHP memory_limit is correctly set to 256M"
 else
@@ -118,7 +118,7 @@ else
 fi
 
 # OPcache
-OPCACHE=$(docker exec e2e-env-full php -r "echo ini_get('opcache.enable');")
+OPCACHE=$(docker exec e2e-env-full php -r "echo ini_get('opcache.enable');") || true
 if [ "$OPCACHE" = "1" ]; then
     log_success "OPcache is enabled"
 else
@@ -126,7 +126,7 @@ else
 fi
 
 # Security: expose_php
-EXPOSE_PHP=$(docker exec e2e-env-full php -r "echo ini_get('expose_php');")
+EXPOSE_PHP=$(docker exec e2e-env-full php -r "echo ini_get('expose_php');") || true
 if [ -z "$EXPOSE_PHP" ] || [ "$EXPOSE_PHP" = "0" ] || [ "$EXPOSE_PHP" = "" ]; then
     log_success "expose_php is disabled (security)"
 else

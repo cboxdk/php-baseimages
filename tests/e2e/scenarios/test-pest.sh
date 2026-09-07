@@ -152,7 +152,7 @@ fi
 log_info "Testing custom expectation (toBeOne)..."
 CUSTOM_TEST=$(docker exec "$CONTAINER_NAME" sh -c "
     cd /var/www/html && ./vendor/bin/pest --filter='custom expectation' 2>&1 || echo ''
-" 2>&1)
+" 2>&1) || true
 
 if echo "$CUSTOM_TEST" | grep -qE "PASS|passed"; then
     log_success "Custom expectations work"
@@ -173,7 +173,7 @@ ARCH_TEST=$(docker exec "$CONTAINER_NAME" sh -c "
     else
         echo 'no_arch_tests'
     fi
-" 2>&1)
+" 2>&1) || true
 
 if echo "$ARCH_TEST" | grep -qE "PASS|passed"; then
     log_success "Architecture testing works"
@@ -201,7 +201,7 @@ BROWSER_TEST=$(docker exec "$CONTAINER_NAME" sh -c "
     else
         echo 'no_browser_tests'
     fi
-" 2>&1)
+" 2>&1) || true
 
 if echo "$BROWSER_TEST" | grep -qE "PASS|passed"; then
     log_success "Browser testing works (Playwright-powered)"

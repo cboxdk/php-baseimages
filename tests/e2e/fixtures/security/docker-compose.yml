@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-cbox/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1}
     container_name: e2e-security
     ports:
       - "8101:80"

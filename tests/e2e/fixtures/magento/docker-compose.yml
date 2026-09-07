@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1}
     container_name: e2e-magento-app
     ports:
       - "8096:80"
@@ -62,7 +62,10 @@ services:
     container_name: e2e-magento-opensearch
     environment:
       - discovery.type=single-node
-      - plugins.security.disabled=true
+      # OpenSearch >=2.12 refuses to start without an admin password unless
+      # the security plugin is skipped; DISABLE_SECURITY_PLUGIN also sets
+      # plugins.security.disabled=true itself (setting both is an error).
+      - DISABLE_SECURITY_PLUGIN=true
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
     ulimits:
       memlock:

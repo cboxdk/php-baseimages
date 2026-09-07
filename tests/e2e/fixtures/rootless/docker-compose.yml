@@ -3,13 +3,16 @@
 
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1}
     container_name: e2e-rootless-app
     ports:
       # Rootless uses port 8080 internally, map to 8095 for testing
       - "8095:8080"
     volumes:
-      - ./public:/var/www/html:ro
+      # nginx serves from /var/www/html/public, so mount the fixture's
+      # public/ there (mounting it as /var/www/html puts files one level
+      # too high and every request 404s).
+      - ./public:/var/www/html/public:ro
     environment:
       # These should be ignored in rootless mode
       PUID: "1000"

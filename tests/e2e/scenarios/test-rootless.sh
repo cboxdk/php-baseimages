@@ -1,5 +1,6 @@
 #!/bin/bash
 # E2E Test: Rootless Container Mode
+# requires: rootless
 # Tests containers running as non-root user with CBOX_ROOTLESS=true
 
 set -euo pipefail
@@ -35,7 +36,7 @@ wait_for_healthy "$CONTAINER_NAME" 60
 log_section "Rootless Identity Tests"
 
 # Verify container runs as www-data (not root)
-USER_ID=$(docker exec "$CONTAINER_NAME" id -u)
+USER_ID=$(docker exec "$CONTAINER_NAME" id -u) || true
 if [ "$USER_ID" = "82" ] || [ "$USER_ID" = "33" ]; then
     log_success "Container runs as non-root (UID: $USER_ID)"
 else
@@ -43,7 +44,7 @@ else
 fi
 
 # Verify user name is www-data
-USER_NAME=$(docker exec "$CONTAINER_NAME" id -un)
+USER_NAME=$(docker exec "$CONTAINER_NAME" id -un) || true
 if [ "$USER_NAME" = "www-data" ]; then
     log_success "Container runs as www-data user"
 else
@@ -146,11 +147,13 @@ else
     log_success "Cannot write to /etc (correct for rootless)"
 fi
 
-# Verify cannot bind to privileged ports (simulated)
-# Note: actual test would require netcat or similar, skip if not available
+# Privileged-port bind is informational only: Docker >= 20.10 sets
+# net.ipv4.ip_unprivileged_port_start=0 inside containers, so an
+# unprivileged user CAN bind port 80 there. The rootless guarantee we
+# actually care about (non-root user) is asserted above.
 if docker exec "$CONTAINER_NAME" which nc >/dev/null 2>&1; then
     if docker exec "$CONTAINER_NAME" sh -c "nc -l -p 80 &" 2>/dev/null; then
-        log_fail "Should NOT be able to bind to port 80"
+        log_info "Kernel allows unprivileged low-port bind (ip_unprivileged_port_start=0, Docker default)"
         docker exec "$CONTAINER_NAME" pkill nc 2>/dev/null || true
     else
         log_success "Cannot bind to privileged port 80"
@@ -167,7 +170,7 @@ log_section "PUID/PGID Handling"
 # PUID/PGID should be ignored in rootless mode
 # The entrypoint should skip user mapping entirely
 # We verify by checking the user is still www-data despite any PUID/PGID env vars
-FINAL_USER=$(docker exec "$CONTAINER_NAME" whoami)
+FINAL_USER=$(docker exec "$CONTAINER_NAME" whoami) || true
 if [ "$FINAL_USER" = "www-data" ]; then
     log_success "PUID/PGID correctly ignored (still www-data)"
 else

@@ -13,7 +13,7 @@ const puppeteer = require('puppeteer-core');
     });
 
     const page = await browser.newPage();
-    await page.setContent('<h1>PHPeek PDF Test</h1><p>Generated at: ' + new Date().toISOString() + '</p>');
+    await page.setContent('<h1>Cbox PDF Test</h1><p>Generated at: ' + new Date().toISOString() + '</p>');
     await page.pdf({ path: process.argv[2], format: 'A4' });
     await browser.close();
 

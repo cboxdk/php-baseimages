@@ -110,7 +110,7 @@ assert_file_exists "$CONTAINER_NAME" "/etc/cbox-init/cbox-init.yaml" "Cbox Init 
 assert_exec_succeeds "$CONTAINER_NAME" "cbox-init check-config --config /etc/cbox-init/cbox-init.yaml" "Cbox Init config is valid"
 
 # Verify config contains expected sections
-CONFIG_CONTENT=$(docker exec "$CONTAINER_NAME" cat /etc/cbox-init/cbox-init.yaml 2>&1)
+CONFIG_CONTENT=$(docker exec "$CONTAINER_NAME" cat /etc/cbox-init/cbox-init.yaml 2>&1) || true
 if echo "$CONFIG_CONTENT" | grep -q "processes:"; then
     log_success "Cbox Init config has processes section"
 else

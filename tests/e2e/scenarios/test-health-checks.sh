@@ -76,7 +76,7 @@ assert_process_running "$CONTAINER_NAME" "nginx: master" "Nginx master process e
 
 # Check for zombie processes (STAT column contains 'Z')
 # grep -c returns 1 exit code when no match but still outputs 0, so capture output only
-ZOMBIES=$(docker exec "$CONTAINER_NAME" sh -c "ps aux | awk '\$8 ~ /Z/ {count++} END {print count+0}'" 2>/dev/null)
+ZOMBIES=$(docker exec "$CONTAINER_NAME" sh -c "ps aux | awk '\$8 ~ /Z/ {count++} END {print count+0}'" 2>/dev/null) || true
 if [ "$ZOMBIES" = "0" ] || [ -z "$ZOMBIES" ]; then
     log_success "No zombie processes detected"
 else

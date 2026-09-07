@@ -1,5 +1,6 @@
 #!/bin/bash
 # E2E Test: Laravel Dusk Browser Testing Capabilities
+# requires: chromium
 # Tests that all Dusk requirements (Chromium, ChromeDriver, WebDriver) are available
 # Also runs actual browser automation to verify functionality
 
@@ -42,7 +43,7 @@ log_section "Test 1: Chromium Browser"
 assert_exec_succeeds "$CONTAINER_NAME" "chromium-browser --version || chromium --version" "Chromium is installed"
 
 # Get Chromium version
-CHROMIUM_VERSION=$(docker exec "$CONTAINER_NAME" sh -c "chromium-browser --version 2>/dev/null || chromium --version 2>/dev/null" | head -1)
+CHROMIUM_VERSION=$(docker exec "$CONTAINER_NAME" sh -c "chromium-browser --version 2>/dev/null || chromium --version 2>/dev/null" | head -1) || true
 if [ -n "$CHROMIUM_VERSION" ]; then
     log_success "Chromium version: $CHROMIUM_VERSION"
 else
@@ -295,7 +296,7 @@ const puppeteer = require(\"puppeteer\");
     console.log(JSON.stringify(results));
 })();
 '
-" 2>&1)
+" 2>&1) || true
 
 # Parse results
 if echo "$DUSK_TEST" | grep -q '"success":true'; then

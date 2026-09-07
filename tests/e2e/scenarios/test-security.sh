@@ -205,7 +205,7 @@ fi
 log_section "Test 5: PHP Configuration Security"
 
 # Check expose_php is disabled
-EXPOSE_PHP=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('expose_php');" 2>&1)
+EXPOSE_PHP=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('expose_php');" 2>&1) || true
 if [ -z "$EXPOSE_PHP" ] || [ "$EXPOSE_PHP" = "0" ] || [ "$EXPOSE_PHP" = "" ] || [ "$EXPOSE_PHP" = "Off" ]; then
     log_success "expose_php is disabled"
 else
@@ -213,7 +213,7 @@ else
 fi
 
 # Check display_errors is disabled (production)
-DISPLAY_ERRORS=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('display_errors');" 2>&1)
+DISPLAY_ERRORS=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('display_errors');" 2>&1) || true
 if [ "$DISPLAY_ERRORS" = "0" ] || [ "$DISPLAY_ERRORS" = "" ] || [ "$DISPLAY_ERRORS" = "Off" ]; then
     log_success "display_errors is disabled (production safe)"
 else
@@ -221,7 +221,7 @@ else
 fi
 
 # Check open_basedir is set
-OPEN_BASEDIR=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('open_basedir');" 2>&1)
+OPEN_BASEDIR=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('open_basedir');" 2>&1) || true
 if [ -n "$OPEN_BASEDIR" ] && [ "$OPEN_BASEDIR" != "" ]; then
     log_success "open_basedir is set: $OPEN_BASEDIR"
 else
@@ -229,7 +229,7 @@ else
 fi
 
 # Check disable_functions
-DISABLED=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('disable_functions');" 2>&1)
+DISABLED=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('disable_functions');" 2>&1) || true
 if [ -n "$DISABLED" ] && echo "$DISABLED" | grep -q "pcntl_"; then
     log_success "Dangerous functions are disabled"
 else

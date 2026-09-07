@@ -25,7 +25,7 @@ docker run -d --name "$CONTAINER_NAME" "$IMAGE" sleep infinity
 test_php_version() {
     log_info "Testing PHP version..."
     local php_version
-    php_version=$(docker exec "$CONTAINER_NAME" php -v | head -1)
+    php_version=$(docker exec "$CONTAINER_NAME" php -v | head -1) || true
     if echo "$php_version" | grep -qE "PHP 8\.[2345]"; then
         log_success "PHP version: $php_version"
     else
@@ -70,7 +70,7 @@ test_required_extensions() {
     )
 
     local installed_extensions
-    installed_extensions=$(docker exec "$CONTAINER_NAME" php -m)
+    installed_extensions=$(docker exec "$CONTAINER_NAME" php -m) || true
 
     local missing=0
     for ext in "${required_extensions[@]}"; do
@@ -99,7 +99,7 @@ test_required_extensions() {
 test_composer() {
     log_info "Testing Composer..."
     local composer_version
-    composer_version=$(docker exec "$CONTAINER_NAME" composer --version 2>/dev/null | head -1)
+    composer_version=$(docker exec "$CONTAINER_NAME" composer --version 2>/dev/null | head -1) || true
     if echo "$composer_version" | grep -qE "Composer version 2"; then
         log_success "Composer: $composer_version"
     else
@@ -112,7 +112,7 @@ test_composer() {
 test_nodejs() {
     log_info "Testing Node.js..."
     local node_version
-    node_version=$(docker exec "$CONTAINER_NAME" node --version 2>/dev/null)
+    node_version=$(docker exec "$CONTAINER_NAME" node --version 2>/dev/null) || true
     if echo "$node_version" | grep -qE "^v(20|22|24)\."; then
         log_success "Node.js: $node_version"
     else
@@ -121,7 +121,7 @@ test_nodejs() {
     fi
 
     local npm_version
-    npm_version=$(docker exec "$CONTAINER_NAME" npm --version 2>/dev/null)
+    npm_version=$(docker exec "$CONTAINER_NAME" npm --version 2>/dev/null) || true
     if [ -n "$npm_version" ]; then
         log_success "npm: v$npm_version"
     else
@@ -134,7 +134,7 @@ test_nodejs() {
 test_cbox_init() {
     log_info "Testing Cbox Init..."
     local pm_version
-    pm_version=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>/dev/null | head -1)
+    pm_version=$(docker exec "$CONTAINER_NAME" cbox-init --version 2>/dev/null | head -1) || true
     if [ -n "$pm_version" ]; then
         log_success "Cbox Init: $pm_version"
     else

@@ -99,7 +99,10 @@ detect_framework() {
     # doesn't trigger migrate/optimize codepaths. (Statamic ships both.)
     if [ -f "$workdir/artisan" ] && { grep -q 'laravel/framework' "$workdir/composer.json" 2>/dev/null || [ -f "$workdir/bootstrap/app.php" ]; }; then
         echo "laravel"
-    elif [ -f "$workdir/bin/console" ] && [ -f "$workdir/symfony.lock" ]; then
+    # Symfony: `bin/console` plus corroborating evidence. symfony.lock only
+    # exists on Flex-managed apps, so also accept a composer dependency on
+    # symfony/framework-bundle (mirrors the Laravel rule above).
+    elif [ -f "$workdir/bin/console" ] && { [ -f "$workdir/symfony.lock" ] || grep -q 'symfony/framework-bundle' "$workdir/composer.json" 2>/dev/null; }; then
         echo "symfony"
     elif [ -f "$workdir/wp-config.php" ] || [ -f "$workdir/wp-config-sample.php" ]; then
         echo "wordpress"
@@ -145,7 +148,10 @@ fix_symfony_permissions() {
     [ ! -f "$workdir/bin/console" ] && return 0
 
     log_info "Fixing Symfony directory permissions..."
+    # Create the cache/log dirs when missing - on a fresh bind mount var/ is
+    # often root-owned, and Symfony cannot mkdir var/cache itself then.
     for dir in var/cache var/log; do
+        mkdir -p "$workdir/$dir" 2>/dev/null || true
         if [ -d "$workdir/$dir" ]; then
             chown -R "$owner:$owner" "$workdir/$dir" 2>/dev/null || true
             chmod -R 775 "$workdir/$dir" 2>/dev/null || true

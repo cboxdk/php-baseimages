@@ -40,7 +40,7 @@ log_section "Test 1: GD Library Support"
 assert_exec_contains "$CONTAINER_NAME" "php -m | grep -i gd" "gd" "GD extension is loaded"
 
 # Check GD info for format support
-GD_INFO=$(docker exec "$CONTAINER_NAME" php -r "print_r(gd_info());" 2>&1)
+GD_INFO=$(docker exec "$CONTAINER_NAME" php -r "print_r(gd_info());" 2>&1) || true
 
 # JPEG Support
 if echo "$GD_INFO" | grep -q '\[JPEG Support\] => 1'; then
@@ -222,7 +222,7 @@ fi
 log_section "Test 6: Image Processing Resources"
 
 # Check memory limit is adequate for image processing
-MEMORY_LIMIT=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('memory_limit');" 2>&1)
+MEMORY_LIMIT=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('memory_limit');" 2>&1) || true
 log_info "PHP memory_limit: $MEMORY_LIMIT"
 
 # Parse memory limit to MB
@@ -240,7 +240,7 @@ else
 fi
 
 # Check max execution time
-MAX_EXEC=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('max_execution_time');" 2>&1)
+MAX_EXEC=$(docker exec "$CONTAINER_NAME" php -r "echo ini_get('max_execution_time');" 2>&1) || true
 if [ "$MAX_EXEC" -ge 60 ] || [ "$MAX_EXEC" -eq 0 ]; then
     log_success "Max execution time: ${MAX_EXEC}s (adequate for image processing)"
 else
@@ -263,7 +263,7 @@ if docker exec "$CONTAINER_NAME" php -m 2>/dev/null | grep -qi "vips"; then
     VIPS_AVAILABLE=true
 
     # Get vips version
-    VIPS_VERSION=$(docker exec "$CONTAINER_NAME" php -r "echo function_exists('vips_version') ? vips_version() : 'unknown';" 2>&1)
+    VIPS_VERSION=$(docker exec "$CONTAINER_NAME" php -r "echo function_exists('vips_version') ? vips_version() : 'unknown';" 2>&1) || true
     log_info "libvips version: $VIPS_VERSION"
 
     # Test vips via HTTP endpoint with proper validation
@@ -364,7 +364,7 @@ elif docker exec "$CONTAINER_NAME" which vips >/dev/null 2>&1; then
             fi
             rm -f /tmp/vips_cli_test.jpg /tmp/vips_cli_out.jpg
         fi
-    " 2>&1)
+    " 2>&1) || true
 
     if echo "$CLI_TEST" | grep -qE "ok:[1-9][0-9]*"; then
         log_success "VIPS CLI: Image resize works"

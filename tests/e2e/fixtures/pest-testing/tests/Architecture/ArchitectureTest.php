@@ -33,9 +33,7 @@ arch('interfaces should have Interface suffix')
 arch('enums should be backed')
     ->expect('App')
     ->enums()
-    ->toBeStringBackedEnums()
-    ->or()
-    ->toBeIntBackedEnums();
+    ->toBeStringBackedEnums();
 
 // Dependency rules
 arch('app should not depend on tests')
