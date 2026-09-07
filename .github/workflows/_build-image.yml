@@ -214,6 +214,21 @@ jobs:
           chmod +x cbox-init/binaries/cbox-init-*
           ls -la cbox-init/binaries/
 
+          # Cbox FPM Exporter - upstream publishes no checksums.txt, so verify
+          # against the sha256 pins recorded in versions.json (reviewed in git
+          # alongside every version bump).
+          mkdir -p fpm-exporter/binaries
+          FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
+          FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
+          echo "Downloading Cbox FPM Exporter v${FPX_VERSION}..."
+          for a in amd64 arm64; do
+            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
+            echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
+          done
+          chmod +x fpm-exporter/binaries/fpm-exporter-*
+          ls -la fpm-exporter/binaries/
+
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
@@ -430,6 +445,21 @@ jobs:
 
           chmod +x cbox-init/binaries/cbox-init-*
           ls -la cbox-init/binaries/
+
+          # Cbox FPM Exporter - upstream publishes no checksums.txt, so verify
+          # against the sha256 pins recorded in versions.json (reviewed in git
+          # alongside every version bump).
+          mkdir -p fpm-exporter/binaries
+          FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
+          FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
+          echo "Downloading Cbox FPM Exporter v${FPX_VERSION}..."
+          for a in amd64 arm64; do
+            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
+            echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
+          done
+          chmod +x fpm-exporter/binaries/fpm-exporter-*
+          ls -la fpm-exporter/binaries/
 
       - name: Determine Dockerfile path
         id: dockerfile

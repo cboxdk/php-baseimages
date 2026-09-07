@@ -10,7 +10,8 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+- **PHP-FPM metrics exporter dogfooded** - [cboxdk/fpm-exporter](https://github.com/cboxdk/fpm-exporter) v3.1.0 ships in every image as a disabled-by-default supervised process (`CBOX_FPM_EXPORTER=true`). Exposes `phpfpm_*` + Laravel metrics on :9114 via FastCGI pool autodiscovery - `listen_queue` and worker saturation are the horizontal-scaling signals the stack was missing (fpm-tune covers the vertical axis). Binaries verified against sha256 pins in versions.json (upstream publishes no checksums yet). Verified end-to-end in root and rootless: supervised with depends_on php-fpm, disabled default leaves no listener
 
 ## [1.1.1] - 2026-09-07
 

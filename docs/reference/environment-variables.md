@@ -281,6 +281,46 @@ listening socket open while workers respawn, so nginx needs no retry
 configuration: measured on these images, 4,900+ requests (sequential and
 saturated-concurrent) through 20 forced reloads produced zero non-200 responses.
 
+### PHP-FPM Metrics Exporter (horizontal-scaling signals)
+
+[cboxdk/fpm-exporter](https://github.com/cboxdk/fpm-exporter) ships in every
+image, supervised as a disabled-by-default process. It autodiscovers PHP-FPM
+pools over FastCGI (no nginx dependency) and exposes `phpfpm_*` metrics —
+plus Laravel metrics (queue sizes, app info) when configured.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_FPM_EXPORTER` | `false` | Enable the exporter (`true`/`false`) |
+| `CBOX_MONITOR_LISTEN_ADDR` | `:9114` | Exporter listen address (read natively by fpm-exporter) |
+
+**These are the metrics that drive horizontal scaling.** Where
+`fpm_tune_*` (port 9110) answers the *vertical* question — how many workers
+fit in this container — the exporter answers the *horizontal* one: is this
+container saturated?
+
+```text
+phpfpm_listen_queue          # requests waiting for a worker — THE scale-out signal
+phpfpm_active_processes      # workers busy right now
+phpfpm_idle_processes        # headroom
+phpfpm_max_children_reached  # pool hit its ceiling (counter)
+phpfpm_accepted_connections  # throughput
+```
+
+A pool that keeps `listen_queue > 0` while `fpm_tune` reports no memory
+budget left is the unambiguous "add replicas" signal (HPA/KEDA on
+`phpfpm_listen_queue`, or `fpm_tune_capacity_exhausted` as the guard).
+
+```yaml
+# Enable and scrape
+environment:
+  CBOX_FPM_EXPORTER: "true"
+```
+
+**Metrics endpoints overview:** `:9090` cbox-init (process supervision),
+`:9110` fpm-tune (capacity/sizing, when enabled), `:9114` fpm-exporter
+(PHP-FPM + Laravel operational metrics). All loopback-scoped inside the
+container by default — expose deliberately.
+
 ### Live config reload
 
 | Variable | Default | Description |

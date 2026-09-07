@@ -54,6 +54,17 @@ ARG TARGETARCH
 FROM cbox-init-${TARGETARCH} AS cbox-init-bin
 
 # ============================================================================
+# Cbox FPM Exporter binary selection (same pattern as Cbox Init above)
+# ============================================================================
+FROM scratch AS fpm-exporter-amd64
+COPY fpm-exporter/binaries/fpm-exporter-linux-amd64 /fpm-exporter
+
+FROM scratch AS fpm-exporter-arm64
+COPY fpm-exporter/binaries/fpm-exporter-linux-arm64 /fpm-exporter
+
+FROM fpm-exporter-${TARGETARCH} AS fpm-exporter-bin
+
+# ============================================================================
 # SLIM BASE - Minimal dependencies, essential extensions only
 # ============================================================================
 ARG PHP_VERSION
@@ -145,6 +156,19 @@ COPY --from=cbox-init-bin /cbox-init /usr/local/bin/cbox-init
 # Here we just ensure the binary is executable and runs
 RUN chmod +x /usr/local/bin/cbox-init && \
     /usr/local/bin/cbox-init --version
+
+# ============================================================================
+# Cbox FPM Exporter (PHP-FPM + Laravel Prometheus metrics on :9114)
+# Supervised as a disabled-by-default process in php-fpm-nginx; its
+# listen-queue and worker-saturation metrics are the horizontal-scaling
+# signals. Checksums verified in CI against the pins in versions.json.
+# ============================================================================
+ARG FPM_EXPORTER_VERSION=3.1.0
+
+COPY --from=fpm-exporter-bin /fpm-exporter /usr/local/bin/fpm-exporter
+
+RUN chmod +x /usr/local/bin/fpm-exporter && \
+    /usr/local/bin/fpm-exporter version
 
 # ============================================================================
 # Base PHP Configuration

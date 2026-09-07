@@ -48,3 +48,6 @@ phpeek-pm/
 
 # Cbox Init binaries (downloaded by scripts/download-cbox-init.sh)
 cbox-init/binaries/
+
+# Cbox FPM Exporter binaries (downloaded by scripts/download-fpm-exporter.sh)
+fpm-exporter/binaries/

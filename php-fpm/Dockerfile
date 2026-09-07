@@ -143,6 +143,7 @@ COPY --from=base-slim /usr/bin/composer /usr/bin/composer
 
 # Copy Cbox Init from base image
 COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-slim /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 
 # Copy Cbox shared libraries from base image
 COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
@@ -179,6 +180,7 @@ COPY --from=base-slim /usr/local/lib/php/extensions/ /usr/local/lib/php/extensio
 COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
 COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-slim /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer \
@@ -226,6 +228,7 @@ COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 
 # Copy Cbox Init from base image
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-standard /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 
 # Copy ImageMagick policy from base image (Debian uses ImageMagick-6)
 COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
@@ -269,6 +272,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-standard /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
@@ -312,6 +316,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
 COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-chromium /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
@@ -352,6 +357,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
 COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-chromium /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
@@ -411,6 +417,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 COPY --from=base-dev /usr/bin/composer /usr/bin/composer
 COPY --from=base-dev /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-dev /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
@@ -467,6 +474,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
     ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 COPY --from=base-dev /usr/bin/composer /usr/bin/composer
 COPY --from=base-dev /usr/local/bin/cbox-init /usr/local/bin/cbox-init
+COPY --from=base-dev /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 

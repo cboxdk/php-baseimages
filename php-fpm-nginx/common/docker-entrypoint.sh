@@ -202,6 +202,9 @@ map_env_aliases() {
     [ -n "$LARAVEL_QUEUE" ] && validate_boolean "$LARAVEL_QUEUE" && export CBOX_INIT_PROCESS_QUEUE_DEFAULT_ENABLED="$LARAVEL_QUEUE"
     [ -n "$LARAVEL_QUEUE_HIGH" ] && validate_boolean "$LARAVEL_QUEUE_HIGH" && export CBOX_INIT_PROCESS_QUEUE_HIGH_ENABLED="$LARAVEL_QUEUE_HIGH"
     [ -n "$CBOX_QUEUE_AUTOSCALER" ] && validate_boolean "$CBOX_QUEUE_AUTOSCALER" && export CBOX_INIT_PROCESS_AUTOSCALER_ENABLED="$CBOX_QUEUE_AUTOSCALER"
+    # FPM metrics exporter (phpfpm_* + laravel_* on :9114) - the listen-queue
+    # and worker-saturation metrics that drive horizontal scaling decisions.
+    [ -n "$CBOX_FPM_EXPORTER" ] && validate_boolean "$CBOX_FPM_EXPORTER" && export CBOX_INIT_PROCESS_FPM_EXPORTER_ENABLED="$CBOX_FPM_EXPORTER"
     # Runtime PHP-FPM autotuning (embedded fpm-tune, cbox-init 3.1+). Short
     # spellings map onto cbox-init's native CBOX_INIT_GLOBAL_* overrides,
     # which win over the fpm_tune block in cbox-init.yaml.

@@ -199,3 +199,27 @@ processes:
     working_dir: /var/www/html
     stdout: true
     stderr: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Cbox FPM Exporter - PHP-FPM + Laravel Prometheus metrics on :9114
+  # Enable via CBOX_FPM_EXPORTER=true or CBOX_INIT_PROCESS_FPM_EXPORTER_ENABLED=true
+  # listen_queue and active/idle worker saturation are THE signals for
+  # horizontal scaling decisions (HPA/KEDA); fpm_tune_* (port 9110) covers
+  # the vertical axis. Autodiscovers pools over FastCGI - no nginx dependency.
+  # ─────────────────────────────────────────────────────────────────────────
+  fpm-exporter:
+    enabled: false
+    command: ["fpm-exporter", "serve"]
+    type: longrun
+    restart: always
+    scale: 1
+    depends_on:
+      - php-fpm
+    stdout: true
+    stderr: true
+    health_check:
+      type: tcp
+      address: "127.0.0.1:9114"
+      period: 10
+      timeout: 3
+      failure_threshold: 3
