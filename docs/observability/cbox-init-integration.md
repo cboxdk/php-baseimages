@@ -126,14 +126,22 @@ Exported on port 9090 at `/metrics`:
 - `cbox_init_scheduled_task_duration_seconds` - Execution duration
 - `cbox_init_scheduled_task_total` - Total runs by status (success/failure)
 
-**All metrics endpoints in the container:**
+**One scrape, one story (cbox-init 3.2+):** the main `:9090` endpoint carries
+the whole container's telemetry. The embedded fpm-tune's `fpm_tune_*` series
+appear there natively while the tuner runs, and enabling fpm-exporter folds
+its `phpfpm_*`/`laravel_*` series in via `metrics_federate` (a source that is
+down contributes `cbox_init_federate_up{name} 0` instead of failing the
+scrape). Point Prometheus at ONE port:
 
-| Port | Source | Content | Enabled by |
-|------|--------|---------|-----------|
-| `9090` | cbox-init | `cbox_init_*` process supervision | Default on |
-| `9110` | embedded fpm-tune | `fpm_tune_*` capacity/sizing | `CBOX_INIT_FPM_TUNE_METRICS_ADDR=:9110` |
-| `9114` | fpm-exporter | `phpfpm_*` + `laravel_*` operational metrics (listen queue, worker saturation — the horizontal-scaling signals) | `CBOX_FPM_EXPORTER=true` |
+| Series on `:9090` | Question it answers | Present when |
+|-------------------|--------------------|--------------|
+| `cbox_init_*` | is everything running? (supervision) | Always |
+| `fpm_tune_*` | does the workload fit this container? (vertical) | `CBOX_FPM_TUNE=true` |
+| `phpfpm_*` + `laravel_*` | is this container saturated? (horizontal — listen queue) | `CBOX_FPM_EXPORTER=true` |
+| `cbox_init_federate_up` | is each federated source healthy? | `CBOX_FPM_EXPORTER=true` |
 
+Standalone listeners remain for direct access: `:9114` fpm-exporter (with the
+exporter), `:9110` fpm-tune (opt-in via `CBOX_INIT_FPM_TUNE_METRICS_ADDR`).
 All loopback-scoped inside the container by default — expose deliberately.
 See [Environment Variables](../reference/environment-variables#php-fpm-metrics-exporter-horizontal-scaling-signals)
 for the scaling-signal details.

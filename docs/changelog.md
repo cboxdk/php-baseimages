@@ -10,6 +10,12 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-07
+
+### Added
+- **One scrape, one story: cbox-init 3.2.0** - the main `:9090` metrics endpoint now carries the whole container's telemetry. `fpm_tune_*` rides on it natively while the tuner runs, and `CBOX_FPM_EXPORTER=true` also folds `phpfpm_*`/`laravel_*` in via the new `metrics_federate` (activated by the entrypoint only when the exporter is enabled, so a disabled exporter never emits a permanent `cbox_init_federate_up 0`; a source that is down degrades to `up 0`, never a failed scrape). cbox-init 3.2.0 also fixes Symfony framework detection on fresh deploys ([cboxdk/init#137](https://github.com/cboxdk/init/pull/137)) - detection required the `var/cache` directory that permission setup itself creates, so fresh Symfony apps never got their cache directory; verified end-to-end by the Symfony E2E scenario going green
+- **PHP-FPM metrics exporter dogfooded** - [cboxdk/fpm-exporter](https://github.com/cboxdk/fpm-exporter) v3.1.1 ships in every image as a disabled-by-default supervised process (`CBOX_FPM_EXPORTER=true`). Exposes `phpfpm_*` + Laravel metrics on :9114 via FastCGI pool autodiscovery - `listen_queue` and worker saturation are the horizontal-scaling signals the stack was missing (fpm-tune covers the vertical axis). Binaries verified against sha256 pins in versions.json (upstream publishes no checksums yet). Verified end-to-end in root and rootless: supervised with depends_on php-fpm, disabled default leaves no listener
+
 ### Fixed
 - **E2E suite made trustworthy end-to-end** - a deep local run exposed that most "failures" were suite bugs masking each other: scenarios only cleaned up on success, so one failure leaked its containers and the shared ports (8090-8096) sank every later scenario; 32 `VAR=$(docker exec ...)` substitutions could kill scenarios mid-run under `set -e`; the pest fixture shipped three genuinely failing architecture tests and referenced a custom-expectation test that did not exist; the magento fixture's OpenSearch 2.15 refused to start (post-2.12 admin-password requirement); the rootless fixture mounted `public/` one level too high so every request 404'd; and the rootless scenario asserted a pre-Docker-20.10 kernel behavior (unprivileged port-80 bind refusal). The runner now guarantees teardown after every scenario, skips chromium-only scenarios on images without Chromium, and runs the rootless scenario against `ROOTLESS_IMAGE` when provided. Full suite is green locally: 17 passed, 2 tier-skips on the standard image, chromium pair green against the chromium tier
 - **Symfony framework detection aligned with cbox-init fix** - shell-side `detect_framework()` required `symfony.lock`, missing non-Flex apps; it now also accepts a `symfony/framework-bundle` composer dependency, and `fix_symfony_permissions()` creates `var/cache`/`var/log` instead of skipping them when absent (mirrors [cboxdk/init#137](https://github.com/cboxdk/init/pull/137), where the same chicken-and-egg bug prevented fresh Symfony deploys from ever getting their cache directory)
@@ -18,9 +24,6 @@ All notable changes to Cbox PHP Base Images.
 
 ### Changed
 - **Default PHP version is now 8.5** - `php.default`, every Dockerfile's `ARG PHP_VERSION` default, docker-compose, and 260+ documentation/template/example references moved from 8.4 to 8.5. Version-matrix enumerations keep listing all supported versions. `latest` already followed 8.5
-
-### Added
-- **PHP-FPM metrics exporter dogfooded** - [cboxdk/fpm-exporter](https://github.com/cboxdk/fpm-exporter) v3.1.0 ships in every image as a disabled-by-default supervised process (`CBOX_FPM_EXPORTER=true`). Exposes `phpfpm_*` + Laravel metrics on :9114 via FastCGI pool autodiscovery - `listen_queue` and worker saturation are the horizontal-scaling signals the stack was missing (fpm-tune covers the vertical axis). Binaries verified against sha256 pins in versions.json (upstream publishes no checksums yet). Verified end-to-end in root and rootless: supervised with depends_on php-fpm, disabled default leaves no listener
 
 ## [1.1.1] - 2026-09-07
 

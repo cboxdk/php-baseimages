@@ -316,10 +316,24 @@ environment:
   CBOX_FPM_EXPORTER: "true"
 ```
 
-**Metrics endpoints overview:** `:9090` cbox-init (process supervision),
-`:9110` fpm-tune (capacity/sizing, when enabled), `:9114` fpm-exporter
-(PHP-FPM + Laravel operational metrics). All loopback-scoped inside the
-container by default — expose deliberately.
+**One scrape, one story (cbox-init 3.2+):** enabling the exporter also folds
+its series into cbox-init's main metrics endpoint on `:9090` via
+`metrics_federate`, and the embedded fpm-tune's `fpm_tune_*` series ride on
+that endpoint natively whenever the tuner runs. Prometheus scrapes ONE port
+and sees the whole story:
+
+```text
+:9090/metrics
+├── cbox_init_*   # is everything running?          (supervision)
+├── fpm_tune_*    # does the workload fit here?     (vertical)
+├── phpfpm_*      # is this container saturated?    (horizontal — listen_queue)
+└── cbox_init_federate_up{name="fpm-exporter"}  # 1 = source healthy
+```
+
+An exporter that is down degrades to `cbox_init_federate_up 0` — never a
+failed scrape. The standalone listeners remain for direct access: `:9114`
+fpm-exporter, `:9110` fpm-tune (opt-in via `CBOX_INIT_FPM_TUNE_METRICS_ADDR`).
+All loopback-scoped inside the container by default — expose deliberately.
 
 ### Live config reload
 

@@ -695,6 +695,16 @@ apply_cbox_init_env_overrides() {
     [ -n "$CBOX_INIT_METRICS_ENABLED" ] && sed -i "s/^\(\s*\)metrics_enabled:.*/\1metrics_enabled: $(_sed_escape "${CBOX_INIT_METRICS_ENABLED}")/" "$dst"
     [ -n "$CBOX_INIT_METRICS_PORT" ] && sed -i "s/^\(\s*\)metrics_port:.*/\1metrics_port: $(_sed_escape "${CBOX_INIT_METRICS_PORT}")/" "$dst"
 
+    # Fold fpm-exporter's series into the main /metrics response when the
+    # exporter process is enabled (cbox-init 3.2+ metrics_federate). The block
+    # ships commented out so a disabled exporter never emits a permanent
+    # cbox_init_federate_up 0.
+    case "${CBOX_INIT_PROCESS_FPM_EXPORTER_ENABLED:-}" in
+        true|TRUE|1|yes|YES)
+            sed -i 's/^  #@FEDERATE#//' "$dst"
+            ;;
+    esac
+
     # Logging overrides
     [ -n "$CBOX_INIT_LOG_LEVEL" ] && sed -i "s/^\(\s*\)log_level:.*/\1log_level: $(_sed_escape "${CBOX_INIT_LOG_LEVEL}")/" "$dst"
     [ -n "$CBOX_INIT_LOG_FORMAT" ] && sed -i "s/^\(\s*\)log_format:.*/\1log_format: $(_sed_escape "${CBOX_INIT_LOG_FORMAT}")/" "$dst"

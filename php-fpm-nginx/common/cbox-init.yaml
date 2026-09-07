@@ -27,6 +27,16 @@ global:
   # Prometheus Metrics (enabled by default, localhost only for security)
   metrics_enabled: true
   metrics_port: 9090
+
+  # One scrape, one story (cbox-init 3.2+): when the fpm-exporter process is
+  # enabled, its phpfpm_*/laravel_* series are folded into this main /metrics
+  # response, next to cbox_init_* (supervision) and fpm_tune_* (capacity).
+  # The entrypoint activates this block when CBOX_FPM_EXPORTER=true; a source
+  # that is down degrades to cbox_init_federate_up{name} 0, never a failed
+  # scrape. Loopback-only by design.
+  #@FEDERATE#  metrics_federate:
+  #@FEDERATE#    - name: fpm-exporter
+  #@FEDERATE#      url: http://127.0.0.1:9114/metrics
   metrics_path: /metrics
 
   # Runtime PHP-FPM autotuning (embedded cboxdk/fpm-tune, cbox-init 3.1+).
