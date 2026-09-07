@@ -52,6 +52,19 @@ jobs:
 
           chmod +x cbox-init/binaries/cbox-init-*
 
+          # Cbox FPM Exporter binaries (php-base COPYs them; verified against
+          # the sha256 pins in versions.json - upstream has no checksums.txt
+          # older than v3.1.1, and the pins are the stronger check anyway)
+          mkdir -p fpm-exporter/binaries
+          FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
+          FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
+          for a in amd64 arm64; do
+            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
+            echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
+          done
+          chmod +x fpm-exporter/binaries/fpm-exporter-*
+
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building Bookworm chain ==="
@@ -107,6 +120,19 @@ jobs:
 
           chmod +x cbox-init/binaries/cbox-init-*
 
+          # Cbox FPM Exporter binaries (php-base COPYs them; verified against
+          # the sha256 pins in versions.json - upstream has no checksums.txt
+          # older than v3.1.1, and the pins are the stronger check anyway)
+          mkdir -p fpm-exporter/binaries
+          FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
+          FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
+          for a in amd64 arm64; do
+            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
+            echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
+          done
+          chmod +x fpm-exporter/binaries/fpm-exporter-*
+
       - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
         run: |
           echo "=== Building Bookworm chain ==="
@@ -160,6 +186,19 @@ jobs:
           cd -
 
           chmod +x cbox-init/binaries/cbox-init-*
+
+          # Cbox FPM Exporter binaries (php-base COPYs them; verified against
+          # the sha256 pins in versions.json - upstream has no checksums.txt
+          # older than v3.1.1, and the pins are the stronger check anyway)
+          mkdir -p fpm-exporter/binaries
+          FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
+          FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
+          for a in amd64 arm64; do
+            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
+            echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
+          done
+          chmod +x fpm-exporter/binaries/fpm-exporter-*
 
       - name: Build images for scanning (full chain)
         run: |
