@@ -35,15 +35,15 @@ Each layer is built in **four tiers**: slim, standard, chromium, dev (see Docker
 ```
 .
 ├── php-base/          # LAYER 2: Single source of truth for all PHP extensions
-│   ├── Dockerfile     # Multi-stage: slim → standard → chromium → dev (ARG PHP_VERSION=8.4)
+│   ├── Dockerfile     # Multi-stage: slim → standard → chromium → dev (ARG PHP_VERSION=8.5)
 │   └── common/        # Shared config (php.ini, imagemagick-policy.xml, xdebug.ini, etc.)
 │
 ├── php-fpm/           # LAYER 3: PHP-FPM images (copies extensions from php-base)
-│   ├── Dockerfile     # ARG PHP_VERSION=8.4
+│   ├── Dockerfile     # ARG PHP_VERSION=8.5
 │   └── common/        # Shared config (entrypoint, healthcheck, fpm-pool.conf)
 │
 ├── php-cli/           # LAYER 3: PHP-CLI images (extends php-base directly)
-│   ├── Dockerfile     # ARG PHP_VERSION=8.4
+│   ├── Dockerfile     # ARG PHP_VERSION=8.5
 │   └── common/        # Shared CLI entrypoint and healthcheck
 │
 ├── nginx/             # Standalone Nginx images
@@ -51,7 +51,7 @@ Each layer is built in **four tiers**: slim, standard, chromium, dev (see Docker
 │   └── common/
 │
 ├── php-fpm-nginx/     # LAYER 4: Multi-service containers (extends php-fpm, adds Nginx)
-│   ├── Dockerfile     # ARG PHP_VERSION=8.4
+│   ├── Dockerfile     # ARG PHP_VERSION=8.5
 │   └── common/        # Shared multi-service entrypoint, nginx config, healthcheck
 │
 ├── common/            # Shared libraries (entrypoint-lib.sh, lifecycle-check.sh)
@@ -89,10 +89,10 @@ Each image type has a `common/` directory with shared configuration:
 **Dockerfile Pattern**: Downstream images (php-fpm, php-cli) copy extensions and tools from php-base via multi-stage builds:
 ```dockerfile
 # Import pre-built base image
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.4-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-bookworm AS base-standard
 
 # Start from official PHP image, then copy everything from base
-FROM php:8.4-fpm-bookworm AS root
+FROM php:8.5-fpm-bookworm AS root
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-standard /usr/bin/composer /usr/bin/composer
@@ -180,7 +180,7 @@ Located in `.github/workflows/`:
 
 Since Dockerfiles use `ARG PHP_VERSION`, no directory copying is needed. Just:
 
-1. Add the version to `versions.json` under `php.supported`, `php.eol`, and `php.latest_patch`
+1. Add the version to `versions.json` under `php.supported`, `php.active_support_until`, `php.security_support_until`, and `php.latest_patch`
 
 2. Update GitHub Actions workflow matrices in all `build-*.yml` files:
 ```yaml
@@ -252,7 +252,7 @@ docker inspect cbox-fpm-nginx --format='{{json .State.Health}}' | jq
 ## Critical Files
 
 ### php-base/Dockerfile
-The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Accepts `ARG PHP_VERSION=8.4`. Multi-stage Dockerfile that builds four tiers:
+The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Accepts `ARG PHP_VERSION=8.5`. Multi-stage Dockerfile that builds four tiers:
 - **slim-base**: Minimal PHP + essential extensions (~200MB)
 - **standard-base**: + ImageMagick, vips, AVIF, Node.js (~400MB)
 - **chromium-base**: + Chromium for Browsershot/Dusk (~800MB)
@@ -379,7 +379,7 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 - `8.3-bookworm` - Rolling (follows latest release, rebuilt weekly)
 - `8.3-bookworm-v1` - Release channel (recommended for production: behavior locked to tooling major v1, still rebuilt weekly with security patches; never crosses a major)
 - `8.3-bookworm-sha256:abc...` - Immutable (for reproducibility; ages by design)
-- `latest` - Follows `php.newest` in versions.json (currently 8.5-bookworm); `php.default` (8.4) is the documented recommendation
+- `latest` - Follows `php.newest` in versions.json (currently 8.5-bookworm); `php.default` (8.5) is the documented recommendation
 
 GitHub releases (vX.Y.Z) version the image tooling (entrypoints, cbox-init, modules), not PHP. The channel comes from `release.channel` in versions.json — bump it when cutting a new MAJOR release, and keep the previous major building from a `release/vN` branch for 6 months.
 

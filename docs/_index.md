@@ -21,13 +21,13 @@ weight: 1
 
 ```yaml
 # Standard (default) -- most Laravel/PHP apps
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Slim -- APIs, microservices
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
 
 # Chromium -- Browsershot, Dusk, PDF generation
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 ```
 
 ## Documentation

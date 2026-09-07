@@ -120,16 +120,16 @@ For the full image size matrix, tier descriptions, and rootless variants, see [C
 
 ```text
 # Standard tier (DEFAULT)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Slim tier (APIs, microservices)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
 
 # Chromium tier (Browsershot, Dusk)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 
 # Development (with Xdebug)
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-dev-v1
 ```
 
 See [Available Extensions](./available-extensions) for the full extension list by tier.

@@ -20,7 +20,7 @@ understands *how it is being run*:
   runtime from live per-worker memory via [fpm-tune](https://github.com/cboxdk/fpm-tune):
   atomic drop-in, graceful reload, zero dropped connections.
 - **Pin your behavior, not your vulnerabilities** — release-channel tags
-  (`8.4-bookworm-v1`) lock the runtime contract to a major while weekly
+  (`8.5-bookworm-v1`) lock the runtime contract to a major while weekly
   rebuilds keep OS security patches flowing. Rolling tags and immutable
   digests exist too. [Tagging strategy →](docs/reference/tagging-strategy.md)
 - **Frameworks handled at startup** — Laravel, Symfony, and WordPress are
@@ -41,7 +41,7 @@ version: '3.8'
 services:
   app:
     # -v1 = release channel: behavior pinned, security patches keep flowing
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     ports:
       - "8000:80"
     volumes:
@@ -92,27 +92,27 @@ Each PHP image type is available in all tier and rootless combinations:
 
 | Tier | Tag | Rootless Tag |
 |------|-----|--------------|
-| **Standard** (default) | `8.4-bookworm` | `8.4-bookworm-rootless` |
-| **Slim** | `8.4-bookworm-slim` | `8.4-bookworm-slim-rootless` |
-| **Chromium** | `8.4-bookworm-chromium` | `8.4-bookworm-chromium-rootless` |
-| **Dev** | `8.4-bookworm-dev` | `8.4-bookworm-dev-rootless` |
+| **Standard** (default) | `8.5-bookworm` | `8.5-bookworm-rootless` |
+| **Slim** | `8.5-bookworm-slim` | `8.5-bookworm-slim-rootless` |
+| **Chromium** | `8.5-bookworm-chromium` | `8.5-bookworm-chromium-rootless` |
+| **Dev** | `8.5-bookworm-dev` | `8.5-bookworm-dev-rootless` |
 
 ```bash
 # Standard tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
 
 # Slim tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
 
 # Chromium tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 
 # Dev tier
 ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev-v1
 
 # Rootless variants
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
 ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
 ```
 
@@ -129,12 +129,12 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
 
 | Tier | Tag Format | Example |
 |------|------------|---------|
-| Standard (default) | `{version}-bookworm` | `8.4-bookworm` |
-| Slim | `{version}-bookworm-slim` | `8.4-bookworm-slim` |
-| Chromium | `{version}-bookworm-chromium` | `8.4-bookworm-chromium` |
-| Dev | `{version}-bookworm-dev` | `8.4-bookworm-dev` |
-| Rootless variants | Add `-rootless` | `8.4-bookworm-rootless`, `8.4-bookworm-dev-rootless` |
-| **Release channel** | Add `-vN` (recommended in production) | `8.4-bookworm-v1`, `8.4-bookworm-slim-v1` |
+| Standard (default) | `{version}-bookworm` | `8.5-bookworm` |
+| Slim | `{version}-bookworm-slim` | `8.5-bookworm-slim` |
+| Chromium | `{version}-bookworm-chromium` | `8.5-bookworm-chromium` |
+| Dev | `{version}-bookworm-dev` | `8.5-bookworm-dev` |
+| Rootless variants | Add `-rootless` | `8.5-bookworm-rootless`, `8.5-bookworm-dev-rootless` |
+| **Release channel** | Add `-vN` (recommended in production) | `8.5-bookworm-v1`, `8.5-bookworm-slim-v1` |
 
 **What's included:**
 
@@ -153,7 +153,7 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 
 | Production | Development |
 |------------|-------------|
-| `php-fpm-nginx:8.4-bookworm-v1` | `php-fpm-nginx:8.4-bookworm-dev-v1` |
+| `php-fpm-nginx:8.5-bookworm-v1` | `php-fpm-nginx:8.5-bookworm-dev-v1` |
 | `php-fpm:8.3-bookworm-v1` | `php-fpm:8.3-bookworm-dev-v1` |
 | `php-fpm:8.2-bookworm-v1` | `php-fpm:8.2-bookworm-dev-v1` |
 
@@ -352,7 +352,7 @@ This remaps the container's `www-data` user and automatically fixes ownership of
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 docker-compose up -d
 ```
 
@@ -360,21 +360,21 @@ docker-compose up -d
 
 | Tag Type | Example | Use Case |
 |----------|---------|----------|
-| **Standard** | `8.4-bookworm` | Most apps (default tier) |
-| **Slim** | `8.4-bookworm-slim` | Minimal footprint, microservices |
-| **Chromium** | `8.4-bookworm-chromium` | Browsershot, Dusk, PDF generation |
-| **Dev** | `8.4-bookworm-dev` | Development, testing, CI/CD |
-| **Rootless** | `8.4-bookworm-rootless` | Security-restricted environments |
-| **Slim + Rootless** | `8.4-bookworm-slim-rootless` | Minimal + non-root |
-| **Chromium + Rootless** | `8.4-bookworm-chromium-rootless` | Chromium + non-root |
-| **Dev + Rootless** | `8.4-bookworm-dev-rootless` | Development + non-root |
-| **PHP Pinned** | `8.4.7-bookworm` | Production version lock |
+| **Standard** | `8.5-bookworm` | Most apps (default tier) |
+| **Slim** | `8.5-bookworm-slim` | Minimal footprint, microservices |
+| **Chromium** | `8.5-bookworm-chromium` | Browsershot, Dusk, PDF generation |
+| **Dev** | `8.5-bookworm-dev` | Development, testing, CI/CD |
+| **Rootless** | `8.5-bookworm-rootless` | Security-restricted environments |
+| **Slim + Rootless** | `8.5-bookworm-slim-rootless` | Minimal + non-root |
+| **Chromium + Rootless** | `8.5-bookworm-chromium-rootless` | Chromium + non-root |
+| **Dev + Rootless** | `8.5-bookworm-dev-rootless` | Development + non-root |
+| **PHP Pinned** | `8.5.10-bookworm` | Production version lock |
 
 **Standard Tier** (most applications):
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     # ImageMagick, vips, Node.js included
 ```
 
@@ -382,7 +382,7 @@ services:
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
     # Minimal size (~120 MiB), core extensions only
 ```
 
@@ -390,7 +390,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
     # Includes Chromium for Browsershot/Dusk
 ```
 
@@ -398,7 +398,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
     # Runs as www-data user, not root
 ```
 
@@ -540,7 +540,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-dev-v1
     volumes:
       - ./:/var/www/html
     environment:
@@ -553,7 +553,7 @@ services:
 ```bash
 # 10x faster than Xdebug coverage
 docker run --rm -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-dev-v1 \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-dev-v1 \
   php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 ```
 

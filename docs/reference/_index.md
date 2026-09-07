@@ -68,19 +68,19 @@ Cbox images come in four tiers:
 
 ```yaml
 # Standard tier (DEFAULT) - Most Laravel/PHP apps
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Slim tier - APIs, microservices
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
 
 # Chromium tier - Browsershot, Dusk, PDF generation
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 
 # Dev tier - Local development with Xdebug, PCOV, SPX
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-dev-v1
 
 # Rootless variants (add -rootless suffix)
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
 ```
 
 ## How to Use This Section
@@ -102,7 +102,7 @@ Most reference pages include copy-paste ready examples:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     environment:
       # Reference: docs/reference/environment-variables.md
       PHP_MEMORY_LIMIT: "512M"

@@ -15,7 +15,7 @@
 # PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
 # ============================================================================
 
-ARG PHP_VERSION=8.4
+ARG PHP_VERSION=8.5
 
 # ============================================================================
 # Import base images for each tier (for extension copying)

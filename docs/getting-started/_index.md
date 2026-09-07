@@ -21,16 +21,16 @@ New to Cbox? This section will help you get up and running quickly.
 What do you need?
 │
 ├─ Local development with Xdebug, PCOV, SPX?
-│  └─ Dev Tier (`8.4-bookworm-dev`)
+│  └─ Dev Tier (`8.5-bookworm-dev`)
 │
 ├─ PDF generation, browser testing (Browsershot/Dusk)?
-│  └─ Chromium Tier (`8.4-bookworm-chromium`)
+│  └─ Chromium Tier (`8.5-bookworm-chromium`)
 │
 ├─ Image processing (ImageMagick, vips), Node.js?
-│  └─ Standard Tier (`8.4-bookworm`) ✅ DEFAULT
+│  └─ Standard Tier (`8.5-bookworm`) ✅ DEFAULT
 │
 └─ Minimal footprint, APIs, microservices?
-   └─ Slim Tier (`8.4-bookworm-slim`)
+   └─ Slim Tier (`8.5-bookworm-slim`)
 ```
 
 ## What You'll Learn

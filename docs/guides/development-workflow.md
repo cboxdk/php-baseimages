@@ -27,7 +27,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-dev-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-dev-v1
     ports:
       - "8000:80"
       - "9003:9003"  # Xdebug port

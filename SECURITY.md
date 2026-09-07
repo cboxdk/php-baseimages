@@ -14,7 +14,7 @@ respond as fast as we realistically can, but we do not promise a formal SLA.
 - **Weekly rebuilds** (Mondays 03:00 UTC) pull the latest upstream PHP and
   Debian base layers, so OS and PHP security patches reach every rolling and
   release-channel tag automatically. `docker pull` weekly to receive them.
-- **Release-channel tags** (`8.4-bookworm-v1`) receive the same weekly security
+- **Release-channel tags** (`8.5-bookworm-v1`) receive the same weekly security
   rebuilds without ever crossing a tooling major — pin these in production.
 - **Immutable digests / SHA tags** are never rebuilt and age by design.
 

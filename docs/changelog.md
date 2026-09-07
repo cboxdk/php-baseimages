@@ -10,6 +10,9 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Changed
+- **Default PHP version is now 8.5** - `php.default`, every Dockerfile's `ARG PHP_VERSION` default, docker-compose, and 260+ documentation/template/example references moved from 8.4 to 8.5. Version-matrix enumerations keep listing all supported versions. `latest` already followed 8.5
+
 ### Added
 - **PHP-FPM metrics exporter dogfooded** - [cboxdk/fpm-exporter](https://github.com/cboxdk/fpm-exporter) v3.1.0 ships in every image as a disabled-by-default supervised process (`CBOX_FPM_EXPORTER=true`). Exposes `phpfpm_*` + Laravel metrics on :9114 via FastCGI pool autodiscovery - `listen_queue` and worker saturation are the horizontal-scaling signals the stack was missing (fpm-tune covers the vertical axis). Binaries verified against sha256 pins in versions.json (upstream publishes no checksums yet). Verified end-to-end in root and rootless: supervised with depends_on php-fpm, disabled default leaves no listener
 

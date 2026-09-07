@@ -2,7 +2,7 @@
 
 variables:
   DOCKER_DRIVER: overlay2
-  PHP_IMAGE: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+  PHP_IMAGE: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
   MYSQL_DATABASE: symfony_test
   MYSQL_ROOT_PASSWORD: root
 

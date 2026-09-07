@@ -81,12 +81,12 @@ Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 {type}:{php_version}-{os}[-tier][-rootless][-vN]
 
 Examples:
-php-fpm-nginx:8.4-bookworm-v1           # Standard tier, release channel (RECOMMENDED)
-php-fpm-nginx:8.4-bookworm-slim-v1      # Slim tier, release channel
-php-fpm-nginx:8.4-bookworm-chromium-v1  # Chromium tier, release channel
-php-fpm-nginx:8.4-bookworm-rootless-v1  # Standard + rootless, release channel
-php-fpm-nginx:8.4-bookworm              # Standard tier, rolling (follows latest release)
-php-fpm-nginx:8.4-bookworm-slim-rootless  # Slim + rootless, rolling
+php-fpm-nginx:8.5-bookworm-v1           # Standard tier, release channel (RECOMMENDED)
+php-fpm-nginx:8.5-bookworm-slim-v1      # Slim tier, release channel
+php-fpm-nginx:8.5-bookworm-chromium-v1  # Chromium tier, release channel
+php-fpm-nginx:8.5-bookworm-rootless-v1  # Standard + rootless, release channel
+php-fpm-nginx:8.5-bookworm              # Standard tier, rolling (follows latest release)
+php-fpm-nginx:8.5-bookworm-slim-rootless  # Slim + rootless, rolling
 ```
 
 Every tag in the matrices above also exists with the `-v1` release-channel
@@ -100,7 +100,7 @@ stays patched:
 
 ```yaml
 # Behavior pinned to major v1, security patches keep flowing
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 ## Rolling Tags
@@ -110,7 +110,7 @@ tooling release — including future majors:
 
 ```yaml
 # Follows the latest release, rebuilt every Monday
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
 ```
 
 ## Immutable Digests
@@ -120,7 +120,7 @@ the CVEs of its build day):
 
 ```yaml
 # Locked to a specific build
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1@sha256:abc123...
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1@sha256:abc123...
 ```
 
 See [Tagging Strategy](tagging-strategy) for the full policy.
@@ -138,7 +138,7 @@ Docker automatically pulls the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 ## OS Information
@@ -170,14 +170,19 @@ Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 
 ## Version Support
 
-| PHP Version | Status | Security Support Until |
-|-------------|--------|------------------------|
-| PHP 8.5 | Active | November 2029 |
-| PHP 8.4 | Active | November 2028 |
-| PHP 8.3 | Active | November 2027 |
-| PHP 8.2 | EOL | December 2025 |
+| PHP Version | Status | Active Support Until | Security Support Until |
+|-------------|--------|----------------------|------------------------|
+| PHP 8.5 | Active | 2027-12-31 | 2029-12-31 |
+| PHP 8.4 | Active | 2026-12-31 | 2028-12-31 |
+| PHP 8.3 | Security-only | 2025-12-31 | 2027-12-31 |
+| PHP 8.2 | Security-only | 2024-12-31 | 2026-12-31 |
 
-**Recommendation**: Use PHP 8.4 or 8.5 for production. PHP 8.5 includes the latest language features.
+Dates from [php.net/supported-versions](https://www.php.net/supported-versions.php);
+the authoritative copy lives in `versions.json`. Security-only is a normal,
+supported state — images keep rebuilding weekly until six months after
+security support ends.
+
+**Recommendation**: PHP 8.5 for new projects and production.
 
 ## Usage Examples
 
@@ -185,17 +190,17 @@ Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 
 ```bash
 # Pull standard tier (most Laravel/PHP apps)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Pull slim tier (APIs, microservices)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
 
 # Pull chromium tier (Browsershot, Dusk)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 
 # Run with volume mount
 docker run -p 8000:80 -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 ### Docker Compose
@@ -204,7 +209,7 @@ docker run -p 8000:80 -v $(pwd):/var/www/html \
 services:
   # Standard tier - most Laravel apps
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     ports:
       - "8000:80"
     volumes:
@@ -212,13 +217,13 @@ services:
 
   # Slim tier - API service
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
     ports:
       - "8001:80"
 
   # Chromium tier - PDF generation service
   pdf:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -227,7 +232,7 @@ services:
 
 ```dockerfile
 # Standard tier for most apps
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -236,7 +241,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 ```dockerfile
 # Chromium tier for Browsershot
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -256,7 +261,7 @@ All images are automatically rebuilt every Monday at 03:00 UTC:
 
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 docker-compose up -d --pull always
 ```
 

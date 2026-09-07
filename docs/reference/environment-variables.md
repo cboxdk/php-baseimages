@@ -50,7 +50,7 @@ id -g    # Your GID (typically 1000)
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     volumes:
       - ./:/var/www/html
     environment:
@@ -650,7 +650,7 @@ When mTLS is enabled, client certificate details are available:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"
@@ -707,7 +707,7 @@ The Management API provides runtime control over container processes. It is **di
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     ports:
       - "9180:9180"
     environment:

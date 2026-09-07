@@ -192,11 +192,11 @@ All examples use Cbox images. Swap versions as needed:
 
 ```yaml
 # Use different PHP version
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Use different tier
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-v1
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 ```
 
 ## Need Help?

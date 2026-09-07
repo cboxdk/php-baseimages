@@ -91,7 +91,7 @@ For detailed troubleshooting, see [Common Issues](../troubleshooting/common-issu
 
 ```bash
 # Pull latest
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Rebuild your image
 docker-compose build --pull
@@ -104,10 +104,10 @@ docker-compose up -d
 
 Use SHA-based tags for reproducibility:
 ```yaml
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1@sha256:abc123...
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1@sha256:abc123...
 ```
 
-Rolling tags (`8.4-bookworm`) get weekly security updates automatically.
+Rolling tags (`8.5-bookworm`) get weekly security updates automatically.
 
 ## Migration
 
@@ -137,7 +137,7 @@ Cbox includes everything from official images plus:
 FROM php:8.4-fpm-bookworm
 
 # After
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 ## Getting Help

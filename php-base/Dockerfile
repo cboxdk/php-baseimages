@@ -18,7 +18,7 @@
 # ============================================================================
 # PHP Version (parameterized - pass via --build-arg)
 # ============================================================================
-ARG PHP_VERSION=8.4
+ARG PHP_VERSION=8.5
 
 # ============================================================================
 # Extension Versions (from versions.json - passed as build args by CI)

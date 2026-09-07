@@ -13,9 +13,9 @@ weight: 4
 | `php-fpm-nginx:8.5-bookworm-slim` | Slim | ~120 MiB |
 | `php-fpm-nginx:8.5-bookworm` | Standard | ~250 MiB |
 | `php-fpm-nginx:8.5-bookworm-chromium` | Chromium | ~700 MiB |
-| `php-fpm-nginx:8.4-bookworm-slim` | Slim | ~120 MiB |
-| `php-fpm-nginx:8.4-bookworm` | Standard | ~250 MiB |
-| `php-fpm-nginx:8.4-bookworm-chromium` | Chromium | ~700 MiB |
+| `php-fpm-nginx:8.5-bookworm-slim` | Slim | ~120 MiB |
+| `php-fpm-nginx:8.5-bookworm` | Standard | ~250 MiB |
+| `php-fpm-nginx:8.5-bookworm-chromium` | Chromium | ~700 MiB |
 | `php-fpm-nginx:8.3-bookworm-slim` | Slim | ~120 MiB |
 | `php-fpm-nginx:8.3-bookworm` | Standard | ~250 MiB |
 | `php-fpm-nginx:8.3-bookworm-chromium` | Chromium | ~700 MiB |
@@ -31,8 +31,8 @@ All tags also have `-rootless` and `-dev` variants (append the suffix).
 |-----|------|------|
 | `php-fpm:8.5-bookworm-slim` | Slim | ~100 MiB |
 | `php-fpm:8.5-bookworm` | Standard | ~230 MiB |
-| `php-fpm:8.4-bookworm-slim` | Slim | ~100 MiB |
-| `php-fpm:8.4-bookworm` | Standard | ~230 MiB |
+| `php-fpm:8.5-bookworm-slim` | Slim | ~100 MiB |
+| `php-fpm:8.5-bookworm` | Standard | ~230 MiB |
 | `php-fpm:8.3-bookworm-slim` | Slim | ~100 MiB |
 | `php-fpm:8.3-bookworm` | Standard | ~230 MiB |
 | `php-fpm:8.2-bookworm-slim` | Slim | ~100 MiB |
@@ -46,10 +46,10 @@ All tags also have `-rootless` and `-dev` variants (append the suffix).
 | `php-cli:8.5-bookworm` | Standard | ~230 MiB |
 | `php-cli:8.5-bookworm-chromium` | Chromium | ~680 MiB |
 | `php-cli:8.5-bookworm-dev` | Dev | ~700 MiB |
-| `php-cli:8.4-bookworm-slim` | Slim | ~100 MiB |
-| `php-cli:8.4-bookworm` | Standard | ~230 MiB |
-| `php-cli:8.4-bookworm-chromium` | Chromium | ~680 MiB |
-| `php-cli:8.4-bookworm-dev` | Dev | ~700 MiB |
+| `php-cli:8.5-bookworm-slim` | Slim | ~100 MiB |
+| `php-cli:8.5-bookworm` | Standard | ~230 MiB |
+| `php-cli:8.5-bookworm-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.5-bookworm-dev` | Dev | ~700 MiB |
 | `php-cli:8.3-bookworm-slim` | Slim | ~100 MiB |
 | `php-cli:8.3-bookworm` | Standard | ~230 MiB |
 | `php-cli:8.3-bookworm-chromium` | Chromium | ~680 MiB |
@@ -79,10 +79,10 @@ All images are prefixed with `ghcr.io/cboxdk/php-baseimages/`.
 
 | Variant | Runs as | Tag example |
 |---------|---------|-------------|
-| Root (default) | `root` at start, drops to `www-data` | `8.4-bookworm` |
-| Rootless | `www-data` from start | `8.4-bookworm-rootless` |
+| Root (default) | `root` at start, drops to `www-data` | `8.5-bookworm` |
+| Rootless | `www-data` from start | `8.5-bookworm-rootless` |
 
-Rootless variants append `-rootless` to any tag: `8.4-bookworm-slim-rootless`, `8.4-bookworm-chromium-rootless`, etc.
+Rootless variants append `-rootless` to any tag: `8.5-bookworm-slim-rootless`, `8.5-bookworm-chromium-rootless`, etc.
 
 **Use rootless when:**
 - Kubernetes with `runAsNonRoot: true` security policies
@@ -112,14 +112,14 @@ Rootless variants append `-rootless` to any tag: `8.4-bookworm-slim-rootless`, `
 # Multi-service (recommended for most projects)
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     ports:
       - "80:80"
 
 # Single-service (Kubernetes / independent scaling)
 services:
   php:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-v1
   nginx:
     image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm-v1
     ports:

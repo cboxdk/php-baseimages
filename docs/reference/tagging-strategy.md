@@ -22,9 +22,9 @@ CVE-free while promising identical bits. So we publish three kinds of tags:
 
 | Kind | Example | Rebuilt weekly? | Crosses tooling majors? | Use when |
 |------|---------|-----------------|------------------------|----------|
-| Rolling | `8.4-bookworm` | ✅ yes | ✅ yes (follows latest release) | You track upstream and want everything newest |
-| **Channel** | `8.4-bookworm-v1` | ✅ yes | ❌ never | **Recommended for production**: entrypoint/tooling behavior locked to major v1, OS security patches keep flowing |
-| Digest / SHA | `8.4-bookworm-sha-abc1234` or `@sha256:…` | ❌ immutable | — | Audits, reproductions, byte-exact rollbacks. Ages by design — contains the CVEs of its build day |
+| Rolling | `8.5-bookworm` | ✅ yes | ✅ yes (follows latest release) | You track upstream and want everything newest |
+| **Channel** | `8.5-bookworm-v1` | ✅ yes | ❌ never | **Recommended for production**: entrypoint/tooling behavior locked to major v1, OS security patches keep flowing |
+| Digest / SHA | `8.5-bookworm-sha-abc1234` or `@sha256:…` | ❌ immutable | — | Audits, reproductions, byte-exact rollbacks. Ages by design — contains the CVEs of its build day |
 
 GitHub releases (`vX.Y.Z`) version the **image tooling** — entrypoint behavior,
 cbox-init version, nginx modules, the extension set — not PHP itself. The
@@ -38,7 +38,7 @@ EOL. Which majors are in support is recorded in `versions.json` under
 
 ```yaml
 # Recommended production pin: behavior locked, security patches current
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 ## Image Tiers
@@ -53,7 +53,7 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
 ## Complete Tag Examples
 
 Every tag below also exists with the `-v1` release-channel suffix (e.g.
-`8.4-bookworm-slim-v1`) — the recommended production pin.
+`8.5-bookworm-slim-v1`) — the recommended production pin.
 
 ### Standard Tier (Default)
 
@@ -94,13 +94,13 @@ All tiers support rootless execution (runs as `www-data` user):
 
 ```text
 # Standard + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless
 
 # Slim + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-rootless
 
 # Chromium + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-rootless
 ```
 
 ## Version Matrix
@@ -120,9 +120,11 @@ Two deliberately distinct concepts, both defined in `versions.json`:
 
 - **Newest** (`php.newest`, currently **8.5**): the newest stable PHP. This is
   what the `latest` tag follows, per Docker ecosystem convention.
-- **Recommended default** (`php.default`, currently **8.4**): what the
-  documentation examples use and what we suggest for new projects — one minor
-  behind newest, with the widest extension/ecosystem compatibility.
+- **Recommended default** (`php.default`, currently **8.5**): what the
+  documentation examples use and what we suggest for new projects. The two
+  currently coincide; they are kept as separate concepts so the
+  recommendation can deliberately trail a brand-new PHP minor while its
+  extension ecosystem catches up.
 
 **Latest (follows `php.newest`)**:
 - `latest` → `8.5-bookworm`
@@ -133,7 +135,7 @@ Two deliberately distinct concepts, both defined in `versions.json`:
 - `chromium` → `8.5-bookworm-chromium`
 
 Don't use `latest` in production — pin a release channel tag
-(`8.4-bookworm-v1`) instead.
+(`8.5-bookworm-v1`) instead.
 
 ## Deprecation Policy
 
@@ -210,28 +212,28 @@ When a version is deprecated, migration guides are published at:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
 ```
 
 ### API/Microservice (Slim Tier)
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim
 ```
 
 ### PDF Generation (Chromium Tier)
 ```yaml
 services:
   pdf:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium
 ```
 
 ### Kubernetes (Rootless)
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless
 ```
 
 ## See Also

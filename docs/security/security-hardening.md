@@ -166,7 +166,7 @@ Never commit secrets to git. Add to `.gitignore`:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     secrets:
       - app_key
       - db_password
@@ -200,8 +200,8 @@ Every image tier ships in two variants:
 
 | Variant | Tag suffix | Runs as | Web port | Use when |
 |---------|-----------|---------|----------|----------|
-| Root | *(none)* — e.g. `8.4-bookworm`, `latest` | `root` (PID 1, nginx master), workers drop to `www-data` | 80 / 443 | You need to bind privileged ports or remap PUID/PGID |
-| Rootless | `-rootless` — e.g. `8.4-bookworm-rootless` | `www-data` throughout | 8080 | **Recommended** — no root anywhere |
+| Root | *(none)* — e.g. `8.5-bookworm`, `latest` | `root` (PID 1, nginx master), workers drop to `www-data` | 80 / 443 | You need to bind privileged ports or remap PUID/PGID |
+| Rootless | `-rootless` — e.g. `8.5-bookworm-rootless` | `www-data` throughout | 8080 | **Recommended** — no root anywhere |
 
 > ⚠️ The **default/`latest` tags run their init process and nginx master as
 > root** (workers still drop to `www-data`). If you don't need to bind port 80
@@ -210,7 +210,7 @@ Every image tier ships in two variants:
 
 ```bash
 # Rootless variant — nothing runs as root
-docker run -p 8080:8080 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
+docker run -p 8080:8080 ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
 docker exec <container> whoami          # -> www-data
 ```
 
@@ -225,7 +225,7 @@ docker exec <container> ps -o user,comm   # workers should show www-data
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
     read_only: true
     tmpfs:
       - /tmp
@@ -258,7 +258,7 @@ switches user, so you can run it with `cap_drop: [ALL]` and no `cap_add`:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-rootless-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
     ports:
       - "8080:8080"
     security_opt:
@@ -290,15 +290,15 @@ networks:
 
 ### Pin Images by Digest
 
-Rolling tags (`8.4-bookworm`) get weekly security rebuilds — great for staying
+Rolling tags (`8.5-bookworm`) get weekly security rebuilds — great for staying
 patched, but the tag moves. For reproducible, tamper-evident deployments, pin
 the digest and update it deliberately:
 
 ```yaml
 services:
   app:
-    # Resolve once: docker buildx imagetools inspect ghcr.io/.../php-fpm-nginx:8.4-bookworm
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1@sha256:<digest>
+    # Resolve once: docker buildx imagetools inspect ghcr.io/.../php-fpm-nginx:8.5-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1@sha256:<digest>
 ```
 
 Verify the image signature before trusting a digest (images are cosign-signed
@@ -308,7 +308,7 @@ with keyless OIDC — see [SECURITY.md](https://github.com/cboxdk/php-baseimages
 cosign verify \
   --certificate-identity-regexp 'https://github.com/cboxdk/php-baseimages/.github/workflows/.+' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 ### Protect the cbox-init Management API
@@ -343,11 +343,11 @@ Every published image carries, verifiable straight from the registry:
 ```bash
 # Inspect provenance and SBOM
 docker buildx imagetools inspect \
-  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1 \
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1 \
   --format '{{ json .Provenance }}'
 
 docker buildx imagetools inspect \
-  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1 \
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1 \
   --format '{{ json .SBOM }}'
 ```
 
@@ -365,7 +365,7 @@ Cbox images are automatically rebuilt weekly (Mondays 03:00 UTC) with the latest
 
 ```bash
 # Pull latest image and restart
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 docker-compose build --pull
 docker-compose up -d
 ```
@@ -376,13 +376,13 @@ docker-compose up -d
 
 ```bash
 # Scan Cbox image
-trivy image ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+trivy image ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Only HIGH and CRITICAL
-trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+trivy image --severity HIGH,CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 # Fail CI on critical vulnerabilities
-trivy image --exit-code 1 --severity CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+trivy image --exit-code 1 --severity CRITICAL ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 ```
 
 Cbox CI workflows already include Trivy scanning. For setting up Trivy in your own CI pipeline, see the [Trivy GitHub Action](https://github.com/aquasecurity/trivy-action) documentation.
