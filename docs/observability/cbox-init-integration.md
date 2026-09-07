@@ -126,6 +126,18 @@ Exported on port 9090 at `/metrics`:
 - `cbox_init_scheduled_task_duration_seconds` - Execution duration
 - `cbox_init_scheduled_task_total` - Total runs by status (success/failure)
 
+**All metrics endpoints in the container:**
+
+| Port | Source | Content | Enabled by |
+|------|--------|---------|-----------|
+| `9090` | cbox-init | `cbox_init_*` process supervision | Default on |
+| `9110` | embedded fpm-tune | `fpm_tune_*` capacity/sizing | `CBOX_INIT_FPM_TUNE_METRICS_ADDR=:9110` |
+| `9114` | fpm-exporter | `phpfpm_*` + `laravel_*` operational metrics (listen queue, worker saturation — the horizontal-scaling signals) | `CBOX_FPM_EXPORTER=true` |
+
+All loopback-scoped inside the container by default — expose deliberately.
+See [Environment Variables](../reference/environment-variables#php-fpm-metrics-exporter-horizontal-scaling-signals)
+for the scaling-signal details.
+
 ### 🔌 Management API
 
 REST API for runtime process control (disabled by default for security).

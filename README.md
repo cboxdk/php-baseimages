@@ -18,7 +18,11 @@ understands *how it is being run*:
 - **Capacity that measures instead of guesses** — `pm.max_children` is seeded
   from the container's real cgroup limits at boot, and (opt-in) re-sized at
   runtime from live per-worker memory via [fpm-tune](https://github.com/cboxdk/fpm-tune):
-  atomic drop-in, graceful reload, zero dropped connections.
+  atomic drop-in, graceful reload, zero dropped connections. The horizontal
+  axis is covered too: [fpm-exporter](https://github.com/cboxdk/fpm-exporter)
+  ships in every image (`CBOX_FPM_EXPORTER=true`) with the `phpfpm_*` metrics
+  that drive scale-out decisions — listen queue, worker saturation,
+  max-children-reached.
 - **Pin your behavior, not your vulnerabilities** — release-channel tags
   (`8.5-bookworm-v1`) lock the runtime contract to a major while weekly
   rebuilds keep OS security patches flowing. Rolling tags and immutable

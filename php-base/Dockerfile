@@ -157,8 +157,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # ============================================================================
 # Cbox Init (Process Manager)
 # ============================================================================
-ARG CBOX_INIT_VERSION=3.0.0
-
+# Version pinned in versions.json (single source of truth for CI and the
+# download scripts). No ARG here: two doc-only version ARGs rotted stale
+# within days and were removed rather than maintained.
 COPY --from=cbox-init-bin /cbox-init /usr/local/bin/cbox-init
 
 # Checksum verification happens in CI before build (see _build-image.yml)
@@ -172,8 +173,6 @@ RUN chmod +x /usr/local/bin/cbox-init && \
 # listen-queue and worker-saturation metrics are the horizontal-scaling
 # signals. Checksums verified in CI against the pins in versions.json.
 # ============================================================================
-ARG FPM_EXPORTER_VERSION=3.1.0
-
 COPY --from=fpm-exporter-bin /fpm-exporter /usr/local/bin/fpm-exporter
 
 RUN chmod +x /usr/local/bin/fpm-exporter && \
