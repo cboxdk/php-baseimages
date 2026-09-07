@@ -65,10 +65,10 @@
     "cbox_init": "3.1.2",
     "bun": "1.3.14",
     "ngx_brotli": "a71f9312c2deb28875acc7bacfdd5695a111aa53",
-    "fpm_exporter": "3.1.0",
+    "fpm_exporter": "3.1.1",
     "fpm_exporter_sha256": {
-      "linux-amd64": "1dbd70bf8393596a25cd5b66ec4a2629b0fe80abb03866d1fa2cd577c17c9e3e",
-      "linux-arm64": "b7c1a99b9527bdd38a24242c952eb1f6237e0d1784bc074f060ef52f696a5061"
+      "linux-amd64": "570d2b3d3284179c47acff8efd8f73ea650e42a2c6bd08c0a8e95cb4b0e3ca98",
+      "linux-arm64": "d9773dfef3f6efbbbea0fe8be40ea79652d71ea24b20bfe89690ab026e205442"
     }
   },
   "deprecation_policy": {
