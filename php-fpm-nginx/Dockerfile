@@ -92,7 +92,8 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -183,7 +184,8 @@ USER root
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -279,7 +281,8 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -370,7 +373,8 @@ USER root
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -466,7 +470,8 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -557,7 +562,8 @@ USER root
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -653,7 +659,8 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -744,7 +751,8 @@ USER root
 # Weekly cache refresh (see php-base/Dockerfile) - without it, a dispatch
 # without a new base digest replays cached apt layers with stale packages
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \

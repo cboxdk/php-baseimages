@@ -11,6 +11,7 @@ All notable changes to Cbox PHP Base Images.
 ## [Unreleased]
 
 ### Fixed
+- **Parent-image packages now receive security upgrades too** - upstream php/nginx images ship packages our `apt-get install` never touches (install does not upgrade unrelated preinstalled packages; libssh2 via curl was the caught case - the CVE gate refused promotion three cascades in a row). The weekly cache-refresh layer now runs `apt-get upgrade` against bookworm-security, making the weekly-patch promise hold for every package in the image, not only the ones we install
 - **Weekly security rebuilds now actually refresh packages** - the CI layer cache had no cache busting, so a scheduled rebuild replayed cached apt layers whenever nothing else invalidated them: the "rebuilt weekly with security patches" promise only held when upstream PHP happened to push a new digest. Exposed by the pre-promotion CVE gate catching a libssh2 fix already published in bookworm-security that a fresh build did not contain. Root stages now take an ISO-week CACHE_REFRESH build-arg: scheduled rebuilds bust once per week, intra-week pushes keep full cache speed
 
 ### Changed

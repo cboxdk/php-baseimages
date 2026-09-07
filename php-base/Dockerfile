@@ -79,7 +79,14 @@ ARG PHP_VERSION
 # "fresh" build did not contain. CI passes the current ISO week; local builds
 # default to a static value (fast rebuilds, bust manually with --build-arg).
 ARG CACHE_REFRESH=local
-RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null
+# The bust layer IS the security-upgrade layer: parent images ship packages
+# (php:*-bookworm carries libssh2 via curl, for example) that our later
+# `apt-get install <other things>` never touches - `install` does not upgrade
+# unrelated already-installed packages. Upgrading here, keyed to the weekly
+# bust, is what makes "rebuilt weekly with security patches" true for the
+# parent's packages too, not only for the ones we install ourselves.
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 LABEL org.opencontainers.image.title="Cbox PHP Base ${PHP_VERSION} Debian"
 LABEL org.opencontainers.image.description="Base PHP image with extensions, Composer, and Cbox Init"
