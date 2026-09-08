@@ -406,7 +406,7 @@ This repository follows the Cbox.com documentation standards for consistent disp
 
 ## Documentation Structure Requirements
 
-This guide explains how to structure documentation for Cbox packages to ensure optimal display and navigation on cbox.com.
+This guide explains how to structure documentation for Cbox packages to ensure optimal display and navigation on cbox.dk.
 
 ## Core Concepts
 
@@ -818,7 +818,7 @@ Before publishing, verify:
 Your documentation will be available at:
 
 ```
-https://cbox.com/docs/{package}/{major_version}/{page_path}
+https://cbox.dk/docs/{package}/{major_version}/{page_path}
 
 Examples:
 /docs/system-metrics/v1/introduction

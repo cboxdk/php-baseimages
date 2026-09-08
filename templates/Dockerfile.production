@@ -64,7 +64,7 @@ RUN composer dump-autoload --optimize --classmap-authoritative
 # =============================================================================
 FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:${PHP_VERSION}-bookworm-v1 AS production
 
-LABEL maintainer="Cbox <hello@cbox.com>"
+LABEL maintainer="Cbox <hello@cbox.dk>"
 LABEL description="Production-optimized PHP application"
 
 WORKDIR /var/www/html

@@ -139,6 +139,6 @@ groups:
 
 ## Support
 
-- [Cbox Documentation](https://cbox.com/docs)
+- [Cbox Documentation](https://cbox.dk/docs)
 - [Cbox Init Integration Guide](../docs/cbox-init-integration.md)
 - [GitHub Issues](https://github.com/cboxdk/php-baseimages/issues)

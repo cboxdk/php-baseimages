@@ -10,6 +10,13 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-08
+
+### Fixed
+- **Repo-root CHANGELOG.md brought back in sync** - GitHub renders the root file, but releases were only ever stamped in docs/changelog.md, so visitors saw a changelog frozen at the pre-1.0 April state. The root file now carries the full release history (pre-1.0 development history preserved at the bottom) and a lint gate fails any future drift
+- **Stray cbox.com references corrected to cbox.dk** - documentation-standards guides, the observability README, the Grafana dashboard help link, and a template maintainer label pointed at a domain that is not ours
+- **SBOMs made visible** - the SPDX SBOM attestations were always on the images but practically undiscoverable: SECURITY.md now shows the exact one-liner to extract the SBOM and provenance from any public image, and GitHub releases carry the default-PHP images' SBOMs as downloadable assets (added retroactively to v1.2.0)
+
 ### Changed
 - **Extension bumps from the first working weekly PR** - apcu 5.1.28, mongodb 2.5.2, msgpack 3.0.1, xdebug 3.5.3, uuid 1.3.0, excimer 1.2.6 (all verified on PECL)
 

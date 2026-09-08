@@ -24,8 +24,23 @@ respond as fast as we realistically can, but we do not promise a formal SLA.
 - SLSA provenance attestation (BuildKit `mode=max`)
 - SPDX SBOM attestation per platform
 
-Verify with `cosign verify` or
-`docker buildx imagetools inspect <image> --format '{{ json .Provenance }}'`.
+Retrieve the SBOM straight from any image — no registry login needed for
+public images:
+
+```bash
+# Full SPDX document for one platform
+docker buildx imagetools inspect ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1 \
+  --format '{{ json (index .SBOM "linux/amd64").SPDX }}' > sbom.spdx.json
+
+# Provenance (SLSA)
+docker buildx imagetools inspect ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1 \
+  --format '{{ json .Provenance }}'
+```
+
+Each [GitHub release](https://github.com/cboxdk/php-baseimages/releases) also
+carries the SPDX SBOMs for the current default-PHP images as downloadable
+assets (`<image>-<tag>-<arch>.spdx.json.gz`). Signature verification:
+`cosign verify ghcr.io/cboxdk/php-baseimages/<image>:<tag>`.
 
 ## CI vulnerability gate
 

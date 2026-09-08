@@ -55,3 +55,19 @@ jobs:
           # Ignore low-value shellcheck style hints in run: blocks (SC2086 et al.);
           # real workflow errors and unknown-label checks still gate.
           /tmp/actionlint -ignore 'SC2086' -ignore 'SC2129' -ignore 'SC2046'
+
+      - name: Changelog drift check
+        run: |
+          # The repo-root CHANGELOG.md (what GitHub renders) must carry the
+          # newest release section from docs/changelog.md (what cbox.dk
+          # scrapes). They drifted apart once - the root file sat at a
+          # pre-1.0 state while releases were stamped only in docs/.
+          newest=$(grep -m1 -oE '^## \[[0-9]+\.[0-9]+\.[0-9]+\]' docs/changelog.md)
+          if [ -z "$newest" ]; then
+            echo "::error::No release header found in docs/changelog.md"; exit 1
+          fi
+          if ! grep -qF "$newest" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md is missing the newest release section from docs/changelog.md: $newest"
+            exit 1
+          fi
+          echo "CHANGELOG.md carries $newest - in sync"
