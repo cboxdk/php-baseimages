@@ -748,12 +748,11 @@ validate_cbox_init_local() {
         fi
     fi
 
-    if ! cbox-init check-config --config "$config" >/dev/null 2>&1; then
-        log_error "Cbox Init config validation failed"
-        exit 1
-    fi
-
-    log_info "Cbox Init validated successfully"
+    # No check-config here: serve validates the RENDERED config (after env
+    # overrides) with the same strict loader and better error output, so a
+    # pre-flight check of the template was pure duplication - one full
+    # process spawn (~90ms) on every container start.
+    log_info "Cbox Init present"
 }
 
 ###########################################
