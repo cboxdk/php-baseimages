@@ -4,6 +4,9 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Fixed
+- **Cold start 6.2s → 1.3s (with the upcoming cbox-init)** - benchmarking against the field exposed that container start was dominated by cbox-init's silent 5s `initial_delay` default before the FIRST health probe (php-fpm listens ~50ms after start; nginx waited out the delay on the dependency chain). Fixed upstream (no `initial_delay` default + 100ms fast-start probing until first success, failure semantics unchanged - [cboxdk/init#143](https://github.com/cboxdk/init/pull/143)), and the entrypoint no longer runs a redundant pre-flight check-config (serve validates the rendered config with better errors). Measured: dependency gate 4.95s → 0.20s, whole-container start → first HTTP 200 median 6.15s → 1.26s
+
 ## [1.2.1] - 2026-09-08
 
 ### Fixed
