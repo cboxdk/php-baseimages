@@ -21,7 +21,10 @@ COPY scripts/init-*.sh /docker-entrypoint-init.d/
 RUN chmod +x /docker-entrypoint-init.d/*.sh
 ```
 
-**Execution order**: Scripts run alphabetically by filename.
+**Execution order**: Scripts run in version-sort order (`sort -V`), so
+`2-foo.sh` runs before `10-bar.sh` - numeric prefixes behave the way you
+expect without zero-padding. A `*.sh` file without the executable bit is
+logged as a warning and skipped (never silently ignored).
 
 ```text
 /docker-entrypoint-init.d/
@@ -340,6 +343,15 @@ containers:
 ```
 
 ## Error Handling
+
+By default a failing init script logs a warning and the container continues
+booting. Set `CBOX_INIT_SCRIPTS_STRICT=true` to abort startup instead - the
+right choice when a script prepares something the app cannot run without.
+
+Scripts are **executed**, not sourced: `exit` inside your script ends only
+that script, never the container boot chain - and exported variables do NOT
+propagate to the services. Put runtime env in the container environment, not
+in init scripts.
 
 ### Exit on Failure
 

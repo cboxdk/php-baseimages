@@ -4,6 +4,32 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Security
+- **PHP execution blocked from user-upload trees** - `/storage/*.php` and `/wp-content/uploads/*.php` are denied in nginx before the PHP handler, PATH_INFO-safe (`(/|$)` anchored). A file uploaded to Laravel's public disk could previously be executed by requesting it directly (the Livewire-CVE class; a comparable image shipped a bypassable version of this block)
+- **`register_argc_argv = Off`** - official PHP images ship no base php.ini, so the engine default (On) applied: a web request's query string became `$argv` in scripts that consult it (the CVE-2024-56145 class of RCE). CLI is unaffected (its SAPI always populates argv)
+- **Weekly Go-binary CVE watch** - the pinned cbox-init/fpm-exporter binaries carry a Go dependency tree that ages independently of apt; a new weekly scan opens a tracking issue the moment they carry fixable CRITICAL/HIGH CVEs, giving lead time before the image Trivy gate (which already scans gobinary targets) would block the weekly rebuild. A competitor shipped stdlib CVEs in every image for 21 months by not watching this
+
+### Fixed
+- **Graceful shutdown actually graceful: PHP-FPM now stopped with SIGQUIT** - FPM treats SIGTERM (the previous effective stop signal in every variant) as IMMEDIATE termination, so every `docker stop` and rolling deploy severed in-flight requests. cbox-init now sends SIGQUIT to php-fpm and nginx (bounded by `process_control_timeout` 10s + supervisor timeout), and the single-process php-fpm image sets `STOPSIGNAL SIGQUIT`. The ecosystem's S6-based images fought this for two years without a clean fix; a Go PID 1 makes it a config line
+- **The FPM pool directory is now owned outright** - upstream reshuffled directives between `docker.conf` and `zz-docker.conf` in PATCH releases (docker-library/php#1635) and `zz-docker.conf` loads after our pool file, so a future upstream change could silently override the env-driven listen address - the exact failure that broke unix-socket setups ecosystem-wide in 8.4.17/8.5.2. Upstream's pool files are deleted at build; everything they provided lives in our own files; and the entrypoint now ASSERTS the effective listen (`php-fpm -tt`) equals what it configured, failing loud at boot instead of mysterious 502s
+- **nginx `worker_processes` sized from the container's CPU limit** - nginx's `auto` reads the HOST's core count, so a 2-CPU-limited container on a 64-core node spawned 64 workers (serversideup#199, closed unfixed there). Both nginx images now compute it from the cgroup quota at boot, the same no-assumptions rule the FPM pool already follows; `NGINX_WORKER_PROCESSES` overrides, `auto` restores nginx's behavior
+- **Init scripts: version-sorted, no silent skips** - `/docker-entrypoint-init.d/` ran in glob order (`10-a.sh` before `2-b.sh`), silently skipped non-executable `*.sh` files, and swallowed failures. Now `sort -V` ordered, non-executable scripts log a warning, and `CBOX_INIT_SCRIPTS_STRICT=true` aborts boot on a failing script
+- **`LARAVEL_MIGRATE_ENABLED` hardened for real fleets** - `--isolated` was passed unconditionally, but its cache lock cannot bootstrap on a FIRST deploy whose cache table does not exist yet (chicken-and-egg); now auto-detected with fallback (`LARAVEL_MIGRATE_ISOLATED=auto|true|false`). A not-yet-reachable database is retried with backoff (`LARAVEL_MIGRATE_RETRIES`, default 5) instead of crash-looping
+
+### Added
+- **Writable-path preflight that names the path** - the single biggest support category across every PHP image project is a bind-mount "Permission denied" diagnosed over days. The entrypoint now checks the detected framework's writable tree (Laravel `storage/`+`bootstrap/cache`, Symfony `var/`, WordPress uploads) and prints the offending path, its owner, and the runtime UID with the exact fix; `CBOX_PREFLIGHT_STRICT=true` aborts boot instead
+- **Worker healthchecks for php-cli** - `healthcheck-worker.sh`, `healthcheck-schedule.sh`, `healthcheck-horizon.sh` ship in the CLI image, so queue/scheduler/Horizon containers get a real health signal instead of reusing a web check that lies in both directions
+- **Optional FastCGI connection pooling** - `NGINX_FASTCGI_KEEP_CONN=on` + `NGINX_FASTCGI_KEEPALIVE` (default 8) pool nginx→FPM connections; off by default (idle pooled connections occupy FPM workers on small pools), valuable on CPU-throttled runtimes (Cloud Run) and very high rps
+- **`PHP_FPM_MEMORY_LIMIT` env** (default 256M, unchanged) - the pool's per-worker memory_limit was hardcoded; now a first-class knob, deliberately FPM-only so CLI (composer/artisan) can diverge
+- **OpenTelemetry extension in standard+ tiers** - enabled but inert until the application installs the OTel SDK (~0.3MB on disk, no hooks register without it). The alternative ecosystem answer is APM agents that fight PID 1
+- **HEALTHCHECK `--start-interval=3s`** on every image - readiness surfaces in seconds during startup instead of waiting out the steady-state interval (Docker 25+; older engines ignore it)
+- **Upstream preflight before the weekly build chain** - verifies `php:X-{cli,fpm}-bookworm` exists with BOTH architectures before any build starts; upstream rollouts fill manifests in gradually and have shipped wrong-arch pulls and days-stale tags. A failed preflight leaves last week's good tags in place
+- **Bookworm suite watch** - upstream drops Debian suites in UNANNOUNCED patch releases (bullseye vanished mid-LTS); a weekly job alerts the week bookworm stops receiving upstream patches, with the migration playbook in the alert
+- **Env contract test in CI** - every env var the docs promise must be consumed by the images; documented-but-dead variables (a chronic ecosystem disease: competitors shipped years of them) now fail lint. Found and fixed 3 on day one
+- **PR test images** - every same-repo PR publishes `ghcr.io/cboxdk/php-baseimages/dev:pr-<N>` (php-fpm-nginx standard, amd64) so a fix can be verified by the reporter before merge
+- **Docs: restricted runtimes guide** (Cloud Run/GKE/read-only rootfs/arbitrary UIDs) and four field-tested troubleshooting entries (ENTRYPOINT-resets-CMD, readv-reset = FPM segfault, mount-files-not-dirs, the un-strippable `error_log()` prefix)
+- **PHP 8.6 readiness tracked in #23** - PIE migration (pecl is gone in 8.6), the NTS/ZTS decision, and the trixie migration playbook (benchmark first: the previous suite jump carried a 30-40% CPU regression for others)
+
 ## [1.4.0] - 2026-09-09
 
 ### Added

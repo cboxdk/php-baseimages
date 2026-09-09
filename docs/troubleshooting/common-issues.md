@@ -71,6 +71,37 @@ docker-compose build --no-cache
 docker-compose up
 ```
 
+### Custom Dockerfile starts nothing after adding ENTRYPOINT
+
+**Symptom:** `FROM ghcr.io/cboxdk/...` + your own `ENTRYPOINT` = container exits instantly
+
+Docker resets the inherited `CMD` whenever a child image defines `ENTRYPOINT`.
+Restate the command:
+
+```dockerfile
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+ENTRYPOINT ["/my-wrapper.sh"]
+# ❌ Without this line the container starts NOTHING:
+CMD ["/usr/local/bin/docker-entrypoint.sh"]
+```
+
+### nginx overrides vanished after an image update
+
+**Symptom:** Custom nginx config worked, then broke after pulling a new image
+
+Mounting the whole directory hides every file the image ships - including new
+ones an update adds:
+
+```yaml
+# ❌ Wrong: masks the image's own conf.d (and future additions)
+volumes:
+  - ./nginx-conf:/etc/nginx/conf.d
+
+# ✅ Right: mount individual files over the ones you mean to replace
+volumes:
+  - ./my-site.conf:/etc/nginx/conf.d/my-site.conf
+```
+
 ## Connection Problems
 
 ### Can't Access Application (502 Bad Gateway)
@@ -113,6 +144,25 @@ DB_DATABASE=your_database
 DB_USERNAME=your_user
 DB_PASSWORD=your_password
 ```
+
+### nginx: "readv() failed (104: Connection reset by peer)" or "recv() failed"
+
+**Symptom:** Intermittent 502s; nginx error log shows `readv() failed ... while reading upstream`
+
+This is almost never an nginx problem: it means the PHP-FPM worker DIED mid-request,
+and a segfault is the usual killer. Look two layers down:
+
+```bash
+# Any segfaults in the FPM log?
+docker compose logs app | grep -iE "SIGSEGV|core dumped|child .* exited on signal"
+
+# A misbehaving zend extension is the classic cause - list what is loaded
+docker compose exec app php -v
+docker compose exec app php -m
+```
+
+If a third-party zend extension (ionCube, custom profilers) appears, test with it
+disabled first - other image projects spent months chasing these as "nginx bugs".
 
 ## Database Problems
 
@@ -212,6 +262,24 @@ docker-compose exec app kill -USR2 1
 # Or restart container
 docker-compose restart app
 ```
+
+### error_log() output carries a "NOTICE: PHP message:" prefix
+
+**Symptom:** Structured/JSON log lines are wrapped in `NOTICE: PHP message: ...`, breaking parsers
+
+PHP-FPM adds this prefix to everything workers write via `error_log()`, and no
+FPM setting removes it cleanly (upstream: wontfix). Write structured logs
+directly to the stream instead:
+
+```php
+// ❌ Gets prefixed by FPM
+error_log(json_encode($event));
+
+// ✅ Reaches the container log verbatim
+file_put_contents('php://stderr', json_encode($event) . PHP_EOL);
+```
+
+Laravel/Monolog users: use the `stderr` log channel (`LOG_CHANNEL=stderr`).
 
 ## Permission Issues
 

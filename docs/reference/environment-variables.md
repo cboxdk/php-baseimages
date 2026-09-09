@@ -92,6 +92,13 @@ environment:
 4. PHP-FPM runs worker processes as the remapped user
 5. Files created by PHP have the correct ownership on your host
 
+### Startup strictness knobs
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CBOX_PREFLIGHT_STRICT` | `false` | Abort boot when a framework-writable path (Laravel `storage/`, Symfony `var/`, WordPress uploads) is not writable - default only warns, naming the path, owner and runtime UID |
+| `CBOX_INIT_SCRIPTS_STRICT` | `false` | Abort boot when a `/docker-entrypoint-init.d/` script fails - default warns and continues |
+
 ### Important notes
 
 - **Requires root mode** — PUID/PGID only works in root images (the default). Rootless images skip PUID/PGID mapping since the container already runs as `www-data`.
@@ -129,6 +136,8 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `LARAVEL_OPTIMIZE_ENABLED` | `false` | Run `config:cache`, `route:cache`, `view:cache` on startup |
 | `LARAVEL_MIGRATE_ENABLED` | `false` | Run `php artisan migrate --force` on startup |
 | `LARAVEL_MIGRATE_ALLOW_FAILURE` | `false` | Continue container startup if migrations fail |
+| `LARAVEL_MIGRATE_ISOLATED` | `auto` | `--isolated` lock so replicas don't race migrations. `auto` = use when artisan supports it, and drop it if the cache lock itself can't bootstrap (first deploy without a cache table); `true`/`false` to force |
+| `LARAVEL_MIGRATE_RETRIES` | `5` | Retries (3s apart) when migration fails on a not-yet-reachable database |
 
 ---
 
@@ -299,6 +308,7 @@ explicitly (explicit env always wins).
 | `PHP_FPM_LISTEN_BACKLOG` | `511` | all | Accept backlog (kernel `somaxconn` caps it) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | all | Hard kill for runaway requests |
 | `PHP_FPM_REQUEST_SLOWLOG_TIMEOUT` | `5s` | all | Stack-trace slow requests to stderr |
+| `PHP_FPM_MEMORY_LIMIT` | `256M` | all | Per-worker memory_limit (pool admin value; CLI keeps php.ini's) |
 
 Mode-specific directives are written as a drop-in (`zz-pm-mode.conf`) so no
 mode ever boots with another mode's directives. With `CBOX_FPM_TUNE=true`
@@ -425,6 +435,7 @@ supervisor for daemon-only containers).
 | `NGINX_WEBROOT` | `/var/www/html/public` | Document root |
 | `NGINX_INDEX` | `index.php index.html` | Index files |
 | `NGINX_SERVER_TOKENS` | `off` | Hide Nginx version |
+| `NGINX_WORKER_PROCESSES` | container CPU limit | Worker count. Sized from the cgroup quota at boot (nginx's own `auto` reads the HOST's cores - 64 workers in a 2-CPU pod). Set a number, or `auto` for nginx's behavior |
 
 ### Client Settings
 
@@ -557,6 +568,8 @@ environment:
 | `NGINX_FASTCGI_CONNECT_TIMEOUT` | `60s` | Connect timeout |
 | `NGINX_FASTCGI_SEND_TIMEOUT` | `60s` | Send timeout |
 | `NGINX_FASTCGI_READ_TIMEOUT` | `60s` | Read timeout |
+| `NGINX_FASTCGI_KEEP_CONN` | `off` | Pool nginx→FPM connections (`on`). Helps CPU-throttled runtimes (Cloud Run) and very high rps; off by default because idle pooled connections occupy FPM workers on small pools |
+| `NGINX_FASTCGI_KEEPALIVE` | `8` | Pooled connections when `NGINX_FASTCGI_KEEP_CONN=on` |
 
 ### Logging
 
