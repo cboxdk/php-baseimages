@@ -281,6 +281,38 @@ listening socket open while workers respawn, so nginx needs no retry
 configuration: measured on these images, 4,900+ requests (sequential and
 saturated-concurrent) through 20 forced reloads produced zero non-200 responses.
 
+### PHP-FPM listen transport (TCP vs unix socket)
+
+Both transports are first-class - pick per deployment:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PHP_FPM_LISTEN` | `tcp` | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
+| `PHP_FPM_SOCKET_PATH` | `/run/php/php-fpm.sock` | Socket location in `unix` mode |
+
+**When to use which:**
+
+- **`unix`** - single-container throughput. Measured on these images:
+  ~**+23% PHP requests/second** on the same hardware (the TCP loopback hop
+  is pure overhead when nginx and FPM share a container). nginx follows
+  automatically (`NGINX_FASTCGI_PASS` is derived unless you set it), the
+  health probe switches with it, and fpm-exporter/fpm-tune autodiscover
+  the socket - `phpfpm_up{socket="unix://..."}`.
+- **`tcp`** (default) - anything that talks to FPM from OUTSIDE the
+  container: a sidecar exporter, a separate nginx container without a
+  shared socket volume, debugging with `cgi-fcgi` from another netns.
+  Also the conservative choice for existing deployments; defaults do not
+  change behavior.
+
+```yaml
+environment:
+  PHP_FPM_LISTEN: "unix"
+```
+
+Works in root and rootless variants (rootless falls back to
+`/tmp/php-fpm.sock` with a warning if the socket directory is not
+writable).
+
 ### PHP-FPM Metrics Exporter (horizontal-scaling signals)
 
 [cboxdk/fpm-exporter](https://github.com/cboxdk/fpm-exporter) ships in every

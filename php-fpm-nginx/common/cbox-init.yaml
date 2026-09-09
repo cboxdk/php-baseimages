@@ -84,8 +84,13 @@ processes:
     stdout: true
     stderr: true
     health_check:
-      type: tcp
-      address: "127.0.0.1:9000"
+      # TCP pair is active by default; with PHP_FPM_LISTEN=unix the
+      # entrypoint drops the two @fpm-tcp lines and activates the exec
+      # probe below (same marker pattern as metrics_federate).
+      type: tcp # @fpm-tcp
+      address: "127.0.0.1:9000" # @fpm-tcp
+#@FPMSOCK#      type: exec
+#@FPMSOCK#      command: ["php", "-r", "exit(@stream_socket_client(getenv('PHP_FPM_SOCKET_URI')) ? 0 : 1);"]
       period: 5
       timeout: 3
       failure_threshold: 3

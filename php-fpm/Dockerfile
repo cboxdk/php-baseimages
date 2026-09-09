@@ -200,9 +200,9 @@ COPY --from=base-slim /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer \
-    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
+    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -293,9 +293,9 @@ COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/polic
 COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
-    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
+    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -378,9 +378,9 @@ COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/polic
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
-    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
+    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
@@ -495,9 +495,9 @@ COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
-    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox && \
+    /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \

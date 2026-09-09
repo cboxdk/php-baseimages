@@ -33,6 +33,17 @@ fi
 # Defaults only. Anything already in the environment wins, including the sizing
 # cbox-init derives from the container's memory limit.
 resolve_fpm_sizing() {
+    # Listen transport: "9000" (TCP, default) or a unix socket path with
+    # PHP_FPM_LISTEN=unix. Same contract as the php-fpm-nginx image; here the
+    # socket use case is a shared volume with a separate nginx container.
+    if [ "${PHP_FPM_LISTEN:-tcp}" = "unix" ]; then
+        sock="${PHP_FPM_SOCKET_PATH:-/run/php/php-fpm.sock}"
+        mkdir -p "$(dirname "$sock")" 2>/dev/null || true
+        [ "$(id -u)" = "0" ] && chown www-data:www-data "$(dirname "$sock")" 2>/dev/null || true
+        export PHP_FPM_LISTEN_ADDR="${PHP_FPM_LISTEN_ADDR:-$sock}"
+    else
+        export PHP_FPM_LISTEN_ADDR="${PHP_FPM_LISTEN_ADDR:-9000}"
+    fi
     export PHP_FPM_MAX_CHILDREN="${PHP_FPM_MAX_CHILDREN:-10}"
     export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
     export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"

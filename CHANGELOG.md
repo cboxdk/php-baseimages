@@ -4,6 +4,9 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Added
+- **Unix-socket transport for the nginx->FPM hop** - `PHP_FPM_LISTEN=unix` serves FastCGI over a unix socket instead of TCP loopback: measured ~+23% PHP requests/second on the same hardware. TCP stays the default (`PHP_FPM_LISTEN=tcp`) because both have real use cases - sockets for single-container throughput, TCP for anything that reaches FPM from outside the container. nginx, the health probe (exec socket check), fpm-exporter autodiscovery and fpm-tune all follow the transport automatically; `PHP_FPM_SOCKET_PATH` overrides the location; works in root and rootless (rootless images now ship a writable `/run/php`)
+
 ## [1.3.0] - 2026-09-09
 
 ### Added
