@@ -160,6 +160,49 @@ fix_symfony_permissions() {
 }
 
 ###########################################
+# PHP-FPM process-manager mode
+# Writes the mode-specific pm directives as a drop-in, so the static pool
+# file stays mode-neutral and php-fpm never warns about directives that
+# belong to another mode. Called by both the php-fpm and php-fpm-nginx
+# entrypoints after sizing envs are resolved.
+###########################################
+write_pm_mode_dropin() {
+    local mode="${PHP_FPM_PM:-dynamic}"
+    local dropin="/usr/local/etc/php-fpm.d/zz-pm-mode.conf"
+    case "$mode" in
+        dynamic)
+            printf '%s\n' \
+                "; Auto-generated: dynamic warm floor (PHP_FPM_PM=dynamic)" \
+                "[www]" \
+                "pm.start_servers = ${PHP_FPM_START_SERVERS:-2}" \
+                "pm.min_spare_servers = ${PHP_FPM_MIN_SPARE:-1}" \
+                "pm.max_spare_servers = ${PHP_FPM_MAX_SPARE:-6}" \
+                "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
+                > "$dropin" 2>/dev/null || log_warn "Could not write $dropin"
+            ;;
+        ondemand)
+            printf '%s\n' \
+                "; Auto-generated: ondemand (PHP_FPM_PM=ondemand)" \
+                "[www]" \
+                "pm.process_idle_timeout = ${PHP_FPM_PROCESS_IDLE_TIMEOUT:-10s}" \
+                "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
+                > "$dropin" 2>/dev/null || log_warn "Could not write $dropin"
+            ;;
+        static)
+            printf '%s\n' \
+                "; Auto-generated: static pool (PHP_FPM_PM=static)" \
+                "[www]" \
+                > "$dropin" 2>/dev/null || log_warn "Could not write $dropin"
+            ;;
+        *)
+            log_error "PHP_FPM_PM must be dynamic, ondemand or static (got: $mode)"
+            return 1
+            ;;
+    esac
+    log_info "PHP-FPM process manager: $mode"
+}
+
+###########################################
 # Init Scripts Execution
 ###########################################
 run_init_scripts() {

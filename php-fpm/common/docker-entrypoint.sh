@@ -49,6 +49,9 @@ resolve_fpm_sizing() {
     export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
     export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
     export PHP_FPM_MAX_REQUESTS="${PHP_FPM_MAX_REQUESTS:-500}"
+    export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
+    export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
+    export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
 }
 
 # Write the pool settings that come from the environment.
@@ -181,6 +184,8 @@ fi
 # php-fpm -t reads what is on disk, so writing them after would validate a
 # configuration the process is not going to run.
 resolve_fpm_sizing
+export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
+write_pm_mode_dropin || exit 1
 write_env_overrides
 validate_fpm_config
 setup_fpm_permissions

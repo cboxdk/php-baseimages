@@ -976,6 +976,10 @@ else
     export PHP_FPM_AUTOTUNE_PROFILE="${PHP_FPM_AUTOTUNE_PROFILE-medium}"
 fi
 export PHP_FPM_MAX_CHILDREN="${PHP_FPM_MAX_CHILDREN:-10}"
+export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
+export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
+export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
+export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
 export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
 export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
 export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
@@ -994,6 +998,7 @@ fi
 
 # Start Cbox Init
 CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
+write_pm_mode_dropin || exit 1
 apply_cbox_init_env_overrides
 log_info "Starting Cbox Init process manager"
 log_info "Config: $CBOX_INIT_CONFIG"

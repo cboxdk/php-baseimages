@@ -281,6 +281,32 @@ listening socket open while workers respawn, so nginx needs no retry
 configuration: measured on these images, 4,900+ requests (sequential and
 saturated-concurrent) through 20 forced reloads produced zero non-200 responses.
 
+### PHP-FPM process manager & worker sizing
+
+The full pm surface is env-driven. Defaults preserve current behavior;
+cbox-init's boot autotune exports the sizing values unless you set them
+explicitly (explicit env always wins).
+
+| Variable | Default | Applies to | Description |
+|----------|---------|------------|-------------|
+| `PHP_FPM_PM` | `dynamic` | all | Process manager: `dynamic` (warm floor), `ondemand` (spawn per burst, idle workers die - bursty/low-traffic pods), `static` (fixed pool) |
+| `PHP_FPM_MAX_CHILDREN` | autotuned | all | Worker ceiling (running count for static) |
+| `PHP_FPM_MAX_REQUESTS` | autotuned | all | Recycle a worker after N requests |
+| `PHP_FPM_START_SERVERS` | autotuned | dynamic | Workers at boot |
+| `PHP_FPM_MIN_SPARE` / `PHP_FPM_MAX_SPARE` | autotuned | dynamic | Idle-worker floor/ceiling |
+| `PHP_FPM_PROCESS_IDLE_TIMEOUT` | `10s` | ondemand | Idle worker lifetime |
+| `PHP_FPM_MAX_SPAWN_RATE` | `32` | dynamic, ondemand | Max workers spawned per second under burst |
+| `PHP_FPM_LISTEN_BACKLOG` | `511` | all | Accept backlog (kernel `somaxconn` caps it) |
+| `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | all | Hard kill for runaway requests |
+| `PHP_FPM_REQUEST_SLOWLOG_TIMEOUT` | `5s` | all | Stack-trace slow requests to stderr |
+
+Mode-specific directives are written as a drop-in (`zz-pm-mode.conf`) so no
+mode ever boots with another mode's directives. With `CBOX_FPM_TUNE=true`
+the runtime tuner respects the mode: for `ondemand`/`static` it resizes only
+`pm.max_children`, and its advice output will tell you when the chosen mode
+fights the observed workload (e.g. an ondemand pool paying cold-start
+latency on every burst).
+
 ### PHP-FPM listen transport (TCP vs unix socket)
 
 Both transports are first-class - pick per deployment:

@@ -11,6 +11,7 @@ All notable changes to Cbox PHP Base Images.
 ## [Unreleased]
 
 ### Added
+- **Process-manager modes as first-class envs** - `PHP_FPM_PM=dynamic|ondemand|static` (default dynamic, unchanged behavior). ondemand spawns workers per burst and lets idle ones die (`PHP_FPM_PROCESS_IDLE_TIMEOUT`, default 10s) - the right shape for bursty/low-traffic pods, and what trafex ships as its default. Mode-specific directives are written as a drop-in so no mode boots with another mode's directives; fpm-tune is already mode-aware upstream (resizes only max_children for non-dynamic pools, and its advice engine flags mode/workload mismatches). Completed the pm env surface while at it: `PHP_FPM_MAX_SPAWN_RATE` (32), `PHP_FPM_LISTEN_BACKLOG` (511), and `PHP_FPM_REQUEST_TERMINATE_TIMEOUT`/`PHP_FPM_REQUEST_SLOWLOG_TIMEOUT` now actually drive the pool (previously hardcoded 60s/5s while the docs promised the env)
 - **Unix-socket transport for the nginx->FPM hop** - `PHP_FPM_LISTEN=unix` serves FastCGI over a unix socket instead of TCP loopback: measured ~+23% PHP requests/second on the same hardware. TCP stays the default (`PHP_FPM_LISTEN=tcp`) because both have real use cases - sockets for single-container throughput, TCP for anything that reaches FPM from outside the container. nginx, the health probe (exec socket check), fpm-exporter autodiscovery and fpm-tune all follow the transport automatically; `PHP_FPM_SOCKET_PATH` overrides the location; works in root and rootless (rootless images now ship a writable `/run/php`)
 
 ## [1.3.0] - 2026-09-09
