@@ -321,7 +321,7 @@ preflight_writable() {
         [ -e "$path" ] || continue
         if [ ! -w "$path" ]; then
             owner=$(stat -c '%U(%u):%G(%g) mode %a' "$path" 2>/dev/null || echo "unknown")
-            log_warn "NOT WRITABLE: $path is owned by $owner, but this container runs as uid $(id -u). Fix the bind mount's ownership on the host (chown $(id -u):$(id -g)) or mount it elsewhere."
+            log_warn "NOT WRITABLE: $path is owned by $owner, but this container runs as uid $(id -u). Fix the bind mount's ownership on the host (chown $(id -u):$(id -g)), drop :ro if it was mounted read-only, or mount it elsewhere."
             failed=1
         fi
     done

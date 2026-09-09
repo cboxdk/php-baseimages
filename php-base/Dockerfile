@@ -225,7 +225,13 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 # Working Directory Setup
 # ============================================================================
 RUN mkdir -p /var/www/html && \
-    chown -R www-data:www-data /var/www
+    chown -R www-data:www-data /var/www && \
+    # Upstream ships /var/www/html as 1777 (sticky + world-writable): any
+    # process in the container can drop files beside the app, and with the
+    # kernel's protected_symlinks a root-created symlink in such a directory
+    # is unreadable by other UIDs - bizarre EACCES under arbitrary-UID runs
+    # (docker-library/php#1556). Owned by www-data, 0755 is the right mode.
+    chmod 0755 /var/www/html
 
 WORKDIR /var/www/html
 

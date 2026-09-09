@@ -583,8 +583,18 @@ generate_runtime_configs() {
         envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_UPSTREAM_CONFIG} ${NGINX_FASTCGI_KEEP_CONN} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
-            log_error "Failed to generate Nginx config"
-            exit 1
+            # A read-only /etc/nginx (readOnlyRootFilesystem without an
+            # emptyDir there) used to kill the container here - even though a
+            # perfectly good baked default.conf ships in the image. Custom
+            # NGINX_* env is what actually NEEDS the render: with none set,
+            # the baked config IS the rendered default, so booting on it is
+            # correct, not merely convenient. With overrides set we still fail
+            # loud - silently ignoring explicit config would be worse.
+            if [ -n "${NGINX_USER_OVERRIDES:-}" ]; then
+                log_error "Failed to render Nginx config while these were configured via env: ${NGINX_USER_OVERRIDES}- refusing to boot on the baked defaults. Mount a writable emptyDir at /etc/nginx/conf.d (see docs: restricted runtimes)."
+                exit 1
+            fi
+            log_warn "Could not write /etc/nginx/conf.d/default.conf (read-only rootfs?) - booting on the image's baked default config. For env-driven nginx config, mount an emptyDir at /etc/nginx/conf.d."
         }
     fi
 
@@ -896,6 +906,12 @@ print_banner "Cbox Base Image" 2>/dev/null || {
     echo "╚═══════════════════════════════════════════════════════════════════════════╝"
 }
 log_info "PHP Version: $PHP_VERSION"
+
+# Snapshot which NGINX_* vars the USER provided, before any function exports
+# its own defaults - the read-only-rootfs fallback below must distinguish "the
+# operator configured nginx via env" (fail loud if it cannot render) from "the
+# entrypoint defaulted everything" (booting on the baked config is correct).
+NGINX_USER_OVERRIDES=$(env | grep -oE '^NGINX_[A-Z0-9_]+' | tr '\n' ' ')
 
 # Map environment variable aliases
 setup_fpm_listen

@@ -34,25 +34,41 @@ Why these matter:
 
 ## Read-only root filesystem (Kubernetes)
 
-The images run with `readOnlyRootFilesystem: true` when the writable paths are
-tmpfs mounts:
+With only `/tmp` and `/run` writable, the container boots on the **baked
+default config**: the entrypoint logs which runtime files it could not write
+and continues, and any `NGINX_*`/`PHP_FPM_*` env overrides that would need
+those files fail loud instead of being silently ignored.
+
+For the full env-driven config surface under `readOnlyRootFilesystem: true`,
+give the entrypoint its render targets as emptyDirs:
 
 ```yaml
 securityContext:
   readOnlyRootFilesystem: true
 volumes:
-  - name: tmp
-    emptyDir: {}
-  - name: run
-    emptyDir: {}
+  - { name: tmp,       emptyDir: {} }
+  - { name: run,       emptyDir: {} }
+  - { name: nginxconf, emptyDir: {} }   # rendered nginx server config
+  - { name: fpmd,      emptyDir: {} }   # pm-mode + env-override drop-ins
+  - { name: phpconf,   emptyDir: {} }   # php ini env-overrides
+  - { name: nginxtmp,  emptyDir: {} }   # nginx body/proxy temp buffers
 volumeMounts:
-  - { name: tmp, mountPath: /tmp }
-  - { name: run, mountPath: /run }
+  - { name: tmp,       mountPath: /tmp }
+  - { name: run,       mountPath: /run }
+  - { name: nginxconf, mountPath: /etc/nginx/conf.d }
+  - { name: fpmd,      mountPath: /usr/local/etc/php-fpm.d }
+  - { name: phpconf,   mountPath: /usr/local/etc/php/conf.d }
+  - { name: nginxtmp,  mountPath: /var/lib/nginx }
 ```
 
-The entrypoint renders runtime config under paths that are writable in this
-layout; anything it cannot write is reported with the exact path at boot
-rather than surfacing as a 500 later.
+Note that emptyDirs mounted over `/etc/nginx/conf.d`, `/usr/local/etc/php-fpm.d`
+and `/usr/local/etc/php/conf.d` start EMPTY - the entrypoint re-renders the
+nginx config, but the FPM pool files and php ini overlays baked into the image
+are hidden by the mount. The practical production shape is therefore usually
+the minimal one above (`/tmp` + `/run` + `/var/lib/nginx`, baked defaults,
+overrides via a ConfigMap mounted as files) rather than emptyDirs over the
+config directories. Anything unwritable is reported with the exact path at
+boot rather than surfacing as a 500 later.
 
 ## Arbitrary UIDs (OpenShift, PSP/PSS restricted)
 

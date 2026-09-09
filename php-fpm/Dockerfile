@@ -125,7 +125,11 @@ RUN rm -f /usr/local/etc/php-fpm.d/docker.conf \
           /usr/local/etc/php-fpm.d/zz-docker.conf \
           /usr/local/etc/php-fpm.d/www.conf \
           /usr/local/etc/php-fpm.d/www.conf.default \
-    && chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
+    && chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh \
+    # Upstream ships /var/www/html as 1777 (sticky + world-writable); with
+    # protected_symlinks that makes root-created symlinks unreadable by other
+    # UIDs (docker-library/php#1556). 0755, owned by the runtime user, below.
+    && chmod 0755 /var/www/html
 
 # FPM treats SIGTERM as immediate termination; SIGQUIT is the graceful stop
 # (finish in-flight requests, bounded by process_control_timeout). The official
