@@ -187,6 +187,7 @@ jobs:
             echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
             echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
             echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
+            echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
             echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
@@ -301,6 +302,7 @@ jobs:
           MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
           VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
+          OPENTELEMETRY_VERSION=${{ steps.versions.outputs.OPENTELEMETRY_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
           VERSIONS
             # Dev tier also needs xdebug/pcov versions

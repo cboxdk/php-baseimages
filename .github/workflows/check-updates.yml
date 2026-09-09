@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   check-updates:
@@ -146,4 +147,89 @@ jobs:
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "No updates found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GO-BINARY CVE WATCH - the pinned cbox-init / fpm-exporter binaries carry a
+  # Go runtime and dependency tree that ages independently of apt. The image
+  # Trivy gate already scans gobinary targets and would BLOCK the weekly
+  # rebuild reactively; this job gives lead time instead, so the binary gets
+  # rebuilt upstream before the gate trips (webdevops shipped stdlib CVEs in
+  # every image for 21 months this way - webdevops/Dockerfile#528/#573).
+  # ═══════════════════════════════════════════════════════════════════════════
+  scan-go-binaries:
+    name: Go-binary CVE watch (cbox-init, fpm-exporter)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download pinned binaries
+        run: |
+          chmod +x scripts/download-cbox-init.sh scripts/download-fpm-exporter.sh
+          ./scripts/download-cbox-init.sh
+          ./scripts/download-fpm-exporter.sh
+          mkdir -p ${RUNNER_TEMP}/go-binaries
+          cp cbox-init/binaries/cbox-init-linux-* ${RUNNER_TEMP}/go-binaries/
+          cp fpm-exporter/binaries/* ${RUNNER_TEMP}/go-binaries/ 2>/dev/null || true
+
+      - name: Scan binaries for fixable CRITICAL/HIGH CVEs
+        id: goscan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: rootfs
+          scan-ref: ${{ runner.temp }}/go-binaries
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Alert (open or update the tracking issue)
+        if: steps.goscan.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="Go CVE watch: pinned cbox-init/fpm-exporter binaries carry fixable CRITICAL/HIGH CVEs"
+          BODY="The weekly Go-binary scan found fixable CRITICAL/HIGH vulnerabilities in the pinned runtime binaries (see the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})).
+
+          Action: rebuild the affected binary upstream (cboxdk/init or cboxdk/fpm-exporter) against a current Go toolchain, cut a release, and bump the pin in versions.json. The image Trivy gate will BLOCK the next weekly rebuild until this is done."
+          existing=$(gh issue list --state open --search "in:title Go CVE watch" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing as of $(date -u +%F). $BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label security
+          fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SUITE WATCH - upstream drops Debian suites in UNANNOUNCED patch releases
+  # (bullseye vanished mid-LTS, docker-library/php#1596/#1619). This alerts the
+  # week bookworm stops receiving patches, instead of the week our builds freeze.
+  # ═══════════════════════════════════════════════════════════════════════════
+  suite-staleness:
+    name: Bookworm suite watch
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check bookworm still receives upstream patches
+        id: suite
+        continue-on-error: true
+        run: |
+          chmod +x scripts/check-suite-alive.sh
+          ./scripts/check-suite-alive.sh
+
+      - name: Alert (open or update the tracking issue)
+        if: steps.suite.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="Upstream suite watch: bookworm variants look dropped or lagging"
+          existing=$(gh issue list --state open --search "in:title suite watch" --json number --jq '.[0].number // empty')
+          BODY="php:<latest_patch>-fpm-bookworm is missing upstream while the same patch exists on the next suite. Precedent says the suite was dropped in a patch release with zero notice (docker-library/php#1619). Plan the trixie migration: flip ALL layers in one release (multi-stage COPY requires identical suites), and benchmark bookworm vs trixie first (docker-library/php#1431 was a 30-40% CPU regression at the previous suite jump). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still true as of $(date -u +%F). $BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY"
           fi

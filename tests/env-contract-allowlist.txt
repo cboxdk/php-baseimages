@@ -1,0 +1,10 @@
+# Env vars that are documented but consumed OUTSIDE this repo's shell/config
+# surface - each entry must name its real consumer. Anything else failing the
+# contract test is docs drift and must be wired or removed, not listed here.
+#
+# Read natively by the Xdebug extension from the environment:
+XDEBUG_CONFIG
+# Read by PhpStorm/IntelliJ (server mapping), passed through untouched:
+PHP_IDE_CONFIG
+# Read natively by the fpm-exporter binary (verified in its config tests):
+CBOX_MONITOR_LISTEN_ADDR

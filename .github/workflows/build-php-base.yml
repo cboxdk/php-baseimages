@@ -49,9 +49,34 @@ on:
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
+  # UPSTREAM PREFLIGHT - verify php:X-{cli,fpm}-bookworm exists with BOTH archs
+  # before any build starts. Upstream rollouts fill manifests in gradually
+  # (docker-library/php#1645, #1683) and stable tags have lagged releases by
+  # days (#1672); failing fast here leaves last week's good tags in place
+  # instead of publishing a half-arch or mismatched release.
+  # ═══════════════════════════════════════════════════════════════════════════
+  upstream-preflight:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            scripts/check-upstream-manifest.sh
+            versions.json
+          sparse-checkout-cone-mode: false
+      - name: Check upstream manifests (amd64 + arm64)
+        run: |
+          chmod +x scripts/check-upstream-manifest.sh
+          for v in $(jq -r '.php.supported[]' versions.json); do
+            ./scripts/check-upstream-manifest.sh "$v" cli fpm
+          done
+
+  # ═══════════════════════════════════════════════════════════════════════════
   # SLIM TIER - Minimal PHP with essential extensions only
   # ═══════════════════════════════════════════════════════════════════════════
   build-slim-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim' }}
     strategy:
       fail-fast: false
@@ -78,6 +103,7 @@ jobs:
     secrets: inherit
 
   build-slim-rootless-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'slim' }}
     strategy:
       fail-fast: false
@@ -106,6 +132,7 @@ jobs:
   # STANDARD TIER (DEFAULT) - ImageMagick, vips, Node.js included
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard' }}
     strategy:
       fail-fast: false
@@ -135,6 +162,7 @@ jobs:
     secrets: inherit
 
   build-rootless-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard' }}
     strategy:
       fail-fast: false
@@ -169,6 +197,7 @@ jobs:
   # CHROMIUM TIER - Includes Chromium for Browsershot/Dusk
   # ═══════════════════════════════════════════════════════════════════════════
   build-chromium-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium' }}
     strategy:
       fail-fast: false
@@ -199,6 +228,7 @@ jobs:
     secrets: inherit
 
   build-chromium-rootless-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'chromium' }}
     strategy:
       fail-fast: false
@@ -228,6 +258,7 @@ jobs:
   # DEV TIER - Standard + Xdebug, PCOV, SPX for development/testing
   # ═══════════════════════════════════════════════════════════════════════════
   build-dev-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev' }}
     strategy:
       fail-fast: false
@@ -258,6 +289,7 @@ jobs:
     secrets: inherit
 
   build-dev-rootless-matrix:
+    needs: upstream-preflight
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'dev' }}
     strategy:
       fail-fast: false

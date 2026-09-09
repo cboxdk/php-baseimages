@@ -56,6 +56,16 @@ jobs:
           # real workflow errors and unknown-label checks still gate.
           /tmp/actionlint -ignore 'SC2086' -ignore 'SC2129' -ignore 'SC2046'
 
+
+      - name: Env contract check
+        run: |
+          # Every env var the docs promise must be consumed by the images -
+          # both competitors shipped years of documented-but-dead envs
+          # (webdevops#351, serversideup#594). External consumers live in
+          # tests/env-contract-allowlist.txt with a named reason.
+          chmod +x tests/test-env-contract.sh
+          ./tests/test-env-contract.sh
+
       - name: Changelog drift check
         run: |
           # The repo-root CHANGELOG.md (what GitHub renders) must carry the
