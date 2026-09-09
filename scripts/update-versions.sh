@@ -111,7 +111,7 @@ UPDATED="$CURRENT"
 # --- PHP Extensions (PECL) ---
 log_info "Checking PECL extensions..."
 
-for ext in redis imagick apcu mongodb msgpack xdebug pcov uuid excimer vips; do
+for ext in redis imagick apcu mongodb msgpack xdebug pcov uuid excimer vips opentelemetry; do
     current=$(echo "$CURRENT" | jq -r ".extensions.$ext")
     latest=$(fetch_pecl_latest "$ext")
 

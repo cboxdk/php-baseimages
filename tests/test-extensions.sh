@@ -37,6 +37,7 @@ REQUIRED_EXTENSIONS=(
 OPTIONAL_EXTENSIONS=(
     "gd"
     "imagick"
+    "opentelemetry"
     "exif"
     "soap"
     "sockets"

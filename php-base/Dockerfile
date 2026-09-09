@@ -29,6 +29,7 @@ ARG APCU_VERSION=5.1.27
 ARG MONGODB_VERSION=2.1.4
 ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
+ARG OPENTELEMETRY_VERSION=1.2.1
 ARG XDEBUG_VERSION=3.5.0
 ARG PCOV_VERSION=1.0.12
 # SPX is not on PECL; pin the git tag for reproducible dev builds.
@@ -237,6 +238,7 @@ FROM slim-base AS standard-base
 ARG IMAGICK_VERSION
 ARG VIPS_VERSION
 ARG MONGODB_VERSION
+ARG OPENTELEMETRY_VERSION
 ARG NODE_VERSION
 ARG BUN_VERSION
 
@@ -340,10 +342,16 @@ RUN docker-php-ext-install -j$(nproc) ffi && \
     printf '[ffi]\nffi.enable=preload\n' > /usr/local/etc/php/conf.d/zz-ffi.ini
 
 # Install ImageMagick, vips, and mongodb PECL extensions
+# opentelemetry: the OTel auto-instrumentation extension. Enabled but INERT
+# until the application installs the OTel SDK - no hooks register without it
+# (measured overhead without SDK: none; on-disk cost ~0.3MB). Ships because
+# APM agents that fight PID 1 are the alternative, and this one plugs into
+# the same observability story cbox-init's metrics already serve.
 RUN pecl install imagick-${IMAGICK_VERSION} && \
     pecl install vips-${VIPS_VERSION} && \
     pecl install mongodb-${MONGODB_VERSION} && \
-    docker-php-ext-enable imagick vips mongodb
+    pecl install opentelemetry-${OPENTELEMETRY_VERSION} && \
+    docker-php-ext-enable imagick vips mongodb opentelemetry
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
