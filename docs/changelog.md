@@ -10,8 +10,17 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-09
+
+### Added
+- **cbox-init 3.3.0 with fpm-tune v1.1.0** - a pool that queues while the host's CPU is full is now HELD at its current size instead of grown ([cboxdk/fpm-tune#15](https://github.com/cboxdk/fpm-tune/pull/15)): CBOX_FPM_TUNE no longer trades CPU-bound throughput (measured -16% before) for workers no core can run. Verified end-to-end on the benchmark harness: 90s saturated CPU load, pool steady at its size, throughput equal to the untuned default (363 vs 360 rps). Also exposes `fpm_tune.cpu_ceiling`/`cpu_headroom` (init#142) for CPU-bound pools with >=50ms requests
+
+### Changed
+- **Extension bumps from the first working weekly PR** - apcu 5.1.28, mongodb 2.5.2, msgpack 3.0.1, xdebug 3.5.3, uuid 1.3.0, excimer 1.2.6 (all verified on PECL)
+
 ### Fixed
-- **Cold start 6.2s → 1.3s (with the upcoming cbox-init)** - benchmarking against the field exposed that container start was dominated by cbox-init's silent 5s `initial_delay` default before the FIRST health probe (php-fpm listens ~50ms after start; nginx waited out the delay on the dependency chain). Fixed upstream (no `initial_delay` default + 100ms fast-start probing until first success, failure semantics unchanged - [cboxdk/init#143](https://github.com/cboxdk/init/pull/143)), and the entrypoint no longer runs a redundant pre-flight check-config (serve validates the rendered config with better errors). Measured: dependency gate 4.95s → 0.20s, whole-container start → first HTTP 200 median 6.15s → 1.26s
+- **Weekly update automation hardened after its first live run** - the workflow committed its own log files into the PR (outputs now live in runner temp and the PR only adds versions.json), and the Node.js fetcher wrote a bare major ("24") that would break the image build while silently jumping LTS lines - it now tracks patches on the current LTS line and warns when a newer LTS exists
+- **Cold start 6.2s → 1.3s** - benchmarking against the field exposed that container start was dominated by cbox-init's silent 5s `initial_delay` default before the FIRST health probe (php-fpm listens ~50ms after start; nginx waited out the delay on the dependency chain). Fixed upstream (no `initial_delay` default + 100ms fast-start probing until first success, failure semantics unchanged - [cboxdk/init#143](https://github.com/cboxdk/init/pull/143)), and the entrypoint no longer runs a redundant pre-flight check-config (serve validates the rendered config with better errors). Measured: dependency gate 4.95s → 0.20s, whole-container start → first HTTP 200 median 6.15s → 1.26s
 
 ## [1.2.1] - 2026-09-08
 
@@ -20,11 +29,6 @@ All notable changes to Cbox PHP Base Images.
 - **Stray cbox.com references corrected to cbox.dk** - documentation-standards guides, the observability README, the Grafana dashboard help link, and a template maintainer label pointed at a domain that is not ours
 - **SBOMs made visible** - the SPDX SBOM attestations were always on the images but practically undiscoverable: SECURITY.md now shows the exact one-liner to extract the SBOM and provenance from any public image, and GitHub releases carry the default-PHP images' SBOMs as downloadable assets (added retroactively to v1.2.0)
 
-### Changed
-- **Extension bumps from the first working weekly PR** - apcu 5.1.28, mongodb 2.5.2, msgpack 3.0.1, xdebug 3.5.3, uuid 1.3.0, excimer 1.2.6 (all verified on PECL)
-
-### Fixed
-- **Weekly update automation hardened after its first live run** - the workflow committed its own log files (eol-output.txt/update-output.txt) into the PR (outputs now live in runner temp and the PR only adds versions.json), and the Node.js fetcher wrote a bare major ("24") that would break the image build (the Dockerfile downloads node-v${NODE_VERSION}-linux-*.tar.gz) while silently jumping LTS lines - it now tracks patches on the current LTS line and warns when a newer LTS exists (lts_name/eol must move with a manual major bump)
 
 ## [1.2.0] - 2026-09-07
 
