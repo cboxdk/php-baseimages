@@ -112,6 +112,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy FPM-specific configurations (shared across root/rootless)
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY php-fpm/common/fpm-global.conf /usr/local/etc/php-fpm.d/zz-global.conf
+COPY php-fpm/common/pm-mode-dynamic.conf /usr/local/etc/php-fpm.d/zz-pm-mode.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 # Own the pool directory outright. Upstream has reshuffled directives between
@@ -222,7 +223,8 @@ COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /var/www/.composer \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox /run/php && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php \
+    /usr/local/etc/php-fpm.d /usr/local/etc/php/conf.d && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
@@ -315,7 +317,8 @@ COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox /run/php && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php \
+    /usr/local/etc/php-fpm.d /usr/local/etc/php/conf.d && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
@@ -400,7 +403,8 @@ COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox /run/php && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php \
+    /usr/local/etc/php-fpm.d /usr/local/etc/php/conf.d && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
@@ -517,7 +521,8 @@ COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /var/lib/php/sessions /tmp/cbox /run/php && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions \
-    /docker-entrypoint-init.d /tmp/cbox /run/php && \
+    /docker-entrypoint-init.d /tmp/cbox /run/php \
+    /usr/local/etc/php-fpm.d /usr/local/etc/php/conf.d && \
     chmod 755 /docker-entrypoint-init.d
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \

@@ -171,6 +171,9 @@ write_pm_mode_dropin() {
     local dropin="/usr/local/etc/php-fpm.d/zz-pm-mode.conf"
     case "$mode" in
         dynamic)
+            # The image BAKES a dynamic drop-in with env placeholders, so an
+            # unwritable config dir (read-only rootfs) is fine for the default
+            # mode: FPM expands the exported PHP_FPM_* itself.
             printf '%s\n' \
                 "; Auto-generated: dynamic warm floor (PHP_FPM_PM=dynamic)" \
                 "[www]" \
@@ -178,7 +181,7 @@ write_pm_mode_dropin() {
                 "pm.min_spare_servers = ${PHP_FPM_MIN_SPARE:-1}" \
                 "pm.max_spare_servers = ${PHP_FPM_MAX_SPARE:-6}" \
                 "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
-                > "$dropin" 2>/dev/null || log_warn "Could not write $dropin"
+                > "$dropin" 2>/dev/null || log_info "Config dir not writable - the baked dynamic drop-in stands (env-expanded by FPM)"
             ;;
         ondemand)
             printf '%s\n' \
@@ -186,13 +189,19 @@ write_pm_mode_dropin() {
                 "[www]" \
                 "pm.process_idle_timeout = ${PHP_FPM_PROCESS_IDLE_TIMEOUT:-10s}" \
                 "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
-                > "$dropin" 2>/dev/null || log_warn "Could not write $dropin"
+                > "$dropin" 2>/dev/null || {
+                    log_error "PHP_FPM_PM=ondemand but $dropin is not writable - refusing to boot the WRONG process manager. Mount a writable emptyDir at /usr/local/etc/php-fpm.d."
+                    return 1
+                }
             ;;
         static)
             printf '%s\n' \
                 "; Auto-generated: static pool (PHP_FPM_PM=static)" \
                 "[www]" \
-                > "$dropin" 2>/dev/null || log_warn "Could not write $dropin"
+                > "$dropin" 2>/dev/null || {
+                    log_error "PHP_FPM_PM=static but $dropin is not writable - refusing to boot the WRONG process manager. Mount a writable emptyDir at /usr/local/etc/php-fpm.d."
+                    return 1
+                }
             ;;
         *)
             log_error "PHP_FPM_PM must be dynamic, ondemand or static (got: $mode)"

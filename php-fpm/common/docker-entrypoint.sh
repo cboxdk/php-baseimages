@@ -47,6 +47,10 @@ resolve_fpm_sizing() {
     export PHP_FPM_MAX_CHILDREN="${PHP_FPM_MAX_CHILDREN:-10}"
     export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
     export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+    # Exported (not only shell-defaulted) because the BAKED zz-pm-mode.conf
+    # carries ${PHP_FPM_MAX_SPAWN_RATE} for FPM's own env expansion - the
+    # read-only-rootfs path where the entrypoint cannot rewrite the drop-in.
+    export PHP_FPM_MAX_SPAWN_RATE="${PHP_FPM_MAX_SPAWN_RATE:-32}"
     export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
     export PHP_FPM_MAX_REQUESTS="${PHP_FPM_MAX_REQUESTS:-500}"
     export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"

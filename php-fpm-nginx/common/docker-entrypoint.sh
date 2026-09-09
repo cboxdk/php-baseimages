@@ -1071,6 +1071,9 @@ export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
 export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-256M}"
 export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
 export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+# Exported because the BAKED zz-pm-mode.conf carries ${PHP_FPM_MAX_SPAWN_RATE}
+# for FPM's own env expansion (the read-only-rootfs path).
+export PHP_FPM_MAX_SPAWN_RATE="${PHP_FPM_MAX_SPAWN_RATE:-32}"
 export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
 export PHP_FPM_MAX_REQUESTS="${PHP_FPM_MAX_REQUESTS:-500}"
 [ -n "$PHP_FPM_AUTOTUNE_PROFILE" ] && log_info "PHP-FPM autotune: profile=$PHP_FPM_AUTOTUNE_PROFILE (memory-derived worker sizing)"
