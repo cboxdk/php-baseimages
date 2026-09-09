@@ -65,6 +65,8 @@ jobs:
           # tests/env-contract-allowlist.txt with a named reason.
           chmod +x tests/test-env-contract.sh
           ./tests/test-env-contract.sh
+          chmod +x tests/test-docs-versions.sh
+          ./tests/test-docs-versions.sh
 
       - name: Changelog drift check
         run: |

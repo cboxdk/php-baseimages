@@ -52,6 +52,7 @@ These extensions are added in the standard tier (and inherited by chromium/dev):
 | Extension | Source | Description |
 |-----------|--------|-------------|
 | `mongodb` | PECL | MongoDB driver |
+| `opentelemetry` | PECL | OpenTelemetry auto-instrumentation (inert until the app installs the OTel SDK) |
 | `imagick` | PECL | ImageMagick bindings |
 | `vips` | PECL | libvips image processing |
 | `soap` | Built-in | SOAP protocol |
@@ -240,6 +241,7 @@ docker run --rm -e XDEBUG_MODE=debug \
 | imagick | ❌ | ✅ | ✅ | ✅ |
 | vips | ❌ | ✅ | ✅ | ✅ |
 | mongodb | ❌ | ✅ | ✅ | ✅ |
+| opentelemetry | ❌ | ✅ | ✅ | ✅ |
 | soap | ❌ | ✅ | ✅ | ✅ |
 | xsl | ❌ | ✅ | ✅ | ✅ |
 | ldap | ❌ | ✅ | ✅ | ✅ |
@@ -261,12 +263,13 @@ All PECL extensions use pinned versions for reproducibility:
 | Extension | Version |
 |-----------|---------|
 | redis | 6.3.0 |
-| apcu | 5.1.27 |
-| mongodb | 2.1.4 |
-| msgpack | 3.0.0 |
+| apcu | 5.1.28 |
+| mongodb | 2.5.2 |
+| opentelemetry | 1.2.1 |
+| msgpack | 3.0.1 |
 | imagick | 3.8.1 |
 | vips | 1.0.13 |
-| xdebug | 3.5.0 |
+| xdebug | 3.5.3 |
 | pcov | 1.0.12 |
 | spx | 0.4.22 (from GitHub) |
 
