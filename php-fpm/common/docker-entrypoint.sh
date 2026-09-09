@@ -52,6 +52,7 @@ resolve_fpm_sizing() {
     export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
     export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
     export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
+    export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-256M}"
 }
 
 # Write the pool settings that come from the environment.
@@ -188,6 +189,11 @@ export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 write_pm_mode_dropin || exit 1
 write_env_overrides
 validate_fpm_config
+# Assert the EFFECTIVE pool listen matches the exported address - tripwire
+# against any conf file loading after zz-custom.conf (docker-library/php#1635)
+if command -v verify_fpm_listen >/dev/null 2>&1; then
+    verify_fpm_listen
+fi
 setup_fpm_permissions
 
 # Run user-provided init scripts (using shared function if available)

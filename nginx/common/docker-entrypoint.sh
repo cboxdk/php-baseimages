@@ -117,7 +117,38 @@ trap reload_config HUP
 log_info "Starting nginx..."
 log_info "Nginx version: $(nginx -v 2>&1 | cut -d: -f2)"
 
+# Size worker_processes from the CONTAINER's CPU limit, not the host's core
+# count - `auto` reads the host, so a 2-CPU-limited container on a 64-core
+# node would spawn 64 workers (serversideup/docker-php#199). Override with
+# NGINX_WORKER_PROCESSES (a number, or 'auto' for nginx's own behavior).
+set_worker_processes() {
+    wp="${NGINX_WORKER_PROCESSES:-}"
+    if [ -z "$wp" ]; then
+        if [ -f /sys/fs/cgroup/cpu.max ]; then
+            read -r q p < /sys/fs/cgroup/cpu.max
+            if [ "$q" != "max" ] && [ "${p:-0}" -gt 0 ] 2>/dev/null; then
+                wp=$(( (q + p - 1) / p ))
+            fi
+        elif [ -f /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]; then
+            q=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us 2>/dev/null)
+            p=$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us 2>/dev/null)
+            if [ "${q:-0}" -gt 0 ] 2>/dev/null && [ "${p:-0}" -gt 0 ] 2>/dev/null; then
+                wp=$(( (q + p - 1) / p ))
+            fi
+        fi
+        [ -z "$wp" ] && wp=$(nproc 2>/dev/null || echo 1)
+    fi
+    [ "$wp" = "auto" ] && return 0
+    if [ -w /etc/nginx/nginx.conf ]; then
+        sed -i "s/^worker_processes .*/worker_processes ${wp};/" /etc/nginx/nginx.conf
+        log_info "worker_processes = ${wp} (container CPU limit; NGINX_WORKER_PROCESSES overrides)"
+    else
+        log_warn "nginx.conf not writable - worker_processes stays 'auto' (host core count)"
+    fi
+}
+
 # Run startup checks
+set_worker_processes
 validate_config
 setup_permissions
 test_upstream

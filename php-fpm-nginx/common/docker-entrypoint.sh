@@ -426,6 +426,23 @@ generate_runtime_configs() {
         : ${NGINX_FASTCGI_CONNECT_TIMEOUT:=60s}
         : ${NGINX_FASTCGI_SEND_TIMEOUT:=60s}
         : ${NGINX_FASTCGI_READ_TIMEOUT:=60s}
+        # Optional FastCGI connection reuse toward FPM. OFF by default: with
+        # keepalive an idle pooled connection is held by an FPM worker, which
+        # can pin workers on small pools. It earns its keep on CPU-throttled
+        # runtimes (Cloud Run cold starts) and very high-rps TCP setups.
+        : ${NGINX_FASTCGI_KEEP_CONN:=off}
+        : ${NGINX_FASTCGI_KEEPALIVE:=8}
+        if [ "${NGINX_FASTCGI_KEEP_CONN}" = "on" ] || [ "${NGINX_FASTCGI_KEEP_CONN}" = "true" ]; then
+            NGINX_FASTCGI_KEEP_CONN=on
+            NGINX_UPSTREAM_CONFIG="upstream cbox_fpm {\n    server ${NGINX_FASTCGI_PASS};\n    keepalive ${NGINX_FASTCGI_KEEPALIVE};\n}"
+            NGINX_UPSTREAM_CONFIG=$(printf '%b' "$NGINX_UPSTREAM_CONFIG")
+            NGINX_FASTCGI_PASS="cbox_fpm"
+            log_info "FastCGI keepalive enabled: ${NGINX_FASTCGI_KEEPALIVE} pooled connections to FPM"
+        else
+            NGINX_FASTCGI_KEEP_CONN=off
+            NGINX_UPSTREAM_CONFIG="# FastCGI keepalive disabled (set NGINX_FASTCGI_KEEP_CONN=on to pool connections)"
+        fi
+        export NGINX_FASTCGI_KEEP_CONN NGINX_UPSTREAM_CONFIG
         : ${NGINX_STATIC_EXPIRES:=1y}
         : ${NGINX_STATIC_CACHE_CONTROL:=public, immutable}
         : ${NGINX_STATIC_ACCESS_LOG:=off}
@@ -563,7 +580,7 @@ generate_runtime_configs() {
         fi
         export NGINX_SERVER_HEADER_CONFIG
 
-        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC}' \
+        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_UPSTREAM_CONFIG} ${NGINX_FASTCGI_KEEP_CONN} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
             log_error "Failed to generate Nginx config"
@@ -844,6 +861,24 @@ preflight_checks() {
                 }
             done
         fi
+
+        # Name any still-unwritable path NOW, with owner and runtime UID -
+        # instead of a cryptic 500 from the framework later. Rootless bind
+        # mounts are where this bites (auto-fix above can't chown there).
+        if command -v preflight_writable >/dev/null 2>&1; then
+            preflight_writable "$workdir/storage" "$workdir/storage/logs" \
+                "$workdir/storage/framework/cache" "$workdir/bootstrap/cache"
+        fi
+    fi
+
+    # Symfony: var/ is the writable tree
+    if [ -f "$workdir/bin/console" ] && command -v preflight_writable >/dev/null 2>&1; then
+        preflight_writable "$workdir/var" "$workdir/var/cache" "$workdir/var/log"
+    fi
+
+    # WordPress: uploads
+    if [ -f "$workdir/wp-config.php" ] && command -v preflight_writable >/dev/null 2>&1; then
+        preflight_writable "$workdir/wp-content/uploads"
     fi
 
     validate_cbox_init_local
@@ -880,6 +915,13 @@ preflight_checks
 # Generate runtime configs
 generate_runtime_configs
 
+# Size nginx worker_processes from the CONTAINER's CPU limit - the same
+# no-assumptions rule the FPM pool already follows. NGINX_WORKER_PROCESSES
+# overrides; 'auto' restores nginx's host-core-count behavior.
+if command -v apply_nginx_worker_processes >/dev/null 2>&1; then
+    apply_nginx_worker_processes /etc/nginx/nginx.conf
+fi
+
 # Set working directory
 WORKDIR="${WORKDIR:-/var/www/html}"
 cd "$WORKDIR" 2>/dev/null || cd /var/www/html
@@ -903,15 +945,45 @@ fi
 if is_true "${LARAVEL_MIGRATE_ENABLED:-false}"; then
     [ -f "$WORKDIR/artisan" ] && {
         log_info "Running Laravel migrations..."
-        migration_failed=0
-        # --isolated takes an atomic cache lock so that when several replicas boot
-        # together (rolling update) only ONE runs migrations; the others no-op
-        # instead of racing on the schema and crash-looping.
-        if [ "${APP_ENV:-production}" = "production" ]; then
-            php artisan migrate --force --no-interaction --isolated 2>&1 || migration_failed=1
-        else
-            php artisan migrate --no-interaction --isolated 2>&1 || migration_failed=1
-        fi
+        # --isolated takes an atomic cache lock so that when several replicas
+        # boot together (rolling update) only ONE runs migrations. But the lock
+        # needs a lock-capable cache store, and on a FIRST deploy with the
+        # database/sqlite cache driver the cache table does not exist yet
+        # (chicken-and-egg). LARAVEL_MIGRATE_ISOLATED: auto (default; use it
+        # when supported, drop it if the lock itself cannot bootstrap), true, false.
+        migrate_isolated="${LARAVEL_MIGRATE_ISOLATED:-auto}"
+        isolated_flag=""
+        case "$migrate_isolated" in
+            true) isolated_flag="--isolated" ;;
+            auto) php artisan migrate --help 2>/dev/null | grep -q -- '--isolated' && isolated_flag="--isolated" ;;
+        esac
+        prod_flag=""
+        [ "${APP_ENV:-production}" = "production" ] && prod_flag="--force"
+        # A database is routinely NOT ready the second a pod boots: retry
+        # connection-class failures with backoff instead of crash-looping.
+        migration_failed=1
+        attempt=1
+        max_attempts="${LARAVEL_MIGRATE_RETRIES:-5}"
+        while [ "$attempt" -le "$max_attempts" ]; do
+            if migrate_output=$(php artisan migrate $prod_flag --no-interaction $isolated_flag 2>&1); then
+                printf '%s\n' "$migrate_output"
+                migration_failed=0
+                break
+            fi
+            printf '%s\n' "$migrate_output"
+            if [ -n "$isolated_flag" ] && [ "$migrate_isolated" = "auto" ] && printf '%s' "$migrate_output" | grep -qiE 'cache table|lock'; then
+                log_warn "Isolated migration could not take its cache lock (first deploy without cache table?) - retrying WITHOUT --isolated"
+                isolated_flag=""
+                continue
+            fi
+            if [ "$attempt" -lt "$max_attempts" ] && printf '%s' "$migrate_output" | grep -qiE 'SQLSTATE\[HY000\] \[2002\]|Connection refused|could not connect|Connection timed out|getaddrinfo|No such file or directory.*sock'; then
+                log_warn "Database not reachable yet (attempt $attempt/$max_attempts) - retrying in 3s"
+                attempt=$((attempt + 1))
+                sleep 3
+                continue
+            fi
+            break
+        done
         if [ "$migration_failed" = "1" ]; then
             if is_true "${LARAVEL_MIGRATE_ALLOW_FAILURE:-false}"; then
                 log_warn "Migration failed - continuing anyway (LARAVEL_MIGRATE_ALLOW_FAILURE=true)"
@@ -980,6 +1052,7 @@ export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
 export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
 export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
+export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-256M}"
 export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
 export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
 export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
@@ -999,6 +1072,13 @@ fi
 # Start Cbox Init
 CBOX_INIT_CONFIG="${CBOX_INIT_CONFIG:-/etc/cbox-init/cbox-init.yaml}"
 write_pm_mode_dropin || exit 1
+# Assert the EFFECTIVE pool listen matches what setup_fpm_listen exported -
+# the tripwire against any conf file loading after ours (docker-library/php#1635).
+# Must run AFTER every PHP_FPM_* export and drop-in write: php-fpm -tt parses
+# the full config, and unresolved ${PHP_FPM_PM} makes the parse itself fail.
+if command -v verify_fpm_listen >/dev/null 2>&1; then
+    verify_fpm_listen
+fi
 apply_cbox_init_env_overrides
 log_info "Starting Cbox Init process manager"
 log_info "Config: $CBOX_INIT_CONFIG"

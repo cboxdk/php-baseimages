@@ -135,7 +135,7 @@ RUN mkdir -p /var/www/html/public && \
     chown -R www-data:www-data /var/www/html
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -234,7 +234,7 @@ RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && 
     chown -R www-data:www-data /var/www /tmp/cbox /usr/local/etc/php/conf.d /usr/local/etc/php-fpm.d
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data
@@ -324,7 +324,7 @@ RUN mkdir -p /var/www/html/public && \
     chown -R www-data:www-data /var/www/html
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -423,7 +423,7 @@ RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && 
     chown -R www-data:www-data /var/www /tmp/cbox /usr/local/etc/php/conf.d /usr/local/etc/php-fpm.d
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data
@@ -513,7 +513,7 @@ RUN mkdir -p /var/www/html/public && \
     chown -R www-data:www-data /var/www/html
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -612,7 +612,7 @@ RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && 
     chown -R www-data:www-data /var/www /tmp/cbox /usr/local/etc/php/conf.d /usr/local/etc/php-fpm.d
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data
@@ -702,7 +702,7 @@ RUN mkdir -p /var/www/html/public && \
     chown -R www-data:www-data /var/www/html
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -801,7 +801,7 @@ RUN mkdir -p /var/www/html/public /var/www/.composer /var/www/.npm /tmp/cbox && 
     chown -R www-data:www-data /var/www /tmp/cbox /usr/local/etc/php/conf.d /usr/local/etc/php-fpm.d
 
 # Health check (checks both nginx and php-fpm)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data

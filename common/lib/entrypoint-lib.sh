@@ -205,18 +205,131 @@ write_pm_mode_dropin() {
 ###########################################
 # Init Scripts Execution
 ###########################################
+# Runs /docker-entrypoint-init.d/*.sh in VERSION-SORT order (sort -V), so
+# 2-a.sh runs before 10-b.sh - plain glob order would run 10 before 2, the
+# classic prefix trap. Scripts are EXECUTED (not sourced): an `exit` inside a
+# user script can never abort the container boot chain.
+#   - a *.sh without +x is a warning, not a silent skip (top support trap)
+#   - CBOX_INIT_SCRIPTS_STRICT=true makes a failing script abort the boot
+#     (default: warn and continue)
 run_init_scripts() {
     local init_dir="${1:-/docker-entrypoint-init.d}"
 
     [ ! -d "$init_dir" ] && return 0
 
-    for script in "$init_dir"/*.sh; do
+    local script oldIFS="$IFS"
+    IFS='
+'
+    for script in $(ls "$init_dir"/*.sh 2>/dev/null | sort -V); do
+        IFS="$oldIFS"
         [ ! -f "$script" ] && continue
-        if [ -x "$script" ]; then
-            log_info "Running init script: $(basename "$script")"
-            "$script" || log_warn "Init script $(basename "$script") failed"
+        if [ ! -x "$script" ]; then
+            log_warn "Init script $(basename "$script") is not executable - SKIPPING. chmod +x it (or COPY --chmod=755) to run it."
+            continue
+        fi
+        log_info "Running init script: $(basename "$script")"
+        if ! "$script"; then
+            if [ "${CBOX_INIT_SCRIPTS_STRICT:-false}" = "true" ]; then
+                log_error "Init script $(basename "$script") failed - aborting startup (CBOX_INIT_SCRIPTS_STRICT=true)"
+                exit 1
+            fi
+            log_warn "Init script $(basename "$script") failed - continuing (set CBOX_INIT_SCRIPTS_STRICT=true to abort on failure)"
         fi
     done
+    IFS="$oldIFS"
+}
+
+###########################################
+# PHP-FPM effective-config assertion
+###########################################
+# Upstream has moved pool directives between its conf.d files in PATCH
+# releases (docker-library/php#1635), silently overriding user listen
+# addresses across the ecosystem. We delete upstream's files at build time;
+# this assert is the tripwire in case any future layer reintroduces one:
+# the EFFECTIVE listen (php-fpm -tt, env expanded) must be exactly what the
+# entrypoint exported. Fails loud at boot instead of mysterious 502s.
+verify_fpm_listen() {
+    local expected="${PHP_FPM_LISTEN_ADDR:-9000}"
+    local effective
+    effective=$(php-fpm -tt 2>&1 | grep -E '[[:space:]]listen = ' | sed 's/^.*listen = //' | tail -1)
+    if [ -z "$effective" ]; then
+        log_warn "Could not read effective listen from php-fpm -tt - skipping listen assertion"
+        return 0
+    fi
+    if [ "$effective" != "$expected" ]; then
+        log_error "PHP-FPM effective listen is '$effective' but the entrypoint configured '$expected'."
+        log_error "A conf file loading after zz-custom.conf is overriding the pool (check /usr/local/etc/php-fpm.d/)."
+        exit 1
+    fi
+    log_info "PHP-FPM listen verified: $effective"
+}
+
+###########################################
+# Container CPU limit (cgroup-aware)
+###########################################
+# `worker_processes auto` reads the HOST's core count, not the container's
+# CPU quota - a 500m-CPU pod on a 64-core node gets 64 workers
+# (serversideup/docker-php#199, closed unfixed). The whole premise of these
+# images is sizing from the container's real limits; this reads them.
+detect_cpu_limit() {
+    local cpus="" quota period
+    if [ -f /sys/fs/cgroup/cpu.max ]; then # cgroup v2
+        read -r quota period < /sys/fs/cgroup/cpu.max
+        if [ "$quota" != "max" ] && [ "${period:-0}" -gt 0 ] 2>/dev/null; then
+            cpus=$(( (quota + period - 1) / period ))
+        fi
+    elif [ -f /sys/fs/cgroup/cpu/cpu.cfs_quota_us ]; then # cgroup v1
+        quota=$(cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us 2>/dev/null)
+        period=$(cat /sys/fs/cgroup/cpu/cpu.cfs_period_us 2>/dev/null)
+        if [ "${quota:-0}" -gt 0 ] 2>/dev/null && [ "${period:-0}" -gt 0 ] 2>/dev/null; then
+            cpus=$(( (quota + period - 1) / period ))
+        fi
+    fi
+    if [ -z "$cpus" ] || ! [ "$cpus" -ge 1 ] 2>/dev/null; then
+        cpus=$(nproc 2>/dev/null || echo 1)
+    fi
+    echo "$cpus"
+}
+
+# Rewrite worker_processes in the nginx main config to the container's CPU
+# limit. NGINX_WORKER_PROCESSES overrides (a number, or 'auto' to restore
+# nginx's host-count behavior).
+apply_nginx_worker_processes() {
+    local conf="${1:-/etc/nginx/nginx.conf}"
+    local wp="${NGINX_WORKER_PROCESSES:-}"
+    [ -z "$wp" ] && wp=$(detect_cpu_limit)
+    [ "$wp" = "auto" ] && return 0
+    if [ -w "$conf" ] && grep -qE '^worker_processes ' "$conf"; then
+        sed -i "s/^worker_processes .*/worker_processes ${wp};/" "$conf"
+        log_info "nginx worker_processes = ${wp} (container CPU limit; override with NGINX_WORKER_PROCESSES, 'auto' = host core count)"
+    else
+        log_warn "Cannot set nginx worker_processes ($conf not writable): 'auto' will size from the HOST's cores, not the container limit"
+    fi
+}
+
+###########################################
+# Writable-path preflight
+###########################################
+# The single biggest support category across every PHP image project is
+# "Permission denied" on a bind mount, diagnosed over days because nothing
+# names the offending path. This names it, with owner and runtime UID, before
+# the app produces a cryptic 500. Warns by default (a read-only mount can be
+# intentional); CBOX_PREFLIGHT_STRICT=true aborts the boot instead.
+preflight_writable() {
+    local failed=0 path owner
+    for path in "$@"; do
+        [ -e "$path" ] || continue
+        if [ ! -w "$path" ]; then
+            owner=$(stat -c '%U(%u):%G(%g) mode %a' "$path" 2>/dev/null || echo "unknown")
+            log_warn "NOT WRITABLE: $path is owned by $owner, but this container runs as uid $(id -u). Fix the bind mount's ownership on the host (chown $(id -u):$(id -g)) or mount it elsewhere."
+            failed=1
+        fi
+    done
+    if [ "$failed" = "1" ] && [ "${CBOX_PREFLIGHT_STRICT:-false}" = "true" ]; then
+        log_error "Aborting startup: unwritable paths above (CBOX_PREFLIGHT_STRICT=true)"
+        exit 1
+    fi
+    return 0
 }
 
 ###########################################

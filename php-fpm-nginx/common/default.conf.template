@@ -17,6 +17,11 @@
 ${NGINX_REAL_IP_CONFIG}
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Optional FastCGI upstream with connection pooling (NGINX_FASTCGI_KEEP_CONN=on)
+# ─────────────────────────────────────────────────────────────────────────────
+${NGINX_UPSTREAM_CONFIG}
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Client-facing scheme/port behind a TLS-terminating proxy.
 # Honor the upstream X-Forwarded-Proto/Port when present, else fall back to this
 # server's own values. Without this, TLS terminated upstream (Traefik/Cloudflare/
@@ -140,6 +145,20 @@ ${NGINX_SECURITY_HEADERS}
     }
 
     # ─────────────────────────────────────────────────────────────────────────
+    # SECURITY: No PHP execution from user-upload trees
+    # A file uploaded to Laravel's public disk (public/storage -> storage/app/
+    # public) or WordPress uploads must never reach PHP-FPM - not even with a
+    # trailing PATH_INFO twist like /storage/evil.php/x (hence the (/|$) anchor).
+    # Regex locations match in order, so these MUST stay above the PHP block.
+    # ─────────────────────────────────────────────────────────────────────────
+    location ~* ^/storage/.*\.php(/|$) {
+        deny all;
+    }
+    location ~* ^/wp-content/uploads/.*\.php(/|$) {
+        deny all;
+    }
+
+    # ─────────────────────────────────────────────────────────────────────────
     # PHP-FPM (with PATH_INFO support for Symfony/Laravel)
     # ─────────────────────────────────────────────────────────────────────────
     location ~ \.php$ {
@@ -150,6 +169,7 @@ ${NGINX_SECURITY_HEADERS}
 
         # PHP-FPM connection
         fastcgi_pass ${NGINX_FASTCGI_PASS};
+        fastcgi_keep_conn ${NGINX_FASTCGI_KEEP_CONN};
         fastcgi_index index.php;
 
         # PATH_INFO support (required for Symfony, some Laravel routes)
@@ -230,6 +250,7 @@ ${NGINX_SECURITY_HEADERS}
         deny all;
         access_log off;
         fastcgi_pass ${NGINX_FASTCGI_PASS};
+        fastcgi_keep_conn ${NGINX_FASTCGI_KEEP_CONN};
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
     }

@@ -114,7 +114,23 @@ COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY php-fpm/common/fpm-global.conf /usr/local/etc/php-fpm.d/zz-global.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
+# Own the pool directory outright. Upstream has reshuffled directives between
+# docker.conf and zz-docker.conf in PATCH releases (docker-library/php#1635),
+# and zz-docker.conf loads AFTER zz-custom.conf ('c' < 'd'), so anything
+# upstream adds there would silently override the env-driven pool - the exact
+# failure that broke unix-socket setups across the ecosystem in 8.4.17/8.5.2.
+# Everything those files provided now lives in zz-global.conf/zz-custom.conf,
+# and the entrypoint asserts the effective listen address at boot.
+RUN rm -f /usr/local/etc/php-fpm.d/docker.conf \
+          /usr/local/etc/php-fpm.d/zz-docker.conf \
+          /usr/local/etc/php-fpm.d/www.conf \
+          /usr/local/etc/php-fpm.d/www.conf.default \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
+
+# FPM treats SIGTERM as immediate termination; SIGQUIT is the graceful stop
+# (finish in-flight requests, bounded by process_control_timeout). The official
+# images ship no STOPSIGNAL and sever requests on every `docker stop`.
+STOPSIGNAL SIGQUIT
 
 # --- Standard tier: adds ImageMagick, vips, Node.js runtime deps ---
 FROM fpm-slim-deps AS fpm-standard-deps
@@ -168,7 +184,7 @@ COPY --from=base-slim /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -205,7 +221,7 @@ RUN mkdir -p /var/www/html /var/www/.composer \
     /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data
@@ -256,7 +272,7 @@ COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -298,7 +314,7 @@ RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data
@@ -339,7 +355,7 @@ COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -383,7 +399,7 @@ RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data
@@ -440,7 +456,7 @@ COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
     chown -R www-data:www-data /var/www /var/lib/php/sessions
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 WORKDIR /var/www/html
@@ -500,7 +516,7 @@ RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
     /docker-entrypoint-init.d /tmp/cbox /run/php && \
     chmod 755 /docker-entrypoint-init.d
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 USER www-data

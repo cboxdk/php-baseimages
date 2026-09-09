@@ -78,6 +78,13 @@ processes:
   php-fpm:
     enabled: true
     command: ["php-fpm", "-F", "-R"]
+    shutdown:
+      # SIGQUIT is FPM's graceful-stop signal; SIGTERM (the supervisor default)
+      # is immediate termination that severs in-flight requests on every deploy.
+      # process_control_timeout (10s, fpm-global.conf) bounds the worker drain;
+      # this timeout bounds the whole stop before SIGKILL.
+      signal: SIGQUIT
+      timeout: 25
     type: longrun
     restart: always
     scale: 1
@@ -109,6 +116,11 @@ processes:
   nginx:
     enabled: true
     command: ["nginx", "-g", "daemon off;"]
+    shutdown:
+      # SIGQUIT = graceful stop (finish in-flight requests); the supervisor's
+      # SIGTERM default is nginx's fast shutdown.
+      signal: SIGQUIT
+      timeout: 25
     type: longrun
     restart: always
     scale: 1

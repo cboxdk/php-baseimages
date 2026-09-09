@@ -42,13 +42,16 @@ ENV CBOX_IMAGE_TIER=slim
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d
 
 RUN mkdir -p /etc/cbox-init
 COPY php-cli/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -70,14 +73,17 @@ ENV CBOX_IMAGE_TIER=slim
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d && \
     chown -R www-data:www-data /docker-entrypoint-init.d
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-cli/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 USER www-data
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -98,13 +104,16 @@ ENV CBOX_IMAGE_TIER=standard
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d
 
 RUN mkdir -p /etc/cbox-init
 COPY php-cli/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -126,14 +135,17 @@ ENV CBOX_IMAGE_TIER=standard
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d && \
     chown -R www-data:www-data /docker-entrypoint-init.d
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-cli/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 USER www-data
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -154,13 +166,16 @@ ENV CBOX_IMAGE_TIER=chromium
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d
 
 RUN mkdir -p /etc/cbox-init
 COPY php-cli/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -182,14 +197,17 @@ ENV CBOX_IMAGE_TIER=chromium
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d && \
     chown -R www-data:www-data /docker-entrypoint-init.d
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-cli/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 USER www-data
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -210,13 +228,16 @@ ENV CBOX_IMAGE_TIER=dev
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d
 
 RUN mkdir -p /etc/cbox-init
 COPY php-cli/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -238,14 +259,17 @@ ENV CBOX_IMAGE_TIER=dev
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh && \
+COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
+COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
+COPY php-cli/common/healthcheck-horizon.sh /usr/local/bin/healthcheck-horizon.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh /usr/local/bin/healthcheck-worker.sh /usr/local/bin/healthcheck-schedule.sh /usr/local/bin/healthcheck-horizon.sh && \
     mkdir -p /docker-entrypoint-init.d && \
     chown -R www-data:www-data /docker-entrypoint-init.d
 RUN mkdir -p /etc/cbox-init && chown -R www-data:www-data /etc/cbox-init
 COPY php-cli/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 USER www-data
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

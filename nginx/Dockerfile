@@ -63,7 +63,7 @@ WORKDIR /var/www/html
 EXPOSE 80 443
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --start-interval=3s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 STOPSIGNAL SIGQUIT
