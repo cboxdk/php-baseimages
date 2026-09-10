@@ -278,6 +278,11 @@ jobs:
           ARGS_FILE=$(mktemp)
           # All images need PHP_VERSION as a build arg (used in FROM lines)
           echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
+          # Pin the upstream chain to THIS branch's release channel: without it a
+          # maintenance branch (release/v1) would build FROM rolling tags and
+          # inherit the newer major's base through them.
+          CHANNEL=$(jq -r '.release.channel // empty' versions.json 2>/dev/null || true)
+          [ -n "$CHANNEL" ] && echo "BASE_CHANNEL=-v${CHANNEL}" >> "$ARGS_FILE"
           # Weekly cache refresh (ISO week) - busts the root apt layers once
           # per week so scheduled security rebuilds actually install fresh
           # packages; intra-week pushes keep full layer-cache speed.
@@ -515,6 +520,11 @@ jobs:
           ARGS_FILE=$(mktemp)
           # All images need PHP_VERSION as a build arg (used in FROM lines)
           echo "PHP_VERSION=${{ inputs.php-version }}" >> "$ARGS_FILE"
+          # Pin the upstream chain to THIS branch's release channel: without it a
+          # maintenance branch (release/v1) would build FROM rolling tags and
+          # inherit the newer major's base through them.
+          CHANNEL=$(jq -r '.release.channel // empty' versions.json 2>/dev/null || true)
+          [ -n "$CHANNEL" ] && echo "BASE_CHANNEL=-v${CHANNEL}" >> "$ARGS_FILE"
           # Weekly cache refresh (ISO week) - busts the root apt layers once
           # per week so scheduled security rebuilds actually install fresh
           # packages; intra-week pushes keep full layer-cache speed.

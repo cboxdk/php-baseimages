@@ -13,18 +13,23 @@
 # ============================================================================
 
 ARG PHP_VERSION=8.5
+# BASE_CHANNEL pins which channel of the upstream image this build consumes:
+# CI passes "-vN" from versions.json release.channel, so a maintenance branch
+# (release/v1) builds FROM the -v1 chain and can never inherit a newer major
+# through the rolling tags. Empty default keeps local builds on rolling.
+ARG BASE_CHANNEL=""
 
 # ============================================================================
 # Import base images for each tier from php-fpm
 # ============================================================================
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim AS base-slim
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim-rootless AS base-slim-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-rootless AS base-standard-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium AS base-chromium
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium-rootless AS base-chromium-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev AS base-dev
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev-rootless AS base-dev-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim${BASE_CHANNEL} AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim-rootless${BASE_CHANNEL} AS base-slim-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm${BASE_CHANNEL} AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-rootless${BASE_CHANNEL} AS base-standard-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium${BASE_CHANNEL} AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium-rootless${BASE_CHANNEL} AS base-chromium-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev${BASE_CHANNEL} AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev-rootless${BASE_CHANNEL} AS base-dev-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # BROTLI-BUILDER: ngx_brotli dynamic modules for Debian's nginx
