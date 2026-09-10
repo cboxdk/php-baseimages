@@ -5,6 +5,14 @@ name: Build and Push PHP-FPM+Nginx Multi-Service Images
 # where php-fpm-nginx tries to build before php-fpm images are pushed.
 # Instead, use repository_dispatch from php-fpm workflow or workflow_dispatch.
 
+# One chain per ref at a time: two chains racing on the same branch is how
+# the -v1 tags briefly carried an older build's content (a flake rerun
+# finishing after the next push's chain). Queued, not cancelled - a running
+# security rebuild must finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   # NO push trigger - php-fpm-nginx depends on php-fpm images being built first
   # Use repository_dispatch from php-fpm workflow instead

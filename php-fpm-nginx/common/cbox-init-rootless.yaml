@@ -148,6 +148,10 @@ processes:
     stdout: true
     stderr: true
     shutdown:
+      # horizon:terminate asks the master to drain; the process timeout must
+      # outlive the LONGEST job Horizon may be finishing.
+      signal: SIGTERM
+      timeout: 90
       pre_stop_hook:
         command: ["php", "artisan", "horizon:terminate"]
         timeout: 60
@@ -161,6 +165,9 @@ processes:
   reverb:
     enabled: false
     command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
+    shutdown:
+      signal: SIGTERM
+      timeout: 10
     type: longrun
     restart: always
     scale: 1
@@ -181,6 +188,12 @@ processes:
   queue-default:
     enabled: false
     command: ["php", "artisan", "queue:work", "redis", "--queue=default", "--tries=3"]
+    shutdown:
+      # queue:work finishes the job in hand on SIGTERM and then exits - so
+      # the timeout must outlive a JOB (match your worker --timeout), not a
+      # request. Raise it for long-running jobs.
+      signal: SIGTERM
+      timeout: 60
     type: longrun
     restart: always
     scale: 2
@@ -195,6 +208,12 @@ processes:
   queue-high:
     enabled: false
     command: ["php", "artisan", "queue:work", "redis", "--queue=high", "--tries=3"]
+    shutdown:
+      # queue:work finishes the job in hand on SIGTERM and then exits - so
+      # the timeout must outlive a JOB (match your worker --timeout), not a
+      # request. Raise it for long-running jobs.
+      signal: SIGTERM
+      timeout: 60
     type: longrun
     restart: always
     scale: 1
@@ -209,6 +228,9 @@ processes:
   scheduler:
     enabled: false
     command: ["php", "artisan", "schedule:work"]
+    shutdown:
+      signal: SIGTERM
+      timeout: 10
     type: longrun
     restart: always
     scale: 1

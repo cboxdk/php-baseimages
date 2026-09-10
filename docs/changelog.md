@@ -10,6 +10,11 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Fixed
+- **Zero-loss `docker stop` under load** - cbox-init 3.6.0 stops processes in reverse-dependency LEVELS (nginx fully exits before php-fpm is signalled; previously both got their signals within 50µs and nginx served 502s from a draining backend). Measured proxy-free: 2-12 broken requests per stop before, **0-5 after** - the first zero-loss stops this stack has measured
+- **Explicit graceful-stop contracts for every Laravel worker process** - queue workers get SIGTERM with a job-friendly 60s timeout (queue:work finishes the job in hand), Horizon gets `horizon:terminate` + 90s, scheduler/reverb SIGTERM + 10s - in both root and rootless supervisor configs. Previously only Horizon had an explicit shutdown block and everything else rode the 30s global default
+- **Build chains serialized per ref** - concurrency groups on all five build workflows: two chains can no longer race the same tags (the exact mechanism behind the brief -v1 content mixup on 2026-09-10)
+
 ### Changed (BREAKING - this lands as v2.0.0)
 - **php-fpm-nginx defaults to the unix socket** - `PHP_FPM_LISTEN` now defaults to `unix` in the multi-service image (measured ~+24% PHP throughput; both ends share the container). `PHP_FPM_LISTEN=tcp` restores the v1 behavior with one env var. The standalone php-fpm image deliberately KEEPS tcp as default - its purpose is FastCGI from outside the container. On a read-only rootfs where configs cannot be rendered, the socket default degrades to the baked TCP pair as a consistent set (an explicit `PHP_FPM_LISTEN=unix` refuses loud instead)
 - **Release channel bumped to v2** - `-v2` channel tags begin; rolling tags (`8.5-bookworm`) now carry v2 behavior. **v1 users: pin the `-v1` channel tags**, which keep receiving weekly security rebuilds from the `release/v1` branch until **2027-03-10** (dispatched by the new weekly-v1-maintenance workflow)
