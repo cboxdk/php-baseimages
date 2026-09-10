@@ -4,6 +4,11 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-10
+
+### Added
+- **cbox-init 3.5.0 with fpm-tune v1.3.0 - a saturated pool converges to its measured parallelism** - with `CBOX_FPM_TUNE=true` + `CBOX_INIT_GLOBAL_FPM_TUNE_CPU_CEILING=true`, a CPU-saturated pool is now CUT to the cores it actually drives (kernel tick deltas) x headroom, instead of being held oversized ([cboxdk/fpm-tune#18](https://github.com/cboxdk/fpm-tune/pull/18)). Live proof on the benchmark harness: a 24-worker pool saturating 2 cores cut to 4 at the trust point - **+25% throughput (318 -> 392-398 rps), fifteen stable windows, one resize event in 46 minutes** - landing exactly on the worker-sweep's measured optimum. Double-gated: the ceiling env AND a trusted baseline; io-shaped pools on a busy host are explicitly protected
+
 ### Security
 - **PHP execution blocked from user-upload trees** - `/storage/*.php` and `/wp-content/uploads/*.php` are denied in nginx before the PHP handler, PATH_INFO-safe (`(/|$)` anchored). A file uploaded to Laravel's public disk could previously be executed by requesting it directly (the Livewire-CVE class; a comparable image shipped a bypassable version of this block)
 - **`register_argc_argv = Off`** - official PHP images ship no base php.ini, so the engine default (On) applied: a web request's query string became `$argv` in scripts that consult it (the CVE-2024-56145 class of RCE). CLI is unaffected (its SAPI always populates argv)
