@@ -202,9 +202,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
           cd cbox-init/binaries
@@ -223,7 +223,7 @@ jobs:
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           echo "Downloading Cbox FPM Exporter v${FPX_VERSION}..."
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
@@ -444,9 +444,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums from checksums.txt..."
           cd cbox-init/binaries
@@ -465,7 +465,7 @@ jobs:
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           echo "Downloading Cbox FPM Exporter v${FPX_VERSION}..."
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
