@@ -10,6 +10,14 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-10
+
+### Fixed
+- **Zero-loss `docker stop` under load** - cbox-init 3.6.0 stops processes in reverse-dependency LEVELS (nginx fully exits before php-fpm is signalled). Measured proxy-free: 2-12 broken requests per stop before, **0-5 after**
+- **Explicit graceful-stop contracts for every Laravel worker process** - queue workers SIGTERM + 60s (queue:work finishes the job in hand), Horizon `horizon:terminate` + 90s, scheduler/reverb SIGTERM + 10s, in both supervisor configs
+- **Build chains serialized per ref** (concurrency groups) and **channel-pinned FROM tags** (`BASE_CHANNEL`), closing the race that briefly left `-v1` tags carrying an older build's content on 2026-09-10
+- **Release-asset downloads retry** - transient fetch failures no longer fail whole build chains
+
 ## [1.5.0] - 2026-09-10
 
 ### Added
