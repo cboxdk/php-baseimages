@@ -204,7 +204,20 @@ setup_user_permissions_extended() {
 # PHP_FPM_SOCKET_PATH overrides the default socket location.
 ###########################################
 setup_fpm_listen() {
-    local mode="${PHP_FPM_LISTEN:-tcp}"
+    # v2: the unix socket is the DEFAULT for this multi-service image - both
+    # ends live in the same container and the socket measured ~+25% PHP
+    # throughput over loopback TCP. The standalone php-fpm image keeps tcp
+    # (its purpose is FastCGI from OUTSIDE the container). Whether the
+    # operator chose explicitly matters to the read-only-rootfs fallback
+    # below: a default can quietly degrade to the baked TCP pair, an explicit
+    # choice must be honored or refused loud.
+    if [ -n "${PHP_FPM_LISTEN+x}" ]; then
+        CBOX_FPM_LISTEN_EXPLICIT=true
+    else
+        CBOX_FPM_LISTEN_EXPLICIT=false
+    fi
+    local mode="${PHP_FPM_LISTEN:-unix}"
+    export PHP_FPM_LISTEN="$mode"
     case "$mode" in
         tcp)
             export PHP_FPM_LISTEN_ADDR="9000"
@@ -594,7 +607,21 @@ generate_runtime_configs() {
                 log_error "Failed to render Nginx config while these were configured via env: ${NGINX_USER_OVERRIDES}- refusing to boot on the baked defaults. Mount a writable emptyDir at /etc/nginx/conf.d (see docs: restricted runtimes)."
                 exit 1
             fi
+            if [ "${CBOX_FPM_LISTEN_EXPLICIT:-false}" = "true" ] && [ "${PHP_FPM_LISTEN}" = "unix" ]; then
+                log_error "Failed to render Nginx config while PHP_FPM_LISTEN=unix was set explicitly - the baked fallback config speaks TCP, so the socket cannot be honored. Mount a writable emptyDir at /etc/nginx/conf.d (see docs: restricted runtimes)."
+                exit 1
+            fi
             log_warn "Could not write /etc/nginx/conf.d/default.conf (read-only rootfs?) - booting on the image's baked default config. For env-driven nginx config, mount an emptyDir at /etc/nginx/conf.d."
+            if [ "${PHP_FPM_LISTEN}" = "unix" ]; then
+                # The baked configs are a consistent TCP pair (nginx pass,
+                # FPM listen via env, cbox-init health probe). The socket
+                # DEFAULT degrades with them as a set; an explicit choice
+                # was refused above instead.
+                log_warn "Socket default degrades to TCP with the baked config set (PHP_FPM_LISTEN=unix explicitly to insist)."
+                export PHP_FPM_LISTEN=tcp
+                export PHP_FPM_LISTEN_ADDR=9000
+                unset PHP_FPM_SOCKET_URI 2>/dev/null || true
+            fi
         }
     fi
 

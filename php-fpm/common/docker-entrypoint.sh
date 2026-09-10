@@ -36,6 +36,10 @@ resolve_fpm_sizing() {
     # Listen transport: "9000" (TCP, default) or a unix socket path with
     # PHP_FPM_LISTEN=unix. Same contract as the php-fpm-nginx image; here the
     # socket use case is a shared volume with a separate nginx container.
+    # tcp stays the DEFAULT here, deliberately diverging from php-fpm-nginx's
+    # unix default (v2): this image's whole purpose is FastCGI from OUTSIDE
+    # the container (nginx sidecars, separate pods), where a unix socket
+    # requires a shared volume nobody mounts by accident.
     if [ "${PHP_FPM_LISTEN:-tcp}" = "unix" ]; then
         sock="${PHP_FPM_SOCKET_PATH:-/run/php/php-fpm.sock}"
         mkdir -p "$(dirname "$sock")" 2>/dev/null || true

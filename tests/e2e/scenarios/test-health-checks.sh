@@ -43,7 +43,7 @@ log_section "Internal Health Check Script Tests"
 
 # Test PHP-FPM is responding on its port (healthcheck.sh requires Cbox Init in production)
 # Use ss (iproute2) as primary, fall back to checking /proc/net/tcp for port 2328 (hex 9000)
-assert_exec_succeeds "$CONTAINER_NAME" "ss -tlnp 2>/dev/null | grep -q ':9000' || grep -q ':2328' /proc/net/tcp 2>/dev/null" "PHP-FPM listening on port 9000"
+assert_exec_succeeds "$CONTAINER_NAME" "ss -tlnp 2>/dev/null | grep -q ':9000' || grep -q ':2328' /proc/net/tcp 2>/dev/null || test -S /run/php/php-fpm.sock || test -S /tmp/php-fpm.sock" "PHP-FPM accepting connections (tcp 9000 or unix socket)"
 
 # Test Nginx is responding on its port
 # Use ss (iproute2) as primary, fall back to checking /proc/net/tcp for port 0050 (hex 80)
@@ -86,7 +86,7 @@ fi
 log_section "Port Health Tests"
 
 # Test PHP-FPM port
-assert_exec_succeeds "$CONTAINER_NAME" "nc -z 127.0.0.1 9000" "PHP-FPM listening on port 9000"
+assert_exec_succeeds "$CONTAINER_NAME" "nc -z 127.0.0.1 9000 || test -S /run/php/php-fpm.sock || test -S /tmp/php-fpm.sock" "PHP-FPM accepting connections (tcp 9000 or unix socket)"
 
 # Test Nginx port
 assert_exec_succeeds "$CONTAINER_NAME" "nc -z 127.0.0.1 80" "Nginx listening on port 80"

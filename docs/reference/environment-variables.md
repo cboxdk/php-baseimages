@@ -323,22 +323,24 @@ Both transports are first-class - pick per deployment:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHP_FPM_LISTEN` | `tcp` | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
+| `PHP_FPM_LISTEN` | `unix` (php-fpm-nginx, v2) / `tcp` (standalone php-fpm) | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
 | `PHP_FPM_SOCKET_PATH` | `/run/php/php-fpm.sock` | Socket location in `unix` mode |
 
 **When to use which:**
 
-- **`unix`** - single-container throughput. Measured on these images:
-  ~**+23% PHP requests/second** on the same hardware (the TCP loopback hop
-  is pure overhead when nginx and FPM share a container). nginx follows
-  automatically (`NGINX_FASTCGI_PASS` is derived unless you set it), the
-  health probe switches with it, and fpm-exporter/fpm-tune autodiscover
-  the socket - `phpfpm_up{socket="unix://..."}`.
-- **`tcp`** (default) - anything that talks to FPM from OUTSIDE the
+- **`unix`** (default in php-fpm-nginx since v2) - single-container
+  throughput. Measured on these images: ~**+23% PHP requests/second** on
+  the same hardware (the TCP loopback hop is pure overhead when nginx and
+  FPM share a container). nginx follows automatically
+  (`NGINX_FASTCGI_PASS` is derived unless you set it), the health probe
+  switches with it, and fpm-exporter/fpm-tune autodiscover the socket -
+  `phpfpm_up{socket="unix://..."}`.
+- **`tcp`** (default in the standalone php-fpm image; the v1 channel's
+  default everywhere) - anything that talks to FPM from OUTSIDE the
   container: a sidecar exporter, a separate nginx container without a
   shared socket volume, debugging with `cgi-fcgi` from another netns.
-  Also the conservative choice for existing deployments; defaults do not
-  change behavior.
+  Set `PHP_FPM_LISTEN=tcp` on php-fpm-nginx to restore the v1 behavior
+  with one env var.
 
 ```yaml
 environment:

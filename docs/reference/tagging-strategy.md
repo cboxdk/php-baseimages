@@ -36,6 +36,11 @@ rebuilds for **6 months** (from a `release/vN` maintenance branch), then goes
 EOL. Which majors are in support is recorded in `versions.json` under
 `release.supported_majors`.
 
+**Current status:** `-v2` is the current channel (unix-socket default in
+php-fpm-nginx). `-v1` (TCP default) is in maintenance: weekly security
+rebuilds from the `release/v1` branch until **2027-03-10**. Staying on v1
+behavior on the v2 channel is one env var: `PHP_FPM_LISTEN=tcp`.
+
 ```yaml
 # Recommended production pin: behavior locked, security patches current
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1

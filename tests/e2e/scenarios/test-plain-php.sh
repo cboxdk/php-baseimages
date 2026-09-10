@@ -65,9 +65,10 @@ assert_http_contains "$BASE_URL/" '"temp_dir_writable": true' "Temp directory is
 
 log_section "Container Health Tests"
 
-# Check PHP-FPM is responding on port 9000
+# Check PHP-FPM accepts connections on its configured transport
+# (tcp 9000 in v1 / with PHP_FPM_LISTEN=tcp; the unix socket is the v2 default)
 # Use ss (iproute2) as primary, fall back to checking /proc/net/tcp for port 2328 (hex 9000)
-assert_exec_succeeds "$CONTAINER_NAME" "ss -tlnp 2>/dev/null | grep -q ':9000' || grep -q ':2328' /proc/net/tcp 2>/dev/null" "PHP-FPM listening on port 9000"
+assert_exec_succeeds "$CONTAINER_NAME" "ss -tlnp 2>/dev/null | grep -q ':9000' || grep -q ':2328' /proc/net/tcp 2>/dev/null || test -S /run/php/php-fpm.sock || test -S /tmp/php-fpm.sock" "PHP-FPM accepting connections (tcp 9000 or unix socket)"
 
 # Check Nginx is responding on port 80
 # Use ss (iproute2) as primary, fall back to checking /proc/net/tcp for port 0050 (hex 80)
