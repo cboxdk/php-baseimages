@@ -160,7 +160,7 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_ERROR_LOG` | `/dev/stderr` | Error log destination |
 | `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
-| `PHP_OPEN_BASEDIR` | the app's directories + read-only kernel statistics (below) | `open_basedir` for the FPM pool. Empty means no restriction — which is what the **dev** tier sets. |
+| `PHP_OPEN_BASEDIR` | *(empty - no restriction)* | `open_basedir` for the FPM pool. Empty since 1.6: the restriction disables PHP's realpath cache, measured at **-39% throughput on the Laravel fixture** (382 vs 625 rps). Set it for LFI defense-in-depth; include the kernel-statistics paths from the curated list below if you use cboxdk/system-metrics |
 
 #### One definition, and why that took three attempts
 
@@ -323,24 +323,23 @@ Both transports are first-class - pick per deployment:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHP_FPM_LISTEN` | `unix` (php-fpm-nginx, v2) / `tcp` (standalone php-fpm) | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
+| `PHP_FPM_LISTEN` | `tcp` | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
 | `PHP_FPM_SOCKET_PATH` | `/run/php/php-fpm.sock` | Socket location in `unix` mode |
 
 **When to use which:**
 
-- **`unix`** (default in php-fpm-nginx since v2) - single-container
-  throughput. Measured on these images: ~**+23% PHP requests/second** on
-  the same hardware (the TCP loopback hop is pure overhead when nginx and
-  FPM share a container). nginx follows automatically
-  (`NGINX_FASTCGI_PASS` is derived unless you set it), the health probe
-  switches with it, and fpm-exporter/fpm-tune autodiscover the socket -
-  `phpfpm_up{socket="unix://..."}`.
-- **`tcp`** (default in the standalone php-fpm image; the v1 channel's
-  default everywhere) - anything that talks to FPM from OUTSIDE the
-  container: a sidecar exporter, a separate nginx container without a
-  shared socket volume, debugging with `cgi-fcgi` from another netns.
-  Set `PHP_FPM_LISTEN=tcp` on php-fpm-nginx to restore the v1 behavior
-  with one env var.
+- **`tcp`** (default) - with FastCGI keepalive on (the 1.6 default) this
+  is also the FASTEST configuration measured: 15.2k hello rps at 2 CPUs
+  vs the socket's 13.3k. And it is the only transport that works from
+  OUTSIDE the container (sidecar exporters, separate nginx, `cgi-fcgi`
+  debugging).
+- **`unix`** - the keepalive-free alternative for single-container
+  setups: +12-24% over PLAIN tcp (without keepalive), and the right
+  choice where connection pooling is undesirable. nginx follows
+  automatically (`NGINX_FASTCGI_PASS` derived), the health probe
+  switches with it, and fpm-exporter/fpm-tune autodiscover the socket.
+  Keepalive is deliberately NOT defaulted on the socket - measured
+  counterproductive there (12.2k).
 
 ```yaml
 environment:
@@ -570,8 +569,8 @@ environment:
 | `NGINX_FASTCGI_CONNECT_TIMEOUT` | `60s` | Connect timeout |
 | `NGINX_FASTCGI_SEND_TIMEOUT` | `60s` | Send timeout |
 | `NGINX_FASTCGI_READ_TIMEOUT` | `60s` | Read timeout |
-| `NGINX_FASTCGI_KEEP_CONN` | `off` | Pool nginx→FPM connections (`on`). Helps CPU-throttled runtimes (Cloud Run) and very high rps; off by default because idle pooled connections occupy FPM workers on small pools |
-| `NGINX_FASTCGI_KEEPALIVE` | `8` | Pooled connections when `NGINX_FASTCGI_KEEP_CONN=on` |
+| `NGINX_FASTCGI_KEEP_CONN` | `off` | Pool nginx→FPM connections. A MICRO-REQUEST optimization: measured +25-29% on sub-ms endpoints (tcp), but **-12% on a real Laravel app** and worse over the unix socket - enable for high-rps micro-APIs and CPU-throttled runtimes (Cloud Run), not for framework apps |
+| `NGINX_FASTCGI_KEEPALIVE` | `32` | Pooled-connection count. Do NOT shrink below ~4x nginx workers: a small pool interacts with `pm.max_requests` worker recycling into second-long tail stalls (measured: 8 conns -> CO-corrected p99 534ms; 32 conns -> 8.4ms) |
 
 ### Logging
 

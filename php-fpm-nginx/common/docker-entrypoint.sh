@@ -204,19 +204,20 @@ setup_user_permissions_extended() {
 # PHP_FPM_SOCKET_PATH overrides the default socket location.
 ###########################################
 setup_fpm_listen() {
-    # v2: the unix socket is the DEFAULT for this multi-service image - both
-    # ends live in the same container and the socket measured ~+25% PHP
-    # throughput over loopback TCP. The standalone php-fpm image keeps tcp
-    # (its purpose is FastCGI from OUTSIDE the container). Whether the
-    # operator chose explicitly matters to the read-only-rootfs fallback
-    # below: a default can quietly degrade to the baked TCP pair, an explicit
-    # choice must be honored or refused loud.
+    # tcp is the default. The socket-as-default experiment was measured and
+    # reversed: with FastCGI keepalive (now default in tcp mode), tcp beats
+    # the socket outright (15.2k vs 13.3k hello rps at 2 CPUs), and keepalive
+    # over the unix socket measured actively WORSE (12.2k). The socket stays
+    # a first-class opt-in for keepalive-free single-container setups.
+    # Whether the operator chose explicitly matters to the read-only-rootfs
+    # fallback below: a default can quietly degrade with the baked config
+    # set, an explicit choice must be honored or refused loud.
     if [ -n "${PHP_FPM_LISTEN+x}" ]; then
         CBOX_FPM_LISTEN_EXPLICIT=true
     else
         CBOX_FPM_LISTEN_EXPLICIT=false
     fi
-    local mode="${PHP_FPM_LISTEN:-unix}"
+    local mode="${PHP_FPM_LISTEN:-tcp}"
     export PHP_FPM_LISTEN="$mode"
     case "$mode" in
         tcp)
@@ -439,12 +440,16 @@ generate_runtime_configs() {
         : ${NGINX_FASTCGI_CONNECT_TIMEOUT:=60s}
         : ${NGINX_FASTCGI_SEND_TIMEOUT:=60s}
         : ${NGINX_FASTCGI_READ_TIMEOUT:=60s}
-        # Optional FastCGI connection reuse toward FPM. OFF by default: with
-        # keepalive an idle pooled connection is held by an FPM worker, which
-        # can pin workers on small pools. It earns its keep on CPU-throttled
-        # runtimes (Cloud Run cold starts) and very high-rps TCP setups.
+        # FastCGI connection reuse toward FPM. OPT-IN, deliberately: it is a
+        # MICRO-REQUEST optimization, not a universal one. Measured at 2 CPUs:
+        # +25-29% on sub-ms hello requests (tcp), but -12% on a real Laravel
+        # app, actively worse over the unix socket, and the pool size
+        # interacts with pm.max_requests worker recycling (8 pooled conns put
+        # a recycle stall on every connection: CO-corrected p99 534ms; 32
+        # conns -> 8.4ms). Enable for high-rps micro-APIs and CPU-throttled
+        # runtimes; leave off for framework apps.
         : ${NGINX_FASTCGI_KEEP_CONN:=off}
-        : ${NGINX_FASTCGI_KEEPALIVE:=8}
+        : ${NGINX_FASTCGI_KEEPALIVE:=32}
         if [ "${NGINX_FASTCGI_KEEP_CONN}" = "on" ] || [ "${NGINX_FASTCGI_KEEP_CONN}" = "true" ]; then
             NGINX_FASTCGI_KEEP_CONN=on
             NGINX_UPSTREAM_CONFIG="upstream cbox_fpm {\n    server ${NGINX_FASTCGI_PASS};\n    keepalive ${NGINX_FASTCGI_KEEPALIVE};\n}"

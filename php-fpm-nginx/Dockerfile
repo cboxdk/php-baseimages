@@ -66,6 +66,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # SLIM-ROOT: Minimal PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim AS slim-root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -155,6 +159,10 @@ CMD ["cbox-init"]
 # SLIM-ROOTLESS: Minimal PHP-FPM + Nginx running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim-rootless AS slim-rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -255,6 +263,10 @@ CMD ["cbox-init"]
 # ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, vips, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -344,6 +356,10 @@ CMD ["cbox-init"]
 # ROOTLESS (STANDARD): Default rootless - PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -444,6 +460,10 @@ CMD ["cbox-init"]
 # CHROMIUM-ROOT: Everything including Chromium for Browsershot/Dusk
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-chromium AS chromium-root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -533,6 +553,10 @@ CMD ["cbox-init"]
 # CHROMIUM-ROOTLESS: Everything including Chromium, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-chromium-rootless AS chromium-rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -633,6 +657,10 @@ CMD ["cbox-init"]
 # DEV-ROOT: Chromium + Xdebug, PCOV, SPX for development/testing
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-dev AS dev-root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -722,6 +750,10 @@ CMD ["cbox-init"]
 # DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-dev-rootless AS dev-rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 

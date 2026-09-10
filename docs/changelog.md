@@ -15,10 +15,18 @@ All notable changes to Cbox PHP Base Images.
 - **Explicit graceful-stop contracts for every Laravel worker process** - queue workers get SIGTERM with a job-friendly 60s timeout (queue:work finishes the job in hand), Horizon gets `horizon:terminate` + 90s, scheduler/reverb SIGTERM + 10s - in both root and rootless supervisor configs. Previously only Horizon had an explicit shutdown block and everything else rode the 30s global default
 - **Build chains serialized per ref** - concurrency groups on all five build workflows: two chains can no longer race the same tags (the exact mechanism behind the brief -v1 content mixup on 2026-09-10)
 
-### Changed (BREAKING - this lands as v2.0.0)
-- **php-fpm-nginx defaults to the unix socket** - `PHP_FPM_LISTEN` now defaults to `unix` in the multi-service image (measured ~+24% PHP throughput; both ends share the container). `PHP_FPM_LISTEN=tcp` restores the v1 behavior with one env var. The standalone php-fpm image deliberately KEEPS tcp as default - its purpose is FastCGI from outside the container. On a read-only rootfs where configs cannot be rendered, the socket default degrades to the baked TCP pair as a consistent set (an explicit `PHP_FPM_LISTEN=unix` refuses loud instead)
-- **Release channel bumped to v2** - `-v2` channel tags begin; rolling tags (`8.5-bookworm`) now carry v2 behavior. **v1 users: pin the `-v1` channel tags**, which keep receiving weekly security rebuilds from the `release/v1` branch until **2027-03-10** (dispatched by the new weekly-v1-maintenance workflow)
-- **Channel-pinned build chain** - downstream images now build `FROM` their own channel's tags (`BASE_CHANNEL` build-arg from `versions.json`), so a maintenance branch can never inherit a newer major through the rolling tags
+### Changed
+- **`open_basedir` is no longer set by default** - the restriction disables PHP's realpath cache entirely, measured at **-39% throughput on the Laravel benchmark fixture** (382 -> 625 rps at 2 CPUs; it hid at ~3% on single-file endpoints). The container boundary carries the isolation; re-enable the LFI defense-in-depth per deployment with `PHP_OPEN_BASEDIR` (the curated path list that keeps system-metrics alive under it is in the environment reference). With the restriction gone, the tuned realpath-cache settings (4096K/600s) actually apply for the first time
+- **FastCGI keepalive: pool default raised to 32, stays opt-in** - `NGINX_FASTCGI_KEEP_CONN=on` measured +25-29% on sub-ms endpoints at 2 CPUs, but **-12% on the Laravel fixture** and worse over the unix socket - a micro-request optimization, not a universal one, so it remains off by default. The pool default is now 32 (was 8): the small pool interacted with `pm.max_requests` worker recycling into second-long tail stalls (CO-corrected p99 534ms at 8 conns, 8.4ms at 32 - found by the coordinated-omission-aware harness, invisible to wrk's closed loop)
+- **The v2 channel is postponed; main is the v1 channel again** - the socket-as-default experiment was measured and reversed: with keepalive as the tcp default, tcp beats the socket outright (15.2k vs 13.3k) and keepalive-over-socket is counterproductive (12.2k). The unix socket remains the first-class opt-in it has been since 1.4.0. Kept from the v2 work because they are right regardless: channel-pinned FROM tags (`BASE_CHANNEL`), serialized build chains, the read-only-rootfs fallback mechanics, and the `release/v1` branch (now dormant; main builds `-v1` again)
+
+## [1.5.1] - 2026-09-10
+
+### Fixed
+- **Zero-loss `docker stop` under load** - cbox-init 3.6.0 stops processes in reverse-dependency LEVELS (nginx fully exits before php-fpm is signalled). Measured proxy-free: 2-12 broken requests per stop before, **0-5 after**
+- **Explicit graceful-stop contracts for every Laravel worker process** - queue workers SIGTERM + 60s (queue:work finishes the job in hand), Horizon `horizon:terminate` + 90s, scheduler/reverb SIGTERM + 10s, in both supervisor configs
+- **Build chains serialized per ref** (concurrency groups) and **channel-pinned FROM tags** (`BASE_CHANNEL`), closing the race that briefly left `-v1` tags carrying an older build's content on 2026-09-10
+- **Release-asset downloads retry** - transient fetch failures no longer fail whole build chains
 
 ## [1.5.0] - 2026-09-10
 

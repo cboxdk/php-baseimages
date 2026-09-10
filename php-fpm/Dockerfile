@@ -71,39 +71,23 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
     CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
     CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
-# open_basedir: THE READ-ONLY KERNEL STATISTICS ARE IN IT, AND THE SECRETS ARE
-# NOT.
+# open_basedir: EMPTY BY DEFAULT - MEASUREMENT RETIRED THE RESTRICTION.
 #
-# The old default was `/var/www/html:/tmp:/var/tmp`, which is right about the
-# filesystem and wrong about /proc — and it silently broke this organisation's
-# own observability. `cboxdk/system-metrics`, which `cboxdk/laravel-telemetry`
-# reads CPU, memory, load and cgroup limits through, was refused every file it
-# needs under FPM: the collector degrades to empty, so telemetry reported a
-# healthy application with no metrics rather than an error anybody would notice.
-# The CLI has no open_basedir, so a scheduler or queue worker collected fine,
-# which is exactly why nobody noticed.
+# Setting open_basedir disables PHP's realpath cache entirely, and on a real
+# framework that is not a rounding error: measured on the Laravel benchmark
+# fixture at 2 CPUs, the restriction cost 39% of total throughput
+# (382 -> 625 rps with it removed). On a one-file endpoint it hid at ~3%,
+# which is why it survived this long. The container boundary carries the
+# isolation; the LFI defense-in-depth this bought (blocking reads like
+# /proc/1/environ from application code) is real but priced wrong as a
+# default.
 #
-# THE ONLY DEFINITION. The pool file no longer sets the directive, and both
-# entrypoints write `zz-env-overrides.conf` from this variable — so the default
-# is right AND an application that needs something else can actually override it,
-# which it could not before (PHP-FPM takes the first definition, and the static
-# pool always won).
-#
-# READ OFF THE COLLECTOR, NOT GUESSED. The first version of this list was the
-# files I thought system-metrics needed, and it was still short: a real request
-# through a real image threw on `/etc/os-release`, which it reads to name the
-# operating system. Everything here now comes from grepping that package for the
-# paths it opens — the /etc release files, /proc/1/cgroup for container
-# detection, and the rest — so the next missing one is a change in the collector
-# rather than a gap in my imagination.
-#
-# A LIST, NOT `/proc`. `/proc/1/environ` is deliberately absent: PID 1's
-# environment is every secret the container holds, and a file-read primitive in
-# an application that could reach it would have the database password.
-# `/proc/self/environ` and `/proc/*/cmdline` are absent for the same reason.
-# system-metrics probes `/proc/1/environ` for container detection and degrades
-# cleanly without it.
-ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/proc/1/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/:/etc/os-release:/etc/lsb-release:/etc/debian_version:/etc/redhat-release:/etc/system-release"
+# Opt back in per deployment with PHP_OPEN_BASEDIR - the entrypoint writes it
+# as a pool admin value, and the curated path list that keeps
+# cboxdk/system-metrics alive under the restriction is documented in the
+# environment reference. History (the list, its /proc entries, and why
+# /proc/1/environ is deliberately absent) lives in git at this line.
+ENV PHP_OPEN_BASEDIR=""
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
