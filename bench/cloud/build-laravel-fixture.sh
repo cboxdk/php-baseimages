@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
-S=/opt/cbox-bench
-APP="/opt/cbox-bench/lv-app"
+S="$HOME/cbox-bench"
+APP="$HOME/cbox-bench/lv-app"
 echo "=== Bygger ægte Laravel-fixture ==="
 rm -rf "$APP"; mkdir -p "$APP"
 docker run --rm -v "$APP:/var/www/html" -w /var/www/html ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1 sh -c '

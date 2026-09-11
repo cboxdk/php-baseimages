@@ -2,17 +2,19 @@
 # Client bootstrap: install wrk + oha, poll the SUT's schedule, measure each
 # configuration, serve results on :8091. SUT_IP must be in the environment.
 set -euo pipefail
-sudo mkdir -p /opt/cbox-bench && sudo chown "$(id -u)" /opt/cbox-bench
-exec >>/opt/cbox-bench/client.log 2>&1
-exec 9>/opt/cbox-bench/lock; flock -n 9 || exit 0
+mkdir -p "$HOME/cbox-bench"
+exec >>$HOME/cbox-bench/client.log 2>&1
+exec 9>$HOME/cbox-bench/lock; flock -n 9 || exit 0
 echo "== client bootstrap $(date -u) SUT=$SUT_IP =="
-command -v wrk >/dev/null || sudo apt-get install -y -qq wrk
+docker pull -q williamyeh/wrk >/dev/null
+wrk() { docker run --rm --network host williamyeh/wrk "$@"; }
 if ! command -v oha >/dev/null; then
-  curl -fsSL -o /tmp/oha https://github.com/hatoo/oha/releases/download/v1.10.0/oha-linux-amd64 \
-    || curl -fsSL -o /tmp/oha https://github.com/hatoo/oha/releases/latest/download/oha-linux-amd64
-  sudo install -m 755 /tmp/oha /usr/local/bin/oha
+  mkdir -p "$HOME/bin"
+  curl -fsSL -o "$HOME/bin/oha" https://github.com/hatoo/oha/releases/latest/download/oha-linux-amd64
+  chmod +x "$HOME/bin/oha"
 fi
-OUT=/opt/cbox-bench/out; mkdir -p "$OUT"
+export PATH="$HOME/bin:$PATH"
+OUT=$HOME/cbox-bench/out; mkdir -p "$OUT"
 ( cd "$OUT" && python3 -m http.server 8091 >/dev/null 2>&1 & ) || true
 : > "$OUT/results.jsonl"
 curl -fsS "http://$SUT_IP:8090/digests.txt" -o "$OUT/digests.txt" || true
