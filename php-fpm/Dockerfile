@@ -103,6 +103,9 @@ COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY php-fpm/common/fpm-global.conf /usr/local/etc/php-fpm.d/zz-global.conf
 COPY php-fpm/common/pm-mode-dynamic.conf /usr/local/etc/php-fpm.d/zz-pm-mode.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 # Own the pool directory outright. Upstream has reshuffled directives between
 # docker.conf and zz-docker.conf in PATCH releases (docker-library/php#1635),
