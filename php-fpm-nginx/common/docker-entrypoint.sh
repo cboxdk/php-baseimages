@@ -953,6 +953,7 @@ log_info "PHP Version: $PHP_VERSION"
 NGINX_USER_OVERRIDES=$(env | grep -oE '^NGINX_[A-Z0-9_]+' | tr '\n' ' ')
 
 # Map environment variable aliases
+setup_opentelemetry
 setup_fpm_listen
 map_env_aliases
 

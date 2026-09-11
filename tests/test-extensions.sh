@@ -32,6 +32,8 @@ REQUIRED_EXTENSIONS=(
 )
 
 # Optional extensions - present in standard+ tier (check but don't fail)
+# opentelemetry: installed in standard+ but NOT loaded by default since 1.6
+# (Zend observer tax, -18.5% on Laravel) - only appears with PHP_OPENTELEMETRY=true
 # Note: mongodb, soap, ldap, xsl, calendar, gettext, shmop, sysvmsg,
 # sysvsem, sysvshm were moved from slim to standard tier
 OPTIONAL_EXTENSIONS=(

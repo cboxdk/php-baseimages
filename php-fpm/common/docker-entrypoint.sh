@@ -192,6 +192,7 @@ fi
 # Run startup checks. The environment's pool settings go in BEFORE validation:
 # php-fpm -t reads what is on disk, so writing them after would validate a
 # configuration the process is not going to run.
+setup_opentelemetry
 resolve_fpm_sizing
 export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 write_pm_mode_dropin || exit 1

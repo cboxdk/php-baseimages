@@ -27,30 +27,19 @@ APP="$B/baseimages/bench/cloud/app"
 LV="$B/lv-app"
 SSU=serversideup/php:8.5-fpm-nginx
 
-# Pass 2: variance repeats of the key pairs + variants that isolate WHY the
-# lv slots lost pass 1 (JIT? fastcgi TCP connect? worker count?). Field images
-# (webdevops/trafex/apache/frankenphp/v151) keep their pass-1 numbers.
-NOJIT="$B/baseimages/bench/cloud/overrides/zz-nojit.ini:/usr/local/etc/php/conf.d/zz-nojit.ini:ro"
-# ── micro @2c ──
-run_slot cbox-pkg        micro cbox:pkg 2 1g "$APP:/var/www/html/public"
-run_slot cbox-pkg-keep   micro cbox:pkg 2 1g "$APP:/var/www/html/public" -e NGINX_FASTCGI_KEEP_CONN=on
+# Pass 3: validate the 1.6 defaults (otel unloaded) against SSU with the
+# client-side rig. The tombstone mount over the otel ini reproduces exactly
+# what the entrypoint gate ships (extension present on disk, not loaded).
+NOOTEL="/dev/null:/usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini:ro"
+run_slot cbox16          micro cbox:pkg 2 1g "$APP:/var/www/html/public" -v "$NOOTEL"
+run_slot cbox16-keep     micro cbox:pkg 2 1g "$APP:/var/www/html/public" -v "$NOOTEL" -e NGINX_FASTCGI_KEEP_CONN=on
 PORT_OVERRIDE=8080 run_slot ssu-opc        micro "$SSU" 2 1g "$APP:/var/www/html/public" -e PHP_OPCACHE_ENABLE=1
-# ── laravel @2c: the diagnostic block ──
-run_slot cbox-pkg-lv     laravel cbox:pkg 2 1g "$LV:/var/www/html"
-run_slot cbox-keep-lv    laravel cbox:pkg 2 1g "$LV:/var/www/html" -e NGINX_FASTCGI_KEEP_CONN=on
-run_slot cbox-w20-lv     laravel cbox:pkg 2 1g "$LV:/var/www/html" -e PHP_FPM_MAX_CHILDREN=20
-run_slot cbox-nojit-lv   laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOJIT"
-run_slot cbox-all-lv     laravel cbox:pkg 2 1g "$LV:/var/www/html" -e NGINX_FASTCGI_KEEP_CONN=on -e PHP_FPM_MAX_CHILDREN=20 -v "$NOJIT"
+run_slot cbox16-lv       laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL"
+run_slot cbox16-keep-lv  laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL" -e NGINX_FASTCGI_KEEP_CONN=on
 PORT_OVERRIDE=8080 run_slot ssu-opc-lv     laravel "$SSU" 2 1g "$LV:/var/www/html" -e PHP_OPCACHE_ENABLE=1
-# ── 8c round ──
-run_slot cbox-pkg-8c     micro cbox:pkg 8 8g "$APP:/var/www/html/public"
-run_slot cbox-keep-8c    micro cbox:pkg 8 8g "$APP:/var/www/html/public" -e NGINX_FASTCGI_KEEP_CONN=on
+run_slot cbox16-8c       micro cbox:pkg 8 8g "$APP:/var/www/html/public" -v "$NOOTEL"
 PORT_OVERRIDE=8080 run_slot ssu-opc-8c     micro "$SSU" 8 8g "$APP:/var/www/html/public" -e PHP_OPCACHE_ENABLE=1
-# ── laravel @8c (both have 20 workers here, so w20 is moot; JIT and connect are not) ──
-run_slot cbox-pkg-lv8c   laravel cbox:pkg 8 8g "$LV:/var/www/html"
-run_slot cbox-nojit-lv8c laravel cbox:pkg 8 8g "$LV:/var/www/html" -v "$NOJIT"
-run_slot cbox-keep-lv8c  laravel cbox:pkg 8 8g "$LV:/var/www/html" -e NGINX_FASTCGI_KEEP_CONN=on
-run_slot cbox-kn-lv8c    laravel cbox:pkg 8 8g "$LV:/var/www/html" -e NGINX_FASTCGI_KEEP_CONN=on -v "$NOJIT"
+run_slot cbox16-lv8c     laravel cbox:pkg 8 8g "$LV:/var/www/html" -v "$NOOTEL"
 PORT_OVERRIDE=8080 run_slot ssu-opc-lv8c   laravel "$SSU" 8 8g "$LV:/var/www/html" -e PHP_OPCACHE_ENABLE=1
 announce finished finished none
 touch "$B/RUN_DONE"

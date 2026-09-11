@@ -348,16 +348,19 @@ RUN docker-php-ext-install -j$(nproc) ffi && \
     printf '[ffi]\nffi.enable=preload\n' > /usr/local/etc/php/conf.d/zz-ffi.ini
 
 # Install ImageMagick, vips, and mongodb PECL extensions
-# opentelemetry: the OTel auto-instrumentation extension. Enabled but INERT
-# until the application installs the OTel SDK - no hooks register without it
-# (measured overhead without SDK: none; on-disk cost ~0.3MB). Ships because
-# APM agents that fight PID 1 are the alternative, and this one plugs into
-# the same observability story cbox-init's metrics already serve.
+# opentelemetry: installed but NOT in the default scan dir. Loading it enables
+# the Zend observer API, which taxes every PHP function call even with no OTel
+# SDK installed - measured 2026-09-11 on dedicated EPYC (Hetzner ccx33):
+# -18.5% rps on a Laravel app vs 0% on tight-loop code. The earlier claim that
+# it was inert without the SDK was wrong. The entrypoints append conf.d-otel
+# to PHP_INI_SCAN_DIR when PHP_OPENTELEMETRY=true (works on read-only fs).
 RUN pecl install imagick-${IMAGICK_VERSION} && \
     pecl install vips-${VIPS_VERSION} && \
     pecl install mongodb-${MONGODB_VERSION} && \
     pecl install opentelemetry-${OPENTELEMETRY_VERSION} && \
-    docker-php-ext-enable imagick vips mongodb opentelemetry
+    docker-php-ext-enable imagick vips mongodb opentelemetry && \
+    mkdir -p /usr/local/etc/php/conf.d-otel && \
+    mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d-otel/
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \

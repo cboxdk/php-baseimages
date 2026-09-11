@@ -52,7 +52,7 @@ These extensions are added in the standard tier (and inherited by chromium/dev):
 | Extension | Source | Description |
 |-----------|--------|-------------|
 | `mongodb` | PECL | MongoDB driver |
-| `opentelemetry` | PECL | OpenTelemetry auto-instrumentation (inert until the app installs the OTel SDK) |
+| `opentelemetry` | PECL | OpenTelemetry auto-instrumentation - **opt-in via `PHP_OPENTELEMETRY=true`**: loading it enables the Zend observer API, measured at -18.5% throughput on a Laravel app even with no OTel SDK installed |
 | `imagick` | PECL | ImageMagick bindings |
 | `vips` | PECL | libvips image processing |
 | `soap` | Built-in | SOAP protocol |
@@ -241,7 +241,7 @@ docker run --rm -e XDEBUG_MODE=debug \
 | imagick | ❌ | ✅ | ✅ | ✅ |
 | vips | ❌ | ✅ | ✅ | ✅ |
 | mongodb | ❌ | ✅ | ✅ | ✅ |
-| opentelemetry | ❌ | ✅ | ✅ | ✅ |
+| opentelemetry | ❌ | ✅* | ✅* | ✅* |
 | soap | ❌ | ✅ | ✅ | ✅ |
 | xsl | ❌ | ✅ | ✅ | ✅ |
 | ldap | ❌ | ✅ | ✅ | ✅ |
@@ -255,6 +255,13 @@ docker run --rm -e XDEBUG_MODE=debug \
 | **Xdebug** | ❌ | ❌ | ❌ | ✅ |
 | **PCOV** | ❌ | ❌ | ❌ | ✅ |
 | **SPX** | ❌ | ❌ | ❌ | ✅ |
+
+\* `opentelemetry` is installed but **not loaded by default**. Loading it enables
+the Zend observer API, which taxes every PHP function call even with no OTel SDK
+installed - measured at **-18.5% throughput on a Laravel app** (0% on tight-loop
+code) on dedicated hardware. Set `PHP_OPENTELEMETRY=true` to load it; the
+entrypoint appends the extension's scan dir to `PHP_INI_SCAN_DIR`, so it works
+on read-only filesystems too.
 
 ## Extension Versions
 

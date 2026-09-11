@@ -243,6 +243,7 @@ ENV CBOX_ROOTLESS=false \
 # Copy PHP extensions from standard base
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-standard /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
 
 # Copy Node.js from standard base
 COPY --from=base-standard /usr/local/bin/node /usr/local/bin/node
@@ -293,6 +294,7 @@ ENV CBOX_ROOTLESS=true \
 
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-standard /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
 COPY --from=base-standard /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-standard /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -338,6 +340,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
 COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -379,6 +382,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
 COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -440,6 +444,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-dev /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
 COPY --from=base-dev /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-dev /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -497,6 +502,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-dev /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
 COPY --from=base-dev /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-dev /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \

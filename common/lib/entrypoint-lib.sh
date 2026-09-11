@@ -274,6 +274,28 @@ verify_fpm_listen() {
 }
 
 ###########################################
+# OpenTelemetry extension (opt-in)
+###########################################
+# The otel extension enables the Zend observer API, which taxes every PHP
+# function call even with no OTel SDK installed - measured 2026-09-11 on
+# dedicated EPYC (Hetzner ccx33): -18.5% rps on a Laravel app, 0% on
+# tight-loop code. Its ini therefore lives in conf.d-otel, outside the
+# default scan dir. A leading colon in PHP_INI_SCAN_DIR appends to the
+# compiled-in default, so this works without touching the filesystem
+# (read-only containers included). Exported before PHP starts; cbox-init
+# passes the environment through to its services.
+setup_opentelemetry() {
+    if is_true "${PHP_OPENTELEMETRY:-false}"; then
+        if [ -f /usr/local/etc/php/conf.d-otel/docker-php-ext-opentelemetry.ini ]; then
+            export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-}:/usr/local/etc/php/conf.d-otel"
+            log_info "OpenTelemetry extension enabled (PHP_OPENTELEMETRY=true)"
+        else
+            log_warn "PHP_OPENTELEMETRY=true but the extension is not in this tier (slim has no otel)"
+        fi
+    fi
+}
+
+###########################################
 # Container CPU limit (cgroup-aware)
 ###########################################
 # `worker_processes auto` reads the HOST's core count, not the container's
