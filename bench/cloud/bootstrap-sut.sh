@@ -18,7 +18,7 @@ cd $HOME/cbox-bench
 mkdir -p state
 announce() { printf '{"name":"%s","phase":"%s","kind":"none","ts":"%s"}
 ' "$1" "$2" "$(date -u +%FT%TZ)" > state/state.json.tmp && mv state/state.json.tmp state/state.json; }
-pgrep -f "http.server 8090" >/dev/null || ( cd state && nohup python3 -m http.server 8090 >/dev/null 2>&1 & )
+pgrep -f "http.server 8090" >/dev/null || ( cd state && nohup python3 -m http.server 8090 >/dev/null 2>&1 9>&- & )
 announce bootstrap bootstrapping
 trap 'announce bootstrap failed; cp bootstrap.log state/bootstrap.log 2>/dev/null' ERR
 

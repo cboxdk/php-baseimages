@@ -6,7 +6,7 @@ B="${CBOX_BENCH_DIR:-$HOME/cbox-bench}"
 ST="$B/state"; mkdir -p "$ST"
 WINDOW="${BENCH_WINDOW:-240}"
 cd "$B"
-( cd "$ST" && python3 -m http.server 8090 >/dev/null 2>&1 & ) || true
+( cd "$ST" && python3 -m http.server 8090 >/dev/null 2>&1 9>&- & ) || true
 announce() { printf '{"name":"%s","phase":"%s","kind":"%s","ts":"%s"}\n' "$1" "$2" "$3" "$(date -u +%FT%TZ)" > "$ST/state.json.tmp" && mv "$ST/state.json.tmp" "$ST/state.json"; }
 cp "$B/digests.txt" "$ST/" 2>/dev/null; cp "$B"/*.sha "$ST/" 2>/dev/null
 

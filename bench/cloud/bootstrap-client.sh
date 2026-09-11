@@ -15,7 +15,7 @@ if ! command -v oha >/dev/null; then
 fi
 export PATH="$HOME/bin:$PATH"
 OUT=$HOME/cbox-bench/out; mkdir -p "$OUT"
-( cd "$OUT" && python3 -m http.server 8091 >/dev/null 2>&1 & ) || true
+( cd "$OUT" && python3 -m http.server 8091 >/dev/null 2>&1 9>&- & ) || true  # 9>&-: do not inherit the flock fd
 : > "$OUT/results.jsonl"
 curl -fsS "http://$SUT_IP:8090/digests.txt" -o "$OUT/digests.txt" || true
 
