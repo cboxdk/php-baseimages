@@ -2,29 +2,29 @@
 <rect width="860" height="376" fill="#ffffff"/>
 <text x="24" y="34" font-size="19" font-weight="650" fill="#0f172a">Static file - static.html @ 2 dedicated vCPU</text>
 <text x="24" y="56" font-size="13" fill="#64748b">Same rig; nginx serves the file, PHP untouched</text>
-<text x="230" y="99" font-size="13.5" text-anchor="end" fill="#0f172a">cbox php-fpm-nginx 1.6</text>
+<text x="230" y="99" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6.1 (socket default)</text>
 <rect x="240" y="84" width="530.0" height="22" rx="3" fill="#0e7490"/>
-<text x="778.0" y="99" font-size="13" font-weight="600" fill="#0f172a">39.445</text>
-<text x="778.0" y="112" font-size="10" fill="#64748b">±3740 · n=3</text>
+<text x="778.0" y="99" font-size="13" font-weight="600" fill="#0f172a">40.624</text>
+<text x="778.0" y="112" font-size="10" fill="#64748b">±1221 · n=3</text>
 <text x="230" y="143" font-size="13.5" text-anchor="end" fill="#0f172a">frankenphp</text>
-<rect x="240" y="128" width="243.0" height="22" rx="3" fill="#94a3b8"/>
-<text x="491.0" y="143" font-size="13" font-weight="600" fill="#0f172a">18.081</text>
-<text x="491.0" y="156" font-size="10" fill="#64748b">±819 · n=3</text>
+<rect x="240" y="128" width="235.9" height="22" rx="3" fill="#94a3b8"/>
+<text x="483.9" y="143" font-size="13" font-weight="600" fill="#0f172a">18.081</text>
+<text x="483.9" y="156" font-size="10" fill="#64748b">±819 · n=3</text>
 <text x="230" y="187" font-size="13.5" text-anchor="end" fill="#0f172a">webdevops/php-nginx</text>
-<rect x="240" y="172" width="201.8" height="22" rx="3" fill="#94a3b8"/>
-<text x="449.8" y="187" font-size="13" font-weight="600" fill="#0f172a">15.022</text>
-<text x="449.8" y="200" font-size="10" fill="#64748b">±60 · n=3</text>
+<rect x="240" y="172" width="196.0" height="22" rx="3" fill="#94a3b8"/>
+<text x="444.0" y="187" font-size="13" font-weight="600" fill="#0f172a">15.022</text>
+<text x="444.0" y="200" font-size="10" fill="#64748b">±60 · n=3</text>
 <text x="230" y="231" font-size="13.5" text-anchor="end" fill="#0f172a">trafex/php-nginx</text>
-<rect x="240" y="216" width="197.1" height="22" rx="3" fill="#94a3b8"/>
-<text x="445.1" y="231" font-size="13" font-weight="600" fill="#0f172a">14.670</text>
-<text x="445.1" y="244" font-size="10" fill="#64748b">±306 · n=3</text>
+<rect x="240" y="216" width="191.4" height="22" rx="3" fill="#94a3b8"/>
+<text x="439.4" y="231" font-size="13" font-weight="600" fill="#0f172a">14.670</text>
+<text x="439.4" y="244" font-size="10" fill="#64748b">±306 · n=3</text>
 <text x="230" y="275" font-size="13.5" text-anchor="end" fill="#0f172a">serversideup</text>
-<rect x="240" y="260" width="182.4" height="22" rx="3" fill="#94a3b8"/>
-<text x="430.4" y="275" font-size="13" font-weight="600" fill="#0f172a">13.573</text>
-<text x="430.4" y="288" font-size="10" fill="#64748b">±6736 · n=9</text>
+<rect x="240" y="260" width="177.1" height="22" rx="3" fill="#94a3b8"/>
+<text x="425.1" y="275" font-size="13" font-weight="600" fill="#0f172a">13.573</text>
+<text x="425.1" y="288" font-size="10" fill="#64748b">±6736 · n=9</text>
 <text x="230" y="319" font-size="13.5" text-anchor="end" fill="#0f172a">php:apache</text>
-<rect x="240" y="304" width="95.6" height="22" rx="3" fill="#94a3b8"/>
-<text x="343.6" y="319" font-size="13" font-weight="600" fill="#0f172a">7.112</text>
-<text x="343.6" y="332" font-size="10" fill="#64748b">±105 · n=3</text>
+<rect x="240" y="304" width="92.8" height="22" rx="3" fill="#94a3b8"/>
+<text x="340.8" y="319" font-size="13" font-weight="600" fill="#0f172a">7.112</text>
+<text x="340.8" y="332" font-size="10" fill="#64748b">±105 · n=3</text>
 <text x="24" y="364" font-size="10.5" fill="#64748b">requests/second, median of all runs · error = SD across runs · higher is better · zero baseline</text>
 </svg>

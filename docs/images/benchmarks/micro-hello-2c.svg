@@ -10,7 +10,7 @@
 <rect x="240" y="128" width="368.4" height="22" rx="3" fill="#94a3b8"/>
 <text x="616.4" y="143" font-size="13" font-weight="600" fill="#0f172a">5.611</text>
 <text x="616.4" y="156" font-size="10" fill="#64748b">±222 · n=3</text>
-<text x="230" y="187" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6 + FASTCGI_KEEP_CONN</text>
+<text x="230" y="187" font-size="13.5" text-anchor="end" fill="#0f172a">cbox + FASTCGI_KEEP_CONN (opt-in)</text>
 <rect x="240" y="172" width="210.7" height="22" rx="3" fill="#0e7490"/>
 <text x="458.7" y="187" font-size="13" font-weight="600" fill="#0f172a">3.209</text>
 <text x="458.7" y="200" font-size="10" fill="#64748b">±31 · n=3</text>
@@ -22,7 +22,7 @@
 <rect x="240" y="260" width="196.0" height="22" rx="3" fill="#94a3b8"/>
 <text x="444.0" y="275" font-size="13" font-weight="600" fill="#0f172a">2.986</text>
 <text x="444.0" y="288" font-size="10" fill="#64748b">±37 · n=9</text>
-<text x="230" y="319" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6 + unix socket</text>
+<text x="230" y="319" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6.1 (socket default)</text>
 <rect x="240" y="304" width="179.5" height="22" rx="3" fill="#0e7490"/>
 <text x="427.5" y="319" font-size="13" font-weight="600" fill="#0f172a">2.734</text>
 <text x="427.5" y="332" font-size="10" fill="#64748b">±19 · n=3</text>
@@ -30,7 +30,7 @@
 <rect x="240" y="348" width="178.4" height="22" rx="3" fill="#94a3b8"/>
 <text x="426.4" y="363" font-size="13" font-weight="600" fill="#0f172a">2.717</text>
 <text x="426.4" y="376" font-size="10" fill="#64748b">±13 · n=3</text>
-<text x="230" y="407" font-size="13.5" text-anchor="end" fill="#0f172a">cbox php-fpm-nginx 1.6</text>
+<text x="230" y="407" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6 (TCP mode)</text>
 <rect x="240" y="392" width="148.7" height="22" rx="3" fill="#0e7490"/>
 <text x="396.7" y="407" font-size="13" font-weight="600" fill="#0f172a">2.264</text>
 <text x="396.7" y="420" font-size="10" fill="#64748b">±44 · n=3</text>
