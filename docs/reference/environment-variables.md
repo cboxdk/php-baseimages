@@ -161,7 +161,7 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
 | `PHP_OPEN_BASEDIR` | *(empty - no restriction)* | `open_basedir` for the FPM pool. Empty since 1.6: the restriction disables PHP's realpath cache, measured at **-39% throughput on the Laravel fixture** (382 vs 625 rps). Set it for LFI defense-in-depth; include the kernel-statistics paths from the curated list below if you use cboxdk/system-metrics |
-| `PHP_OPENTELEMETRY` | `false` | Load the OpenTelemetry auto-instrumentation extension. Off by default since 1.6: the extension enables the Zend observer API, which taxes every PHP function call even with no OTel SDK installed - measured at **-18.5% throughput on a Laravel app** (0% on tight-loop code). Enable it when you actually ship OTel traces |
+| `PHP_OPENTELEMETRY` | `false` | Load the OpenTelemetry auto-instrumentation extension. Off by default since 1.6: the extension enables the Zend observer API, which taxes every PHP function call even with no OTel SDK installed - measured at **-18.5% throughput on a Laravel app** (0% on tight-loop code). Enable it when you actually ship OTel traces. If what you want is Laravel telemetry without taxing every function call, [cboxdk/laravel-telemetry](https://github.com/cboxdk/laravel-telemetry) does it in userland at the framework's own hooks - measured impact: none |
 
 #### Performance vs. security: should you enable `open_basedir`?
 

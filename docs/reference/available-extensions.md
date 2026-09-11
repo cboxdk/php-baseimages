@@ -263,6 +263,11 @@ code) on dedicated hardware. Set `PHP_OPENTELEMETRY=true` to load it; the
 entrypoint appends the extension's scan dir to `PHP_INI_SCAN_DIR`, so it works
 on read-only filesystems too.
 
+If the goal is telemetry from a Laravel app rather than C-level
+auto-instrumentation, [cboxdk/laravel-telemetry](https://github.com/cboxdk/laravel-telemetry)
+collects it in userland through the framework's own extension points - it does
+not enable the observer API, so it carries none of this tax.
+
 ## Extension Versions
 
 All PECL extensions use pinned versions for reproducibility:
