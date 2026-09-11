@@ -47,4 +47,5 @@ run_slot cbox-pkg-lv8c   laravel cbox:pkg 8 8g "$LV:/var/www/html"
 PORT_OVERRIDE=8080 run_slot ssu-opc-lv8c   laravel "$SSU" 8 8g "$LV:/var/www/html" -e PHP_OPCACHE_ENABLE=1
 
 announce finished finished none
+touch /opt/cbox-bench/RUN_DONE
 echo "SUT-SCHEDULE-DONE"

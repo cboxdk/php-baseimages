@@ -3,7 +3,13 @@
 # cbox-init@main injected), pull competitors, then run the schedule announced
 # on :8090 while serving containers on :8080. Idempotent via lock.
 set -euo pipefail
-exec >>/opt/cbox-bench/bootstrap.log 2>&1 || { sudo mkdir -p /opt/cbox-bench && sudo chown "$(id -u)" /opt/cbox-bench && exec >>/opt/cbox-bench/bootstrap.log 2>&1; }
+# mkdir BEFORE the exec redirect: a failing exec-redirect exits the script,
+# so on a virgin box the old order died before it could create the dir.
+sudo mkdir -p /opt/cbox-bench && sudo chown "$(id -u)" /opt/cbox-bench
+exec >>/opt/cbox-bench/bootstrap.log 2>&1
+# One full schedule per box: without this marker the cron restarts the whole
+# run (rebuild included) the minute the first one finishes.
+[ -f /opt/cbox-bench/RUN_DONE ] && exit 0
 exec 9>/opt/cbox-bench/lock; flock -n 9 || exit 0
 echo "== bootstrap $(date -u) =="
 cd /opt/cbox-bench
