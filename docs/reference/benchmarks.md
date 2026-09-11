@@ -20,7 +20,22 @@ Three promises up front:
 3. **Everything needed to reproduce is disclosed**: hardware, kernel, image
    digests, load-generator settings, run counts, and the aggregation rule.
 
-<!-- RESULTS-SUMMARY -->
+## Results at a glance
+
+Same-pass, same-rig medians (full tables and method below):
+
+| Workload | 2 vCPU | 8 vCPU |
+|---|---|---|
+| **Laravel** (framework path) | **+6%** vs ServerSideUp (135 vs 127 rps) | tie (1,226-1,244 vs 1,244 rps) |
+| **Static files** (nginx layer) | **+190%** (39.4k vs 13.6k rps) | **+69%** (107k vs 64k rps) |
+| **CPU-bound PHP** | +2% (within noise) | +2% (within noise) |
+| **Trivial PHP round trip** | -23% default TCP; **+9%** with keepalive | -20% default; -3% with unix socket |
+| **p99.9 under open-loop load** (Laravel) | 360ms vs 345ms | **9.9ms vs 10.0ms** |
+
+The honest summary: on framework workloads and the web-server layer these
+images win or tie; on the trivial-request transport path ServerSideUp's
+unix-socket default is faster than our TCP default, and our documented
+opt-ins close most or all of that gap. Details, losses and caveats below.
 
 ## The rig
 
@@ -109,7 +124,84 @@ routes) - it represents the framework-heavy path, not a tuned deployment.
 
 ## Results
 
-<!-- RESULTS-TABLES -->
+### The field at 2 vCPU / 1 GB
+
+![PHP fast path at 2 vCPU](../images/benchmarks/micro-hello-2c.svg)
+
+`hello.php` is the transport benchmark: nearly all of its cost is the
+nginx→FPM round trip. Apache and FrankenPHP skip FastCGI entirely (mod_php /
+embedded SAPI), which is why they top this chart - and why neither leads the
+Laravel chart below. Among the FPM+nginx images, the spread is the FastCGI
+transport: ServerSideUp's unix-socket default beats our TCP default by 23%;
+our keepalive opt-in flips it to +9% the other way. Trafex's Alpine image
+posts a strong hello number but drops to less than half the field's
+throughput on CPU-bound work (musl allocator).
+
+| Configuration | hello.php | work.php | static.html |
+|---|---|---|---|
+| cbox 1.6 | 2,264 ±44 | 384 ±11 | 39,445 ±3,740 |
+| cbox 1.6 + keepalive | **3,209 ±31** | **397 ±4** | 40,867 ±1,022 |
+| cbox 1.6 + unix socket | 2,734 ±19 | 379 ±2 | **40,624 ±1,221** |
+| serversideup + opcache | 2,952 ±58 | 376 ±4 | 13,599 ±131 |
+| serversideup (default) | 2,717 ±13 | 370 ±3 | 13,621 ±489 |
+| webdevops | 1,889 ±11 | 378 ±2 | 15,022 ±60 |
+| trafex | 3,126 ±96 | 152 ±7 | 14,670 ±306 |
+| apache (mod_php) | 5,611 ±222 | 414 ±32 | 7,112 ±105 |
+| frankenphp (classic) | 8,072 ±340 | 673 ±66 | 18,081 ±819 |
+
+*(rps, median ±SD; cbox and serversideup rows n=9 same-pass; field rows n=9
+from the field pass on the same rig and day)*
+
+### Laravel at 2 vCPU / 1 GB
+
+![Laravel at 2 vCPU](../images/benchmarks/laravel-2c.svg)
+
+The workload the transport chart cannot predict: 135 vs 127 rps (+6%) on the
+defaults, and the ordering of the micro chart inverts - everything here is
+dominated by framework execution, where worker sizing and what the image
+loads into PHP decide the outcome.
+
+### Static files
+
+![Static files at 2 vCPU](../images/benchmarks/static-2c.svg)
+
+Every PHP app serves assets. This is the nginx layer itself - 2.9× the
+closest FPM competitor, and the gap persists at 8 vCPU (107k vs 64k).
+
+### Scaling to 8 vCPU / 8 GB
+
+![PHP fast path at 8 vCPU](../images/benchmarks/scaling-8c.svg)
+![Laravel at 8 vCPU](../images/benchmarks/laravel-8c.svg)
+
+| Configuration | hello.php | work.php | Laravel /items |
+|---|---|---|---|
+| cbox 1.6 | 19,998 ±1,298 | **3,653 ±3** | 1,226 ±16 |
+| cbox 1.6 + unix socket | 24,076 ±2,441 | 3,733 ±11 | **1,244 ±14** |
+| serversideup + opcache | 24,868 ±28 | 3,592 ±5 | 1,244 ±3 |
+
+At 8 CPUs both stacks converge on ~20 workers and the Laravel result is a
+statistical tie. The hello gap is again the transport; the socket opt-in
+closes it to -3%.
+
+### Tail latency (open loop, coordinated-omission corrected)
+
+`oha --latency-correction` at 60% of each configuration's measured
+throughput, 45 s:
+
+| Configuration | Workload | rate/s | p50 | p99 | p99.9 |
+|---|---|---|---|---|---|
+| cbox 1.6 @8c | Laravel | 735 | 5.1ms | 7.1ms | **9.9ms** |
+| serversideup @8c | Laravel | 746 | 5.4ms | 7.1ms | 10.0ms |
+| cbox 1.6 @2c | Laravel | 78 | 10.4ms | 168ms | 360ms |
+| serversideup @2c | Laravel | 75 | 11.3ms | 177ms | 345ms |
+| cbox 1.6 @2c | hello | 1,345 | 1.0ms | 1.6ms | 3.3ms |
+| cbox + keepalive @2c | hello | 1,924 | 0.8ms | 1.3ms | **742ms** |
+| cbox + unix socket @2c | hello | 1,633 | 0.9ms | 1.4ms | 4.6ms |
+| serversideup @2c | hello | 1,767 | 0.9ms | 1.5ms | 3.3ms |
+
+Two things worth reading out of this table: the 8-CPU Laravel tails are
+sub-10ms and effectively identical across stacks - and the keepalive opt-in's
+p99.9 spike is exactly why it is an opt-in (see the findings section).
 
 ## What we found and changed along the way
 
@@ -179,6 +271,10 @@ with Docker:
 SUT_IP=<sut-ip> ./bench/cloud/bootstrap-client.sh
 # results stream to ~/cbox-bench/out/results.jsonl as JSONL
 ```
+
+The raw measurement data behind this page (every run, as JSONL) is committed
+under `bench/cloud/results/2026-09-11/`, together with the exact image digests.
+The benchmarked commit is stamped in the same directory's shas.
 
 The schedule of configurations lives in `bench/cloud/run-sut.sh`. If you run
 it and get materially different numbers, open an issue - with your

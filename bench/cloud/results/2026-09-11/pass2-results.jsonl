@@ -1,0 +1,104 @@
+{"name":"cbox-pkg","kind":"micro","ep":"/hello.php","run":1,"rps":2245.05,"p50":"13.47ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/hello.php","run":2,"rps":2318.29,"p50":"12.89ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/hello.php","run":3,"rps":2232.83,"p50":"13.48ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/work.php","run":1,"rps":390.68,"p50":"190.01ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/work.php","run":2,"rps":377.70,"p50":"191.22ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/work.php","run":3,"rps":376.59,"p50":"31.91ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/static.html","run":1,"rps":42019.60,"p50":"1.06ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/static.html","run":2,"rps":37820.88,"p50":"1.13ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/static.html","run":3,"rps":40916.37,"p50":"1.07ms","non2xx":0}
+{"name": "cbox-pkg", "kind": "co", "ep": "/hello.php", "rate": 1339, "p50_ms": 0.83, "p99_ms": 1.19, "p999_ms": 3.6, "success": 1.0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/hello.php","run":1,"rps":3113.07,"p50":"0.98ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/hello.php","run":2,"rps":3124.75,"p50":"0.96ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/hello.php","run":3,"rps":3096.67,"p50":"0.97ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/work.php","run":1,"rps":397.50,"p50":"5.85ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/work.php","run":2,"rps":407.21,"p50":"5.76ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/work.php","run":3,"rps":347.55,"p50":"7.04ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/static.html","run":1,"rps":14230.16,"p50":"2.12ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/static.html","run":2,"rps":13830.51,"p50":"2.17ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/static.html","run":3,"rps":13452.04,"p50":"2.16ms","non2xx":0}
+{"name": "cbox-pkg-keep", "kind": "co", "ep": "/hello.php", "rate": 1857, "p50_ms": 0.93, "p99_ms": 1.54, "p999_ms": 2.87, "success": 1.0}
+{"name":"ssu-opc","kind":"micro","ep":"/hello.php","run":1,"rps":2972.74,"p50":"8.62ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/hello.php","run":2,"rps":3008.74,"p50":"8.35ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/hello.php","run":3,"rps":2985.81,"p50":"8.47ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/work.php","run":1,"rps":379.85,"p50":"190.26ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/work.php","run":2,"rps":385.69,"p50":"189.83ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/work.php","run":3,"rps":4983.43,"p50":"1.46ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/static.html","run":1,"rps":158.46,"p50":"472.69ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/static.html","run":2,"rps":135.05,"p50":"494.59ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/static.html","run":3,"rps":131.75,"p50":"495.54ms","non2xx":0}
+{"name": "ssu-opc", "kind": "co", "ep": "/hello.php", "rate": 1791, "p50_ms": 0.47, "p99_ms": 17.43, "p999_ms": 130.5, "success": 1.0}
+{"name":"cbox-pkg-lv","kind":"laravel","ep":"/items","run":1,"rps":133.02,"p50":"498.74ms","non2xx":0}
+{"name":"cbox-pkg-lv","kind":"laravel","ep":"/items","run":2,"rps":114.47,"p50":"581.00ms","non2xx":0}
+{"name":"cbox-pkg-lv","kind":"laravel","ep":"/items","run":3,"rps":113.94,"p50":"583.57ms","non2xx":0}
+{"name": "cbox-pkg-lv", "kind": "co", "ep": "/items", "rate": 67, "p50_ms": 11.98, "p99_ms": 213.11, "p999_ms": 386.95, "success": 1.0}
+{"name":"cbox-keep-lv","kind":"laravel","ep":"/items","run":1,"rps":119.70,"p50":"89.26ms","non2xx":0}
+{"name":"cbox-keep-lv","kind":"laravel","ep":"/items","run":2,"rps":116.65,"p50":"89.93ms","non2xx":0}
+{"name":"cbox-keep-lv","kind":"laravel","ep":"/items","run":3,"rps":117.79,"p50":"89.74ms","non2xx":0}
+{"name": "cbox-keep-lv", "kind": "co", "ep": "/items", "rate": 70, "p50_ms": 9.0, "p99_ms": 14.08, "p999_ms": 2484.18, "success": 1.0}
+{"name":"cbox-w20-lv","kind":"laravel","ep":"/items","run":1,"rps":115.78,"p50":"582.21ms","non2xx":0}
+{"name":"cbox-w20-lv","kind":"laravel","ep":"/items","run":2,"rps":113.83,"p50":"581.62ms","non2xx":0}
+{"name":"cbox-w20-lv","kind":"laravel","ep":"/items","run":3,"rps":114.95,"p50":"578.43ms","non2xx":0}
+{"name": "cbox-w20-lv", "kind": "co", "ep": "/items", "rate": 68, "p50_ms": 12.01, "p99_ms": 270.17, "p999_ms": 503.11, "success": 1.0}
+{"name":"cbox-nojit-lv","kind":"laravel","ep":"/items","run":1,"rps":113.41,"p50":"592.96ms","non2xx":0}
+{"name":"cbox-nojit-lv","kind":"laravel","ep":"/items","run":2,"rps":115.73,"p50":"589.09ms","non2xx":0}
+{"name":"cbox-nojit-lv","kind":"laravel","ep":"/items","run":3,"rps":111.20,"p50":"594.20ms","non2xx":0}
+{"name": "cbox-nojit-lv", "kind": "co", "ep": "/items", "rate": 66, "p50_ms": 12.62, "p99_ms": 266.97, "p999_ms": 455.62, "success": 1.0}
+{"name":"cbox-all-lv","kind":"laravel","ep":"/items","run":1,"rps":108.44,"p50":"114.80ms","non2xx":0}
+{"name":"cbox-all-lv","kind":"laravel","ep":"/items","run":2,"rps":106.43,"p50":"194.33ms","non2xx":0}
+{"name":"cbox-all-lv","kind":"laravel","ep":"/items","run":3,"rps":108.47,"p50":"195.17ms","non2xx":0}
+{"name": "cbox-all-lv", "kind": "co", "ep": "/items", "rate": 64, "p50_ms": 11.63, "p99_ms": 196.94, "p999_ms": 23533.27, "success": 1.0}
+{"name":"ssu-opc-lv","kind":"laravel","ep":"/items","run":1,"rps":132.27,"p50":"497.41ms","non2xx":0}
+{"name":"ssu-opc-lv","kind":"laravel","ep":"/items","run":2,"rps":126.26,"p50":"500.19ms","non2xx":0}
+{"name":"ssu-opc-lv","kind":"laravel","ep":"/items","run":3,"rps":128.94,"p50":"498.30ms","non2xx":0}
+{"name": "ssu-opc-lv", "kind": "co", "ep": "/items", "rate": 76, "p50_ms": 11.24, "p99_ms": 191.4, "p999_ms": 407.6, "success": 1.0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/hello.php","run":1,"rps":17592.14,"p50":"3.55ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/hello.php","run":2,"rps":19717.79,"p50":"3.03ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/hello.php","run":3,"rps":20041.64,"p50":"2.92ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/work.php","run":1,"rps":3586.63,"p50":"17.33ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/work.php","run":2,"rps":3625.79,"p50":"17.19ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/work.php","run":3,"rps":3589.30,"p50":"17.33ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/static.html","run":1,"rps":106590.88,"p50":"462.00us","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/static.html","run":2,"rps":106020.31,"p50":"452.00us","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/static.html","run":3,"rps":106649.32,"p50":"459.00us","non2xx":0}
+{"name": "cbox-pkg-8c", "kind": "co", "ep": "/hello.php", "rate": 12024, "p50_ms": 0.95, "p99_ms": 39.8, "p999_ms": 125.3, "success": 1.0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/hello.php","run":1,"rps":3805.14,"p50":"472.00us","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/hello.php","run":2,"rps":22292.12,"p50":"764.00us","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/hello.php","run":3,"rps":20659.66,"p50":"744.00us","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/work.php","run":1,"rps":3713.88,"p50":"6.02ms","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/work.php","run":2,"rps":3525.49,"p50":"7.02ms","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/work.php","run":3,"rps":3528.66,"p50":"6.01ms","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/static.html","run":1,"rps":107303.98,"p50":"456.00us","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/static.html","run":2,"rps":106630.58,"p50":"453.00us","non2xx":0}
+{"name":"cbox-keep-8c","kind":"micro","ep":"/static.html","run":3,"rps":107278.44,"p50":"456.00us","non2xx":0}
+{"name": "cbox-keep-8c", "kind": "co", "ep": "/hello.php", "rate": 12395, "p50_ms": 0.87, "p99_ms": 72.52, "p999_ms": 224.01, "success": 1.0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/hello.php","run":1,"rps":24989.63,"p50":"2.41ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/hello.php","run":2,"rps":24974.79,"p50":"2.42ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/hello.php","run":3,"rps":24820.51,"p50":"2.43ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/work.php","run":1,"rps":3602.99,"p50":"17.52ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/work.php","run":2,"rps":3605.44,"p50":"17.49ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/work.php","run":3,"rps":3605.40,"p50":"17.49ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/static.html","run":1,"rps":63955.86,"p50":"0.88ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/static.html","run":2,"rps":64575.94,"p50":"0.88ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/static.html","run":3,"rps":63498.14,"p50":"0.87ms","non2xx":0}
+{"name": "ssu-opc-8c", "kind": "co", "ep": "/hello.php", "rate": 14892, "p50_ms": 0.89, "p99_ms": 2.21, "p999_ms": 19.25, "success": 1.0}
+{"name":"cbox-pkg-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1085.63,"p50":"58.50ms","non2xx":0}
+{"name":"cbox-pkg-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1066.52,"p50":"60.21ms","non2xx":0}
+{"name":"cbox-pkg-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1052.83,"p50":"60.89ms","non2xx":0}
+{"name": "cbox-pkg-lv8c", "kind": "co", "ep": "/items", "rate": 631, "p50_ms": 5.81, "p99_ms": 8.19, "p999_ms": 9.7, "success": 1.0}
+{"name":"cbox-nojit-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1025.78,"p50":"62.12ms","non2xx":0}
+{"name":"cbox-nojit-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1011.23,"p50":"63.48ms","non2xx":0}
+{"name":"cbox-nojit-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1002.55,"p50":"64.01ms","non2xx":0}
+{"name": "cbox-nojit-lv8c", "kind": "co", "ep": "/items", "rate": 601, "p50_ms": 6.09, "p99_ms": 8.41, "p999_ms": 10.94, "success": 1.0}
+{"name":"cbox-keep-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1099.96,"p50":"14.14ms","non2xx":0}
+{"name":"cbox-keep-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1084.64,"p50":"25.57ms","non2xx":0}
+{"name":"cbox-keep-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1106.74,"p50":"13.56ms","non2xx":0}
+{"name": "cbox-keep-lv8c", "kind": "co", "ep": "/items", "rate": 663, "p50_ms": 5.72, "p99_ms": 8.23, "p999_ms": 7145.59, "success": 1.0}
+{"name":"cbox-kn-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1055.91,"p50":"15.22ms","non2xx":0}
+{"name":"cbox-kn-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1045.33,"p50":"20.65ms","non2xx":0}
+{"name":"cbox-kn-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1038.71,"p50":"24.67ms","non2xx":0}
+{"name": "cbox-kn-lv8c", "kind": "co", "ep": "/items", "rate": 622, "p50_ms": 5.89, "p99_ms": 8.55, "p999_ms": 1651.96, "success": 1.0}
+{"name":"ssu-opc-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1233.93,"p50":"51.69ms","non2xx":0}
+{"name":"ssu-opc-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1239.69,"p50":"51.38ms","non2xx":0}
+{"name":"ssu-opc-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1234.37,"p50":"51.55ms","non2xx":0}
+{"name": "ssu-opc-lv8c", "kind": "co", "ep": "/items", "rate": 740, "p50_ms": 5.39, "p99_ms": 7.26, "p999_ms": 10.27, "success": 1.0}

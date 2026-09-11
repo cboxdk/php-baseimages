@@ -1,0 +1,126 @@
+{"name":"cbox-pkg","kind":"micro","ep":"/hello.php","run":1,"rps":2260.84,"p50":"13.28ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/hello.php","run":2,"rps":2208.36,"p50":"13.34ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/hello.php","run":3,"rps":2168.17,"p50":"13.62ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/work.php","run":1,"rps":375.83,"p50":"191.13ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/work.php","run":2,"rps":369.97,"p50":"191.68ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/work.php","run":3,"rps":379.55,"p50":"190.91ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/static.html","run":1,"rps":39176.71,"p50":"1.10ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/static.html","run":2,"rps":43284.88,"p50":"1.04ms","non2xx":0}
+{"name":"cbox-pkg","kind":"micro","ep":"/static.html","run":3,"rps":42597.10,"p50":"1.05ms","non2xx":0}
+{"name": "cbox-pkg", "kind": "co", "ep": "/hello.php", "rate": 25558, "p50_ms": 20467.35, "p99_ms": 40876.95, "p999_ms": 41254.96, "success": 1.0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/hello.php","run":1,"rps":3229.58,"p50":"0.93ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/hello.php","run":2,"rps":3050.64,"p50":"0.96ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/hello.php","run":3,"rps":3117.10,"p50":"0.96ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/work.php","run":1,"rps":402.67,"p50":"5.76ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/work.php","run":2,"rps":407.84,"p50":"5.77ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/work.php","run":3,"rps":440.22,"p50":"5.58ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/static.html","run":1,"rps":40071.97,"p50":"1.07ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/static.html","run":2,"rps":38050.85,"p50":"1.18ms","non2xx":0}
+{"name":"cbox-pkg-keep","kind":"micro","ep":"/static.html","run":3,"rps":36320.88,"p50":"1.21ms","non2xx":0}
+{"name": "cbox-pkg-keep", "kind": "co", "ep": "/hello.php", "rate": 21792, "p50_ms": 19392.05, "p99_ms": 38731.91, "p999_ms": 39089.37, "success": 1.0}
+{"name":"cbox-v151","kind":"micro","ep":"/hello.php","run":1,"rps":2099.50,"p50":"14.33ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/hello.php","run":2,"rps":2054.26,"p50":"14.48ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/hello.php","run":3,"rps":2090.08,"p50":"14.15ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/work.php","run":1,"rps":375.66,"p50":"192.45ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/work.php","run":2,"rps":362.40,"p50":"192.90ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/work.php","run":3,"rps":366.62,"p50":"192.60ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/static.html","run":1,"rps":38780.98,"p50":"1.08ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/static.html","run":2,"rps":42520.52,"p50":"1.02ms","non2xx":0}
+{"name":"cbox-v151","kind":"micro","ep":"/static.html","run":3,"rps":45688.50,"p50":"0.98ms","non2xx":0}
+{"name": "cbox-v151", "kind": "co", "ep": "/hello.php", "rate": 27412, "p50_ms": 20668.5, "p99_ms": 41298.05, "p999_ms": 41669.14, "success": 1.0}
+{"name":"ssu","kind":"micro","ep":"/hello.php","run":1,"rps":2730.09,"p50":"10.24ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/hello.php","run":2,"rps":2716.86,"p50":"10.27ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/hello.php","run":3,"rps":2703.62,"p50":"10.34ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/work.php","run":1,"rps":371.55,"p50":"191.57ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/work.php","run":2,"rps":365.78,"p50":"192.15ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/work.php","run":3,"rps":370.37,"p50":"191.48ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/static.html","run":1,"rps":14317.22,"p50":"2.12ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/static.html","run":2,"rps":13621.42,"p50":"2.14ms","non2xx":0}
+{"name":"ssu","kind":"micro","ep":"/static.html","run":3,"rps":13373.89,"p50":"2.16ms","non2xx":0}
+{"name": "ssu", "kind": "co", "ep": "/hello.php", "rate": 8023, "p50_ms": 15066.82, "p99_ms": 30146.78, "p999_ms": 30418.64, "success": 1.0}
+{"name":"ssu-opc","kind":"micro","ep":"/hello.php","run":1,"rps":3006.32,"p50":"8.43ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/hello.php","run":2,"rps":3028.78,"p50":"8.29ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/hello.php","run":3,"rps":2949.45,"p50":"8.57ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/work.php","run":1,"rps":381.57,"p50":"189.71ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/work.php","run":2,"rps":375.63,"p50":"190.67ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/work.php","run":3,"rps":377.64,"p50":"190.35ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/static.html","run":1,"rps":13587.22,"p50":"2.15ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/static.html","run":2,"rps":13702.50,"p50":"2.14ms","non2xx":0}
+{"name":"ssu-opc","kind":"micro","ep":"/static.html","run":3,"rps":13399.34,"p50":"2.17ms","non2xx":0}
+{"name": "ssu-opc", "kind": "co", "ep": "/hello.php", "rate": 8039, "p50_ms": 13912.88, "p99_ms": 28438.51, "p999_ms": 28688.55, "success": 1.0}
+{"name":"webdevops","kind":"micro","ep":"/hello.php","run":1,"rps":1888.67,"p50":"38.29ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/hello.php","run":2,"rps":1868.37,"p50":"39.92ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/hello.php","run":3,"rps":1888.95,"p50":"37.42ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/work.php","run":1,"rps":378.11,"p50":"188.83ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/work.php","run":2,"rps":375.83,"p50":"188.98ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/work.php","run":3,"rps":379.90,"p50":"188.73ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/static.html","run":1,"rps":15079.02,"p50":"2.06ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/static.html","run":2,"rps":15021.78,"p50":"2.06ms","non2xx":0}
+{"name":"webdevops","kind":"micro","ep":"/static.html","run":3,"rps":14959.04,"p50":"2.08ms","non2xx":0}
+{"name": "webdevops", "kind": "co", "ep": "/hello.php", "rate": 8975, "p50_ms": 17846.33, "p99_ms": 35264.96, "p999_ms": 35583.0, "success": 1.0}
+{"name":"trafex","kind":"micro","ep":"/hello.php","run":1,"rps":3289.70,"p50":"9.88ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/hello.php","run":2,"rps":3126.39,"p50":"9.32ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/hello.php","run":3,"rps":3120.53,"p50":"9.82ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/work.php","run":1,"rps":151.51,"p50":"407.97ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/work.php","run":2,"rps":162.09,"p50":"403.09ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/work.php","run":3,"rps":149.53,"p50":"409.68ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/static.html","run":1,"rps":14189.41,"p50":"1.60ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/static.html","run":2,"rps":14669.91,"p50":"1.57ms","non2xx":0}
+{"name":"trafex","kind":"micro","ep":"/static.html","run":3,"rps":14758.43,"p50":"1.55ms","non2xx":0}
+{"name": "trafex", "kind": "co", "ep": "/hello.php", "rate": 8854, "p50_ms": 17387.72, "p99_ms": 33779.24, "p999_ms": 34098.78, "success": 1.0}
+{"name":"apache","kind":"micro","ep":"/hello.php","run":1,"rps":5951.85,"p50":"4.96ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/hello.php","run":2,"rps":5611.02,"p50":"5.55ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/hello.php","run":3,"rps":5535.36,"p50":"5.39ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/work.php","run":1,"rps":411.51,"p50":"108.65ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/work.php","run":2,"rps":468.42,"p50":"108.71ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/work.php","run":3,"rps":414.15,"p50":"112.68ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/static.html","run":1,"rps":7242.25,"p50":"3.77ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/static.html","run":2,"rps":7034.62,"p50":"3.89ms","non2xx":0}
+{"name":"apache","kind":"micro","ep":"/static.html","run":3,"rps":7111.71,"p50":"3.87ms","non2xx":0}
+{"name": "apache", "kind": "co", "ep": "/hello.php", "rate": 4266, "p50_ms": 0.69, "p99_ms": 1.23, "p999_ms": 2.79, "success": 1.0}
+{"name":"frankenphp","kind":"micro","ep":"/hello.php","run":1,"rps":8072.24,"p50":"7.73ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/hello.php","run":2,"rps":7994.32,"p50":"7.81ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/hello.php","run":3,"rps":8617.79,"p50":"7.19ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/work.php","run":1,"rps":690.92,"p50":"97.69ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/work.php","run":2,"rps":672.93,"p50":"97.47ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/work.php","run":3,"rps":568.42,"p50":"106.92ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/static.html","run":1,"rps":18609.45,"p50":"3.30ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/static.html","run":2,"rps":18081.40,"p50":"3.40ms","non2xx":0}
+{"name":"frankenphp","kind":"micro","ep":"/static.html","run":3,"rps":17003.10,"p50":"3.60ms","non2xx":0}
+{"name": "frankenphp", "kind": "co", "ep": "/hello.php", "rate": 10201, "p50_ms": 5032.33, "p99_ms": 7545.14, "p999_ms": 7626.05, "success": 1.0}
+{"name":"cbox-pkg-lv","kind":"laravel","ep":"/items","run":1,"rps":114.14,"p50":"583.91ms","non2xx":0}
+{"name":"cbox-pkg-lv","kind":"laravel","ep":"/items","run":2,"rps":113.13,"p50":"584.85ms","non2xx":0}
+{"name":"cbox-pkg-lv","kind":"laravel","ep":"/items","run":3,"rps":113.00,"p50":"585.85ms","non2xx":0}
+{"name": "cbox-pkg-lv", "kind": "co", "ep": "/items", "rate": 67, "p50_ms": 11.84, "p99_ms": 180.39, "p999_ms": 363.68, "success": 1.0}
+{"name":"ssu-opc-lv","kind":"laravel","ep":"/items","run":1,"rps":127.47,"p50":"499.91ms","non2xx":0}
+{"name":"ssu-opc-lv","kind":"laravel","ep":"/items","run":2,"rps":126.98,"p50":"500.09ms","non2xx":0}
+{"name":"ssu-opc-lv","kind":"laravel","ep":"/items","run":3,"rps":129.05,"p50":"499.80ms","non2xx":0}
+{"name": "ssu-opc-lv", "kind": "co", "ep": "/items", "rate": 77, "p50_ms": 10.93, "p99_ms": 109.32, "p999_ms": 326.27, "success": 1.0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/hello.php","run":1,"rps":17466.15,"p50":"3.59ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/hello.php","run":2,"rps":19460.83,"p50":"3.08ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/hello.php","run":3,"rps":20066.20,"p50":"2.93ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/work.php","run":1,"rps":3611.18,"p50":"17.23ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/work.php","run":2,"rps":3596.30,"p50":"17.31ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/work.php","run":3,"rps":3582.27,"p50":"17.38ms","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/static.html","run":1,"rps":107850.46,"p50":"445.00us","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/static.html","run":2,"rps":106752.53,"p50":"459.00us","non2xx":0}
+{"name":"cbox-pkg-8c","kind":"micro","ep":"/static.html","run":3,"rps":105534.60,"p50":"454.00us","non2xx":0}
+{"name": "cbox-pkg-8c", "kind": "co", "ep": "/hello.php", "rate": 63320, "p50_ms": 17439.28, "p99_ms": 32108.76, "p999_ms": 32370.68, "success": 1.0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/hello.php","run":1,"rps":24884.58,"p50":"2.42ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/hello.php","run":2,"rps":24942.57,"p50":"2.43ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/hello.php","run":3,"rps":24956.45,"p50":"2.41ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/work.php","run":1,"rps":3606.89,"p50":"17.47ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/work.php","run":2,"rps":3603.50,"p50":"17.52ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/work.php","run":3,"rps":3602.17,"p50":"17.51ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/static.html","run":1,"rps":63502.79,"p50":"0.88ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/static.html","run":2,"rps":63718.33,"p50":"0.88ms","non2xx":0}
+{"name":"ssu-opc-8c","kind":"micro","ep":"/static.html","run":3,"rps":64650.41,"p50":"0.87ms","non2xx":0}
+{"name": "ssu-opc-8c", "kind": "co", "ep": "/hello.php", "rate": 38790, "p50_ms": 8597.7, "p99_ms": 17134.59, "p999_ms": 17288.64, "success": 1.0}
+{"name":"cbox-pkg-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1076.98,"p50":"58.99ms","non2xx":0}
+{"name":"cbox-pkg-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1064.53,"p50":"60.13ms","non2xx":0}
+{"name":"cbox-pkg-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1051.48,"p50":"60.98ms","non2xx":0}
+{"name": "cbox-pkg-lv8c", "kind": "co", "ep": "/items", "rate": 630, "p50_ms": 5.81, "p99_ms": 8.18, "p999_ms": 10.96, "success": 1.0}
+{"name":"ssu-opc-lv8c","kind":"laravel","ep":"/items","run":1,"rps":1241.97,"p50":"51.15ms","non2xx":0}
+{"name":"ssu-opc-lv8c","kind":"laravel","ep":"/items","run":2,"rps":1237.77,"p50":"51.34ms","non2xx":0}
+{"name":"ssu-opc-lv8c","kind":"laravel","ep":"/items","run":3,"rps":1240.53,"p50":"51.38ms","non2xx":0}
+{"name": "ssu-opc-lv8c", "kind": "co", "ep": "/items", "rate": 744, "p50_ms": 5.41, "p99_ms": 7.39, "p999_ms": 11.25, "success": 1.0}

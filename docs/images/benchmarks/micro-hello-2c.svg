@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 508" font-family="system-ui,-apple-system,Segoe UI,sans-serif">
+<rect width="860" height="508" fill="#ffffff"/>
+<text x="24" y="34" font-size="19" font-weight="650" fill="#0f172a">PHP fast path - hello.php @ 2 dedicated vCPU</text>
+<text x="24" y="56" font-size="13" fill="#64748b">Hetzner CCX33 (dedicated AMD EPYC), 2 CPU / 1 GB per container, wrk -t4 -c64 -d20s over LAN</text>
+<text x="230" y="99" font-size="13.5" text-anchor="end" fill="#0f172a">frankenphp</text>
+<rect x="240" y="84" width="530.0" height="22" rx="3" fill="#94a3b8"/>
+<text x="778.0" y="99" font-size="13" font-weight="600" fill="#0f172a">8.072</text>
+<text x="778.0" y="112" font-size="10" fill="#64748b">±340 · n=3</text>
+<text x="230" y="143" font-size="13.5" text-anchor="end" fill="#0f172a">php:apache</text>
+<rect x="240" y="128" width="368.4" height="22" rx="3" fill="#94a3b8"/>
+<text x="616.4" y="143" font-size="13" font-weight="600" fill="#0f172a">5.611</text>
+<text x="616.4" y="156" font-size="10" fill="#64748b">±222 · n=3</text>
+<text x="230" y="187" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6 + FASTCGI_KEEP_CONN</text>
+<rect x="240" y="172" width="210.7" height="22" rx="3" fill="#0e7490"/>
+<text x="458.7" y="187" font-size="13" font-weight="600" fill="#0f172a">3.209</text>
+<text x="458.7" y="200" font-size="10" fill="#64748b">±31 · n=3</text>
+<text x="230" y="231" font-size="13.5" text-anchor="end" fill="#0f172a">trafex/php-nginx</text>
+<rect x="240" y="216" width="205.3" height="22" rx="3" fill="#94a3b8"/>
+<text x="453.3" y="231" font-size="13" font-weight="600" fill="#0f172a">3.126</text>
+<text x="453.3" y="244" font-size="10" fill="#64748b">±96 · n=3</text>
+<text x="230" y="275" font-size="13.5" text-anchor="end" fill="#0f172a">serversideup + opcache</text>
+<rect x="240" y="260" width="196.0" height="22" rx="3" fill="#94a3b8"/>
+<text x="444.0" y="275" font-size="13" font-weight="600" fill="#0f172a">2.986</text>
+<text x="444.0" y="288" font-size="10" fill="#64748b">±37 · n=9</text>
+<text x="230" y="319" font-size="13.5" text-anchor="end" fill="#0f172a">cbox 1.6 + unix socket</text>
+<rect x="240" y="304" width="179.5" height="22" rx="3" fill="#0e7490"/>
+<text x="427.5" y="319" font-size="13" font-weight="600" fill="#0f172a">2.734</text>
+<text x="427.5" y="332" font-size="10" fill="#64748b">±19 · n=3</text>
+<text x="230" y="363" font-size="13.5" text-anchor="end" fill="#0f172a">serversideup (default)</text>
+<rect x="240" y="348" width="178.4" height="22" rx="3" fill="#94a3b8"/>
+<text x="426.4" y="363" font-size="13" font-weight="600" fill="#0f172a">2.717</text>
+<text x="426.4" y="376" font-size="10" fill="#64748b">±13 · n=3</text>
+<text x="230" y="407" font-size="13.5" text-anchor="end" fill="#0f172a">cbox php-fpm-nginx 1.6</text>
+<rect x="240" y="392" width="148.7" height="22" rx="3" fill="#0e7490"/>
+<text x="396.7" y="407" font-size="13" font-weight="600" fill="#0f172a">2.264</text>
+<text x="396.7" y="420" font-size="10" fill="#64748b">±44 · n=3</text>
+<text x="230" y="451" font-size="13.5" text-anchor="end" fill="#0f172a">webdevops/php-nginx</text>
+<rect x="240" y="436" width="124.0" height="22" rx="3" fill="#94a3b8"/>
+<text x="372.0" y="451" font-size="13" font-weight="600" fill="#0f172a">1.889</text>
+<text x="372.0" y="464" font-size="10" fill="#64748b">±12 · n=3</text>
+<text x="24" y="496" font-size="10.5" fill="#64748b">requests/second, median of all runs · error = SD across runs · higher is better · zero baseline</text>
+</svg>
