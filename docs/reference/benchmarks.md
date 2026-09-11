@@ -29,13 +29,14 @@ Same-pass, same-rig medians (full tables and method below):
 | **Laravel** (framework path) | **+6%** vs ServerSideUp (135 vs 127 rps) | tie (1,226-1,244 vs 1,244 rps) |
 | **Static files** (nginx layer) | **+190%** (39.4k vs 13.6k rps) | **+69%** (107k vs 64k rps) |
 | **CPU-bound PHP** | +2% (within noise) | +2% (within noise) |
-| **Trivial PHP round trip** | -23% default TCP; **+9%** with keepalive | -20% default; -3% with unix socket |
+| **Trivial PHP round trip** | -7% on the socket default (1.6.1); **+9%** with keepalive opt-in | -3% on the socket default |
 | **p99.9 under open-loop load** (Laravel) | 360ms vs 345ms | **9.9ms vs 10.0ms** |
 
 The honest summary: on framework workloads and the web-server layer these
-images win or tie; on the trivial-request transport path ServerSideUp's
-unix-socket default is faster than our TCP default, and our documented
-opt-ins close most or all of that gap. Details, losses and caveats below.
+images win or tie; the trivial-request transport path is within -7%/-3% of
+ServerSideUp since 1.6.1 made the unix socket the multi-service default
+(measured on this rig - the tables below show every mode), with the
+keepalive opt-in flipping 2 vCPU to +9%. Details, losses and caveats below.
 
 ## The rig
 
@@ -66,7 +67,7 @@ was tuned:
 |---|---|---|
 | cbox 1.6 | `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm` | none (1.6 defaults, built from source at the benchmarked commit) |
 | cbox 1.6 + keepalive | same | `NGINX_FASTCGI_KEEP_CONN=on` (documented opt-in) |
-| cbox 1.6 + socket | same | `PHP_FPM_LISTEN=unix` (documented opt-in) |
+| cbox 1.6.1 socket | same | `PHP_FPM_LISTEN=unix` - the php-fpm-nginx default since 1.6.1 (measured pre-flip, so socket rows are labeled separately) |
 | serversideup | `serversideup/php:8.5-fpm-nginx` | none |
 | serversideup + opcache | same | `PHP_OPCACHE_ENABLE=1` (their documented production switch; **their default ships OPcache off**) |
 | webdevops | `webdevops/php-nginx:8.5` | none |
@@ -132,16 +133,18 @@ routes) - it represents the framework-heavy path, not a tuned deployment.
 nginx→FPM round trip. Apache and FrankenPHP skip FastCGI entirely (mod_php /
 embedded SAPI), which is why they top this chart - and why neither leads the
 Laravel chart below. Among the FPM+nginx images, the spread is the FastCGI
-transport: ServerSideUp's unix-socket default beats our TCP default by 23%;
-our keepalive opt-in flips it to +9% the other way. Trafex's Alpine image
+transport: with both stacks on their socket defaults (ours since 1.6.1) the
+gap is -7%; the keepalive opt-in flips it to +9% the other way. An
+interleaved n=9 A/B confirmed the socket costs nothing on the Laravel
+workload (+0.4% vs TCP). Trafex's Alpine image
 posts a strong hello number but drops to less than half the field's
 throughput on CPU-bound work (musl allocator).
 
 | Configuration | hello.php | work.php | static.html |
 |---|---|---|---|
-| cbox 1.6 | 2,264 ±44 | 384 ±11 | 39,445 ±3,740 |
-| cbox 1.6 + keepalive | **3,209 ±31** | **397 ±4** | 40,867 ±1,022 |
-| cbox 1.6 + unix socket | 2,734 ±19 | 379 ±2 | **40,624 ±1,221** |
+| cbox 1.6 (TCP mode) | 2,264 ±44 | 384 ±11 | 39,445 ±3,740 |
+| cbox + keepalive (opt-in) | **3,209 ±31** | **397 ±4** | 40,867 ±1,022 |
+| **cbox 1.6.1 (socket default)** | 2,734 ±19 | 379 ±2 | **40,624 ±1,221** |
 | serversideup + opcache | 2,952 ±58 | 376 ±4 | 13,599 ±131 |
 | serversideup (default) | 2,717 ±13 | 370 ±3 | 13,621 ±489 |
 | webdevops | 1,889 ±11 | 378 ±2 | 15,022 ±60 |
@@ -175,8 +178,8 @@ closest FPM competitor, and the gap persists at 8 vCPU (107k vs 64k).
 
 | Configuration | hello.php | work.php | Laravel /items |
 |---|---|---|---|
-| cbox 1.6 | 19,998 ±1,298 | **3,653 ±3** | 1,226 ±16 |
-| cbox 1.6 + unix socket | 24,076 ±2,441 | 3,733 ±11 | **1,244 ±14** |
+| cbox 1.6 (TCP mode) | 19,998 ±1,298 | **3,653 ±3** | 1,226 ±16 |
+| **cbox 1.6.1 (socket default)** | 24,076 ±2,441 | 3,733 ±11 | **1,244 ±14** |
 | serversideup + opcache | 24,868 ±28 | 3,592 ±5 | 1,244 ±3 |
 
 At 8 CPUs both stacks converge on ~20 workers and the Laravel result is a
