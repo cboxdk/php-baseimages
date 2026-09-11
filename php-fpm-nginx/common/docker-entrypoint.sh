@@ -580,6 +580,13 @@ generate_runtime_configs() {
         # Append the format name to the access_log directives (invalid after "off")
         [ "${NGINX_ACCESS_LOG}" != "off" ] && NGINX_ACCESS_LOG="${NGINX_ACCESS_LOG} ${NGINX_LOG_FORMAT}"
         [ "${NGINX_STATIC_ACCESS_LOG}" != "off" ] && NGINX_STATIC_ACCESS_LOG="${NGINX_STATIC_ACCESS_LOG} ${NGINX_LOG_FORMAT}"
+        # NOTE, measured and rejected: buffering the access log (buffer=64k)
+        # LOWERED throughput here (20.1k vs 25.5k hello at 8 CPUs) - the log
+        # is a symlink to docker's stdout pipe, and large batched writes
+        # block workers against the pipe while the collector drains it.
+        # Small per-request writes flow better. NGINX_ACCESS_LOG=off remains
+        # the documented knob for squeezing the last ~7% out of micro-request
+        # workloads that do not need request logs.
 
         # Server header rebrand/removal via headers-more (more_set_headers can
         # replace or strip headers, which add_header cannot). Operator-supplied

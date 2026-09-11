@@ -27,11 +27,12 @@ command -v git >/dev/null || { echo "git mangler"; exit 1; }
 [ -d init ] || git clone --depth 1 https://github.com/cboxdk/init init
 ( cd baseimages && git pull -q ); ( cd init && git pull -q )
 
-# Go toolchain for cbox-init (toolchain directive fetches the right version)
-if ! command -v go >/dev/null; then sudo apt-get install -y -qq golang-go; fi
+# Go build inside a container: no sudo, no host toolchain (the ploi user has
+# no passwordless sudo on Ploi docker-servers - learned the silent way)
 announce building-init bootstrapping
-( cd init && GOTOOLCHAIN=auto CGO_ENABLED=0 go build -o $HOME/cbox-bench/cbox-init ./cmd/cbox-init )
-$HOME/cbox-bench/cbox-init --version
+docker run --rm -v "$HOME/cbox-bench/init:/src" -w /src -e CGO_ENABLED=0 -e GOFLAGS=-buildvcs=false golang:1.26 go build -o /src/cbox-init-built ./cmd/cbox-init
+cp init/cbox-init-built "$HOME/cbox-bench/cbox-init" && chmod +x "$HOME/cbox-bench/cbox-init"
+"$HOME/cbox-bench/cbox-init" --version
 
 # Build the package image: baseimages@main with the freshly built init
 cd baseimages
