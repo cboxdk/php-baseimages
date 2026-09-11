@@ -23,6 +23,7 @@ measure() { # name kind
   name="$1"; kind="$2"; base="http://$SUT_IP:8080"
   if [ "$kind" = laravel ]; then eps="/items"; else eps="/hello.php /work.php /static.html"; fi
   wrk -t4 -c64 -d5s "$base$(echo $eps | awk '{print $1}')" >/dev/null 2>&1
+  first_ep=$(echo $eps | awk '{print $1}'); first_rps=""
   for ep in $eps; do
     for r in 1 2 3; do
       out=$(wrk -t4 -c64 -d20s --latency "$base$ep" 2>/dev/null)
@@ -31,11 +32,15 @@ measure() { # name kind
       n2=$(echo "$out" | awk '/Non-2xx/{print $4+0}'); : "${n2:=0}"
       printf '{"name":"%s","kind":"%s","ep":"%s","run":%d,"rps":%s,"p50":"%s","non2xx":%s}\n' \
         "$name" "$kind" "$ep" "$r" "${rps:-0}" "${p50:-na}" "${n2:-0}" >> "$OUT/results.jsonl"
+      [ "$ep" = "$first_ep" ] && first_rps="$rps"
     done
   done
-  # CO-corrected tail at ~60% of the last measured hello/laravel rps
-  ep=$(echo $eps | awk '{print $1}')
-  cap=${rps%.*}; rate=$(( cap * 60 / 100 )); [ "$rate" -lt 50 ] && rate=50
+  # CO-corrected tail at ~60% of the SAME endpoint's own measured rps.
+  # (v1 of this script reused $rps from the loop = the LAST endpoint, so oha
+  # fired at 60% of static.html's rate against hello.php - queue explosion,
+  # 20s p50s, garbage. The rate must come from the endpoint oha targets.)
+  ep="$first_ep"
+  cap=${first_rps%.*}; rate=$(( ${cap:-100} * 60 / 100 )); [ "$rate" -lt 50 ] && rate=50
   oha -z 45s -q "$rate" -c 64 --latency-correction --no-tui --output-format json "$base$ep" 2>/dev/null \
     | python3 -c "
 import json,sys
