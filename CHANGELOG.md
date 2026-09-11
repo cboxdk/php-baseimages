@@ -2,9 +2,14 @@
 
 All notable changes to Cbox PHP Base Images.
 
-## [Unreleased]
+## [1.6.0] - 2026-09-11
+
+### Added
+- **The benchmark page is now real** - full rewrite of `docs/reference/benchmarks.md` on dedicated cloud hardware (2-box Hetzner EPYC rig, one machine under test, one generating load over LAN): disclosed methodology, image digests, coordinated-omission-corrected tails, committed raw JSONL data, and the losses printed next to the wins. The laptop-era numbers are retired. The whole rig ships in `bench/cloud/` and is reproducible on two fresh Ubuntu boxes
+- **cbox-init 3.7.0** - boot-profile CPU cap 2.5 workers per core (was 4), measured on the same rig: the 4x cap booted memory-ceiling pools that lost to smaller competitors on every PHP axis; at 8 CPUs both stacks now converge on the same worker count and the Laravel result is a statistical tie
 
 ### Fixed
+- **`entrypoint-lib.sh` now ships in the same layer as the entrypoint that sources it** (all php-fpm-nginx/php-fpm/php-cli targets) - an image whose entrypoint came from a newer repo state than its inherited base layer could call a lib function that did not exist yet and die with exit 127 at boot. Found the hard way when the benchmark rig built a fresh entrypoint against a registry base
 - **Zero-loss `docker stop` under load** - cbox-init 3.6.0 stops processes in reverse-dependency LEVELS (nginx fully exits before php-fpm is signalled; previously both got their signals within 50µs and nginx served 502s from a draining backend). Measured proxy-free: 2-12 broken requests per stop before, **0-5 after** - the first zero-loss stops this stack has measured
 - **Explicit graceful-stop contracts for every Laravel worker process** - queue workers get SIGTERM with a job-friendly 60s timeout (queue:work finishes the job in hand), Horizon gets `horizon:terminate` + 90s, scheduler/reverb SIGTERM + 10s - in both root and rootless supervisor configs. Previously only Horizon had an explicit shutdown block and everything else rode the 30s global default
 - **Build chains serialized per ref** - concurrency groups on all five build workflows: two chains can no longer race the same tags (the exact mechanism behind the brief -v1 content mixup on 2026-09-10)
