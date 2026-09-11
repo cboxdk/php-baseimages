@@ -27,13 +27,24 @@ APP="$B/baseimages/bench/cloud/app"
 LV="$B/lv-app"
 SSU=serversideup/php:8.5-fpm-nginx
 
-# Pass 4 (mini): the unix-socket opt-in on top of the 1.6 defaults - the
-# remaining hello gap vs SSU is their socket transport; this measures ours.
+# Pass 3+4 (rerun - the first pass-3 went unmeasured, a stale client held the
+# lock): validate the 1.6 defaults (otel unloaded via tombstone mount, exactly
+# what the entrypoint gate ships) against SSU, plus the unix-socket opt-in.
 NOOTEL="/dev/null:/usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini:ro"
+run_slot cbox16          micro cbox:pkg 2 1g "$APP:/var/www/html/public" -v "$NOOTEL"
+run_slot cbox16-keep     micro cbox:pkg 2 1g "$APP:/var/www/html/public" -v "$NOOTEL" -e NGINX_FASTCGI_KEEP_CONN=on
 run_slot cbox16-sock     micro cbox:pkg 2 1g "$APP:/var/www/html/public" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+PORT_OVERRIDE=8080 run_slot ssu-opc        micro "$SSU" 2 1g "$APP:/var/www/html/public" -e PHP_OPCACHE_ENABLE=1
+run_slot cbox16-lv       laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL"
+run_slot cbox16-keep-lv  laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL" -e NGINX_FASTCGI_KEEP_CONN=on
 run_slot cbox16-sock-lv  laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+PORT_OVERRIDE=8080 run_slot ssu-opc-lv     laravel "$SSU" 2 1g "$LV:/var/www/html" -e PHP_OPCACHE_ENABLE=1
+run_slot cbox16-8c       micro cbox:pkg 8 8g "$APP:/var/www/html/public" -v "$NOOTEL"
 run_slot cbox16-sock-8c  micro cbox:pkg 8 8g "$APP:/var/www/html/public" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+PORT_OVERRIDE=8080 run_slot ssu-opc-8c     micro "$SSU" 8 8g "$APP:/var/www/html/public" -e PHP_OPCACHE_ENABLE=1
+run_slot cbox16-lv8c     laravel cbox:pkg 8 8g "$LV:/var/www/html" -v "$NOOTEL"
 run_slot cbox16-sock-lv8c laravel cbox:pkg 8 8g "$LV:/var/www/html" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+PORT_OVERRIDE=8080 run_slot ssu-opc-lv8c   laravel "$SSU" 8 8g "$LV:/var/www/html" -e PHP_OPCACHE_ENABLE=1
 announce finished finished none
 touch "$B/RUN_DONE"
 echo "SUT-SCHEDULE-DONE"

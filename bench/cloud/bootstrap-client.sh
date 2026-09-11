@@ -4,7 +4,7 @@
 set -euo pipefail
 mkdir -p "$HOME/cbox-bench"
 exec >>$HOME/cbox-bench/client.log 2>&1
-exec 9>$HOME/cbox-bench/lock; flock -n 9 || exit 0
+exec 9>$HOME/cbox-bench/lock; flock -n 9 || { echo "lock busy, exiting $(date -u)" >> $HOME/cbox-bench/lockskips.log; exit 0; }
 echo "== client bootstrap $(date -u) SUT=$SUT_IP =="
 docker pull -q williamyeh/wrk >/dev/null
 wrk() { docker run --rm --network host williamyeh/wrk "$@"; }
@@ -15,7 +15,10 @@ if ! command -v oha >/dev/null; then
 fi
 export PATH="$HOME/bin:$PATH"
 OUT=$HOME/cbox-bench/out; mkdir -p "$OUT"
-( cd "$OUT" && python3 -m http.server 8091 >/dev/null 2>&1 9>&- & ) || true  # 9>&-: do not inherit the flock fd
+# exec 9>&- INSIDE the subshell: the subshell itself inherits the flock fd and
+# bash can leave that subshell alive as the server's parent - it then holds the
+# lock forever and every later run dies silently at flock (cost us a full pass).
+( exec 9>&-; cd "$OUT" && setsid python3 -m http.server 8091 >/dev/null 2>&1 & ) || true
 : > "$OUT/results.jsonl"
 curl -fsS "http://$SUT_IP:8090/digests.txt" -o "$OUT/digests.txt" || true
 

@@ -10,7 +10,7 @@ exec >>$HOME/cbox-bench/bootstrap.log 2>&1
 # One full schedule per box: without this marker the cron restarts the whole
 # run (rebuild included) the minute the first one finishes.
 [ -f $HOME/cbox-bench/RUN_DONE ] && exit 0
-exec 9>$HOME/cbox-bench/lock; flock -n 9 || exit 0
+exec 9>$HOME/cbox-bench/lock; flock -n 9 || { echo "lock busy, exiting $(date -u)" >> $HOME/cbox-bench/lockskips.log; exit 0; }
 echo "== bootstrap $(date -u) =="
 cd $HOME/cbox-bench
 # State endpoint FIRST, so progress and failures are observable from outside
@@ -18,7 +18,7 @@ cd $HOME/cbox-bench
 mkdir -p state
 announce() { printf '{"name":"%s","phase":"%s","kind":"none","ts":"%s"}
 ' "$1" "$2" "$(date -u +%FT%TZ)" > state/state.json.tmp && mv state/state.json.tmp state/state.json; }
-pgrep -f "http.server 8090" >/dev/null || ( cd state && nohup python3 -m http.server 8090 >/dev/null 2>&1 9>&- & )
+pgrep -f "http.server 8090" >/dev/null || ( exec 9>&-; cd state && setsid nohup python3 -m http.server 8090 >/dev/null 2>&1 & )
 announce bootstrap bootstrapping
 trap 'announce bootstrap failed; cp bootstrap.log state/bootstrap.log 2>/dev/null' ERR
 
