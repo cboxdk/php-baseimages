@@ -162,6 +162,43 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
 | `PHP_OPEN_BASEDIR` | *(empty - no restriction)* | `open_basedir` for the FPM pool. Empty since 1.6: the restriction disables PHP's realpath cache, measured at **-39% throughput on the Laravel fixture** (382 vs 625 rps). Set it for LFI defense-in-depth; include the kernel-statistics paths from the curated list below if you use cboxdk/system-metrics |
 
+#### Performance vs. security: should you enable `open_basedir`?
+
+The default is **off**, and that is a measured trade, not an oversight:
+setting `open_basedir` disables PHP's realpath cache entirely, which costs
+**~39% throughput on a real Laravel application** (382 → 666 req/s at
+2 CPUs on our benchmark fixture - the cache saves repeated filesystem
+lookups across the hundreds of files a framework request touches). On a
+single-file endpoint the cost hides at ~3%, which is exactly why this class
+of regression goes unnoticed.
+
+What enabling it buys: a defense-in-depth line against **local file
+inclusion in your own application code** - with the restriction on, a
+compromised `include`/`file_get_contents` cannot read paths like
+`/proc/1/environ` (which holds every secret in the container's
+environment). The container boundary does NOT protect the app from itself;
+`open_basedir` does.
+
+**Enable it when** the application executes less-trusted code (plugins,
+user templates), serves user uploads near executable paths, or compliance
+requires it - and accept the realpath cost. **Leave it off when** raw
+framework throughput matters and your LFI surface is handled at the
+application layer.
+
+Copy-paste re-enable, including the kernel-statistics paths that keep
+`cboxdk/system-metrics` (and `laravel-telemetry`) working under the
+restriction:
+
+```yaml
+environment:
+  PHP_OPEN_BASEDIR: "/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/proc/1/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/:/etc/os-release:/etc/lsb-release:/etc/debian_version:/etc/redhat-release:/etc/system-release"
+```
+
+`/proc/1/environ` and `/proc/*/cmdline` are deliberately absent from that
+list - they are the secrets the restriction exists to protect. Verified
+behavior: with the list applied, `file_get_contents('/proc/1/environ')`
+fails while `/proc/meminfo` (metrics) succeeds.
+
 #### One definition, and why that took three attempts
 
 `open_basedir` is set in exactly one place: the entrypoint writes

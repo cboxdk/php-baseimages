@@ -87,10 +87,16 @@ disable_functions = exec,passthru,shell_exec,system,proc_open,popen,curl_exec,cu
 expose_php = Off
 allow_url_fopen = Off
 allow_url_include = Off
-; open_basedir is NOT set here. The FPM pool sets it as a `php_admin_value`,
-; which overrides php.ini — so a value in this file is silently ignored in web
-; requests. Use `PHP_OPEN_BASEDIR` instead, and keep the read-only kernel
-; statistics in it or `cboxdk/laravel-telemetry` collects nothing:
+; open_basedir is NOT set here, and since 1.6 it is OFF by default: the
+; restriction disables PHP's realpath cache, measured at -39% throughput on
+; a real Laravel app (~3% on single-file endpoints, where it hides). It is
+; still the right defense-in-depth where the app runs less-trusted code -
+; with it on, an LFI in application code cannot read /proc/1/environ (every
+; secret in the container). Enable per deployment with `PHP_OPEN_BASEDIR`
+; (a `php_admin_value` on the pool - a value in THIS file is silently
+; ignored in web requests), and keep the read-only kernel statistics in the
+; list or `cboxdk/laravel-telemetry` collects nothing. The copy-paste list
+; and the full performance-vs-security note:
 ; see docs/reference/environment-variables.md.
 
 ; Session security
