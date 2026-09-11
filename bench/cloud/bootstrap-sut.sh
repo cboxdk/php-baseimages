@@ -13,6 +13,14 @@ exec >>/opt/cbox-bench/bootstrap.log 2>&1
 exec 9>/opt/cbox-bench/lock; flock -n 9 || exit 0
 echo "== bootstrap $(date -u) =="
 cd /opt/cbox-bench
+# State endpoint FIRST, so progress and failures are observable from outside
+# (there is no ssh in this rig - the endpoint IS the diagnostics channel).
+mkdir -p state
+announce() { printf '{"name":"%s","phase":"%s","kind":"none","ts":"%s"}
+' "$1" "$2" "$(date -u +%FT%TZ)" > state/state.json.tmp && mv state/state.json.tmp state/state.json; }
+pgrep -f "http.server 8090" >/dev/null || ( cd state && nohup python3 -m http.server 8090 >/dev/null 2>&1 & )
+announce bootstrap bootstrapping
+trap 'announce bootstrap failed; cp bootstrap.log state/bootstrap.log 2>/dev/null' ERR
 
 command -v git >/dev/null || sudo apt-get install -y -qq git
 [ -d baseimages ] || git clone --depth 1 https://github.com/cboxdk/php-baseimages baseimages
@@ -21,6 +29,7 @@ command -v git >/dev/null || sudo apt-get install -y -qq git
 
 # Go toolchain for cbox-init (toolchain directive fetches the right version)
 if ! command -v go >/dev/null; then sudo apt-get install -y -qq golang-go; fi
+announce building-init bootstrapping
 ( cd init && GOTOOLCHAIN=auto CGO_ENABLED=0 go build -o /opt/cbox-bench/cbox-init ./cmd/cbox-init )
 /opt/cbox-bench/cbox-init --version
 
@@ -30,10 +39,12 @@ cp /opt/cbox-bench/cbox-init cbox-init/binaries/cbox-init-linux-amd64
 cp /opt/cbox-bench/cbox-init cbox-init/binaries/cbox-init-linux-arm64  # unused on amd64
 printf '%s' "$( (cd . && git rev-parse HEAD) )" > /opt/cbox-bench/baseimages.sha
 printf '%s' "$( (cd ../init && git rev-parse HEAD) )" > /opt/cbox-bench/init.sha
+announce building-image bootstrapping 2>/dev/null || true
 docker build -q -f php-fpm-nginx/Dockerfile --target root --build-arg PHP_VERSION=8.5 -t cbox:pkg .
 cd /opt/cbox-bench
 
 # Competitors, as shipped
+announce pulling-competitors bootstrapping
 for img in "serversideup/php:8.5-fpm-nginx" "webdevops/php-nginx:8.5" "trafex/php-nginx:latest" \
            "php:8.5-apache-bookworm" "dunglas/frankenphp:php8.5-bookworm" \
            "ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1"; do
