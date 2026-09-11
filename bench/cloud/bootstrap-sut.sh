@@ -36,6 +36,7 @@ cp init/cbox-init-built "$HOME/cbox-bench/cbox-init" && chmod +x "$HOME/cbox-ben
 
 # Build the package image: baseimages@main with the freshly built init
 cd baseimages
+mkdir -p cbox-init/binaries
 cp $HOME/cbox-bench/cbox-init cbox-init/binaries/cbox-init-linux-amd64
 cp $HOME/cbox-bench/cbox-init cbox-init/binaries/cbox-init-linux-arm64  # unused on amd64
 printf '%s' "$( (cd . && git rev-parse HEAD) )" > $HOME/cbox-bench/baseimages.sha
