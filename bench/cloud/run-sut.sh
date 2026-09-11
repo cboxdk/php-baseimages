@@ -16,7 +16,14 @@ run_slot() { # name kind image cpus mem mount extra...
   docker rm -f sut >/dev/null 2>&1
   docker run -d --name sut --cpus="$cpus" --memory="$mem" -p 8080:${PORT_OVERRIDE:-80} -v "$mnt" "$@" "$img" >/dev/null || { announce "$name" error "$kind"; return; }
   probe="/hello.php"; [ "$kind" = laravel ] && probe="/items"
-  for i in $(seq 1 300); do curl -sf -o /dev/null "http://127.0.0.1:8080$probe" && break; sleep 0.5; done
+  ok=""
+  for i in $(seq 1 300); do curl -sf -o /dev/null "http://127.0.0.1:8080$probe" && { ok=1; break; }; sleep 0.5; done
+  # Never announce ready on a dead container - a crashed slot must show as
+  # error, not send the client measuring a corpse (learned from exit-127 boot).
+  if [ -z "$ok" ]; then
+    echo "slot $name never became ready:"; docker logs sut 2>&1 | tail -15
+    announce "$name" error "$kind"; docker rm -f sut >/dev/null 2>&1; return
+  fi
   announce "$name" ready "$kind"
   sleep "$WINDOW"
   announce "$name" done "$kind"

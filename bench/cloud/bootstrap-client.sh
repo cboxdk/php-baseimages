@@ -25,7 +25,7 @@ curl -fsS "http://$SUT_IP:8090/digests.txt" -o "$OUT/digests.txt" || true
 measure() { # name kind
   name="$1"; kind="$2"; base="http://$SUT_IP:8080"
   if [ "$kind" = laravel ]; then eps="/items"; else eps="/hello.php /work.php /static.html"; fi
-  wrk -t4 -c64 -d5s "$base$(echo $eps | awk '{print $1}')" >/dev/null 2>&1
+  wrk -t4 -c64 -d5s "$base$(echo $eps | awk '{print $1}')" >/dev/null 2>&1 || true  # warmup failure must not kill the loop (set -e)
   first_ep=$(echo $eps | awk '{print $1}'); first_rps=""
   for ep in $eps; do
     for r in 1 2 3; do

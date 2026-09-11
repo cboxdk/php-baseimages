@@ -136,6 +136,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -239,6 +243,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -333,6 +341,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -436,6 +448,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -530,6 +546,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -633,6 +653,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -727,6 +751,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -830,6 +858,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
