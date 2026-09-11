@@ -62,18 +62,32 @@ if [ "${CBOX_INIT_METRICS_ENABLED:-true}" = "true" ]; then
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PHP-FPM Check
+# PHP-FPM Check (transport-aware)
 # ─────────────────────────────────────────────────────────────────────────────
-if command -v check_port >/dev/null 2>&1; then
+# Docker healthchecks do NOT see the entrypoint's exports - only image/run
+# env. So the transport is detected, not read: a live socket file at the
+# expected path means unix mode (the php-fpm-nginx default since 1.6.1),
+# otherwise the classic TCP pair is probed. A container hard-flipped this
+# check to unhealthy in socket mode when the port was hardcoded.
+PHP_FPM_SOCKET="${PHP_FPM_SOCKET_PATH:-/run/php/php-fpm.sock}"
+if [ -S "$PHP_FPM_SOCKET" ]; then
+    if command -v nc >/dev/null 2>&1 && nc -zU "$PHP_FPM_SOCKET" 2>/dev/null; then
+        check_passed "PHP-FPM accepting on unix socket ${PHP_FPM_SOCKET}"
+    elif pgrep -f "php-fpm: master" >/dev/null 2>&1 || pgrep -x php-fpm >/dev/null 2>&1; then
+        check_passed "PHP-FPM socket present and master running (${PHP_FPM_SOCKET})"
+    else
+        _check_failed "PHP-FPM socket exists but no php-fpm process"
+    fi
+elif command -v check_port >/dev/null 2>&1; then
     if check_port ${PHP_FPM_PORT}; then
         check_passed "PHP-FPM listening on :${PHP_FPM_PORT}"
     else
-        _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
+        _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT} (and no socket at ${PHP_FPM_SOCKET})"
     fi
 elif nc -z 127.0.0.1 ${PHP_FPM_PORT} 2>/dev/null; then
     check_passed "PHP-FPM listening on :${PHP_FPM_PORT}"
 else
-    _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT}"
+    _check_failed "PHP-FPM not listening on :${PHP_FPM_PORT} (and no socket at ${PHP_FPM_SOCKET})"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

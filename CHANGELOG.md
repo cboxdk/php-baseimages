@@ -2,6 +2,14 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [1.6.1] - 2026-09-11
+
+### Changed
+- **php-fpm-nginx defaults to the unix socket (`PHP_FPM_LISTEN=unix`)** - decided on the dedicated-hardware rig: +21% on the transport path over plain TCP at both 2 and 8 vCPU, the cleanest open-loop tail of any variant (p99.9 4.6ms), Laravel/work/static unchanged (the -3% Laravel reading was re-tested with an interleaved A/B and did not reproduce). The laptop measurement that previously reversed this did not transfer to cloud cores, where the per-request connect cost weighs ~3x heavier. `PHP_FPM_LISTEN=tcp` restores the classic pair; **standalone php-fpm keeps TCP** (remote FastCGI is its purpose); keepalive stays opt-in (+9% peak on micro but 742ms p99.9 recycling spikes - the wrong tradeoff for a default). On read-only rootfs the default degrades gracefully to the baked TCP set as before; an explicit `unix` still refuses loud
+
+### Fixed
+- **The container healthcheck is transport-aware** - it hardcoded TCP :9000 for the FPM probe, so a socket-mode container ran (unhealthy) forever (Docker healthchecks cannot see entrypoint exports, so the check now detects the live socket file instead of reading env). Caught by the benchmark rig the hour the default flipped
+
 ## [1.6.0] - 2026-09-11
 
 ### Added

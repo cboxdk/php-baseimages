@@ -196,19 +196,25 @@ setup_user_permissions_extended() {
 # invalid user input early. The lib version trusts input without validation.
 ###########################################
 ###########################################
-# PHP-FPM listen transport (TCP vs unix socket)
-# PHP_FPM_LISTEN=tcp (default) keeps the classic 127.0.0.1:9000 - the right
-# choice when something outside the container scrapes or proxies FPM
-# directly. PHP_FPM_LISTEN=unix serves the nginx->FPM hop over a unix
-# socket instead (measured ~+25% PHP throughput single-container);
+# PHP-FPM listen transport (unix socket vs TCP)
+# PHP_FPM_LISTEN=unix (default) serves the nginx->FPM hop over a unix
+# socket - measured +21% on the transport path with the cleanest tails
+# (dedicated-EPYC rig, bench/cloud/results/2026-09-11). PHP_FPM_LISTEN=tcp
+# restores the classic 127.0.0.1:9000 - the right choice when something
+# outside the container scrapes or proxies FPM directly.
 # PHP_FPM_SOCKET_PATH overrides the default socket location.
 ###########################################
 setup_fpm_listen() {
-    # tcp is the default. The socket-as-default experiment was measured and
-    # reversed: with FastCGI keepalive (now default in tcp mode), tcp beats
-    # the socket outright (15.2k vs 13.3k hello rps at 2 CPUs), and keepalive
-    # over the unix socket measured actively WORSE (12.2k). The socket stays
-    # a first-class opt-in for keepalive-free single-container setups.
+    # unix is the default in THIS image (nginx and FPM share the container;
+    # the hop never leaves it). Decided on dedicated-EPYC measurements
+    # (2026-09-11, bench/cloud/results): socket +21% over plain tcp on the
+    # transport path with the cleanest open-loop tail of any variant
+    # (p99.9 4.6ms), Laravel equal, work/static unchanged. The earlier
+    # laptop run that reversed this (tcp+keepalive 15.2k vs socket 13.3k)
+    # did not transfer to cloud cores, where per-request connect cost
+    # weighs 3x heavier. Keepalive stays opt-in: +9% more peak on micro,
+    # but 742ms p99.9 recycling spikes - wrong tradeoff for a default.
+    # Standalone php-fpm keeps tcp: remote FastCGI is its purpose.
     # Whether the operator chose explicitly matters to the read-only-rootfs
     # fallback below: a default can quietly degrade with the baked config
     # set, an explicit choice must be honored or refused loud.
@@ -217,7 +223,7 @@ setup_fpm_listen() {
     else
         CBOX_FPM_LISTEN_EXPLICIT=false
     fi
-    local mode="${PHP_FPM_LISTEN:-tcp}"
+    local mode="${PHP_FPM_LISTEN:-unix}"
     export PHP_FPM_LISTEN="$mode"
     case "$mode" in
         tcp)

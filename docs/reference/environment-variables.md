@@ -361,7 +361,7 @@ Both transports are first-class - pick per deployment:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHP_FPM_LISTEN` | `tcp` | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
+| `PHP_FPM_LISTEN` | `unix` (php-fpm-nginx) / `tcp` (standalone php-fpm) | `unix` = the nginx->FPM hop over a unix socket (+21% transport throughput, cleanest p99.9 - the multi-service default since 1.6.1); `tcp` = classic `127.0.0.1:9000`, the standalone default and the right choice when FPM is scraped/proxied from outside the container |
 | `PHP_FPM_SOCKET_PATH` | `/run/php/php-fpm.sock` | Socket location in `unix` mode |
 
 **When to use which:**
