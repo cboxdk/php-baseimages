@@ -2,6 +2,11 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [Unreleased]
+
+### Added
+- **Statamic guide: deployment modes** - mount mode vs baked (immutable) images, the multi-stage build pattern, and git-backed content on a volume in baked mode - including the empty-volume trap (a not-yet-existing volume mounted over a baked path yields an empty directory and a 404, hit while validating the pattern). Both modes verified against a real Statamic install on this image
+
 ## [1.6.2] - 2026-09-13
 
 ### Added

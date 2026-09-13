@@ -129,6 +129,101 @@ And with push enabled the commit lands on the remote immediately after.
 | Saves are slow in the control panel | Git runs synchronously | Set `LARAVEL_QUEUE=true` so commits go through the worker |
 | Nothing commits | Git integration is a Statamic Pro feature | Enable Pro (`config/statamic/editions.php`); trial mode works locally |
 
+## Deployment modes
+
+Statamic runs in two fundamentally different shapes, and git integration
+works differently in each. Both patterns below are validated against this
+image.
+
+### Mount mode (dev, single server)
+
+The whole site is a bind mount - everything above this section describes
+mount mode. The site directory IS the git repository, saves commit in
+place, and `PUID`/`PGID` keep host and container ownership aligned. Use it
+when the server is long-lived and the site directory is the source of truth.
+
+### Baked mode (production, Kubernetes, immutable deploys)
+
+The site is compiled into the image; nothing is mounted. This is the
+multi-stage pattern:
+
+```dockerfile
+# Build stage: composer in the CLI image (it ships Node.js too, so a
+# `npm ci && npm run build` stage for the frontend fits the same pattern)
+FROM ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1 AS build
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-autoloader --no-scripts --no-interaction
+COPY . .
+RUN composer dump-autoload --optimize
+
+# Runtime stage: the multi-service image
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+COPY --from=build --chown=www-data:www-data /app /var/www/html
+```
+
+```bash
+docker build -t my-site:$(git rev-parse --short HEAD) .
+docker run -d -p 8080:80 my-site:abc1234
+```
+
+Expected: the container reports healthy and serves the site with no
+volumes at all.
+
+### Git-backed content in baked mode
+
+An immutable image and runtime content edits pull in opposite directions.
+The pattern that reconciles them: **the content directory is its own git
+repository on a volume**, separate from the site code.
+
+1. Keep `content/` (plus whatever else editors change - `users/`, asset
+   containers) in a dedicated content repository.
+2. Mount that repository as a volume; the baked image carries the code,
+   the volume carries the editable state.
+3. Point Statamic's git integration at the mounted paths (`git.paths` in
+   `config/statamic/git.php`) and set the work tree to the volume.
+
+```yaml
+services:
+  statamic:
+    image: my-site:abc1234
+    volumes:
+      - ./content-repo:/var/www/html/content
+      - ./deploy_key:/run/secrets/git_key:ro
+      - ./known_hosts:/etc/ssh/ssh_known_hosts:ro
+    environment:
+      - LARAVEL_QUEUE=true
+      - GIT_SSH_COMMAND=ssh -i /run/secrets/git_key -o IdentitiesOnly=yes
+      - STATAMIC_GIT_ENABLED=true
+      - STATAMIC_GIT_PUSH=true
+```
+
+❌ **The empty-volume trap** (we hit it validating this page): mounting a
+volume that does not exist yet over a baked path gives you an EMPTY
+directory on top of your baked content - Docker creates the empty host
+dir and the site 404s. A content volume must be **seeded before first
+boot** (clone the content repo to the host path first, or use an init
+container that clones when the volume is empty):
+
+```bash
+# Seed once, before first start
+git clone git@github.com:you/site-content.git ./content-repo
+docker compose up -d
+```
+
+New code deploy = new image, content volume untouched. Content edits =
+commits pushed from the running container, pulled into the next image
+build if you also bake a content snapshot as fallback.
+
+### Choosing
+
+| | Mount mode | Baked mode |
+|---|---|---|
+| Deploys | git pull / rsync in place | immutable image per release |
+| Git integration | whole site is the repo | content volume is its own repo |
+| Fits | single server, dev, small sites | Kubernetes, autoscaling, CI/CD |
+| Trap to know | key must be 0400 (above) | seed the content volume first |
+
 ## What the Laravel detection gives Statamic for free
 
 - `storage/` and `bootstrap/cache/` permissions fixed at boot (PUID-aware)
