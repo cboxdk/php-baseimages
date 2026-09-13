@@ -2,7 +2,7 @@
 
 All notable changes to Cbox PHP Base Images.
 
-## [Unreleased]
+## [1.6.2] - 2026-09-13
 
 ### Added
 - **Statamic git integration works out of the box** - `openssh-client` (ssh + ssh-keyscan) is now in every runtime tier, and `safe.directory = *` is baked into `/etc/gitconfig`: git 2.35+ otherwise refuses bind-mounted repos owned by another UID ("dubious ownership"), the classic Statamic-in-Docker failure. Validated end-to-end against a real private GitHub repository: a genuine Statamic install in the container, `php please git:commit` as www-data, commit AND automatic push over SSH with a deploy key. New `docs/guides/statamic-guide.md` carries the full recipe including the ssh key-permission trap (0400 owned by the runtime user; ssh hard-refuses world-readable keys)
