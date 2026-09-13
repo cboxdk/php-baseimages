@@ -90,13 +90,21 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
 ENV PHP_OPEN_BASEDIR=""
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
+    bash curl wget git unzip procps openssh-client netcat-openbsd libfcgi-bin \
     cron \
     libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 \
     libpq5 libicu72 libzip4 \
     libxml2 libxslt1.1 libldap-2.5-0 \
     libbz2-1.0 libonig5 libreadline8 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
+
+# git 2.35+ refuses to operate on a repo owned by another UID ("dubious
+# ownership") - which is the NORMAL situation for a bind-mounted app (host
+# UID vs www-data). In a single-app container the protection defends
+# nothing and it breaks Statamic git integration, composer VCS installs
+# and every `git status` in the workdir. Trust all paths at build time:
+# works identically in root, rootless and read-only-rootfs modes.
+RUN git config --system --add safe.directory '*'
 
 # Copy FPM-specific configurations (shared across root/rootless)
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf

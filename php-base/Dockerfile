@@ -104,7 +104,7 @@ ARG MSGPACK_VERSION
 # ============================================================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Essential tools
-    bash curl wget git unzip procps \
+    bash curl wget git unzip procps openssh-client \
     # Cron for Laravel Scheduler
     cron \
     # Runtime libraries (minimal set for slim tier)
@@ -113,6 +113,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2 \
     libbz2-1.0 libonig5 libreadline8 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
+
+# git 2.35+ refuses to operate on a repo owned by another UID ("dubious
+# ownership") - which is the NORMAL situation for a bind-mounted app (host
+# UID vs www-data). In a single-app container the protection defends
+# nothing and it breaks Statamic git integration, composer VCS installs
+# and every `git status` in the workdir. Trust all paths at build time:
+# works identically in root, rootless and read-only-rootfs modes.
+RUN git config --system --add safe.directory '*'
 
 # ============================================================================
 # SLIM: PHP Extensions (essential only)
