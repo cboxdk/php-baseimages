@@ -1,0 +1,85 @@
+name: Build PHP 8.6 Beta Lane (experimental)
+
+# The pre-GA early-warning lane (issue #23): builds php-base against
+# php:8.6-rc with the pecl-free PIE install path, weekly and on demand.
+# A red run here means upstream moved under us (new beta, pie change,
+# extension breakage) - months before GA forces the issue.
+# NOT part of the release chains; pushes only the clearly-marked beta tag.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 5 * * 1'
+  push:
+    paths:
+      - 'php-base/Dockerfile.php86-beta'
+      - '.github/workflows/build-php86-beta.yml'
+
+permissions:
+  contents: read
+  packages: write
+  issues: write
+
+concurrency:
+  group: php86-beta-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (amd64) and load for smoke test
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: php-base/Dockerfile.php86-beta
+          platforms: linux/amd64
+          load: true
+          tags: php86-beta:smoke
+          build-args: |
+            CACHE_REFRESH=${{ github.run_id }}
+
+      - name: Smoke test
+        run: |
+          docker run --rm php86-beta:smoke sh -c '
+            set -e
+            php -v | head -1
+            warn=$(php -r "exit(0);" 2>&1 | grep -c Warning || true)
+            [ "$warn" = "0" ] || { echo "startup warnings: $warn"; php -r "exit(0);"; exit 1; }
+            n=$(php -m | grep -cE "^(pdo_mysql|pdo_pgsql|mysqli|pgsql|zip|intl|bcmath|gd|exif|pcntl|sockets|bz2|gmp|mbstring|mongodb)$")
+            [ "$n" = "15" ] || { echo "expected 15 core extensions, got $n"; php -m; exit 1; }
+            otel_off=$(php -m | grep -ci opentelemetry || true)
+            otel_on=$(PHP_INI_SCAN_DIR=":/usr/local/etc/php/conf.d-otel" php -m | grep -ci opentelemetry)
+            [ "$otel_off" = "0" ] && [ "$otel_on" = "1" ] || { echo "otel gate broken (off=$otel_off on=$otel_on)"; exit 1; }
+            composer --version
+            echo "SMOKE OK"'
+
+      - name: Push multi-arch beta tag
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: php-base/Dockerfile.php86-beta
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository }}/php-base:8.6-rc-bookworm-beta
+          build-args: |
+            CACHE_REFRESH=${{ github.run_id }}
+
+      - name: Ping the tracking issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 23 --repo "${{ github.repository }}" --body "The PHP 8.6 beta lane went red: upstream moved (new beta, pie change, or an extension stopped compiling). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

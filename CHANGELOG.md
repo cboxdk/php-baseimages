@@ -2,6 +2,11 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [Unreleased]
+
+### Added
+- **PHP 8.6 beta lane (experimental, issue #23)** - `php-base/Dockerfile.php86-beta` builds against `php:8.6-rc` with the pecl-free PIE install path, weekly and on demand, pushing only a clearly-marked `8.6-rc-bookworm-beta` tag. First session already caught three real 8.6 facts: the stable `pie` binary refuses to run on 8.6 (nightly required), `mbstring` must be installed explicitly (dropped from the base image), and 8.6's gd links libwebpdemux/libwebpmux (libwebp7 alone leaves gd unloadable). All 15 core extensions compile and load on 8.6.0beta2; mongodb + opentelemetry install via PIE (otel behind the same opt-in gate as production). Still blocked upstream: redis, apcu, msgpack, imagick, pcov - the weekly pie-readiness watch pings #23 as they tag
+
 ## [1.7.0] - 2026-09-14
 
 ### Added

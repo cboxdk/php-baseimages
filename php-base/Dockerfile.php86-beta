@@ -1,0 +1,96 @@
+# ============================================================================
+# EXPERIMENTAL: PHP 8.6 beta lane (issue #23)
+# ============================================================================
+# Purpose: build against php:8.6-rc TODAY so the pecl-free (PIE) install path
+# and every core-extension compile is proven long before GA. This file is
+# deliberately separate from the production Dockerfile: it converges into
+# php-base/Dockerfile when 8.6 goes GA and the PIE blockers clear, then dies.
+#
+# Facts this lane is built on (verified 2026-09-14 against 8.6.0beta2):
+# - `pecl` does not exist in php:8.6 images (--with-pear dropped for good)
+# - `mbstring` is no longer baked into the base image (needs libonig + install)
+# - beta2 is still NTS (the ZTS-default flip has not happened - keep watching)
+# - PIE-installable on 8.6 today: mongodb 2.5.2, open-telemetry 1.4.1
+#   (xdebug only as 3.6.0alpha1 - added when it tags stable)
+# - the stable pie binary refuses to run on 8.6 - nightly-bin required
+# - 8.6's gd links libwebpdemux/libwebpmux: libwebp7 alone (enough on 8.5)
+#   leaves gd unloadable at runtime - first real catch of this lane
+#
+# STILL BLOCKED upstream (fixes merged but untagged, tracked by the weekly
+# pie-readiness watch which pings #23):
+#   redis    - phpredis/phpredis > 6.3.0 needed (develop has the fixes)
+#   apcu     - apcu/apcu > 5.1.28 needed
+#   msgpack  - msgpack/msgpack-php > 3.0.1 needed
+#   imagick  - imagick/imagick > 3.8.1 needed (#768 still open)
+#   pcov     - fix not even merged (krakjoe/pcov#133)
+#   vips     - pecl ext dead; php-vips 2.x is userland FFI (architecture
+#              decision pending: conflicts with our ffi.enable=preload)
+# ============================================================================
+
+ARG PHP_VERSION=8.6-rc
+FROM php:${PHP_VERSION}-cli-bookworm AS beta
+
+ARG CACHE_REFRESH=local
+RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
+    apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
+LABEL org.opencontainers.image.title="Cbox PHP Base 8.6 BETA (experimental)"
+LABEL org.opencontainers.image.description="PHP 8.6 pre-GA lane: pecl-free installs via PIE - NOT for production"
+LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
+
+# Runtime tools + libraries (mirrors the slim tier, plus libonig5 which the
+# 8.6 base no longer carries for the now-external mbstring)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash curl wget git unzip procps openssh-client \
+    cron \
+    libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 libwebpdemux2 libwebpmux3 \
+    libpq5 libicu72 libzip4 \
+    libxml2 \
+    libbz2-1.0 libonig5 libreadline8 libgmp10 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git config --system --add safe.directory '*'
+
+# Core extensions - all compiled from php-src bundles, so this section is the
+# early-warning system for 8.6 C-API breakage in the toolchain itself.
+# mbstring is EXPLICIT now (dropped from the base image in 8.6).
+# opcache is built-in since 8.5-style packaging - no explicit install.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS \
+    libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
+    libpq-dev libicu-dev libzip-dev \
+    libbz2-dev libonig-dev libreadline-dev libgmp-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo_mysql pdo_pgsql mysqli pgsql \
+        zip intl bcmath gd exif \
+        pcntl sockets bz2 gmp \
+        mbstring \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+        libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
+        libpq-dev libicu-dev libzip-dev \
+        libbz2-dev libonig-dev libreadline-dev libgmp-dev \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# PIE installs - upstream's recommended bind-mount pattern. Versions PINNED;
+# widen this list as the pie-readiness watch reports blockers tagging.
+# hadolint ignore=DL3008
+# pie:bin (stable) refuses to RUN on 8.6 ("requires 8.1.*||...||8.5.*")
+# as of 2026-09-14 - the nightly build is the one that knows about 8.6.
+# Swap back to :bin when a stable pie release admits 8.6.
+RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/local/bin/pie \
+    apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
+    && pie install mongodb/mongodb-extension:2.5.2 \
+    && pie install open-telemetry/ext-opentelemetry:1.4.1 \
+    # otel stays opt-in exactly like the production images: observer tax
+    # (-18.5% on Laravel) - the ini lives outside the default scan dir and
+    # PHP_OPENTELEMETRY=true appends it via PHP_INI_SCAN_DIR
+    && mkdir -p /usr/local/etc/php/conf.d-otel \
+    && for f in /usr/local/etc/php/conf.d/*opentelemetry*.ini; do \
+         [ -e "$f" ] && mv "$f" /usr/local/etc/php/conf.d-otel/; \
+       done \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY php-base/common/php.ini /usr/local/etc/php/php.ini
