@@ -1,0 +1,94 @@
+name: Verify GitHub Actions Usage
+
+# The standing proof (and regression test) for docs/guides/github-actions.md:
+# these images work as GitHub Actions job containers and service containers.
+# Runs weekly right after the Monday image rebuilds, so a rebuild that breaks
+# the CI story is caught the same morning.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'
+  push:
+    paths:
+      - '.github/workflows/verify-actions-usage.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  container-job:
+    name: container job (test in the deploy image)
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Toolchain is on PATH (entrypoint is bypassed by the runner)
+        run: |
+          php -v | head -1
+          composer --version
+          node -v
+          git --version
+
+      - name: Checkout workspace is usable (baked safe.directory)
+        # The workspace is owned by the runner user, git runs as root in the
+        # container - the classic "dubious ownership" failure on other images.
+        run: |
+          git status --porcelain >/dev/null
+          git log -1 --oneline
+          echo "safe.directory OK"
+
+      - name: Composer project + Pest unit test inside the image
+        run: |
+          mkdir -p /tmp/proj && cd /tmp/proj
+          composer init --quiet --no-interaction --name ci/proof
+          composer config allow-plugins.pestphp/pest-plugin true
+          composer require --dev pestphp/pest --no-interaction --quiet
+          mkdir -p tests
+          printf '<?php it("runs in the deploy image", fn () => expect(PHP_VERSION)->toStartWith("8.5"));' > tests/SmokeTest.php
+          ./vendor/bin/pest tests/SmokeTest.php
+
+  browser-job:
+    name: browser tests (baked Playwright, zero downloads)
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-chromium-v1
+    steps:
+      - name: Pest browser test against the baked Chromium
+        run: |
+          snap=$(ls /ms-playwright | sort | md5sum)
+          mkdir -p /tmp/bt/public && cd /tmp/bt
+          composer init --quiet --no-interaction --name ci/browser
+          composer config allow-plugins.pestphp/pest-plugin true
+          composer require --dev pestphp/pest pestphp/pest-plugin-browser -W --no-interaction --quiet
+          npm init -y >/dev/null 2>&1
+          npm install playwright@latest >/dev/null 2>&1
+          printf '<h1>gha works</h1>' > public/index.html
+          ( cd public && php -S 127.0.0.1:8099 >/dev/null 2>&1 & )
+          sleep 1
+          mkdir -p tests/Browser
+          printf '<?php it("browses", function () { visit("http://127.0.0.1:8099/")->assertSee("gha works"); });' > tests/Browser/SmokeTest.php
+          ./vendor/bin/pest tests/Browser/SmokeTest.php
+          if [ "$snap" = "$(ls /ms-playwright | sort | md5sum)" ]; then
+            echo "ZERO browser downloads - baked build matched playwright@latest"
+          else
+            echo "::error::Playwright downloaded a browser: the baked revision no longer matches playwright@latest (version skew - is the weekly rebuild running?)"
+            exit 1
+          fi
+
+  service-job:
+    name: service container (php-fpm-nginx)
+    runs-on: ubuntu-24.04
+    services:
+      app:
+        # The runner waits for the image's HEALTHCHECK before steps start.
+        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+        ports:
+          - 8080:80
+    steps:
+      - name: Service is healthy and serving
+        run: |
+          curl -sf -o /dev/null -w 'healthz: %{http_code}\n' http://localhost:8080/healthz
+          echo "service container story verified"
