@@ -74,7 +74,7 @@ assert_exec_succeeds "$C" '
     ( cd public && php -S 127.0.0.1:8099 >/dev/null 2>&1 & )
     sleep 1
     mkdir -p tests/Browser
-    printf "%s" "<?php it("drives baked chromium", function () { visit("http://127.0.0.1:8099/")->assertSee("pest-e2e works"); });" > tests/Browser/SmokeTest.php
+    printf "%s" "<?php it(\"drives baked chromium\", function () { visit(\"http://127.0.0.1:8099/\")->assertSee(\"pest-e2e works\"); });" > tests/Browser/SmokeTest.php
     ./vendor/bin/pest tests/Browser/SmokeTest.php >/dev/null 2>&1'     "pest (current major) runs a real browser test against the baked Chromium"
 
 FINAL_FAILED=$TESTS_FAILED
