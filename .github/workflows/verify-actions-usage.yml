@@ -58,7 +58,7 @@ jobs:
     steps:
       - name: Pest browser test against the baked Chromium
         run: |
-          snap=$(ls /ms-playwright | sort | md5sum)
+          snap=$(printf '%s\n' /ms-playwright/* | md5sum)
           mkdir -p /tmp/bt/public && cd /tmp/bt
           composer init --quiet --no-interaction --name ci/browser
           composer config allow-plugins.pestphp/pest-plugin true
@@ -71,7 +71,7 @@ jobs:
           mkdir -p tests/Browser
           printf '<?php it("browses", function () { visit("http://127.0.0.1:8099/")->assertSee("gha works"); });' > tests/Browser/SmokeTest.php
           ./vendor/bin/pest tests/Browser/SmokeTest.php
-          if [ "$snap" = "$(ls /ms-playwright | sort | md5sum)" ]; then
+          if [ "$snap" = "$(printf '%s\n' /ms-playwright/* | md5sum)" ]; then
             echo "ZERO browser downloads - baked build matched playwright@latest"
           else
             echo "::error::Playwright downloaded a browser: the baked revision no longer matches playwright@latest (version skew - is the weekly rebuild running?)"
