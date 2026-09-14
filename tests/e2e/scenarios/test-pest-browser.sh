@@ -58,6 +58,25 @@ await b.close();" > $D/smoke.mjs &&
     node $D/smoke.mjs' \
     "playwright@latest launches the baked Chromium and renders (no browser download)"
 
+log_section "Full Pest flow against the baked browser (wire protocol)"
+# The raw smoke above proves the baked browser; this proves pest's own
+# Playwright-server handshake against it. Pest 5 is the current default;
+# both majors were validated individually when this landed (pest 4.7.8 +
+# plugin 4.3.1, pest 5.1.4 + plugin 5.0.1, same baked revision).
+assert_exec_succeeds "$C" '
+    set -e
+    mkdir -p /pest-e2e/public && cd /pest-e2e
+    composer init --quiet --no-interaction --name e2e/pest >/dev/null 2>&1
+    composer config allow-plugins.pestphp/pest-plugin true
+    composer require --dev pestphp/pest pestphp/pest-plugin-browser -W --no-interaction --quiet >/dev/null 2>&1
+    npm init -y >/dev/null 2>&1 && npm install playwright@latest >/dev/null 2>&1
+    printf "%s" "<h1>pest-e2e works</h1>" > public/index.html
+    ( cd public && php -S 127.0.0.1:8099 >/dev/null 2>&1 & )
+    sleep 1
+    mkdir -p tests/Browser
+    printf "%s" "<?php it("drives baked chromium", function () { visit("http://127.0.0.1:8099/")->assertSee("pest-e2e works"); });" > tests/Browser/SmokeTest.php
+    ./vendor/bin/pest tests/Browser/SmokeTest.php >/dev/null 2>&1'     "pest (current major) runs a real browser test against the baked Chromium"
+
 FINAL_FAILED=$TESTS_FAILED
 if [ "$FINAL_FAILED" -gt 0 ]; then TEST_EXIT_CODE=1; else TEST_EXIT_CODE=0; fi
 print_summary 2>/dev/null || true

@@ -35,6 +35,11 @@ Expected: tests run immediately - `npx playwright install` is NOT needed,
 because the baked browsers already match `playwright@latest` on a current
 image.
 
+Both plugin majors are validated against the same baked build (their
+Playwright contracts overlap): Pest 4 (`pest-plugin-browser` ^4, playwright
+>= 1.59.1) and Pest 5 (^5, playwright >= 1.62.1) each ran a real browser
+test with zero downloads.
+
 ```php
 it('has a welcome page', function () {
     $page = visit('/');
