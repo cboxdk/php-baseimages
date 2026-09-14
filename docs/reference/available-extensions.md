@@ -121,10 +121,12 @@ The Chromium tier includes everything in Standard, plus Chromium for browser aut
 
 | Component | Purpose |
 |-----------|---------|
-| Chromium | Headless browser |
+| Chromium | Headless browser (Browsershot/Puppeteer, Dusk) |
+| chromium-driver | chromedriver, apt-version-matched with Chromium - zero-download Dusk |
+| Playwright Chromium (`/ms-playwright`) | Pest v4 browser testing - refreshed to `playwright@latest` weekly |
 | nss | Network Security Services |
 | harfbuzz | Text shaping |
-| ttf-freefont | Free fonts |
+| Emoji/unicode fonts | fonts-noto-color-emoji, fonts-unifont, fonts-freefont-ttf - screenshot fidelity |
 
 ### Environment Variables (auto-set)
 

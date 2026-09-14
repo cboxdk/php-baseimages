@@ -2,6 +2,15 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [Unreleased]
+
+### Added
+- **Pest v4 browser testing works out of the box on the chromium tier** - the released pest-plugin-browser cannot use a system Chromium (Playwright allows no executable override; watch pest-plugin-browser#243), so the image bakes Playwright's own Chromium at `PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`, revision-refreshed to `playwright@latest` by the weekly rebuild: `composer require pestphp/pest-plugin-browser && npm i playwright && vendor/bin/pest` with zero browser downloads. Launch smoke validated (root, no sandbox flags - Playwright defaults chromiumSandbox=false)
+- **Zero-download Laravel Dusk** - `chromium-driver` added to the chromium tier; apt keeps it version-matched with chromium (validated: 152.0.7977.82 == 152.0.7977.82), so `dusk:chrome-driver` downloads are unnecessary. Recipe in the new browser-testing guide
+- **Screenshot-fidelity fonts** (`fonts-noto-color-emoji`, `fonts-unifont`, `fonts-freefont-ttf`) on the chromium tier - screenshot assertions render glyphs instead of tofu
+- **`docs/guides/browser-testing.md`** - Pest v4 and Dusk recipes, the Playwright version rule and its skew symptom, stability hints (--ipc, PID-1 reaping already covered by cbox-init)
+- **E2E: pest-browser readiness scenario** - asserts the baked browser, env, chromedriver pairing, fonts, and a real playwright@latest launch against the baked build; verified red on pre-fix images
+
 ## [1.6.3] - 2026-09-13
 
 ### Added

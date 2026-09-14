@@ -390,6 +390,13 @@ FROM standard-base AS chromium-base
 # Chromium and dependencies for headless browser
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
+    # chromium-driver: apt keeps it version-matched with chromium, which
+    # makes Laravel Dusk zero-download (useChromedriver('/usr/bin/chromedriver')
+    # + ChromeOptions setBinary('/usr/bin/chromium'))
+    chromium-driver \
+    # emoji/unicode fonts: without them Playwright/Puppeteer screenshot
+    # assertions render tofu boxes where the host renders glyphs
+    fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf \
     fonts-liberation \
     libnss3 \
     libatk1.0-0 \
@@ -407,6 +414,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set Puppeteer to use installed Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# ── Pest v4 browser testing (Playwright) ────────────────────────────────
+# pest-plugin-browser drives Playwright, and released versions CANNOT be
+# pointed at the distro Chromium (no executablePath/channel option; watch
+# pestphp/pest-plugin-browser#243). So the zero-download path is baking
+# Playwright's own Chromium under a shared PLAYWRIGHT_BROWSERS_PATH. The
+# weekly rebuild tracks playwright@latest - exactly what pest docs tell
+# users to npm install - so app and image agree most weeks. On skew
+# ("Executable doesn't exist at /ms-playwright/..."), `npx playwright
+# install chromium` tops the shared dir up. No install-deps needed: the
+# distro chromium above already pulls every required library. Root is
+# fine: Playwright launches with chromiumSandbox=false by default.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npm install -g playwright@latest \
+    && playwright install chromium \
+    && chmod -R a+rX /ms-playwright \
+    && npm uninstall -g playwright \
+    && npm cache clean --force
 
 # ============================================================================
 # DEV BASE - Chromium + Development tools (Xdebug, PCOV, SPX)

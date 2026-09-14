@@ -151,10 +151,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM fpm-standard-deps AS fpm-chromium-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium fonts-liberation libnss3 \
+    chromium chromium-driver \
+    fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf \
+    fonts-liberation libnss3 \
     libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
     libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
     && rm -rf /var/lib/apt/lists/*
+
+# Playwright's Chromium build for Pest v4 browser testing - baked in
+# php-base (where Node lives) and copied here as static files. See the
+# rationale comment in php-base/Dockerfile.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+COPY --from=base-chromium /ms-playwright /ms-playwright
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM with essential extensions
