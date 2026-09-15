@@ -1,34 +1,32 @@
 # ============================================================================
-# EXPERIMENTAL: PHP 8.6 beta lane (issue #23)
+# EXPERIMENTAL: PHP 8.6 beta lane, all four tiers (issue #23)
 # ============================================================================
-# Purpose: build against php:8.6-rc TODAY so the pecl-free (PIE) install path
-# and every core-extension compile is proven long before GA. This file is
-# deliberately separate from the production Dockerfile: it converges into
-# php-base/Dockerfile when 8.6 goes GA and the PIE blockers clear, then dies.
+# Purpose: build slim/standard/chromium/dev against php:8.6-rc TODAY so the
+# pecl-free (PIE) path and every extension's 8.6-readiness is measured, not
+# guessed. Extensions known to be blocked are still ATTEMPTED, tolerantly:
+# a failure lands in /usr/local/etc/php86-report.txt instead of killing the
+# build, and the day upstream tags an 8.6 fix the report flips to OK on the
+# next weekly run - the lane discovers it before we do.
 #
-# Facts this lane is built on (verified 2026-09-14 against 8.6.0beta2):
-# - `pecl` does not exist in php:8.6 images (--with-pear dropped for good)
-# - `mbstring` is no longer baked into the base image (needs libonig + install)
-# - beta2 is still NTS (the ZTS-default flip has not happened - keep watching)
-# - PIE-installable on 8.6 today: mongodb 2.5.2, open-telemetry 1.4.1
-#   (xdebug only as 3.6.0alpha1 - added when it tags stable)
-# - the stable pie binary refuses to run on 8.6 - nightly-bin required
-# - 8.6's gd links libwebpdemux/libwebpmux: libwebp7 alone (enough on 8.5)
-#   leaves gd unloadable at runtime - first real catch of this lane
+# This file converges into php-base/Dockerfile at 8.6 GA, then dies.
 #
-# STILL BLOCKED upstream (fixes merged but untagged, tracked by the weekly
-# pie-readiness watch which pings #23):
-#   redis    - phpredis/phpredis > 6.3.0 needed (develop has the fixes)
-#   apcu     - apcu/apcu > 5.1.28 needed
-#   msgpack  - msgpack/msgpack-php > 3.0.1 needed
-#   imagick  - imagick/imagick > 3.8.1 needed (#768 still open)
-#   pcov     - fix not even merged (krakjoe/pcov#133)
-#   vips     - pecl ext dead; php-vips 2.x is userland FFI (architecture
-#              decision pending: conflicts with our ffi.enable=preload)
+# Facts this lane established (2026-09-14/15, 8.6.0beta2):
+# - `pecl` does not exist in 8.6 images; the stable `pie` binary refuses to
+#   RUN on 8.6 - nightly-bin required until a stable pie admits 8.6
+# - `mbstring` must be installed explicitly (+libonig)
+# - 8.6's gd links libwebpdemux/libwebpmux: add libwebpdemux2 libwebpmux3
+# - beta2 is still NTS (keep watching the ZTS default flip)
+# Deliberately absent: vips (pecl ext dead; php-vips 2.x is userland FFI -
+# architecture decision pending), Bun and the gd-AVIF rebuild (not what this
+# lane measures; both return at GA convergence).
 # ============================================================================
 
 ARG PHP_VERSION=8.6-rc
-FROM php:${PHP_VERSION}-cli-bookworm AS beta
+
+# ────────────────────────────────────────────────────────────────────────────
+# SLIM
+# ────────────────────────────────────────────────────────────────────────────
+FROM php:${PHP_VERSION}-cli-bookworm AS beta-slim
 
 ARG CACHE_REFRESH=local
 RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
@@ -38,8 +36,6 @@ LABEL org.opencontainers.image.title="Cbox PHP Base 8.6 BETA (experimental)"
 LABEL org.opencontainers.image.description="PHP 8.6 pre-GA lane: pecl-free installs via PIE - NOT for production"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
-# Runtime tools + libraries (mirrors the slim tier, plus libonig5 which the
-# 8.6 base no longer carries for the now-external mbstring)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps openssh-client \
     cron \
@@ -51,10 +47,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN git config --system --add safe.directory '*'
 
-# Core extensions - all compiled from php-src bundles, so this section is the
-# early-warning system for 8.6 C-API breakage in the toolchain itself.
-# mbstring is EXPLICIT now (dropped from the base image in 8.6).
-# opcache is built-in since 8.5-style packaging - no explicit install.
+# Core extensions from php-src: the early-warning system for C-API breakage.
+# mbstring is EXPLICIT on 8.6; opcache is built in - no explicit install.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
@@ -72,25 +66,124 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libbz2-dev libonig-dev libreadline-dev libgmp-dev \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# PIE installs - upstream's recommended bind-mount pattern. Versions PINNED;
-# widen this list as the pie-readiness watch reports blockers tagging.
-# hadolint ignore=DL3008
-# pie:bin (stable) refuses to RUN on 8.6 ("requires 8.1.*||...||8.5.*")
-# as of 2026-09-14 - the nightly build is the one that knows about 8.6.
-# Swap back to :bin when a stable pie release admits 8.6.
+# The attempt harness: every PIE install below is tolerated and scored.
+# UNPINNED on purpose - the lane exists to notice upstream movement. A
+# failed install must not leave a dangling ini enabling a missing .so.
+COPY <<'EOF' /usr/local/bin/pie-attempt
+#!/bin/sh
+# usage: pie-attempt <ext-name> <vendor/package[:version]>
+name="$1"; pkg="$2"; REPORT=/usr/local/etc/php86-report.txt
+if pie install "$pkg" >"/tmp/pie-$name.log" 2>&1; then
+    v=$(php -r "echo phpversion('$name');" 2>/dev/null)
+    echo "OK   $name  $pkg  $v" >> "$REPORT"
+else
+    rm -f /usr/local/etc/php/conf.d/*"$name"*.ini
+    reason=$(grep -iE 'cannot use|not compatible|requires php|fatal error|error:|exit code' "/tmp/pie-$name.log" | head -1)
+    [ -n "$reason" ] || reason=$(grep -vE '^\s*$|^ *\[|Output:|^install \[' "/tmp/pie-$name.log" | tail -1)
+    echo "FAIL $name  $pkg  $(echo "$reason" | cut -c1-140)" >> "$REPORT"
+fi
+exit 0
+EOF
+RUN chmod +x /usr/local/bin/pie-attempt && \
+    printf '# PHP 8.6 beta lane extension report (%s)\n' "$(date -u +%F)" > /usr/local/etc/php86-report.txt
+
+# Slim-tier PECL successors: redis/apcu/msgpack are the known blockers -
+# attempted every build so the report flips the week upstream tags fixes.
 RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/local/bin/pie \
     apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS \
-    && pie install mongodb/mongodb-extension:2.5.2 \
-    && pie install open-telemetry/ext-opentelemetry:1.4.1 \
-    # otel stays opt-in exactly like the production images: observer tax
-    # (-18.5% on Laravel) - the ini lives outside the default scan dir and
-    # PHP_OPENTELEMETRY=true appends it via PHP_INI_SCAN_DIR
-    && mkdir -p /usr/local/etc/php/conf.d-otel \
-    && for f in /usr/local/etc/php/conf.d/*opentelemetry*.ini; do \
-         [ -e "$f" ] && mv "$f" /usr/local/etc/php/conf.d-otel/; \
-       done \
+    && pie-attempt redis phpredis/phpredis \
+    && pie-attempt apcu apcu/apcu \
+    && pie-attempt msgpack msgpack/msgpack-php \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY php-base/common/php.ini /usr/local/etc/php/php.ini
+
+# ────────────────────────────────────────────────────────────────────────────
+# STANDARD: + built-in extras, imagick attempt, mongodb/otel via PIE, Node
+# ────────────────────────────────────────────────────────────────────────────
+FROM beta-slim AS beta-standard
+
+# Built-in extras (php-src): discover that each still compiles on 8.6.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libxslt1.1 libldap-2.5-0 \
+    $PHPIZE_DEPS libxml2-dev libxslt1-dev libldap2-dev \
+    && docker-php-ext-install -j"$(nproc)" \
+        soap xsl ldap calendar gettext shmop sysvmsg sysvsem sysvshm \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS libxml2-dev libxslt1-dev libldap2-dev \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# PECL successors for the standard tier. imagick is a known blocker
+# (attempted); mongodb + otel are the two with real 8.6 support today.
+RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/local/bin/pie \
+    apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS libmagickwand-dev \
+    && pie-attempt imagick imagick/imagick \
+    && pie-attempt mongodb mongodb/mongodb-extension \
+    && pie-attempt opentelemetry open-telemetry/ext-opentelemetry \
+    # otel stays opt-in exactly like production (observer tax, -18.5% Laravel)
+    && mkdir -p /usr/local/etc/php/conf.d-otel \
+    && for f in /usr/local/etc/php/conf.d/*opentelemetry*.ini; do \
+         [ -e "$f" ] && mv "$f" /usr/local/etc/php/conf.d-otel/; \
+       done \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS libmagickwand-dev \
+    && apt-get update && apt-get install -y --no-install-recommends libmagickwand-6.q16-6 \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Node.js for the chromium tier's Playwright story (same major as production)
+ARG NODE_VERSION=22.23.1
+RUN ARCH=$(dpkg --print-architecture) && case "$ARCH" in amd64) NARCH=x64;; arm64) NARCH=arm64;; *) exit 1;; esac \
+    && curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NARCH}.tar.gz" \
+       | tar -xz -C /usr/local --strip-components=1 \
+    && node -v && npm -v
+
+# ────────────────────────────────────────────────────────────────────────────
+# CHROMIUM: + browser stack (PHP-version-independent, should just work)
+# ────────────────────────────────────────────────────────────────────────────
+FROM beta-standard AS beta-chromium
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium chromium-driver \
+    fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf fonts-liberation \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+RUN npm install -g playwright@latest \
+    && playwright install chromium \
+    && chmod -R a+rX /ms-playwright \
+    && npm uninstall -g playwright \
+    && npm cache clean --force
+
+# ────────────────────────────────────────────────────────────────────────────
+# DEV: + xdebug (alpha attempt), pcov (blocked attempt), SPX (source attempt)
+# ────────────────────────────────────────────────────────────────────────────
+FROM beta-chromium AS beta-dev
+
+ARG SPX_VERSION=v0.4.22
+RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/local/bin/pie \
+    apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS zlib1g-dev \
+    # xdebug stable (3.5.x) excludes 8.6; the alpha is the only candidate.
+    # Attempting latest means the report flips when 3.6.0 stable tags.
+    && pie-attempt xdebug xdebug/xdebug \
+    && pie-attempt pcov pecl/pcov \
+    # SPX comes from source (never was on PECL) - does it phpize on 8.6?
+    && ( git clone --depth=1 --branch "$SPX_VERSION" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
+         && cd /tmp/php-spx && phpize >/dev/null && ./configure >/dev/null && make -j"$(nproc)" >/tmp/spx.log 2>&1 \
+         && make install >/dev/null && docker-php-ext-enable spx \
+         && echo "OK   spx  source:$SPX_VERSION  $(php -r "echo phpversion('spx');")" >> /usr/local/etc/php86-report.txt \
+         || { rm -f /usr/local/etc/php/conf.d/*spx*.ini; \
+              echo "FAIL spx  source:$SPX_VERSION  $(grep -iE 'error' /tmp/spx.log 2>/dev/null | head -1 | cut -c1-140)" >> /usr/local/etc/php86-report.txt; } ) \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# If xdebug made it in, it must not tax every request by default: same
+# philosophy as production (mode off; XDEBUG_MODE overrides at runtime).
+RUN if php -m 2>/dev/null | grep -qi xdebug; then \
+        ini=$(ls /usr/local/etc/php/conf.d/*xdebug*.ini 2>/dev/null | head -1) && \
+        printf 'xdebug.mode=off\n' >> "$ini"; \
+    fi

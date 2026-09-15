@@ -1,10 +1,11 @@
 name: Build PHP 8.6 Beta Lane (experimental)
 
-# The pre-GA early-warning lane (issue #23): builds php-base against
+# The pre-GA early-warning lane (issue #23): builds all four tiers against
 # php:8.6-rc with the pecl-free PIE install path, weekly and on demand.
-# A red run here means upstream moved under us (new beta, pie change,
-# extension breakage) - months before GA forces the issue.
-# NOT part of the release chains; pushes only the clearly-marked beta tag.
+# Blocked extensions are ATTEMPTED tolerantly - the per-tier report in the
+# job summary shows exactly what compiles on 8.6 this week, and flips to OK
+# the week upstream tags a fix. A red run means upstream moved under us.
+# NOT part of the release chains; pushes only clearly-marked beta tags.
 
 on:
   workflow_dispatch:
@@ -26,6 +27,19 @@ concurrency:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tier: slim
+            tag_suffix: '-slim-beta'
+          - tier: standard
+            tag_suffix: '-beta'
+          - tier: chromium
+            tag_suffix: '-chromium-beta'
+          - tier: dev
+            tag_suffix: '-dev-beta'
+    name: ${{ matrix.tier }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -45,41 +59,50 @@ jobs:
         with:
           context: .
           file: php-base/Dockerfile.php86-beta
+          target: beta-${{ matrix.tier }}
           platforms: linux/amd64
           load: true
           tags: php86-beta:smoke
           build-args: |
             CACHE_REFRESH=${{ github.run_id }}
 
-      - name: Smoke test
+      - name: Smoke test + extension report
         run: |
           docker run --rm php86-beta:smoke sh -c '
             set -e
             php -v | head -1
             warn=$(php -r "exit(0);" 2>&1 | grep -c Warning || true)
             [ "$warn" = "0" ] || { echo "startup warnings: $warn"; php -r "exit(0);"; exit 1; }
-            n=$(php -m | grep -cE "^(pdo_mysql|pdo_pgsql|mysqli|pgsql|zip|intl|bcmath|gd|exif|pcntl|sockets|bz2|gmp|mbstring|mongodb)$")
-            [ "$n" = "15" ] || { echo "expected 15 core extensions, got $n"; php -m; exit 1; }
-            otel_off=$(php -m | grep -ci opentelemetry || true)
-            otel_on=$(PHP_INI_SCAN_DIR=":/usr/local/etc/php/conf.d-otel" php -m | grep -ci opentelemetry)
-            [ "$otel_off" = "0" ] && [ "$otel_on" = "1" ] || { echo "otel gate broken (off=$otel_off on=$otel_on)"; exit 1; }
-            composer --version
+            n=$(php -m | grep -cE "^(pdo_mysql|pdo_pgsql|mysqli|pgsql|zip|intl|bcmath|gd|exif|pcntl|sockets|bz2|gmp|mbstring)$")
+            [ "$n" = "14" ] || { echo "expected 14 core extensions, got $n"; php -m; exit 1; }
+            composer --version >/dev/null
             echo "SMOKE OK"'
+          {
+            echo "## 8.6 extension report - ${{ matrix.tier }}"
+            echo '```'
+            docker run --rm php86-beta:smoke cat /usr/local/etc/php86-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Push multi-arch beta tag
         uses: docker/build-push-action@v6
         with:
           context: .
           file: php-base/Dockerfile.php86-beta
+          target: beta-${{ matrix.tier }}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}/php-base:8.6-rc-bookworm-beta
+          tags: ghcr.io/${{ github.repository }}/php-base:8.6-rc-bookworm${{ matrix.tag_suffix }}
           build-args: |
             CACHE_REFRESH=${{ github.run_id }}
 
-      - name: Ping the tracking issue on failure
-        if: failure()
+  alert:
+    needs: build
+    if: failure()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Ping the tracking issue
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue comment 23 --repo "${{ github.repository }}" --body "The PHP 8.6 beta lane went red: upstream moved (new beta, pie change, or an extension stopped compiling). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh issue comment 23 --repo "${{ github.repository }}" --body "The PHP 8.6 beta lane went red: upstream moved (new beta, pie change, or a core extension stopped compiling). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
