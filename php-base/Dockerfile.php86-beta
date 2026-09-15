@@ -71,16 +71,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # failed install must not leave a dangling ini enabling a missing .so.
 COPY <<'EOF' /usr/local/bin/pie-attempt
 #!/bin/sh
-# usage: pie-attempt <ext-name> <vendor/package[:version]>
-name="$1"; pkg="$2"; REPORT=/usr/local/etc/php86-report.txt
+# usage: pie-attempt <ext-name> <vendor/package[:version|:dev-branch]> [-DEV]
+# -DEV marks a development-branch attempt: it is skipped when the released
+# version already loaded, and scores as OK-DEV/FAIL-DEV so the scoreboard
+# separates "released and working" from "fix confirmed on branch, await tag".
+name="$1"; pkg="$2"; label="${3:-}"; REPORT=/usr/local/etc/php86-report.txt
+if [ "$label" = "-DEV" ] && php -m 2>/dev/null | grep -qix "$name"; then
+    echo "SKIP-DEV $name  (released version already loaded)" >> "$REPORT"
+    exit 0
+fi
 if pie install "$pkg" >"/tmp/pie-$name.log" 2>&1; then
     v=$(php -r "echo phpversion('$name');" 2>/dev/null)
-    echo "OK   $name  $pkg  $v" >> "$REPORT"
+    echo "OK$label   $name  $pkg  $v" >> "$REPORT"
 else
     rm -f /usr/local/etc/php/conf.d/*"$name"*.ini
     reason=$(grep -iE 'cannot use|not compatible|requires php|fatal error|error:|exit code' "/tmp/pie-$name.log" | head -1)
     [ -n "$reason" ] || reason=$(grep -vE '^\s*$|^ *\[|Output:|^install \[' "/tmp/pie-$name.log" | tail -1)
-    echo "FAIL $name  $pkg  $(echo "$reason" | cut -c1-140)" >> "$REPORT"
+    echo "FAIL$label $name  $pkg  $(echo "$reason" | cut -c1-140)" >> "$REPORT"
 fi
 exit 0
 EOF
@@ -94,6 +101,12 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/l
     && pie-attempt redis phpredis/phpredis \
     && pie-attempt apcu apcu/apcu \
     && pie-attempt msgpack msgpack/msgpack-php \
+    # dev-branch fallbacks: the 8.6 fixes are MERGED upstream but untagged -
+    # Packagist syncs the branches, so PIE can build them. Auto-retired: the
+    # -DEV attempt skips itself once the released attempt above succeeds.
+    && pie-attempt redis phpredis/phpredis:dev-develop -DEV \
+    && pie-attempt apcu apcu/apcu:dev-master -DEV \
+    && pie-attempt msgpack msgpack/msgpack-php:dev-master -DEV \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -119,6 +132,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/local/bin/pie \
     apt-get update && apt-get install -y --no-install-recommends $PHPIZE_DEPS libmagickwand-dev \
     && pie-attempt imagick imagick/imagick \
+    && pie-attempt imagick imagick/imagick:dev-master -DEV \
     && pie-attempt mongodb mongodb/mongodb-extension \
     && pie-attempt opentelemetry open-telemetry/ext-opentelemetry \
     # otel stays opt-in exactly like production (observer tax, -18.5% Laravel)
@@ -170,7 +184,10 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/l
     # xdebug stable (3.5.x) excludes 8.6; the alpha is the only candidate.
     # Attempting latest means the report flips when 3.6.0 stable tags.
     && pie-attempt xdebug xdebug/xdebug \
+    && pie-attempt xdebug xdebug/xdebug:3.6.0alpha1 -DEV \
     && pie-attempt pcov pecl/pcov \
+    # pcov's 8.6 fix lives on an UNMERGED branch (krakjoe/pcov#133)
+    && pie-attempt pcov pecl/pcov:dev-issue-php86a2 -DEV \
     # SPX comes from source (never was on PECL) - does it phpize on 8.6?
     && ( git clone --depth=1 --branch "$SPX_VERSION" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
          && cd /tmp/php-spx && phpize >/dev/null && ./configure >/dev/null && make -j"$(nproc)" >/tmp/spx.log 2>&1 \
@@ -178,6 +195,14 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/l
          && echo "OK   spx  source:$SPX_VERSION  $(php -r "echo phpversion('spx');")" >> /usr/local/etc/php86-report.txt \
          || { rm -f /usr/local/etc/php/conf.d/*spx*.ini; \
               echo "FAIL spx  source:$SPX_VERSION  $(grep -iE 'error' /tmp/spx.log 2>/dev/null | head -1 | cut -c1-140)" >> /usr/local/etc/php86-report.txt; } ) \
+    # SPX dev fallback: same skip-once-released logic as the PIE -DEV attempts
+    && ( php -m | grep -qi "^spx$" || { \
+         rm -rf /tmp/php-spx && git clone --depth=1 https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
+         && cd /tmp/php-spx && phpize >/dev/null && ./configure >/dev/null && make -j"$(nproc)" >/tmp/spx-dev.log 2>&1 \
+         && make install >/dev/null && docker-php-ext-enable spx \
+         && echo "OK-DEV   spx  source:master  $(php -r "echo phpversion('spx');")" >> /usr/local/etc/php86-report.txt \
+         || { rm -f /usr/local/etc/php/conf.d/*spx*.ini; \
+              echo "FAIL-DEV spx  source:master  $(grep -iE 'error' /tmp/spx-dev.log 2>/dev/null | head -1 | cut -c1-140)" >> /usr/local/etc/php86-report.txt; }; } ) \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
