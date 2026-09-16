@@ -292,6 +292,12 @@ Comprehensive docs in `docs/` following ServerSideUp quality standards:
 - `docs/guides/laravel-guide.md` - Complete Laravel guide with common mistakes
 - `docs/advanced/extending-images.md` - Customization examples
 
+**The changelog is ONE file**: `CHANGELOG.md` at the repository root. cbox.dk
+reads the changelog from the root file, so it is the exception to the /docs
+rule below - do NOT add a `docs/changelog.md` copy to get it onto the site.
+That copy existed once, drifted twice, and the lint gate meant to catch it
+only ever compared the two files in one direction.
+
 **Documentation Principles**:
 - Copy-paste ready examples
 - Expected output for every command
