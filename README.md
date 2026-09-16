@@ -243,6 +243,7 @@ Single container with both PHP-FPM and Nginx:
 **Slim Tier (all tiers inherit these):**
 - **Core:** opcache, apcu, redis, pdo_mysql, pdo_pgsql, mysqli, pgsql, zip, intl, bcmath, sockets, pcntl
 - **Data:** msgpack
+- **Telemetry:** cbox_telemetry ([telemetry-native](https://github.com/cboxdk/telemetry-native) - CPU profiler, connect/cURL timing, crash records; opt-in via `PHP_TELEMETRY_NATIVE=true`, PHP 8.3+)
 - **Images:** gd (WebP), exif
 - **Features:** bz2, gmp
 

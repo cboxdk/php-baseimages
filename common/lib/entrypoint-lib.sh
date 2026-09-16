@@ -296,6 +296,40 @@ setup_opentelemetry() {
 }
 
 ###########################################
+# Cbox Telemetry Native extension (opt-in)
+###########################################
+# cboxdk/telemetry-native is the native half of cboxdk/laravel-telemetry: a
+# statistical CPU profiler, native timing for connects and cURL, bounded
+# runtime counters and a signal-safe crash recorder. The image ships the .so
+# but leaves it unloaded - it is pre-1.0, and it installs fatal-signal
+# handlers, which is not something an image should arm on an application's
+# behalf. Its ini therefore lives in conf.d-telemetry, outside the default
+# scan dir; same read-only-safe mechanism as setup_opentelemetry above.
+#
+# PHP_TELEMETRY_NATIVE_AUTO opens a unit of work at RINIT, so a profile
+# covers framework boot instead of starting wherever middleware runs. Right
+# for FPM. WRONG for queue workers and Octane, where RINIT fires once per
+# PROCESS - an automatic unit there would span hours and mean nothing, and
+# the consumer should call begin()/finish() per job instead. That is why it
+# is a separate switch rather than something PHP_TELEMETRY_NATIVE implies.
+setup_telemetry_native() {
+    if is_true "${PHP_TELEMETRY_NATIVE:-false}"; then
+        if [ -f /usr/local/etc/php/conf.d-telemetry/cbox-telemetry.ini ]; then
+            export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-}:/usr/local/etc/php/conf.d-telemetry"
+            log_info "telemetry-native extension enabled (PHP_TELEMETRY_NATIVE=true)"
+            if is_true "${PHP_TELEMETRY_NATIVE_AUTO:-false}"; then
+                export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR}:/usr/local/etc/php/conf.d-telemetry-auto"
+                log_info "telemetry-native automatic units enabled (cbox_telemetry.auto=1)"
+            fi
+        else
+            log_warn "PHP_TELEMETRY_NATIVE=true but the extension is not in this image (it needs PHP 8.3+)"
+        fi
+    elif is_true "${PHP_TELEMETRY_NATIVE_AUTO:-false}"; then
+        log_warn "PHP_TELEMETRY_NATIVE_AUTO=true does nothing without PHP_TELEMETRY_NATIVE=true"
+    fi
+}
+
+###########################################
 # Container CPU limit (cgroup-aware)
 ###########################################
 # `worker_processes auto` reads the HOST's core count, not the container's

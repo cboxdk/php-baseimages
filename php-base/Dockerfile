@@ -30,6 +30,7 @@ ARG MONGODB_VERSION=2.1.4
 ARG MSGPACK_VERSION=3.0.0
 ARG VIPS_VERSION=1.0.13
 ARG OPENTELEMETRY_VERSION=1.2.1
+ARG TELEMETRY_NATIVE_VERSION=0.1.0
 ARG XDEBUG_VERSION=3.5.0
 ARG PCOV_VERSION=1.0.12
 # SPX is not on PECL; pin the git tag for reproducible dev builds.
@@ -154,6 +155,54 @@ RUN pecl install redis-${REDIS_VERSION} && \
     pecl install apcu-${APCU_VERSION} && \
     pecl install msgpack-${MSGPACK_VERSION} && \
     docker-php-ext-enable redis apcu msgpack
+
+# cboxdk/telemetry-native: SHIPPED, AND NOT LOADED.
+#
+# The native half of cboxdk/laravel-telemetry - a statistical CPU profiler,
+# native timing for connects and cURL, bounded runtime counters and a
+# signal-safe crash recorder. laravel-telemetry keeps owning everything
+# semantic; this only measures the runtime.
+#
+# Off by default because it is pre-1.0 and because it installs fatal-signal
+# handlers: an image should not arm those on every application that happens
+# to pull the tag. Its own FPM measurements put loading it inside the noise
+# floor, so the gate here is about maturity, not about a measured tax - the
+# opposite of why opentelemetry is gated. Same mechanism, different reason:
+# the ini lives outside the default scan dir and the entrypoints append it
+# when PHP_TELEMETRY_NATIVE=true.
+#
+# Built from source, not PECL - it is not published there. The two scan dirs
+# are created unconditionally so the COPY --from stages downstream resolve on
+# every PHP version, including the 8.2 images the extension does not support.
+#
+# The two asserts at the end are tripwires. A build that quietly produced a
+# different version than the pin, or a .so that cannot load, has to fail here
+# rather than at somebody else's 3am. `timer_backend` is the other one worth
+# asserting: `thread-walltime` means configure's CPU-timer probe failed and
+# profiles would silently measure wall time instead.
+ARG TELEMETRY_NATIVE_VERSION
+RUN set -eux; \
+    mkdir -p /usr/local/etc/php/conf.d-telemetry /usr/local/etc/php/conf.d-telemetry-auto; \
+    case "$PHP_VERSION" in \
+        8.2*) echo "telemetry-native requires PHP 8.3+ - skipping on ${PHP_VERSION}"; exit 0 ;; \
+    esac; \
+    git clone --depth 1 --branch "v${TELEMETRY_NATIVE_VERSION}" \
+        https://github.com/cboxdk/telemetry-native.git /usr/src/telemetry-native; \
+    cd /usr/src/telemetry-native; \
+    phpize; \
+    ./configure --enable-cbox-telemetry; \
+    make -j"$(nproc)"; \
+    make install; \
+    cd /; rm -rf /usr/src/telemetry-native; \
+    printf 'extension=cbox_telemetry.so\n' \
+        > /usr/local/etc/php/conf.d-telemetry/cbox-telemetry.ini; \
+    printf 'cbox_telemetry.auto=1\n' \
+        > /usr/local/etc/php/conf.d-telemetry-auto/cbox-telemetry-auto.ini; \
+    built="$(php -d extension=cbox_telemetry.so -r 'echo cbox_telemetry_status()["version"];')"; \
+    backend="$(php -d extension=cbox_telemetry.so -r 'echo cbox_telemetry_status()["timer_backend"];')"; \
+    [ "$built" = "$TELEMETRY_NATIVE_VERSION" ] || { echo "telemetry-native: built $built, pinned $TELEMETRY_NATIVE_VERSION" >&2; exit 1; }; \
+    [ "$backend" = "posix-thread-cputime" ] || { echo "telemetry-native: timer backend is '$backend', expected posix-thread-cputime" >&2; exit 1; }; \
+    echo "telemetry-native ${built} built (${backend})"
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \

@@ -130,6 +130,24 @@ for ext in redis imagick apcu mongodb msgpack xdebug pcov uuid excimer vips open
     fi
 done
 
+# telemetry-native is not on PECL - it is built from a pinned git tag, so it
+# tracks GitHub releases instead. Still pre-1.0: a bump here can be a breaking
+# one, which is exactly what the review on the weekly PR is for.
+current=$(echo "$CURRENT" | jq -r ".extensions.telemetry_native")
+latest=$(fetch_github_latest "cboxdk/telemetry-native")
+if [[ -n "$latest" && "$latest" =~ ^[0-9] ]]; then
+    if [[ "$current" != "$latest" ]]; then
+        UPDATE_COUNT=$((UPDATE_COUNT + 1))
+        UPDATE_LIST="${UPDATE_LIST}  - extensions.telemetry_native: $current -> $latest\n"
+        log_update "extensions.telemetry_native: $current -> $latest"
+        UPDATED=$(echo "$UPDATED" | jq ".extensions.telemetry_native = \"$latest\"")
+    else
+        log_success "extensions.telemetry_native: $current (up to date)"
+    fi
+else
+    log_error "Failed to fetch telemetry_native, keeping $current"
+fi
+
 echo ""
 
 # --- Tools ---

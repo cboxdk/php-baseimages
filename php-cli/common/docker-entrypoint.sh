@@ -152,6 +152,7 @@ fi
 
 # Run user-provided init scripts (using shared function if available)
 command -v setup_opentelemetry >/dev/null 2>&1 && setup_opentelemetry
+command -v setup_telemetry_native >/dev/null 2>&1 && setup_telemetry_native
 
 if command -v run_init_scripts >/dev/null 2>&1; then
     run_init_scripts /docker-entrypoint-init.d

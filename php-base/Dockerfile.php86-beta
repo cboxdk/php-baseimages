@@ -29,6 +29,11 @@ ARG PHP_VERSION=8.6-rc
 FROM php:${PHP_VERSION}-cli-bookworm AS beta-slim
 
 ARG CACHE_REFRESH=local
+
+# telemetry-native pin (mirrors extensions.telemetry_native in versions.json;
+# this lane hardcodes its pins the same way SPX and Node do below)
+ARG TELEMETRY_NATIVE_VERSION=0.1.0
+
 RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
     apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
@@ -107,6 +112,18 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:nightly-bin,source=/pie,target=/usr/l
     && pie-attempt redis phpredis/phpredis:dev-develop -DEV \
     && pie-attempt apcu apcu/apcu:dev-master -DEV \
     && pie-attempt msgpack msgpack/msgpack-php:dev-master -DEV \
+    # telemetry-native ships in production from slim up, built from a pinned
+    # source tag and gated off. It declares ^8.3|^8.4|^8.5, so whether it
+    # survives 8.6 is exactly the kind of question this report exists to
+    # answer. Same gate as production: the ini stays out of the scan dir.
+    && ( git clone --depth=1 --branch "v${TELEMETRY_NATIVE_VERSION}" https://github.com/cboxdk/telemetry-native.git /tmp/telemetry-native \
+         && cd /tmp/telemetry-native && phpize >/dev/null && ./configure --enable-cbox-telemetry >/dev/null \
+         && make -j"$(nproc)" >/tmp/tn.log 2>&1 && make install >/dev/null \
+         && mkdir -p /usr/local/etc/php/conf.d-telemetry /usr/local/etc/php/conf.d-telemetry-auto \
+         && printf 'extension=cbox_telemetry.so\n' > /usr/local/etc/php/conf.d-telemetry/cbox-telemetry.ini \
+         && printf 'cbox_telemetry.auto=1\n' > /usr/local/etc/php/conf.d-telemetry-auto/cbox-telemetry-auto.ini \
+         && echo "OK   cbox_telemetry  source:v${TELEMETRY_NATIVE_VERSION}  $(php -d extension=cbox_telemetry.so -r "echo cbox_telemetry_status()['timer_backend'];") (opt-in, not loaded)" >> /usr/local/etc/php86-report.txt \
+         || echo "FAIL cbox_telemetry  source:v${TELEMETRY_NATIVE_VERSION}  $(grep -iE 'error' /tmp/tn.log 2>/dev/null | head -1 | cut -c1-140)" >> /usr/local/etc/php86-report.txt ) \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

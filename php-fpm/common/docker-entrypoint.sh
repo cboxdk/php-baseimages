@@ -193,6 +193,7 @@ fi
 # php-fpm -t reads what is on disk, so writing them after would validate a
 # configuration the process is not going to run.
 setup_opentelemetry
+setup_telemetry_native
 resolve_fpm_sizing
 export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 write_pm_mode_dropin || exit 1

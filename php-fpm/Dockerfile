@@ -182,6 +182,8 @@ ENV CBOX_ROOTLESS=false \
 # Copy PHP extensions from slim base
 COPY --from=base-slim /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 
 # Copy Composer from base image
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
@@ -223,6 +225,8 @@ ENV CBOX_ROOTLESS=true \
 
 COPY --from=base-slim /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
 COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-slim /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
@@ -263,6 +267,8 @@ ENV CBOX_ROOTLESS=false \
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-standard /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 
 # Copy Node.js from standard base
 COPY --from=base-standard /usr/local/bin/node /usr/local/bin/node
@@ -314,6 +320,8 @@ ENV CBOX_ROOTLESS=true \
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-standard /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-standard /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-standard /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -360,6 +368,8 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-chromium /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -402,6 +412,8 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-chromium /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -464,6 +476,8 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY --from=base-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-dev /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-dev /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-dev /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -522,6 +536,8 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 COPY --from=base-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-dev /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-dev /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-dev /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \

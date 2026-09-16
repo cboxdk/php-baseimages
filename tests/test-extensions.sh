@@ -34,6 +34,10 @@ REQUIRED_EXTENSIONS=(
 # Optional extensions - present in standard+ tier (check but don't fail)
 # opentelemetry: installed in standard+ but NOT loaded by default since 1.6
 # (Zend observer tax, -18.5% on Laravel) - only appears with PHP_OPENTELEMETRY=true
+# cbox_telemetry (telemetry-native) is deliberately absent from both lists: it
+# ships in every tier from slim up but is never in `php -m` unless
+# PHP_TELEMETRY_NATIVE=true. Its gate is asserted in
+# tests/e2e/scenarios/test-php-base.sh, where both halves can be checked.
 # Note: mongodb, soap, ldap, xsl, calendar, gettext, shmop, sysvmsg,
 # sysvsem, sysvshm were moved from slim to standard tier
 OPTIONAL_EXTENSIONS=(

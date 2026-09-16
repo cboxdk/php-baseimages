@@ -35,6 +35,7 @@ The Slim tier includes all core extensions needed for most PHP applications.
 | `redis` | PECL | Redis client extension |
 | `apcu` | PECL | User-land data caching |
 | `msgpack` | PECL | MessagePack serialization |
+| `cbox_telemetry` | Source | Runtime telemetry - CPU profiler, connect/cURL timing, crash records. **Opt-in via `PHP_TELEMETRY_NATIVE=true`**, pre-1.0, PHP 8.3+ only |
 | `zip` | Built-in | ZIP archive support |
 | `intl` | Built-in | Internationalization functions |
 | `bcmath` | Built-in | Arbitrary precision mathematics |
@@ -230,6 +231,7 @@ docker run --rm -e XDEBUG_MODE=debug \
 | redis | ✅ | ✅ | ✅ | ✅ |
 | apcu | ✅ | ✅ | ✅ | ✅ |
 | msgpack | ✅ | ✅ | ✅ | ✅ |
+| cbox_telemetry | ✅† | ✅† | ✅† | ✅† |
 | intl | ✅ | ✅ | ✅ | ✅ |
 | bcmath | ✅ | ✅ | ✅ | ✅ |
 | gd (WebP) | ✅ | ✅ | ✅ | ✅ |
@@ -270,6 +272,91 @@ auto-instrumentation, [cboxdk/laravel-telemetry](https://github.com/cboxdk/larav
 collects it in userland through the framework's own extension points - it does
 not enable the observer API, so it carries none of this tax.
 
+† `cbox_telemetry` ([cboxdk/telemetry-native](https://github.com/cboxdk/telemetry-native))
+is likewise installed but **not loaded by default**, for a different reason: it
+is pre-1.0, and it installs fatal-signal handlers for its crash recorder. That
+is not something an image should arm on every application that pulls the tag.
+Its own measurements put loading it inside the noise floor of an FPM harness -
+the gate here is about maturity, not about a measured tax. Set
+`PHP_TELEMETRY_NATIVE=true` to load it. Absent from the PHP 8.2 images: the
+extension supports 8.3+ only.
+
+See [Runtime telemetry](#runtime-telemetry-cbox_telemetry) below.
+
+## Runtime telemetry (`cbox_telemetry`)
+
+[cboxdk/telemetry-native](https://github.com/cboxdk/telemetry-native) is the
+native half of [cboxdk/laravel-telemetry](https://github.com/cboxdk/laravel-telemetry).
+The Laravel package keeps owning everything semantic - trace context, sampling
+policy, redaction, attribute naming, OTLP export. The extension only observes
+the PHP runtime, and answers the questions the userland package structurally
+cannot:
+
+- **Which call stacks burned the CPU** - a statistical CPU profiler sampling
+  on a per-thread CPU timer, not wall clock
+- **Why the connection took 180 ms** - native timing around `PDO::__construct`,
+  `PDO::connect`, `Redis::connect`/`pconnect` and `curl_exec`
+- **What the process was doing when it died** - a signal-safe crash recorder
+  that writes one fixed-width record, then re-raises so the process dies
+  exactly as it would have, core dump and all
+
+It ships in every tier from slim up, on PHP 8.3 and newer, and it is **off
+until you turn it on**:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    environment:
+      PHP_TELEMETRY_NATIVE: "true"
+      # FPM only - see the warning below
+      PHP_TELEMETRY_NATIVE_AUTO: "true"
+```
+
+Verify what you got:
+
+```bash
+docker compose exec app php -r 'print_r(cbox_telemetry_status());'
+```
+
+The two fields worth reading: `timer_backend` must say `posix-thread-cputime`
+(anything else means samples measure wall time), and `hook_detail` reports
+`requested` versus `installed` per hook group - which is how you find out that
+`redis.connect` timings are missing because `ext-redis` is not in the image,
+rather than because the hook is off.
+
+### `PHP_TELEMETRY_NATIVE_AUTO` is for FPM, not for workers
+
+Automatic units open at `RINIT`, before any PHP runs, so a profile covers
+framework boot instead of starting wherever your middleware does - on a cold
+request that is often most of the time.
+
+In a **queue worker or an Octane server, `RINIT` fires once for the whole
+process**. An automatic unit there would span hours and mean nothing. Leave the
+switch off in those containers and let the consumer call `begin()`/`finish()`
+per job. That is why it is a separate variable rather than something
+`PHP_TELEMETRY_NATIVE=true` implies.
+
+### Why it is opt-in
+
+Unlike `opentelemetry`, this is not a performance gate. Upstream's FPM
+measurements put loading the extension, installing the hooks and arming the
+crash recorder inside the noise floor of the harness, and profiling every
+request at 1 ms somewhere between nothing and about 5%.
+
+It is off because it is **pre-1.0** and because the crash recorder installs
+handlers for fatal signals. Arming those on every application that happens to
+pull a rolling tag is a decision for the application, not for the image. That
+calculus changes at 1.0; the variable will not.
+
+### Crash records and read-only filesystems
+
+The recorder writes to `cbox_telemetry.crash.dir` (default `/tmp/cbox-telemetry`,
+with a private `0700` subdirectory per uid). On a container with a read-only
+root filesystem, mount a writable `/tmp` - otherwise `cbox_telemetry_status()`
+reports `crash_recorder => unavailable: directory` and records nothing. It says
+so truthfully; it does not fail the request.
+
 ## Extension Versions
 
 All PECL extensions use pinned versions for reproducibility:
@@ -280,6 +367,7 @@ All PECL extensions use pinned versions for reproducibility:
 | apcu | 5.1.28 |
 | mongodb | 2.5.2 |
 | opentelemetry | 1.2.1 |
+| telemetry_native | 0.1.0 |
 | msgpack | 3.0.1 |
 | imagick | 3.8.1 |
 | vips | 1.0.13 |

@@ -156,6 +156,82 @@ test_directories() {
     fi
 }
 
+# Test telemetry-native ships but stays unloaded
+#
+# The point of the extension being opt-in is that a default container does NOT
+# have it in php -m. Assert both halves, and drive the ON half through the real
+# entrypoint function rather than a hand-written PHP_INI_SCAN_DIR - a .so that
+# ships but never actually reaches PHP is exactly the failure this guards.
+test_telemetry_native() {
+    log_info "Testing telemetry-native gate..."
+
+    local php_minor
+    php_minor=$(docker exec "$CONTAINER_NAME" php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null) || true
+    if [ "$php_minor" = "8.2" ]; then
+        log_info "telemetry-native: skipped, the extension needs PHP 8.3+ (image is $php_minor)"
+        return 0
+    fi
+
+    if docker exec "$CONTAINER_NAME" php -m | grep -q '^cbox_telemetry$'; then
+        log_fail "telemetry-native is loaded by default - it must stay opt-in"
+        return 1
+    fi
+    log_success "telemetry-native: not loaded by default"
+
+    # PHP_TELEMETRY_NATIVE=true, through the shipped entrypoint library
+    local backend
+    backend=$(docker exec -e PHP_TELEMETRY_NATIVE=true "$CONTAINER_NAME" sh -c \
+        '. /usr/local/lib/cbox/entrypoint-lib.sh; setup_telemetry_native >/dev/null 2>&1; php -r "echo extension_loaded(\"cbox_telemetry\") ? cbox_telemetry_status()[\"timer_backend\"] : \"not-loaded\";"' 2>/dev/null) || true
+    if [ "$backend" != "posix-thread-cputime" ]; then
+        log_fail "telemetry-native: PHP_TELEMETRY_NATIVE=true gave timer backend '$backend', expected posix-thread-cputime"
+        return 1
+    fi
+    log_success "telemetry-native: PHP_TELEMETRY_NATIVE=true loads it ($backend)"
+
+    # Automatic units are a separate switch: on for FPM, wrong for workers
+    local auto_off auto_on
+    auto_off=$(docker exec -e PHP_TELEMETRY_NATIVE=true "$CONTAINER_NAME" sh -c \
+        '. /usr/local/lib/cbox/entrypoint-lib.sh; setup_telemetry_native >/dev/null 2>&1; php -r "echo cbox_telemetry_status()[\"auto\"] ? 1 : 0;"' 2>/dev/null) || true
+    auto_on=$(docker exec -e PHP_TELEMETRY_NATIVE=true -e PHP_TELEMETRY_NATIVE_AUTO=true "$CONTAINER_NAME" sh -c \
+        '. /usr/local/lib/cbox/entrypoint-lib.sh; setup_telemetry_native >/dev/null 2>&1; php -r "echo cbox_telemetry_status()[\"auto\"] ? 1 : 0;"' 2>/dev/null) || true
+    if [ "$auto_off" != "0" ] || [ "$auto_on" != "1" ]; then
+        log_fail "telemetry-native: auto gate wrong (without PHP_TELEMETRY_NATIVE_AUTO='$auto_off', with='$auto_on')"
+        return 1
+    fi
+    log_success "telemetry-native: automatic units gated separately"
+}
+
+# Test runtime tools that every tier must carry
+#
+# git is the one that went missing: the dev tier purged it while cleaning up
+# its build deps, so the tier meant for CI and local work was the only one
+# without it. tests/test-runtime-deps.sh catches that statically; this checks
+# the artifact that actually shipped.
+test_runtime_tools() {
+    log_info "Testing runtime tools present in every tier..."
+
+    local failed=0
+    for tool in git ssh unzip curl; do
+        if docker exec "$CONTAINER_NAME" sh -c "command -v $tool" >/dev/null 2>&1; then
+            log_success "runtime tool present: $tool"
+        else
+            log_fail "runtime tool MISSING: $tool (every tier must ship it)"
+            failed=1
+        fi
+    done
+
+    # safe.directory is baked in slim-base purely so git works on a
+    # bind-mounted app owned by another UID - useless if git is not there
+    if docker exec "$CONTAINER_NAME" git config --system --get-all safe.directory 2>/dev/null | grep -q '\*'; then
+        log_success "git safe.directory = * is in effect"
+    else
+        log_fail "git safe.directory = * missing (bind-mounted repos will be refused)"
+        failed=1
+    fi
+
+    return $failed
+}
+
 # Run all tests
 FAILED=0
 
@@ -165,6 +241,8 @@ test_composer || ((FAILED++))
 test_nodejs || ((FAILED++))
 test_cbox_init || ((FAILED++))
 test_directories || ((FAILED++))
+test_telemetry_native || ((FAILED++))
+test_runtime_tools || ((FAILED++))
 
 # Summary
 echo ""
