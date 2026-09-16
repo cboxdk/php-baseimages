@@ -494,8 +494,17 @@ ARG PCOV_VERSION
 ARG SPX_VERSION
 
 # Install dev extensions (Xdebug, PCOV, SPX)
+#
+# git is deliberately NOT in this install list and NOT in the purge below.
+# It is a RUNTIME dependency of every tier, installed in slim-base - composer
+# VCS installs, `git status` in a bind-mounted app, Statamic git integration.
+# Naming it here re-marked it manually-installed and the cleanup then purged
+# it, so the dev tier - the one tier that exists for CI and local work - was
+# the only one shipping WITHOUT git. `--auto-remove` took git-man,
+# liberror-perl and patch with it (cweagans/composer-patches needs patch).
+# The SPX clone below uses the git that slim-base already installed.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    $PHPIZE_DEPS git zlib1g-dev \
+    $PHPIZE_DEPS zlib1g-dev \
     && pecl install xdebug-${XDEBUG_VERSION} \
     && pecl install pcov-${PCOV_VERSION} \
     && docker-php-ext-enable xdebug pcov \
@@ -506,7 +515,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-enable spx \
     && rm -rf /tmp/php-spx \
     # Cleanup
-    && apt-get purge -y --auto-remove $PHPIZE_DEPS git \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy dev extension configurations
