@@ -106,6 +106,44 @@ write_env_overrides() {
         || log_warn "Could not write $fpm (read-only rootfs? mount an emptyDir at /usr/local/etc/php-fpm.d)"
 }
 
+# opcache.preload - the only supported way to use the FFI this image ships.
+#
+# It goes in a php.ini drop-in, NOT in the pool conf above. preload is
+# PHP_INI_SYSTEM and runs at MINIT, before the master ever reads a pool's
+# php_admin_value, so a pool directive would be silently ignored - the worst
+# possible failure for a setting whose whole job is to run once at startup.
+#
+# php-fpm-nginx has its own copy inside apply_php_env_overrides. This one
+# exists because php-fpm is also run directly, and without it the variable
+# would be documented but dead in exactly the images that a remote-FastCGI
+# deployment uses.
+write_opcache_preload() {
+    [ -n "${PHP_OPCACHE_PRELOAD:-}" ] || return 0
+
+    if [ ! -f "$PHP_OPCACHE_PRELOAD" ]; then
+        log_error "PHP_OPCACHE_PRELOAD is set to '$PHP_OPCACHE_PRELOAD' but that file does not exist."
+        log_error "Preload runs at startup - fix the path or unset the variable."
+        exit 1
+    fi
+
+    local ini="/usr/local/etc/php/conf.d/zz-opcache-preload.ini"
+    {
+        printf '%s\n' "; Auto-generated from PHP_OPCACHE_PRELOAD"
+        printf '%s\n' "opcache.preload = ${PHP_OPCACHE_PRELOAD}"
+        # PHP refuses to preload as root without preload_user, and says so in
+        # terms of the ini rather than of the container. Rootless images are
+        # already non-root, where PHP ignores the setting.
+        if ! is_rootless; then
+            printf '%s\n' "opcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER:-www-data}"
+        elif [ -n "${PHP_OPCACHE_PRELOAD_USER:-}" ]; then
+            printf '%s\n' "opcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER}"
+        fi
+    } > "$ini" 2>/dev/null \
+        || { log_warn "Could not write $ini (read-only rootfs? mount an emptyDir at /usr/local/etc/php/conf.d)"; return 0; }
+
+    log_info "OPcache preload enabled: $PHP_OPCACHE_PRELOAD"
+}
+
 # Validate PHP-FPM configuration
 validate_fpm_config() {
     log_info "Validating PHP-FPM configuration..."
@@ -198,6 +236,7 @@ resolve_fpm_sizing
 export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 write_pm_mode_dropin || exit 1
 write_env_overrides
+write_opcache_preload
 validate_fpm_config
 # Assert the EFFECTIVE pool listen matches the exported address - tripwire
 # against any conf file loading after zz-custom.conf (docker-library/php#1635)

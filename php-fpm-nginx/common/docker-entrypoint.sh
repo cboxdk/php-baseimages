@@ -337,6 +337,38 @@ apply_php_env_overrides() {
     [ -n "$PHP_ERROR_LOG" ] && content="${content}\nerror_log = $PHP_ERROR_LOG"
     [ -n "$PHP_SESSION_COOKIE_SECURE" ] && content="${content}\nsession.cookie_secure = $PHP_SESSION_COOKIE_SECURE"
     [ -n "$PHP_REALPATH_CACHE_TTL" ] && content="${content}\nrealpath_cache_ttl = $PHP_REALPATH_CACHE_TTL"
+
+    # opcache.preload - the ONLY supported way to use the FFI this image ships.
+    #
+    # php-base compiles FFI with `ffi.enable=preload`, which is upstream's own
+    # default and the right one: preloaded code may call into C, request code
+    # may not. But until now the image offered no way to preload anything, so
+    # the sanctioned path was closed and FFI was effectively dead weight.
+    #
+    # preload is PHP_INI_SYSTEM and runs once at MINIT, which is why it belongs
+    # in a file written before php-fpm starts rather than in a pool directive.
+    #
+    # A missing script is checked here on purpose. PHP's own failure is a
+    # startup fatal that names the ini setting but not the fact that the path
+    # does not exist, in a container that then crash-loops.
+    if [ -n "${PHP_OPCACHE_PRELOAD:-}" ]; then
+        if [ ! -f "$PHP_OPCACHE_PRELOAD" ]; then
+            log_error "PHP_OPCACHE_PRELOAD is set to '$PHP_OPCACHE_PRELOAD' but that file does not exist."
+            log_error "Preload runs at startup - fix the path or unset the variable."
+            exit 1
+        fi
+        content="${content}\nopcache.preload = $PHP_OPCACHE_PRELOAD"
+        # PHP refuses to preload as root without preload_user, and the message
+        # it gives is about the ini, not about the container running as root.
+        # Rootless images are already a non-root user, where the setting is
+        # unnecessary and PHP ignores it.
+        if ! is_rootless; then
+            content="${content}\nopcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER:-www-data}"
+        elif [ -n "${PHP_OPCACHE_PRELOAD_USER:-}" ]; then
+            content="${content}\nopcache.preload_user = $PHP_OPCACHE_PRELOAD_USER"
+        fi
+        log_info "OPcache preload enabled: $PHP_OPCACHE_PRELOAD"
+    fi
     # NOT open_basedir. It belongs to the FPM pool alone — see below — and this
     # file is php.ini, which the CLI reads too. Composer lives at
     # /usr/bin/composer, artisan runs from a scheduler, a queue worker opens

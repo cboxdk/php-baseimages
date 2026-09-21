@@ -69,7 +69,7 @@ session.cookie_samesite = "Strict"
 [opcache]
 opcache.enable = 1
 opcache.memory_consumption = 256
-opcache.interned_strings_buffer = 16
+opcache.interned_strings_buffer = 32   ; measured: a warm Laravel request interns ~20M
 opcache.max_accelerated_files = 20000
 opcache.validate_timestamps = 0
 opcache.save_comments = 1

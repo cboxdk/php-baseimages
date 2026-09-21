@@ -204,6 +204,73 @@ RUN echo "opcache.enable=1" > /usr/local/etc/php/conf.d/99-opcache.ini \
     && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/99-opcache.ini
 ```
 
+## Using FFI
+
+FFI is compiled into the **standard, chromium and dev tiers** (not slim) and
+shipped with `ffi.enable=preload`. That is upstream's own default and the right
+one: FFI loads arbitrary shared libraries and calls into them, so an image that
+enabled it for request code would hand every request in every application a way
+out of PHP.
+
+Under FPM that means **request code cannot call `FFI::cdef()`**. Preloaded code
+can, and `PHP_OPCACHE_PRELOAD` is how you get a preload script.
+
+### The pattern that works
+
+Preloading persists **declarations**, not runtime state - a `static` property
+assigned during preload is empty again by the time a request runs. Use
+`FFI::load()` on a header with an `FFI_SCOPE`, then look the scope up per
+request:
+
+```c
+/* /opt/ffi/libc.h */
+#define FFI_SCOPE "LIBC"
+#define FFI_LIB "libc.so.6"
+
+long time(long *t);
+int getpid(void);
+```
+
+```php
+<?php // /opt/ffi/preload.php - runs once at startup
+FFI::load(__DIR__ . '/libc.h');
+```
+
+```php
+<?php // request code - no cdef() anywhere
+$libc = FFI::scope('LIBC');
+echo $libc->getpid();
+```
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
+    environment:
+      PHP_OPCACHE_PRELOAD: /opt/ffi/preload.php
+    volumes:
+      - ./ffi:/opt/ffi:ro
+```
+
+Verified on `php-cli:8.5-bookworm`: without the preload, `FFI::scope('LIBC')`
+fails with `Failed loading scope 'LIBC'`; with it, the call returns.
+
+### Two things that will bite you
+
+**A `static` property set in the preload script is not there at request time.**
+`FFI::cdef()` assigned to `Libc::$ffi` during preload looks like it should work
+and fails with *"Typed static property must not be accessed before
+initialization"*. Scopes survive; values do not.
+
+**The CLI is not gated.** `ffi.enable=preload` still allows `FFI::cdef()` in the
+CLI SAPI - that is PHP's behaviour, not ours. The restriction protects web
+requests, so a CLI script that works proves nothing about what FPM will allow.
+
+**A preload path that does not exist fails the container at boot** with a
+message naming the path, rather than PHP's startup fatal that names only the ini
+setting. That is deliberate - see
+[`PHP_OPCACHE_PRELOAD`](../reference/environment-variables).
+
 ## Version Pinning Best Practices
 
 ### Pin Versions in Production
