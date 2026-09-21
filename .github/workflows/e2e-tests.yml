@@ -53,10 +53,26 @@ env:
 
 jobs:
   # Quick smoke test on every push - builds entire chain locally
+  #
+  # Runs on BOTH architectures. We publish arm64 manifests on every build, and
+  # until now nothing ever executed one: every test job was ubuntu-24.04, so
+  # arm64 shipped on the strength of "it compiled". GitHub's ARM runners are
+  # free for public repositories and effectively unlimited in concurrency
+  # (see the note in _build-image.yml), so the honest version costs a runner,
+  # not money.
   smoke-test:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    name: smoke-test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -142,6 +158,17 @@ jobs:
           VERBOSE: "true"
         run: |
           tests/e2e/run-e2e-tests.sh "$IMAGE" image-formats
+
+      - name: Run security E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # Asserts the shipped php.ini security defaults (session cookie
+          # HttpOnly/strict-mode, opcache sizing). These were warnings that
+          # nothing ran on a push, which is how session.cookie_httponly=0
+          # shipped unnoticed.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" security
 
   # Full matrix test (manual trigger)
   full-matrix:
