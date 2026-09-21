@@ -2,6 +2,21 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [1.9.0] - 2026-09-21
+
+### Security
+- **Session cookies were not HttpOnly** - these images ship their own `php.ini`, so the ENGINE defaults applied: `session.cookie_httponly` off and `session.use_strict_mode` off, where `php.ini-production` turns both on. Any XSS could read the session cookie, and a session id the attacker chose was accepted (fixation). Exactly the same trap as the `register_argc_argv` note already in that file. Laravel sets all three itself from `config/session.php` so Laravel apps were never exposed; the ones that were are anything calling `session_start()` directly - plain PHP, WordPress, legacy code. Now `cookie_httponly=On`, `use_strict_mode=1`, `cookie_samesite=Lax`. `cookie_secure` stays unset on purpose (it would break every local http:// container - `PHP_SESSION_COOKIE_SECURE=1` in production). The e2e security scenario now asserts these hard instead of warning. Prompted by serversideup/docker-php v5.0.0-beta1, which fixed the same default
+
+### Fixed
+- **`opcache.interned_strings_buffer` was too small for Laravel, measured** - 16M, while a single warm request through a real Laravel HTTP kernel interns **19.58M**. Past the ceiling, strings fall back to per-process storage, paid for by every worker, with no error anywhere. Now 32M. The rig: Laravel 13 with livewire, horizon, spatie/laravel-permission and sanctum, config/route/view cached, booted through `$app->handleRequest()` on `php-cli:8.5-bookworm` - warm set 633 scripts / 116.1 MB / 19.58 MB interned, versus 10,020 scripts / 268.2 MB / 40.93 MB when every `.php` file in the project is compiled
+- **The other two OPcache numbers were checked and deliberately left alone.** `memory_consumption` stays 256 (2.2x headroom over the 116 MB warm set; raising it would cost shared memory in every small container to buy nothing) and `max_accelerated_files` stays 20000 (the compile-everything case is 10,020). Symfony's performance guide recommends 32531 and that number gets copied around the PHP world - for Laravel it is a 3x over-provisioned hash table
+
+### Added
+- **`PHP_OPCACHE_PRELOAD` and `PHP_OPCACHE_PRELOAD_USER`** - the images compile FFI with `ffi.enable=preload`, which is upstream's own default and the right one, but offered no way to preload anything: the only sanctioned path to FFI was closed and the extension was dead weight. A missing script is caught at boot with a named cause instead of PHP's startup fatal, which names the ini setting and not the fact that the path does not exist. `preload_user` defaults to `www-data` on root images and is left to PHP on rootless ones. Wired in **both** php-fpm and php-fpm-nginx - the first cut only did php-fpm-nginx while the docs promised it everywhere, which is the documented-but-dead failure this repo has a contract test for (the test passes when a variable is consumed *anywhere*, so it could not catch a per-image gap). Not wired in php-cli on purpose: `opcache.enable_cli` is off there, so a preload would be built and thrown away once per process
+- **E2E smoke test now runs on arm64 as well as amd64** - every test job was `ubuntu-24.04`, so the arm64 manifests we publish on every build shipped on the strength of "it compiled" and nothing had ever executed one. GitHub's ARM runners are free for public repositories, so the honest version costs a runner, not money
+- **`docs/advanced/custom-extensions.md`: how to actually use FFI** - the images ship FFI with `ffi.enable=preload` and, until this release, no way to preload; now there is one, and the recipe is written down. Both traps are in there because both were hit while verifying it: a `static` property assigned during preload is empty again at request time (preloading persists declarations, not state - use `FFI::load()` with an `FFI_SCOPE` and `FFI::scope()` per request), and `ffi.enable=preload` does NOT gate the CLI SAPI, so a working CLI script proves nothing about what FPM allows. Verified end to end: without the preload `FFI::scope('LIBC')` fails with `Failed loading scope`, with it the call returns
+- **The security E2E scenario runs on every push** - it only ran on a manual dispatch before, which is how `session.cookie_httponly=0` shipped with a test file sitting in the repo that would have caught it
+
 ## [1.8.0] - 2026-09-16
 
 ### Changed
