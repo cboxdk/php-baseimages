@@ -2,7 +2,7 @@
 
 All notable changes to Cbox PHP Base Images.
 
-## [Unreleased]
+## [1.9.1] - 2026-09-24
 
 ### Fixed
 - **cbox-init 3.7.1: removed or scaled-away processes no longer alert forever** - cbox-init left stale series behind whenever a process or instance went away on purpose. A live scale-down, a lower `scale` through a reload or API edit, removing a process, or turning it into a scheduled task all left `cbox_init_process_up` at 0 for good, so a `process_up == 0` alert fired on something the operator removed on purpose. Scheduled tasks also kept their old `desired_scale` and health status, which set off scale-drift and health alerts. Each of those paths now drops the series. No metric or label names changed, so existing dashboards and alerts keep working
