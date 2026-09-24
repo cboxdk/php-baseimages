@@ -34,12 +34,6 @@
       "id": "timeseries",
       "name": "Time series",
       "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "table",
-      "name": "Table",
-      "version": ""
     }
   ],
   "annotations": {
@@ -58,7 +52,7 @@
       }
     ]
   },
-  "description": "Cbox Init Process Manager Dashboard - Monitor PHP-FPM, Nginx, Horizon, Queue Workers, and Scheduled Tasks",
+  "description": "Cbox Init Process Manager Dashboard - Monitor PHP-FPM, Nginx, Horizon, Queue Workers, and health checks",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -161,7 +155,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_init_process_up{process=\"php-fpm\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_up{name=\"php-fpm\", instance=~\"$instance\"}",
           "legendFormat": "PHP-FPM",
           "refId": "A"
         }
@@ -238,7 +232,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_init_process_up{process=\"nginx\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_up{name=\"nginx\", instance=~\"$instance\"}",
           "legendFormat": "Nginx",
           "refId": "A"
         }
@@ -315,7 +309,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_init_process_up{process=\"horizon\", instance=~\"$instance\"}",
+          "expr": "cbox_init_process_up{name=\"horizon\", instance=~\"$instance\"}",
           "legendFormat": "Horizon",
           "refId": "A"
         }
@@ -617,11 +611,12 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_init_process_memory_bytes{instance=~\"$instance\"}",
+          "expr": "cbox_init_process_memory_bytes{type=\"rss\", instance=~\"$instance\"}",
           "legendFormat": "{{ process }}",
           "refId": "A"
         }
       ],
+      "description": "Resident memory per process. Needs resource metrics, which cbox-init has off by default: set resource_metrics_enabled: true in cbox-init.yaml or CBOX_INIT_GLOBAL_RESOURCE_METRICS_ENABLED=true.",
       "title": "Memory Usage by Process",
       "type": "timeseries"
     },
@@ -675,7 +670,7 @@
               }
             ]
           },
-          "unit": "percentunit"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -705,11 +700,12 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "rate(cbox_init_process_cpu_seconds_total{instance=~\"$instance\"}[1m])",
+          "expr": "cbox_init_process_cpu_percent{instance=~\"$instance\"}",
           "legendFormat": "{{ process }}",
           "refId": "A"
         }
       ],
+      "description": "CPU per process in percent of one core (can exceed 100). Needs resource metrics, which cbox-init has off by default: set resource_metrics_enabled: true in cbox-init.yaml or CBOX_INIT_GLOBAL_RESOURCE_METRICS_ENABLED=true.",
       "title": "CPU Usage by Process",
       "type": "timeseries"
     },
@@ -822,8 +818,8 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_init_process_current_scale{process=~\"queue.*\", instance=~\"$instance\"}",
-          "legendFormat": "{{ process }} (Current)",
+          "expr": "cbox_init_process_current_scale{name=~\"queue.*\", instance=~\"$instance\"}",
+          "legendFormat": "{{ name }} (Current)",
           "refId": "A"
         },
         {
@@ -831,8 +827,8 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "cbox_init_process_desired_scale{process=~\"queue.*\", instance=~\"$instance\"}",
-          "legendFormat": "{{ process }} (Desired)",
+          "expr": "cbox_init_process_desired_scale{name=~\"queue.*\", instance=~\"$instance\"}",
+          "legendFormat": "{{ name }} (Desired)",
           "refId": "B"
         }
       ],
@@ -919,8 +915,8 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "increase(cbox_init_process_restarts_total{process=~\"queue.*\", instance=~\"$instance\"}[5m])",
-          "legendFormat": "{{ process }}",
+          "expr": "increase(cbox_init_process_restarts_total{name=~\"queue.*\", instance=~\"$instance\"}[5m])",
+          "legendFormat": "{{ name }}",
           "refId": "A"
         }
       ],
@@ -934,346 +930,6 @@
         "w": 24,
         "x": 0,
         "y": 23
-      },
-      "id": 30,
-      "panels": [],
-      "title": "Scheduled Tasks",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Exit Code"
-            },
-            "properties": [
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "basic",
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "red",
-                      "value": 1
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Last Run"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeFromNow"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Next Run"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dateTimeFromNow"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Duration"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "s"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      },
-      "id": 31,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "cbox_init_scheduled_task_last_run_timestamp{instance=~\"$instance\"} * 1000",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "cbox_init_scheduled_task_next_run_timestamp{instance=~\"$instance\"} * 1000",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "cbox_init_scheduled_task_last_exit_code{instance=~\"$instance\"}",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "cbox_init_scheduled_task_duration_seconds{instance=~\"$instance\"}",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "",
-          "refId": "D"
-        }
-      ],
-      "title": "Scheduled Tasks Status",
-      "transformations": [
-        {
-          "id": "seriesToColumns",
-          "options": {
-            "byField": "task"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Time 1": true,
-              "Time 2": true,
-              "Time 3": true,
-              "Time 4": true,
-              "__name__": true,
-              "__name__ 1": true,
-              "__name__ 2": true,
-              "__name__ 3": true,
-              "__name__ 4": true,
-              "instance": true,
-              "instance 1": true,
-              "instance 2": true,
-              "instance 3": true,
-              "instance 4": true,
-              "job": true,
-              "job 1": true,
-              "job 2": true,
-              "job 3": true,
-              "job 4": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "Value #A": "Last Run",
-              "Value #B": "Next Run",
-              "Value #C": "Exit Code",
-              "Value #D": "Duration",
-              "task": "Task"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": ".*failure.*"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": ".*success.*"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 32
-      },
-      "id": 32,
-      "options": {
-        "legend": {
-          "calcs": ["sum"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "increase(cbox_init_scheduled_task_total{instance=~\"$instance\"}[1h])",
-          "legendFormat": "{{ task }} ({{ status }})",
-          "refId": "A"
-        }
-      ],
-      "title": "Scheduled Task Executions (1h)",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 40
       },
       "id": 40,
       "panels": [],
@@ -1358,7 +1014,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 24
       },
       "id": 41,
       "options": {
@@ -1381,7 +1037,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "expr": "cbox_init_health_check_status{instance=~\"$instance\"}",
-          "legendFormat": "{{ process }} ({{ check_type }})",
+          "legendFormat": "{{ name }} ({{ type }})",
           "refId": "A"
         }
       ],
