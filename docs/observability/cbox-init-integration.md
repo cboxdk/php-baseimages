@@ -110,21 +110,38 @@ Per-process hooks:
 ### 📈 Prometheus Metrics
 Exported on port 9090 at `/metrics`:
 
-**Process Metrics:**
-- `cbox_init_process_up` - Process running status
-- `cbox_init_process_restarts_total` - Restart counts
-- `cbox_init_process_cpu_seconds_total` - CPU usage
-- `cbox_init_process_memory_bytes` - Memory usage
-- `cbox_init_health_check_status` - Health check results
-- `cbox_init_process_desired_scale` - Desired instances
-- `cbox_init_process_current_scale` - Running instances
+**Process metrics** (labels in braces):
+- `cbox_init_process_up{name, instance}` - 1 running, 0 stopped
+- `cbox_init_process_restarts_total{name, reason}` - Restart counts
+- `cbox_init_process_start_time_seconds{name, instance}` - Instance start time
+- `cbox_init_process_last_exit_code{name, instance}` - Last exit code
+- `cbox_init_process_desired_scale{name}` - Desired instances
+- `cbox_init_process_current_scale{name}` - Running instances
+- `cbox_init_health_check_status{name, type}` - Health check results (1 healthy)
 
-**Scheduled Task Metrics (v1.1.0+):**
-- `cbox_init_scheduled_task_last_run_timestamp` - Last execution time
-- `cbox_init_scheduled_task_next_run_timestamp` - Next scheduled time
-- `cbox_init_scheduled_task_last_exit_code` - Most recent exit code
-- `cbox_init_scheduled_task_duration_seconds` - Execution duration
-- `cbox_init_scheduled_task_total` - Total runs by status (success/failure)
+**Resource metrics** (off by default in cbox-init; enable with
+`CBOX_INIT_GLOBAL_RESOURCE_METRICS_ENABLED=true`):
+- `cbox_init_process_cpu_percent{process, instance}` - CPU, percent of one core
+- `cbox_init_process_memory_bytes{process, instance, type}` - Memory, `type` is `rss` or `vms`
+- `cbox_init_process_memory_percent`, `cbox_init_process_threads`,
+  `cbox_init_process_file_descriptors` - same `{process, instance}` labels
+
+**Label names matter.** The process name is under **`name`** on the process
+and health check metrics, and under **`process`** only on the resource
+metrics. `cbox_init_process_up{process="php-fpm"}` matches nothing; use
+`cbox_init_process_up{name="php-fpm"}`.
+
+cbox-init's own `instance` label holds the instance ID (`php-fpm-0`). With
+Prometheus' default `honor_labels: false`, the scrape target's `instance`
+label (`app:9090`) takes that name and cbox-init's value is renamed to
+`exported_instance`. The bundled Grafana dashboard relies on this: its
+Instance variable selects the container, not the process instance.
+
+cbox-init does not export Prometheus metrics for scheduled tasks. Use the
+schedule API instead; see Scheduled Tasks below.
+
+The full list with every label is in the cbox-init
+[metrics reference](https://github.com/cboxdk/init/blob/main/docs/observability/metrics.md).
 
 **One scrape, one story (cbox-init 3.2+):** the main `:9090` endpoint carries
 the whole container's telemetry. The embedded fpm-tune's `fpm_tune_*` series
@@ -397,7 +414,11 @@ scrape_configs:
 
 ### Grafana Dashboard
 
-Import dashboard from Cbox Init repository (coming in Phase 4).
+Import [`observability/grafana-cbox-init-dashboard.json`](https://github.com/cboxdk/php-baseimages/blob/main/observability/grafana-cbox-init-dashboard.json)
+(Grafana → Dashboards → Import). It queries the labels described under
+Prometheus Metrics above and assumes Prometheus' default
+`honor_labels: false`. The memory and CPU panels stay empty until resource
+metrics are enabled (`CBOX_INIT_GLOBAL_RESOURCE_METRICS_ENABLED=true`).
 
 ### Health Check Endpoint
 
@@ -549,17 +570,17 @@ environment:
 
 ### Metrics
 
-Monitor scheduled tasks via Prometheus:
+cbox-init does not export Prometheus metrics for scheduled tasks. A
+scheduled process has no supervisor, so it does not appear in
+`cbox_init_process_up` either. Query the schedule API (requires
+`CBOX_INIT_API_ENABLED=true`, port 9180):
 
-```promql
-# Last execution time
-cbox_init_scheduled_task_last_run_timestamp{process="backup-job"}
+```bash
+# Next and last run, run counts, success rate
+curl http://localhost:9180/api/v1/processes/backup-job/schedule
 
-# Next scheduled execution
-cbox_init_scheduled_task_next_run_timestamp{process="backup-job"}
-
-# Task success rate
-rate(cbox_init_scheduled_task_total{status="success"}[1h])
+# Recent runs with exit codes and durations
+curl "http://localhost:9180/api/v1/processes/backup-job/schedule/history?limit=5"
 ```
 
 ## Advanced Logging (v1.1.0+)

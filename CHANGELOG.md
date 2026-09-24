@@ -2,6 +2,12 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [Unreleased]
+
+### Fixed
+- **The cbox-init Grafana dashboard and docs queried labels cbox-init does not emit** - `cbox_init_process_up`, `_restarts_total`, `_current_scale`, `_desired_scale` and `cbox_init_health_check_status` carry the process name under `name`, but the dashboard, `observability/README.md` and the docs selected on `process=` (and `check_type`, which is `type`), so the status, queue and health panels showed nothing. Only the resource metrics (`cbox_init_process_cpu_percent`, `_memory_bytes`, ...) use `process`. The docs now state the exact labels and the `instance` → `exported_instance` rename Prometheus applies under the default `honor_labels: false`
+- **Panels and docs for metrics that do not exist are gone** - `cbox_init_process_cpu_seconds_total` was never a cbox-init metric; the CPU panel now uses `cbox_init_process_cpu_percent` (unit `percent`, not `percentunit`), and the memory panel shows RSS only instead of RSS and VMS under one legend. The whole `cbox_init_scheduled_task_*` family, its dashboard row and its alert rule were fiction too; cbox-init removed them from its own docs in August. The docs now point at the schedule API instead. The memory and CPU panels say they need `CBOX_INIT_GLOBAL_RESOURCE_METRICS_ENABLED=true`, because cbox-init ships with resource metrics off
+
 ## [1.9.0] - 2026-09-21
 
 ### Security
