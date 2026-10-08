@@ -5,7 +5,7 @@ All notable changes to Cbox PHP Base Images.
 ## [Unreleased]
 
 ### Fixed
-- **Node.js 22.23.3** (from 22.23.1): the images missed the 22.23.2 security release. npm's bundled `brace-expansion` 2.0.2 (CVE-2026-102276, fixed in 2.1.5) is still in npm 10.9.9 and goes into the `.trivyignore` npm baseline with the others that follow Node bumps; it had blocked every image build since it was published
+- **Node.js 22.23.3** (from 22.23.1): the images missed the 22.23.2 security release. npm's bundled `brace-expansion` 2.0.2 (CVE-2026-102276, fixed in 2.1.5) is still in npm 10.9.9 and goes into the `.trivyignore` npm baseline with the others that follow Node bumps, as does CVE-2026-102278 in the same package, published hours later; they had blocked every image build
 - **cbox-init 3.8.2: a process's own `shutdown.timeout` is honoured, and `1`/`0` in an env override are no longer booleans** - the images set `global.shutdown_timeout: 30`, and that bounded the whole stop: a queue worker given `shutdown.timeout: 1800` to finish its job was force-killed after 30 seconds. cbox-init now waits as long as the longest stop an enabled process asks for (up to 3600; the container's own grace period must allow it). Env overrides are converted to the type of the field they set: `CBOX_INIT_PROCESS_<NAME>_SCHEDULE_MAX_CONCURRENT=1` no longer stops the container with "cannot unmarshal !!bool into int", and `..._USER=1` is the user `1`, not `true`. Also from 3.8.0/3.8.1: `shutdown.kill_timeout`, `user`/`group` on exec health checks and hooks, an exit acted on while a child still holds the process's output, nested env overrides no longer create phantom processes
 
 ## [1.9.1] - 2026-09-24
