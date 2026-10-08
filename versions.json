@@ -29,7 +29,7 @@
     "preview": {}
   },
   "node": {
-    "version": "22.23.1",
+    "version": "22.23.3",
     "lts_name": "Jod",
     "eol": "2027-04-30"
   },

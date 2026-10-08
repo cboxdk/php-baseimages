@@ -39,7 +39,7 @@ ARG SPX_VERSION=v0.4.22
 # JS runtimes are installed via RUN (official tarball/zip), not `COPY --from`,
 # because copying from an external image stage triggers a buildx blob-mount
 # failure on our self-hosted runner (the layer gets dropped on push to ghcr).
-ARG NODE_VERSION=22.23.1
+ARG NODE_VERSION=22.23.3
 ARG BUN_VERSION=1.3.14
 
 # ============================================================================
