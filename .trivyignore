@@ -184,5 +184,7 @@ CVE-2026-73566
 CVE-2026-9496
 # [HIGH] brace-expansion: DoS (fixed in 2.1.5); npm 10.9.9, bundled with Node 22.23.3, still ships 2.0.2 (added 2026-10-08)
 CVE-2026-102276
+# [HIGH] brace-expansion: DoS (fixed in 2.1.6); same npm-bundled 2.0.2 as above (added 2026-10-08)
+CVE-2026-102278
 
 
