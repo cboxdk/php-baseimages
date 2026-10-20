@@ -1,0 +1,3 @@
+#!/usr/bin/env php
+<?php
+// Present only so the entrypoint detects a Laravel app.

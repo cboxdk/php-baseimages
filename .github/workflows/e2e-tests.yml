@@ -48,6 +48,7 @@ on:
           - 'health-checks'
           - 'image-formats'
           - 'app-processes'
+          - 'nginx-template'
 
 env:
   REGISTRY: ghcr.io/cboxdk/php-baseimages
@@ -159,6 +160,15 @@ jobs:
           VERBOSE: "true"
         run: |
           tests/e2e/run-e2e-tests.sh "$IMAGE" image-formats
+
+      - name: Run nginx-template E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # $realpath_root on a real symlink-release swap (#38), the server.d
+          # include hook and the Statamic static-caching preset (#40).
+          tests/e2e/run-e2e-tests.sh "$IMAGE" nginx-template
 
       - name: Run security E2E test
         env:

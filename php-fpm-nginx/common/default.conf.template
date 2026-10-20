@@ -138,11 +138,32 @@ ${NGINX_SECURITY_HEADERS}
     error_log ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL};
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Main Location
+    # Server-level extension point
+    #
+    # Drop a .conf file in /etc/nginx/server.d/ to add locations to THIS server
+    # block without owning the whole template - an app needs exact-match or
+    # named locations in front of PHP (a full-page cache, a redirect map, a
+    # protected admin path), and the only way to get them used to be replacing
+    # default.conf.template wholesale, which meant forking it and missing every
+    # later fix to the health endpoints, security blocks and fastcgi params.
+    # (http-level config already had conf.d/*.conf; this is the server level.)
+    #
+    # Position is deliberate: BEFORE the locations below, because nginx tries
+    # regex locations in the order they appear, so a file here can take
+    # precedence over the image's own. That also means a `location /` of your
+    # own collides with the one below - use the Statamic preset or
+    # NGINX_TRY_FILES for that instead. A bad file here fails `nginx -t` at
+    # startup with its own filename and line number, not at 3am.
     # ─────────────────────────────────────────────────────────────────────────
-    location / {
-        try_files $uri $uri/ ${NGINX_TRY_FILES};
-    }
+    include /etc/nginx/server.d/*.conf;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Main Location
+    #
+    # Rendered by the entrypoint: the plain try_files chain, or Statamic's
+    # full static-caching chain when STATAMIC_STATIC_CACHING=full.
+    # ─────────────────────────────────────────────────────────────────────────
+${NGINX_MAIN_LOCATION}
 
     # ─────────────────────────────────────────────────────────────────────────
     # SECURITY: No PHP execution from user-upload trees
@@ -155,6 +176,12 @@ ${NGINX_SECURITY_HEADERS}
         deny all;
     }
     location ~* ^/wp-content/uploads/.*\.php(/|$) {
+        deny all;
+    }
+    # public/vendor/ holds published package assets (see the directory block
+    # near the end of this file), so the directory itself must stay reachable -
+    # but nothing under it may ever execute.
+    location ~* ^/vendor/.*\.php(/|$) {
         deny all;
     }
 
@@ -174,9 +201,24 @@ ${NGINX_SECURITY_HEADERS}
 
         # PATH_INFO support (required for Symfony, some Laravel routes)
         fastcgi_param PATH_INFO $fastcgi_path_info;
-        fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+        # The script root below is $realpath_root by default, $document_root
+        # with NGINX_USE_REALPATH_ROOT=false. For a web root that contains no
+        # symlinks the two are the same string; for a release-based deploy
+        # (/app/current -> releases/<id>) only the first one is right. With
+        # $document_root, PHP resolves every include through the symlink and
+        # opcache - validate_timestamps=0 in production - keeps serving the
+        # PREVIOUS release's compiled files until FPM is reloaded. Each request
+        # now carries the release's real path, so the swap takes effect on it.
+        # (Forge and Envoyer templates have used $realpath_root for years.)
+        fastcgi_param PATH_TRANSLATED ${NGINX_SCRIPT_ROOT}$fastcgi_path_info;
+        fastcgi_param SCRIPT_FILENAME ${NGINX_SCRIPT_ROOT}$fastcgi_script_name;
         include fastcgi_params;
+        # DOCUMENT_ROOT has to come AFTER the include: fastcgi_params defines
+        # it as $document_root, and of two definitions of one param the LAST
+        # one reaches PHP. (The same reason the proxy headers below, HTTP_HOST
+        # among them, sit after the include.)
+        fastcgi_param DOCUMENT_ROOT ${NGINX_SCRIPT_ROOT};
 
         # ─────────────────────────────────────────────────────────────────────
         # Proxy Headers (forwarded to PHP for trusted proxy detection)
@@ -251,8 +293,9 @@ ${NGINX_SECURITY_HEADERS}
         access_log off;
         fastcgi_pass ${NGINX_FASTCGI_PASS};
         fastcgi_keep_conn ${NGINX_FASTCGI_KEEP_CONN};
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param SCRIPT_FILENAME ${NGINX_SCRIPT_ROOT}$fastcgi_script_name;
         include fastcgi_params;
+        fastcgi_param DOCUMENT_ROOT ${NGINX_SCRIPT_ROOT};
     }
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -312,8 +355,22 @@ ${NGINX_SECURITY_HEADERS}
         return 404;
     }
 
-    # Block sensitive directories
-    location ~ ^/(vendor|node_modules|storage/logs|storage/debugbar|tests|\.github|\.vscode|\.idea)/ {
+    # Block sensitive directories.
+    #
+    # vendor/ is NOT in this list, and must not be: the web root is public/, so
+    # /vendor/ here means public/vendor/ - exactly where Laravel packages
+    # publish their browser assets. Denying the directory 404'd every one of
+    # them, which is the Statamic Control Panel
+    # (public/vendor/statamic/cp/...), the Horizon dashboard
+    # (public/vendor/horizon/...) and anything else installed with
+    # `vendor:publish --tag=*-assets`. The project's real vendor/ is outside
+    # the web root anyway; what this rule was actually protecting against is
+    # NGINX_WEBROOT pointed at the project root by mistake, and for that it is
+    # PHP execution that matters - denied above, next to the storage/ rules,
+    # where it has to sit to win over the `\.php$` block.
+    #
+    # The rest have no legitimate place under a web root at all.
+    location ~ ^/(node_modules|storage/logs|storage/debugbar|tests|\.github|\.vscode|\.idea)/ {
         deny all;
         return 404;
     }

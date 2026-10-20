@@ -35,6 +35,7 @@ QUICK_TESTS=(
     "test-health-checks.sh"
     "test-env-config.sh"
     "test-app-processes.sh"
+    "test-nginx-template.sh"
 )
 
 FRAMEWORK_TESTS=(

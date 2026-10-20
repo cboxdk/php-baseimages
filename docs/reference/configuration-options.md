@@ -278,7 +278,41 @@ location / {
 
 ## Nginx Server Blocks
 
-### Method 1: Custom Nginx Configuration via Volume
+### Method 1: Add locations to the image's server block (recommended)
+
+Mount `.conf` files into `/etc/nginx/server.d/` and they are included inside the
+server block the image already renders — you keep the health endpoints, the
+security blocks, the fastcgi params and every later fix to them, and only own
+the part you actually need:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    volumes:
+      - ./docker/nginx/server.d:/etc/nginx/server.d:ro
+```
+
+```nginx
+# docker/nginx/server.d/app.conf
+location = /old-url {
+    return 301 /new-url;
+}
+
+location /internal-api {
+    allow 10.0.0.0/8;
+    deny all;
+    try_files $uri /index.php?$query_string;
+}
+```
+
+Included *before* the image's own locations, so a regex block here wins over
+them. A `location /` of your own collides with the image's and nginx refuses to
+start — use `NGINX_TRY_FILES`, or `STATAMIC_STATIC_CACHING` for Statamic's
+static-caching chain. http-level config (extra `server` blocks, `map`s,
+rate-limit zones) still goes in `/etc/nginx/conf.d/`.
+
+### Method 2: Replace the whole server block via Volume
 
 **Create `docker/nginx/default.conf`:**
 

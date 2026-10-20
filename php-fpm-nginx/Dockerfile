@@ -116,7 +116,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -218,7 +218,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -321,7 +321,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -423,7 +423,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -526,7 +526,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -628,7 +628,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -731,7 +731,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -833,7 +833,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log

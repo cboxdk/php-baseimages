@@ -517,6 +517,28 @@ generate_runtime_configs() {
         : ${NGINX_OPEN_FILE_CACHE_VALID:=30s}
         : ${NGINX_OPEN_FILE_CACHE_MIN_USES:=2}
         : ${NGINX_OPEN_FILE_CACHE_ERRORS:=on}
+
+        # The root every fastcgi block hands PHP. $realpath_root by default:
+        # for a web root with no symlinks it is the same string as
+        # $document_root, and for a release-based deploy (/app/current ->
+        # releases/<id>) it is the only correct one - otherwise PHP resolves
+        # includes through the symlink and opcache (validate_timestamps=0 in
+        # production) keeps serving the previous release until FPM is reloaded.
+        # Forge and Envoyer templates have shipped $realpath_root for years.
+        # NGINX_USE_REALPATH_ROOT=false restores $document_root.
+        #
+        # NOTE for release-based deploys: nginx's own open_file_cache can still
+        # serve STATIC files (including a static page cache under public/) from
+        # the previous release for up to NGINX_OPEN_FILE_CACHE_VALID (30s)
+        # after a swap. Reload nginx after the swap - new workers start with an
+        # empty cache - or set NGINX_OPEN_FILE_CACHE=off.
+        : ${NGINX_USE_REALPATH_ROOT:=true}
+        if is_true "${NGINX_USE_REALPATH_ROOT}"; then
+            NGINX_SCRIPT_ROOT='$realpath_root'
+        else
+            NGINX_SCRIPT_ROOT='$document_root'
+        fi
+        export NGINX_SCRIPT_ROOT
         : ${NGINX_TRUSTED_PROXIES:=}
         : ${NGINX_REAL_IP_HEADER:=X-Forwarded-For}
         : ${NGINX_REAL_IP_RECURSIVE:=on}
@@ -643,7 +665,94 @@ generate_runtime_configs() {
         fi
         export NGINX_SERVER_HEADER_CONFIG
 
-        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_UPSTREAM_CONFIG} ${NGINX_FASTCGI_KEEP_CONN} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC}' \
+        # ─────────────────────────────────────────────────────────────────────
+        # Main location, and the optional Statamic static-caching chain.
+        #
+        # Statamic's "full measure" static caching writes rendered pages as
+        # .html under public/ and expects nginx to serve them WITHOUT booting
+        # PHP - that is the whole point of it. Those rules replace `location /`,
+        # so they cannot live in a drop-in next to it; the entrypoint renders
+        # one or the other here.
+        #
+        # STATAMIC_STATIC_CACHING: off (default) | half | full
+        #   half needs nothing from nginx - Statamic serves it from the app,
+        #   after Laravel boots - and is accepted so the same value can be set
+        #   in both places. It defaults to STATAMIC_STATIC_CACHING_STRATEGY
+        #   when that is in the container's environment, which is the variable
+        #   Statamic's own config reads, so the two cannot drift apart.
+        # STATAMIC_STATIC_PATH: directory under the web root (default: static)
+        # STATAMIC_STATIC_IGNORE_QUERY_STRINGS: must match
+        #   static_caching.ignore_query_strings in the app's config. Default
+        #   false, like Statamic's own. A mismatch is safe either way - nginx
+        #   simply misses the file and the request falls through to PHP.
+        #
+        # https://statamic.dev/advanced-topics/static-caching#nginx
+        # ─────────────────────────────────────────────────────────────────────
+        : "${STATAMIC_STATIC_CACHING:=${STATAMIC_STATIC_CACHING_STRATEGY:-off}}"
+        : ${STATAMIC_STATIC_PATH:=static}
+        : ${STATAMIC_STATIC_IGNORE_QUERY_STRINGS:=false}
+
+        case "${STATAMIC_STATIC_CACHING}" in
+            full|half|off) : ;;
+            *)
+                log_warn "Unknown STATAMIC_STATIC_CACHING '${STATAMIC_STATIC_CACHING}' (valid: off, half, full) - using off"
+                STATAMIC_STATIC_CACHING=off
+                ;;
+        esac
+
+        if [ "${STATAMIC_STATIC_CACHING}" = "full" ]; then
+            # Strip surrounding slashes so both `static` and `/static/` work.
+            _statamic_path=$(sanitize_nginx_value "${STATAMIC_STATIC_PATH}" | sed 's#^/*##; s#/*$##')
+            if is_true "${STATAMIC_STATIC_IGNORE_QUERY_STRINGS}"; then
+                _statamic_file="/${_statamic_path}\${uri}_.html"
+            else
+                _statamic_file="/${_statamic_path}\${uri}_\${args}.html"
+            fi
+            # Quoted heredoc: every $ in here is an nginx variable, not a shell
+            # one. The two @@...@@ tokens are filled in below.
+            NGINX_MAIN_LOCATION=$(cat <<'STATAMIC_EOF'
+    # Statamic full static caching (STATAMIC_STATIC_CACHING=full).
+    # A cache hit is served straight from disk; anything that must not be
+    # cached - a non-GET request, a live preview - goes to PHP.
+    set $try_location @static;
+    if ($request_method != GET) { set $try_location @not_static; }
+    if ($args ~* "live-preview=(.*)") { set $try_location @not_static; }
+
+    location / {
+        try_files $uri $try_location;
+    }
+
+    location @static {
+        try_files @@STATAMIC_FILE@@ $uri $uri/ @@TRY_FILES@@;
+    }
+
+    location @not_static {
+        try_files $uri @@TRY_FILES@@;
+    }
+STATAMIC_EOF
+)
+            NGINX_MAIN_LOCATION="${NGINX_MAIN_LOCATION//@@STATAMIC_FILE@@/$_statamic_file}"
+            log_info "Statamic full static caching: serving /${_statamic_path}/ from disk before PHP"
+            # The preset only exists in the RENDERED config. On a read-only
+            # /etc/nginx the fallback below boots the baked default instead,
+            # which has the plain `location /` - every page would quietly go
+            # through PHP again. Join the list that makes that failure fatal
+            # instead of a warning.
+            NGINX_USER_OVERRIDES="${NGINX_USER_OVERRIDES:-}STATAMIC_STATIC_CACHING "
+        else
+            NGINX_MAIN_LOCATION=$(cat <<'MAIN_EOF'
+    location / {
+        try_files $uri $uri/ @@TRY_FILES@@;
+    }
+MAIN_EOF
+)
+            [ "${STATAMIC_STATIC_CACHING}" = "half" ] && \
+                log_info "Statamic half static caching needs no nginx rules - the app serves it"
+        fi
+        NGINX_MAIN_LOCATION="${NGINX_MAIN_LOCATION//@@TRY_FILES@@/$NGINX_TRY_FILES}"
+        export NGINX_MAIN_LOCATION
+
+        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_UPSTREAM_CONFIG} ${NGINX_FASTCGI_KEEP_CONN} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC} ${NGINX_SCRIPT_ROOT} ${NGINX_MAIN_LOCATION}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
             # A read-only /etc/nginx (readOnlyRootFilesystem without an
