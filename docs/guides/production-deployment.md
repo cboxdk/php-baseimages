@@ -195,6 +195,13 @@ services:
 
 ## Zero-Downtime Deployments
 
+The strategies below replace *containers*: a release is an image, and the
+orchestrator moves traffic between instances. If instead one long-lived
+container serves the site and a deploy is a new `releases/<id>` directory with
+a `current` symlink — the Envoyer/Forge/Deployer shape — see
+[Zero-Downtime Symlink Releases](symlink-releases), which covers the swap, the
+worker restart and the four traps that pattern hits on this image.
+
 ### Rolling Update Strategy
 
 ```yaml

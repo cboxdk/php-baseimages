@@ -65,4 +65,4 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
 - [Common Issues](troubleshooting/common-issues) -- FAQ-style solutions
 - [Debugging Guide](troubleshooting/debugging-guide) -- Systematic debugging
 - [Migration Guide](getting-started/migration-guide) -- From ServerSideUp, Bitnami, custom images
-- [Changelog](./changelog) -- What's new
+- [Changelog](https://github.com/cboxdk/php-baseimages/blob/main/CHANGELOG.md) -- What's new (the changelog lives at the repository root, not in /docs)

@@ -67,6 +67,10 @@ jobs:
           ./tests/test-env-contract.sh
           chmod +x tests/test-docs-versions.sh
           ./tests/test-docs-versions.sh
+          # cbox.dk serves /docs, so a dead relative link there is invisible
+          # from the repo - nothing renders it in CI and nothing clicks it.
+          chmod +x tests/test-docs-links.sh
+          ./tests/test-docs-links.sh
           # No tier may purge a tool the tiers below it ship - the dev
           # tier shipped without git this way, and nothing noticed.
           chmod +x tests/test-runtime-deps.sh

@@ -52,6 +52,14 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - CI/CD integration
   - Zero-downtime deployments
 
+- **[Zero-Downtime Symlink Releases](./symlink-releases)** 🚀 New
+  - `releases/<id>` + a `current` symlink on a single server
+  - The atomic swap, the worker restart, and instant rollback
+  - The four traps: root-owned deploy steps, pool admin values beating a
+    mounted php.ini, nginx's open_file_cache outliving the swap, and when a
+    PHP-FPM reload is actually needed
+  - Statamic: per-release Stache, static-cache warming, CP assets
+
 - **[Cbox vs ServerSideUp](./cbox-vs-serversideup)** ✨ New
   - DX, docs, and feature scorecard
   - Actionable follow-ups to widen the gap

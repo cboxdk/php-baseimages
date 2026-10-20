@@ -215,14 +215,38 @@ New code deploy = new image, content volume untouched. Content edits =
 commits pushed from the running container, pulled into the next image
 build if you also bake a content snapshot as fallback.
 
+### Symlink-release mode (zero-downtime on a single server)
+
+The middle ground, and the most common production shape for a Statamic site on
+one server: every deploy unpacks into `/app/releases/<id>`, `storage/` and
+`.env` are symlinked in from `/app/shared/`, and one atomic symlink swap makes
+a release live. Instant rollback, no image build, no orchestrator.
+
+```yaml
+environment:
+  - WORKDIR=/app/current              # moves the workers too, not just nginx
+  - NGINX_WEBROOT=/app/current/public
+  - PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
+```
+
+It needs a handful of things this image decides for you — `$realpath_root` (on
+by default) so a swap takes effect at once, `docker exec -u www-data` so the
+deploy does not leave root-owned caches, nginx's `open_file_cache` flushed, and
+a Stache that is not shared between releases.
+
+➜ **[Zero-Downtime Symlink Releases](symlink-releases)** has the full deploy
+script, the rollback, each trap where you meet it, and the Statamic specifics
+(per-release Stache store, `static:warm` after the swap, CP assets).
+
 ### Choosing
 
-| | Mount mode | Baked mode |
-|---|---|---|
-| Deploys | git pull / rsync in place | immutable image per release |
-| Git integration | whole site is the repo | content volume is its own repo |
-| Fits | single server, dev, small sites | Kubernetes, autoscaling, CI/CD |
-| Trap to know | key must be 0400 (above) | seed the content volume first |
+| | Mount mode | Symlink-release mode | Baked mode |
+|---|---|---|---|
+| Deploys | git pull / rsync in place | new `releases/<id>` + symlink swap | immutable image per release |
+| Rollback | git checkout | repoint the symlink (instant) | redeploy the previous image |
+| Git integration | whole site is the repo | a repo outside the releases | content volume is its own repo |
+| Fits | single server, dev, small sites | single server, production | Kubernetes, autoscaling, CI/CD |
+| Trap to know | key must be 0400 (above) | `docker exec` runs as root | seed the content volume first |
 
 ## What the Laravel detection gives Statamic for free
 
