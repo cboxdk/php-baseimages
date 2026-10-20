@@ -605,11 +605,26 @@ environment:
   - NGINX_OPEN_FILE_CACHE=off
 ```
 
+> **Release-based deploys:** the cache is keyed by path, so after you swap
+> `current` to a new release nginx can keep serving **static** files - including
+> a static page cache under `public/` - from the previous one for up to
+> `NGINX_OPEN_FILE_CACHE_VALID` (30s). Reload nginx after the swap (its new
+> workers start with an empty cache):
+>
+> ```bash
+> docker exec <container> nginx -s reload
+> ```
+>
+> If you cannot reload, set `NGINX_OPEN_FILE_CACHE=off` or shorten
+> `NGINX_OPEN_FILE_CACHE_VALID`. The PHP side is already handled by
+> `NGINX_USE_REALPATH_ROOT`, which is on by default.
+
 ### FastCGI Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NGINX_FASTCGI_PASS` | `127.0.0.1:9000` | PHP-FPM address |
+| `NGINX_USE_REALPATH_ROOT` | `true` | Pass `$realpath_root` as `SCRIPT_FILENAME`/`DOCUMENT_ROOT` instead of `$document_root`. Identical for a web root with no symlinks; required for release-based deploys. `false` restores `$document_root` |
 | `NGINX_FASTCGI_BUFFERS` | `8 8k` | FastCGI buffers |
 | `NGINX_FASTCGI_BUFFER_SIZE` | `8k` | Buffer size |
 | `NGINX_FASTCGI_BUSY_BUFFERS_SIZE` | `16k` | Busy buffers size |
@@ -690,6 +705,80 @@ which is loaded in all `php-fpm-nginx` images. Custom configs mounted into
 | `NGINX_STATIC_CACHE_CONTROL` | `public, immutable` | Cache-Control header |
 | `NGINX_STATIC_ACCESS_LOG` | `off` | Static file access logging |
 | `NGINX_TRY_FILES` | `/index.php?$query_string` | try_files fallback |
+
+---
+
+## Adding Your Own Nginx Locations
+
+Two hooks, so you never have to fork `default.conf.template` and then miss the
+next fix to the health endpoints, security blocks or fastcgi params:
+
+| Path | Level | Use it for |
+|------|-------|-----------|
+| `/etc/nginx/conf.d/*.conf` | http | extra `server` blocks, `map`s, rate-limit zones, `upstream`s |
+| `/etc/nginx/server.d/*.conf` | server | `location` blocks inside the image's own server block |
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    volumes:
+      - ./docker/nginx/server.d:/etc/nginx/server.d:ro
+```
+
+```nginx
+# docker/nginx/server.d/redirects.conf
+location = /old-url {
+    return 301 /new-url;
+}
+```
+
+**Order matters.** `server.d` is included *before* the image's own locations, and
+nginx tries regex locations in the order they appear — so a block here can take
+precedence over the built-in static-asset, PHP and deny rules. That is the
+point, and it is also the footgun: a `location ~ \.php$` of your own replaces
+the image's, fastcgi params and all.
+
+A `location /` of your own **collides** with the image's and nginx refuses to
+start. Use `NGINX_TRY_FILES` for small changes, or the Statamic preset below.
+Either way a bad file fails `nginx -t` at startup, with its own filename and
+line number, instead of at 3am.
+
+---
+
+## Statamic Static Caching
+
+Statamic's *full measure* static caching writes rendered pages as `.html` under
+`public/` and expects nginx to serve them without booting PHP — that is the
+whole point of it. Those rules replace `location /`, so they cannot go in a
+`server.d` drop-in; this preset renders them instead.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STATAMIC_STATIC_CACHING` | `$STATAMIC_STATIC_CACHING_STRATEGY`, else `off` | `off`, `half` or `full` |
+| `STATAMIC_STATIC_PATH` | `static` | Directory under the web root that Statamic writes to |
+| `STATAMIC_STATIC_IGNORE_QUERY_STRINGS` | `false` | Must match `static_caching.ignore_query_strings` in the app's config |
+
+```yaml
+environment:
+  - STATAMIC_STATIC_CACHING=full
+  - STATAMIC_STATIC_IGNORE_QUERY_STRINGS=true   # if the app ignores them too
+```
+
+- **`half`** needs nothing from nginx — Statamic serves it from the app, after
+  Laravel boots. It is accepted so you can set the same value in both places.
+- **`full`** generates Statamic's documented chain: a cache hit is served from
+  disk, while a non-GET request or a `?live-preview=` request always reaches
+  PHP.
+- `STATAMIC_STATIC_CACHING` defaults to `STATAMIC_STATIC_CACHING_STRATEGY`, the
+  variable Statamic's own config reads, so passing that one into the container
+  configures both halves and they cannot drift apart.
+- `STATAMIC_STATIC_IGNORE_QUERY_STRINGS` picks the filename nginx looks for
+  (`/static/<uri>_.html` vs `/static/<uri>_<query>.html`). A mismatch is safe
+  in both directions — nginx simply misses the file and the request falls
+  through to PHP — but you lose the cache.
+- Pair it with `NGINX_OPEN_FILE_CACHE` on release-based deploys: see the note
+  under [Open File Cache](#open-file-cache).
 
 ---
 

@@ -175,12 +175,31 @@ fi
 # ═══════════════════════════════════════════════════════════════════════════
 log_section "Test 4: Directory Blocking"
 
-# Test vendor directory
-CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/" 2>/dev/null)
-if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
-    log_success "vendor/ directory is blocked (HTTP $CODE)"
+# vendor/ under the web root is public/vendor/ - where Laravel packages publish
+# their browser assets. Denying the whole directory 404'd the Statamic Control
+# Panel and the Horizon dashboard (#37), so the contract is narrower now: the
+# published assets are served, and nothing under it executes.
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/statamic/cp/build/assets/app.js" 2>/dev/null)
+if [ "$CODE" = "200" ]; then
+    log_success "published asset under public/vendor/ is served (HTTP $CODE)"
 else
-    log_fail "vendor/ directory is accessible! (HTTP $CODE)"
+    log_fail "published asset under public/vendor/ is not served! (HTTP $CODE) - the #37 regression"
+fi
+
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/evil.php" 2>/dev/null)
+if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
+    log_success "PHP under public/vendor/ is blocked (HTTP $CODE)"
+else
+    log_fail "PHP under public/vendor/ executed! (HTTP $CODE)"
+fi
+
+# The project's own vendor/ sits beside public/, not under it, so it is not
+# reachable at all - the thing the directory rule was really protecting.
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/autoload.php" 2>/dev/null)
+if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
+    log_success "the project's vendor/autoload.php is not reachable (HTTP $CODE)"
+else
+    log_fail "vendor/autoload.php is reachable! (HTTP $CODE)"
 fi
 
 # Test node_modules directory
