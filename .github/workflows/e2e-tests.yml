@@ -47,6 +47,7 @@ on:
           - 'plain-php'
           - 'health-checks'
           - 'image-formats'
+          - 'app-processes'
 
 env:
   REGISTRY: ghcr.io/cboxdk/php-baseimages
@@ -169,6 +170,16 @@ jobs:
           # nothing ran on a push, which is how session.cookie_httponly=0
           # shipped unnoticed.
           tests/e2e/run-e2e-tests.sh "$IMAGE" security
+
+      - name: Run app-processes E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # Worker identity (#34), WORKDIR (#35) and numeric env overrides
+          # (#36). All three shipped because nothing ever looked at what uid a
+          # queue worker runs as or where it starts.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" app-processes
 
   # Full matrix test (manual trigger)
   full-matrix:

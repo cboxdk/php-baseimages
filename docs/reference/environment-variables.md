@@ -37,6 +37,7 @@ These are the most commonly used variables. Just set what you need!
 | `PGID` | *(container default)* | Set the GID that `www-data` runs as |
 | `APP_USER` | `www-data` | Application user name |
 | `APP_GROUP` | `www-data` | Application group name |
+| `CBOX_APP_USER` | `$APP_USER` when started as root, else *(empty)* | The user the Cbox Init app processes (queue workers, scheduler, Horizon, Reverb, autoscaler) run as. Resolved automatically - set it only to override |
 
 ### Find your host UID/GID
 
@@ -90,7 +91,10 @@ environment:
 2. Ownership of `/var/www/html` is updated to match
 3. Framework directories (`storage/`, `bootstrap/cache/`, `var/`) are chowned automatically
 4. PHP-FPM runs worker processes as the remapped user
-5. Files created by PHP have the correct ownership on your host
+5. The Cbox Init app processes - queue workers, scheduler, Horizon, Reverb, the
+   queue autoscaler - run as that same user, so what a job writes (cache files,
+   compiled views, logs) stays writable for the PHP-FPM workers that read it next
+6. Files created by PHP have the correct ownership on your host
 
 ### Startup strictness knobs
 
@@ -104,6 +108,7 @@ environment:
 - **Requires root mode** — PUID/PGID only works in root images (the default). Rootless images skip PUID/PGID mapping since the container already runs as `www-data`.
 - **Docker Desktop (macOS/Windows)** — Docker Desktop handles permission translation automatically via its VM layer, so PUID/PGID is usually not needed. It won't break anything if set, though.
 - **Only set what you need** — if you only need to change the UID, just set `PUID`. If you only need the GID, just set `PGID`.
+- **Containers that are already unprivileged** — a rootless image, `--user 1000:1000`, or OpenShift's arbitrary UID cannot switch user at all, so `CBOX_APP_USER` resolves to empty and the app processes simply run as the container's own user. That user *is* the app user there, so nothing is lost. Setting `CBOX_APP_USER` explicitly in such a container asks for a privilege drop that cannot happen, and Cbox Init refuses to start the process rather than silently running it as the wrong user.
 
 ---
 
@@ -922,7 +927,7 @@ environment:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WORKDIR` | `/var/www/html` | Working directory |
+| `WORKDIR` | `/var/www/html` | Application root. Moves framework detection, the permission fixes, the Laravel log tail **and** the working directory of every Cbox Init app process - set it to your `current` symlink for release-based deploys |
 | `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Cbox Init config path |
 | `REVERB_PORT` | `8080` | Reverb port for healthcheck (override if using non-default port) |
 

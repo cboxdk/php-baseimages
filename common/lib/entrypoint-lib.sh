@@ -526,6 +526,57 @@ setup_user_permissions() {
 }
 
 ###########################################
+# App Process Identity (cbox-init app processes)
+#
+# The app processes in cbox-init.yaml - queue workers, scheduler, Horizon,
+# Reverb, the queue autoscaler - carry two placeholders that cbox-init expands
+# when it loads the config:
+#
+#   working_dir: ${WORKDIR:-/var/www/html}
+#   user: ${CBOX_APP_USER:-}
+#
+# This resolves both, once, before cbox-init is exec'd.
+#
+# WORKDIR was hardcoded to /var/www/html in the config, so a symlink-release
+# layout (WORKDIR=/app/current) crash-looped every worker with "Could not open
+# input file: artisan" while php-fpm and the entrypoint used the real path.
+#
+# CBOX_APP_USER makes the workers match the php-fpm pool user instead of
+# staying root: a job that writes a cache file, a compiled view, a log line or
+# a git object left it root-owned, and the php-fpm workers could not write
+# there afterwards.
+#
+# It is deliberately EMPTY whenever this container cannot drop privileges -
+# the rootless images, `--user 1000:1000`, OpenShift's arbitrary uid. cbox-init
+# fails a process closed when it cannot setuid to the configured user, so
+# asking for www-data from a container that is already an unprivileged user
+# would turn "the workers run as the wrong user" into "the workers do not run".
+# Nothing is lost there: the container's own user IS the app user.
+#
+# An explicit CBOX_APP_USER is always honored, as is a per-process
+# CBOX_INIT_PROCESS_<NAME>_USER / _WORKING_DIR override.
+###########################################
+setup_app_process_identity() {
+    WORKDIR="${WORKDIR:-/var/www/html}"
+    export WORKDIR
+
+    # Explicitly set (even to empty) = the operator decided; don't second-guess.
+    if [ -n "${CBOX_APP_USER+x}" ]; then
+        export CBOX_APP_USER
+        return 0
+    fi
+
+    if [ "$(id -u)" = "0" ] && ! is_rootless; then
+        export CBOX_APP_USER="${APP_USER:-www-data}"
+        log_info "App processes (workers, scheduler, Horizon, Reverb) run as ${CBOX_APP_USER} in ${WORKDIR}"
+    else
+        export CBOX_APP_USER=""
+        log_info "App processes run as this container's own user (uid $(id -u)) in ${WORKDIR}"
+    fi
+    return 0
+}
+
+###########################################
 # Laravel Helpers
 ###########################################
 laravel_decrypt_env() {

@@ -996,6 +996,13 @@ setup_telemetry_native
 setup_fpm_listen
 map_env_aliases
 
+# Resolve WORKDIR and the user the cbox-init app processes run as, before
+# anything reads either. Must run BEFORE setup_user_permissions_extended,
+# which chowns $WORKDIR, and before preflight_checks.
+if command -v setup_app_process_identity >/dev/null 2>&1; then
+    setup_app_process_identity
+fi
+
 # Setup PUID/PGID user permissions
 setup_user_permissions_extended
 
@@ -1017,7 +1024,7 @@ if command -v apply_nginx_worker_processes >/dev/null 2>&1; then
     apply_nginx_worker_processes /etc/nginx/nginx.conf
 fi
 
-# Set working directory
+# Set working directory (resolved and exported by setup_app_process_identity)
 WORKDIR="${WORKDIR:-/var/www/html}"
 cd "$WORKDIR" 2>/dev/null || cd /var/www/html
 

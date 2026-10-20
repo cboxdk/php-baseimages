@@ -31,6 +31,27 @@ global:
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Process Definitions (DAG-based dependencies)
+#
+# App processes (queue workers, scheduler, Horizon, Reverb, autoscaler) carry
+# `working_dir: ${WORKDIR:-/var/www/html}` and `user: ${CBOX_APP_USER:-}`,
+# which cbox-init expands when it loads this file. The entrypoint resolves
+# both, so every app process agrees with php-fpm about where the app lives
+# and who owns what it writes:
+#
+#   WORKDIR         the app root. Hardcoding /var/www/html crash-looped every
+#                   worker on a symlink-release layout (WORKDIR=/app/current)
+#                   with "Could not open input file: artisan".
+#   CBOX_APP_USER   www-data (or $APP_USER) when the container starts as root,
+#                   so a job's cache files, compiled views and logs stay
+#                   writable for the php-fpm workers that read them next.
+#                   EMPTY when this container cannot drop privileges at all
+#                   (--user 1000:1000, OpenShift's random uid, the rootless
+#                   images): cbox-init fails a process closed when it cannot
+#                   setuid, and "workers run as the wrong user" is a far
+#                   smaller problem than "workers do not run".
+#
+# Per-process overrides (CBOX_INIT_PROCESS_<NAME>_USER,
+# CBOX_INIT_PROCESS_<NAME>_WORKING_DIR) still win over both.
 # ═══════════════════════════════════════════════════════════════════════════
 processes:
   # ─────────────────────────────────────────────────────────────────────────
@@ -43,7 +64,8 @@ processes:
     type: longrun
     restart: always
     scale: 1
-    working_dir: /var/www/html
+    working_dir: ${WORKDIR:-/var/www/html}
+    user: ${CBOX_APP_USER:-}
     stdout: true
     stderr: true
     shutdown:
@@ -53,7 +75,7 @@ processes:
     logging:
       files:
         laravel-log:
-          path: /var/www/html/storage/logs/laravel.log
+          path: ${WORKDIR:-/var/www/html}/storage/logs/laravel.log
           json: { enabled: true, detect_auto: true }
           rotate:
             max_size: 50MB
@@ -69,7 +91,8 @@ processes:
     type: longrun
     restart: always
     scale: 1
-    working_dir: /var/www/html
+    working_dir: ${WORKDIR:-/var/www/html}
+    user: ${CBOX_APP_USER:-}
     stdout: true
     stderr: true
 
@@ -83,13 +106,14 @@ processes:
     type: longrun
     restart: always
     scale: 2
-    working_dir: /var/www/html
+    working_dir: ${WORKDIR:-/var/www/html}
+    user: ${CBOX_APP_USER:-}
     stdout: true
     stderr: true
     logging:
       files:
         laravel-log:
-          path: /var/www/html/storage/logs/laravel.log
+          path: ${WORKDIR:-/var/www/html}/storage/logs/laravel.log
           json: { enabled: true, detect_auto: true }
           rotate:
             max_size: 50MB
@@ -105,7 +129,8 @@ processes:
     type: longrun
     restart: always
     scale: 1
-    working_dir: /var/www/html
+    working_dir: ${WORKDIR:-/var/www/html}
+    user: ${CBOX_APP_USER:-}
     stdout: true
     stderr: true
 
@@ -119,7 +144,8 @@ processes:
     type: longrun
     restart: always
     scale: 1
-    working_dir: /var/www/html
+    working_dir: ${WORKDIR:-/var/www/html}
+    user: ${CBOX_APP_USER:-}
     stdout: true
     stderr: true
 
@@ -135,6 +161,7 @@ processes:
     type: longrun
     restart: always
     scale: 1
-    working_dir: /var/www/html
+    working_dir: ${WORKDIR:-/var/www/html}
+    user: ${CBOX_APP_USER:-}
     stdout: true
     stderr: true
