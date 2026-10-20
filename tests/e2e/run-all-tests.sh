@@ -34,6 +34,7 @@ QUICK_TESTS=(
     "test-plain-php.sh"
     "test-health-checks.sh"
     "test-env-config.sh"
+    "test-app-processes.sh"
 )
 
 FRAMEWORK_TESTS=(

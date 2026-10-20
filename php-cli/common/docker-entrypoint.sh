@@ -145,9 +145,18 @@ if command -v cbox-init >/dev/null 2>&1; then
     log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
+# Resolve WORKDIR and the user the cbox-init app processes run as, before the
+# chown below uses $WORKDIR and before cbox-init expands the config.
+if command -v setup_app_process_identity >/dev/null 2>&1; then
+    setup_app_process_identity
+else
+    WORKDIR="${WORKDIR:-/var/www/html}"
+    export WORKDIR
+fi
+
 # Setup proper permissions (skip in rootless mode)
-if [ -d /var/www/html ] && ! is_rootless; then
-    chown -R www-data:www-data /var/www/html 2>/dev/null || true
+if [ -d "$WORKDIR" ] && ! is_rootless; then
+    chown -R www-data:www-data "$WORKDIR" 2>/dev/null || true
 fi
 
 # Run user-provided init scripts (using shared function if available)
