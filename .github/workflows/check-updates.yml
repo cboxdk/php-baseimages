@@ -198,7 +198,16 @@ jobs:
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body "Still failing as of $(date -u +%F). $BODY"
           else
-            gh issue create --title "$TITLE" --body "$BODY" --label security
+            # The label has to exist before it can be attached, and a missing
+            # one must never be what silences the alarm. It already was: this
+            # step detected the three Go CVEs on 12 and 19 October, then died
+            # on `could not add label: 'security' not found`, so no issue was
+            # ever opened and the promotion gate blocked every publish for
+            # twelve days with nothing but a red weekly run to show for it.
+            gh label create security --color d93f0b \
+              --description "Security findings that block a publish" 2>/dev/null || true
+            gh issue create --title "$TITLE" --body "$BODY" --label security ||
+              gh issue create --title "$TITLE" --body "$BODY"
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════

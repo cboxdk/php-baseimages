@@ -209,7 +209,11 @@ jobs:
 
       - name: Install Trivy
         run: |
-          TRIVY_VERSION=0.69.3
+          # Same version the pre-promotion gate runs (trivy-action v0.36.0
+          # installs 0.70.0). Two scanners of different vintages disagree about
+          # what counts as fixable, and this job now has to give the same
+          # verdict as the gate - a PR that passes here must not fail there.
+          TRIVY_VERSION=0.70.0
           mkdir -p "$HOME/.local/bin"
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
             | sh -s -- -b "$HOME/.local/bin" "v${TRIVY_VERSION}"
@@ -238,3 +242,33 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Debian 12 (Bookworm)" >> $GITHUB_STEP_SUMMARY
           trivy image --severity CRITICAL,HIGH --format table cbox-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
+
+      # ─────────────────────────────────────────────────────────────────────
+      # THE GATE, pre-merge. Everything above this point is a REPORT: it
+      # uploads SARIF and writes a summary table, and passes whatever it
+      # finds. That is why no pull request ever went red while the identical
+      # check on main blocked every publish for twelve days (#47) - the
+      # promotion gate lives in the `merge` job of _build-image.yml, which is
+      # skipped on pull_request events, so the artifact that would actually be
+      # promoted was never verified until after the merge.
+      #
+      # Same flags as that gate, so the answer here is the answer there:
+      # --ignore-unfixed (a CVE with no fix available is not actionable),
+      # --ignorefile .trivyignore (the triaged backlog), --exit-code 1.
+      #
+      # One tier is enough to catch the whole class: every tier COPYs the same
+      # Go binaries and shares the same Debian base, and it was those two
+      # binaries - not a Debian package - that blocked promotion.
+      #
+      # Deliberately LAST, so a failure here never costs the SARIF upload or
+      # the summary table above it.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (same gate as promotion)
+        run: |
+          trivy image \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --ignorefile .trivyignore \
+            --exit-code 1 \
+            --format table \
+            cbox-scan:bookworm
