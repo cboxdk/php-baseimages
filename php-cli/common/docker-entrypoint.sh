@@ -154,6 +154,14 @@ else
     export WORKDIR
 fi
 
+# PUID/PGID: remap www-data to the host user before the chown below, which
+# names the user rather than its uid and so follows the remap. Without this the
+# variables were accepted and ignored in this image (#44) - every artefact a
+# `composer install` or `artisan` run wrote came out as uid 33.
+if command -v setup_user_permissions >/dev/null 2>&1; then
+    setup_user_permissions
+fi
+
 # Setup proper permissions (skip in rootless mode)
 if [ -d "$WORKDIR" ] && ! is_rootless; then
     chown -R www-data:www-data "$WORKDIR" 2>/dev/null || true

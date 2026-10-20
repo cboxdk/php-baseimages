@@ -102,90 +102,10 @@ sanitize_nginx_value() {
     echo "$1" | sed 's/[;{}$`\\]//g'
 }
 
-###########################################
-# PUID/PGID Runtime User Mapping
-# NOTE: This is an extended version of setup_user_permissions() from
-# entrypoint-lib.sh. It adds rootless-mode awareness, current UID/GID
-# checks before modifying, and ownership updates for the workdir and
-# common framework directories (storage, bootstrap/cache, var/).
-# Not using the lib version because the logic is a complete superset.
-###########################################
-setup_user_permissions_extended() {
-    # Skip PUID/PGID mapping in rootless mode
-    if is_rootless; then
-        log_info "Rootless mode - skipping PUID/PGID user mapping"
-        return 0
-    fi
-
-    local target_uid="${PUID:-}"
-    local target_gid="${PGID:-}"
-    local app_user="${APP_USER:-www-data}"
-    local app_group="${APP_GROUP:-www-data}"
-
-    [ -z "$target_uid" ] && [ -z "$target_gid" ] && return 0
-
-    if [ "$(id -u)" != "0" ]; then
-        log_warn "PUID/PGID specified but not running as root - skipping user mapping"
-        return 0
-    fi
-
-    [ -n "$target_uid" ] && ! validate_numeric "$target_uid" && return 1
-    [ -n "$target_gid" ] && ! validate_numeric "$target_gid" && return 1
-
-    log_info "Setting up PUID=${target_uid:-unchanged} PGID=${target_gid:-unchanged}"
-
-    # Modify group if PGID specified
-    if [ -n "$target_gid" ]; then
-        local current_gid
-        current_gid=$(id -g "$app_user" 2>/dev/null || echo "")
-        if [ "$current_gid" != "$target_gid" ]; then
-            if getent group "$target_gid" >/dev/null 2>&1; then
-                local existing_group
-                existing_group=$(getent group "$target_gid" | cut -d: -f1)
-                log_info "GID $target_gid already exists as group '$existing_group'"
-            else
-                groupmod -g "$target_gid" "$app_group" 2>/dev/null || \
-                    addgroup -g "$target_gid" "$app_group" 2>/dev/null || \
-                    groupadd -g "$target_gid" "$app_group" 2>/dev/null || true
-            fi
-        fi
-    fi
-
-    # Modify user if PUID specified
-    if [ -n "$target_uid" ]; then
-        local current_uid
-        current_uid=$(id -u "$app_user" 2>/dev/null || echo "")
-        if [ "$current_uid" != "$target_uid" ]; then
-            if getent passwd "$target_uid" >/dev/null 2>&1; then
-                local existing_user
-                existing_user=$(getent passwd "$target_uid" | cut -d: -f1)
-                log_info "UID $target_uid already exists as user '$existing_user'"
-            else
-                usermod -u "$target_uid" "$app_user" 2>/dev/null || \
-                    adduser -u "$target_uid" -D -S -G "$app_group" "$app_user" 2>/dev/null || \
-                    useradd -u "$target_uid" -g "$app_group" "$app_user" 2>/dev/null || true
-            fi
-        fi
-    fi
-
-    # Update ownership only when it isn't already correct. `chown -R` over a
-    # large mounted volume (Statamic content, uploaded assets) on every start
-    # is O(files) and slows rollouts / trips startupProbes — so skip when the
-    # workdir is already owned by the target user.
-    local workdir="${WORKDIR:-/var/www/html}"
-    if [ -d "$workdir" ]; then
-        local numeric_uid
-        numeric_uid=$(id -u "$app_user" 2>/dev/null || echo "")
-        if [ -n "$numeric_uid" ] && [ "$(stat -c %u "$workdir" 2>/dev/null)" = "$numeric_uid" ]; then
-            log_info "Ownership of $workdir already correct - skipping recursive chown"
-        else
-            log_info "Updating ownership of $workdir"
-            chown -R "$app_user:$app_group" "$workdir" 2>/dev/null || true
-        fi
-    fi
-
-    log_info "User permissions configured successfully"
-}
+# PUID/PGID mapping: setup_user_permissions() in entrypoint-lib.sh. This file
+# used to carry a private superset of it, which is exactly why php-fpm, php-cli
+# and nginx silently ignored PUID/PGID (#44) - one implementation now, called
+# by every image.
 
 # Laravel .env decryption: uses laravel_decrypt_env() from entrypoint-lib.sh
 
@@ -1106,14 +1026,14 @@ setup_fpm_listen
 map_env_aliases
 
 # Resolve WORKDIR and the user the cbox-init app processes run as, before
-# anything reads either. Must run BEFORE setup_user_permissions_extended,
+# anything reads either. Must run BEFORE setup_user_permissions,
 # which chowns $WORKDIR, and before preflight_checks.
 if command -v setup_app_process_identity >/dev/null 2>&1; then
     setup_app_process_identity
 fi
 
-# Setup PUID/PGID user permissions
-setup_user_permissions_extended
+# Setup PUID/PGID user permissions, and bring $WORKDIR's ownership with it
+setup_user_permissions "$WORKDIR"
 
 # Decrypt Laravel .env.encrypted (uses lib function if available)
 if command -v laravel_decrypt_env >/dev/null 2>&1; then

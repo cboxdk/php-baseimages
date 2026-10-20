@@ -482,47 +482,106 @@ validate_cbox_init() {
 
 ###########################################
 # PUID/PGID User Mapping
+#
+# Remaps the app user to the uid/gid the host uses, which is the whole point of
+# PUID/PGID: files the container writes into a bind mount come out owned by
+# somebody who can edit them afterwards.
+#
+# THIS is the one implementation. php-fpm-nginx used to carry a private copy
+# and the other three images carried nothing, so `PUID=1000` was accepted and
+# silently ignored on php-fpm, php-cli and nginx while the docs promised it
+# everywhere (#44). One function, called by every entrypoint.
+#
+# Optional arguments are directories to chown after the remap - pass the ones
+# the image owns. Without PUID/PGID nothing is remapped and nothing is chowned,
+# so a caller that wants its usual unconditional chown keeps doing it itself.
+#
+# APP_USER/APP_GROUP name the user to remap; the standalone nginx image runs
+# its workers as `nginx`, not `www-data`, and defaults them accordingly.
 ###########################################
 setup_user_permissions() {
+    # Rootless images already run AS the app user: nothing to remap, and no
+    # privilege to remap it with.
+    if is_rootless; then
+        log_info "Rootless mode - skipping PUID/PGID user mapping"
+        return 0
+    fi
+
     local target_uid="${PUID:-}"
     local target_gid="${PGID:-}"
     local app_user="${APP_USER:-www-data}"
     local app_group="${APP_GROUP:-www-data}"
 
-    # Skip if no PUID/PGID specified
     [ -z "$target_uid" ] && [ -z "$target_gid" ] && return 0
 
-    # Only root can change ownership
     if [ "$(id -u)" != "0" ]; then
-        log_warn "PUID/PGID specified but not running as root - skipping"
+        log_warn "PUID/PGID specified but not running as root - skipping user mapping"
         return 0
     fi
 
-    # Validate numeric
-    [ -n "$target_uid" ] && ! validate_numeric "$target_uid" && return 1
-    [ -n "$target_gid" ] && ! validate_numeric "$target_gid" && return 1
+    # A typo here is a deploy-time mistake, and every image fails the boot on it
+    # rather than guessing a uid. Name the variable - "Value must be numeric" on
+    # its own sent people reading the wrong part of their compose file.
+    if [ -n "$target_uid" ] && ! validate_numeric "$target_uid" >/dev/null 2>&1; then
+        log_error "PUID must be a number (got '$target_uid')"
+        return 1
+    fi
+    if [ -n "$target_gid" ] && ! validate_numeric "$target_gid" >/dev/null 2>&1; then
+        log_error "PGID must be a number (got '$target_gid')"
+        return 1
+    fi
 
-    log_info "Setting up PUID=${target_uid:-unchanged} PGID=${target_gid:-unchanged}"
+    log_info "Setting up PUID=${target_uid:-unchanged} PGID=${target_gid:-unchanged} for ${app_user}:${app_group}"
 
-    # Modify group
+    # Group first: a usermod that moves the user into a group needs it to exist.
     if [ -n "$target_gid" ]; then
-        if ! getent group "$target_gid" >/dev/null 2>&1; then
-            groupmod -g "$target_gid" "$app_group" 2>/dev/null || \
-            addgroup -g "$target_gid" "$app_group" 2>/dev/null || \
-            groupadd -g "$target_gid" "$app_group" 2>/dev/null || true
+        local current_gid
+        current_gid=$(id -g "$app_user" 2>/dev/null || echo "")
+        if [ "$current_gid" != "$target_gid" ]; then
+            if getent group "$target_gid" >/dev/null 2>&1; then
+                # Taken by something else. Say so instead of leaving the
+                # operator to wonder why the mapping did not happen.
+                log_info "GID $target_gid already exists as group '$(getent group "$target_gid" | cut -d: -f1)'"
+            else
+                groupmod -g "$target_gid" "$app_group" 2>/dev/null || \
+                    addgroup -g "$target_gid" "$app_group" 2>/dev/null || \
+                    groupadd -g "$target_gid" "$app_group" 2>/dev/null || true
+            fi
         fi
     fi
 
-    # Modify user
     if [ -n "$target_uid" ]; then
-        if ! getent passwd "$target_uid" >/dev/null 2>&1; then
-            usermod -u "$target_uid" "$app_user" 2>/dev/null || \
-            adduser -u "$target_uid" -D -S -G "$app_group" "$app_user" 2>/dev/null || \
-            useradd -u "$target_uid" -g "$app_group" "$app_user" 2>/dev/null || true
+        local current_uid
+        current_uid=$(id -u "$app_user" 2>/dev/null || echo "")
+        if [ "$current_uid" != "$target_uid" ]; then
+            if getent passwd "$target_uid" >/dev/null 2>&1; then
+                log_info "UID $target_uid already exists as user '$(getent passwd "$target_uid" | cut -d: -f1)'"
+            else
+                usermod -u "$target_uid" "$app_user" 2>/dev/null || \
+                    adduser -u "$target_uid" -D -S -G "$app_group" "$app_user" 2>/dev/null || \
+                    useradd -u "$target_uid" -g "$app_group" "$app_user" 2>/dev/null || true
+            fi
         fi
     fi
 
-    log_info "User permissions configured"
+    # Ownership of the paths the caller named. `chown -R` over a large mounted
+    # volume (Statamic content, uploaded assets) on every start is O(files) and
+    # slows rollouts / trips startupProbes - so skip a path that is already
+    # owned by the target user.
+    local numeric_uid
+    numeric_uid=$(id -u "$app_user" 2>/dev/null || echo "")
+    local dir
+    for dir in "$@"; do
+        [ -d "$dir" ] || continue
+        if [ -n "$numeric_uid" ] && [ "$(stat -c %u "$dir" 2>/dev/null)" = "$numeric_uid" ]; then
+            log_info "Ownership of $dir already correct - skipping recursive chown"
+            continue
+        fi
+        log_info "Updating ownership of $dir"
+        chown -R "$app_user:$app_group" "$dir" 2>/dev/null || true
+    done
+
+    log_info "User permissions configured: ${app_user} is uid $(id -u "$app_user" 2>/dev/null || echo '?')"
 }
 
 ###########################################

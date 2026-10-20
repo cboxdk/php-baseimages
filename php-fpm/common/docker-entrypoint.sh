@@ -164,9 +164,16 @@ setup_fpm_permissions() {
 
     log_info "Setting up permissions..."
 
+    # PUID/PGID first: it remaps www-data to the host user, and the chowns
+    # below name the user rather than its uid, so they then land on the right
+    # one. Without this the variables were accepted and ignored here (#44) -
+    # every file this image wrote into a bind mount came out as uid 33.
+    setup_user_permissions
+
     # Ensure www-data can write to necessary directories
-    if [ -d /var/www/html ]; then
-        chown -R www-data:www-data /var/www/html 2>/dev/null || true
+    _fpm_root="${WORKDIR:-/var/www/html}"
+    if [ -d "$_fpm_root" ]; then
+        chown -R www-data:www-data "$_fpm_root" 2>/dev/null || true
     fi
 
     # Ensure PHP session directory exists and is writable

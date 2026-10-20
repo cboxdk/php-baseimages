@@ -35,8 +35,8 @@ These are the most commonly used variables. Just set what you need!
 |----------|---------|-------------|
 | `PUID` | *(container default)* | Set the UID that `www-data` runs as |
 | `PGID` | *(container default)* | Set the GID that `www-data` runs as |
-| `APP_USER` | `www-data` | Application user name |
-| `APP_GROUP` | `www-data` | Application group name |
+| `APP_USER` | `www-data` (`nginx` in the standalone `nginx` image) | Application user name - the user `PUID` remaps |
+| `APP_GROUP` | `www-data` (`nginx` in the standalone `nginx` image) | Application group name |
 | `CBOX_APP_USER` | `$APP_USER` when started as root, else *(empty)* | The user the Cbox Init app processes (queue workers, scheduler, Horizon, Reverb, autoscaler) run as. Resolved automatically - set it only to override |
 
 ### Find your host UID/GID
@@ -105,7 +105,9 @@ environment:
 
 ### Important notes
 
+- **Every image honours them** — `php-fpm`, `php-cli`, `php-fpm-nginx` and `nginx` all remap on startup. In the standalone `nginx` image the user being remapped is `nginx` (uid 101), because that is who its workers run as; everywhere else it is `www-data` (uid 33). Override with `APP_USER`/`APP_GROUP`.
 - **Requires root mode** — PUID/PGID only works in root images (the default). Rootless images skip PUID/PGID mapping since the container already runs as `www-data`.
+- **A non-numeric value fails the boot** — `PUID=bob` stops the container with `PUID must be a number (got 'bob')` rather than guessing a uid and leaving you to find out later.
 - **Docker Desktop (macOS/Windows)** — Docker Desktop handles permission translation automatically via its VM layer, so PUID/PGID is usually not needed. It won't break anything if set, though.
 - **Only set what you need** — if you only need to change the UID, just set `PUID`. If you only need the GID, just set `PGID`.
 - **Containers that are already unprivileged** — a rootless image, `--user 1000:1000`, or OpenShift's arbitrary UID cannot switch user at all, so `CBOX_APP_USER` resolves to empty and the app processes simply run as the container's own user. That user *is* the app user there, so nothing is lost. Setting `CBOX_APP_USER` explicitly in such a container asks for a privilege drop that cannot happen, and Cbox Init refuses to start the process rather than silently running it as the wrong user.

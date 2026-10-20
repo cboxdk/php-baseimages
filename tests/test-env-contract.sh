@@ -45,3 +45,62 @@ if [ "$fail" = "1" ]; then
     exit 1
 fi
 echo "env contract OK: every documented variable is consumed."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Second direction: PER-IMAGE consumption.
+#
+# The check above passes when a variable is consumed ANYWHERE, which is a real
+# blind spot: PUID/PGID were documented as a property of "these images" while
+# only php-fpm-nginx honoured them. php-fpm, php-cli and nginx accepted them and
+# silently remapped nothing (#44) - every file they wrote into a bind mount came
+# out as uid 33. The 1.9.0 changelog recorded the same shape for
+# PHP_OPCACHE_PRELOAD ("the test passes when a variable is consumed anywhere, so
+# it could not catch a per-image gap").
+#
+# So: variables the docs present as universal must be consumed by EVERY image's
+# entrypoint - directly, or through a shared-library function it calls.
+# ─────────────────────────────────────────────────────────────────────────────
+UNIVERSAL_VARS="PUID PGID APP_USER APP_GROUP"
+IMAGE_ENTRYPOINTS="php-fpm/common/docker-entrypoint.sh
+php-cli/common/docker-entrypoint.sh
+php-fpm-nginx/common/docker-entrypoint.sh
+nginx/common/docker-entrypoint.sh"
+# Shared-library functions that consume these on an entrypoint's behalf. An
+# entrypoint that calls one counts as consuming whatever the function reads.
+CONSUMER_FNS="setup_user_permissions"
+LIB="common/lib/entrypoint-lib.sh"
+
+per_image_fail=0
+for v in $UNIVERSAL_VARS; do
+    for ep in $IMAGE_ENTRYPOINTS; do
+        [ -f "$ep" ] || { echo "MISSING ENTRYPOINT: $ep"; per_image_fail=1; continue; }
+        # Comments are stripped first: a comment that merely MENTIONS the
+        # variable is not consumption, and leaving one behind while deleting the
+        # code is exactly how a gap would hide from this check.
+        code=$(sed 's/#.*//' "$ep")
+        if printf '%s' "$code" | grep -q -- "$v"; then
+            continue
+        fi
+        # Indirect: the entrypoint calls a function that reads the variable.
+        indirect=0
+        for fn in $CONSUMER_FNS; do
+            if printf '%s' "$code" | grep -q -- "$fn" && grep -q -- "$v" "$LIB"; then
+                indirect=1
+                break
+            fi
+        done
+        [ "$indirect" = "1" ] && continue
+        echo "PER-IMAGE GAP: $v is documented for every image but $ep neither"
+        echo "               reads it nor calls a shared function that does"
+        per_image_fail=1
+    done
+done
+
+if [ "$per_image_fail" = "1" ]; then
+    echo ""
+    echo "Fix: call the shared consumer from that entrypoint (for PUID/PGID that"
+    echo "is setup_user_permissions in $LIB), or narrow the docs so the promise"
+    echo "names the images that actually keep it."
+    exit 1
+fi
+echo "env contract OK: universal variables are consumed by every image."
