@@ -8,7 +8,7 @@
 # - slim:     Core PHP + database/cache/queue extensions - API/microservices
 #             (opcache, pdo_mysql, pdo_pgsql, mysqli, pgsql, redis, apcu, msgpack,
 #              zip, intl, bcmath, gd, exif, pcntl, sockets, bz2, gmp)
-# - standard: + ImageMagick, vips, Node.js, mongodb, soap, ldap, xsl,
+# - standard: + ImageMagick, Node.js, mongodb, soap, ldap, xsl,
 #               calendar, gettext, shmop, sysvmsg, sysvsem, sysvshm - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
 #
@@ -25,13 +25,12 @@ ARG PHP_VERSION=8.5
 # ============================================================================
 ARG REDIS_VERSION=6.3.0
 ARG IMAGICK_VERSION=3.8.1
-ARG APCU_VERSION=5.1.27
-ARG MONGODB_VERSION=2.1.4
-ARG MSGPACK_VERSION=3.0.0
-ARG VIPS_VERSION=1.0.13
+ARG APCU_VERSION=5.1.28
+ARG MONGODB_VERSION=2.5.2
+ARG MSGPACK_VERSION=3.0.1
 ARG OPENTELEMETRY_VERSION=1.2.1
 ARG TELEMETRY_NATIVE_VERSION=0.1.0
-ARG XDEBUG_VERSION=3.5.0
+ARG XDEBUG_VERSION=3.5.3
 ARG PCOV_VERSION=1.0.12
 # SPX is not on PECL; pin the git tag for reproducible dev builds.
 ARG SPX_VERSION=v0.4.22
@@ -150,11 +149,45 @@ RUN docker-php-ext-install -j$(nproc) \
         docker-php-ext-install opcache; \
     fi
 
-# Install PECL extensions with PINNED versions
-RUN pecl install redis-${REDIS_VERSION} && \
-    pecl install apcu-${APCU_VERSION} && \
-    pecl install msgpack-${MSGPACK_VERSION} && \
-    docker-php-ext-enable redis apcu msgpack
+# Extensions via PIE, with PINNED versions.
+#
+# Was `pecl install`. The pecl binary does not exist in php:8.6 images
+# (--with-pear dropped, PECL formally deprecated - docker-library/php#1682),
+# and the PECL network service has a stated shelf life, so this path had to go
+# whether or not 8.6 is added (#23).
+#
+# PIE enables what it installs, writing the SAME ini filename that
+# docker-php-ext-enable produced - /usr/local/etc/php/conf.d/
+# docker-php-ext-<name>.ini containing `extension=<name>`. That is load-bearing
+# downstream: the standard tier MOVES docker-php-ext-opentelemetry.ini out of
+# the scan dir, and the dev tier OVERWRITES the xdebug/spx/pcov ini files with
+# its own. Verified on 8.5 before migrating, not assumed.
+#
+# The package names are NOT mechanical (pecl `redis` is PIE
+# `phpredis/phpredis`); each was verified against Packagist.
+#
+# libtool is PIE's own build requirement, on top of $PHPIZE_DEPS - it shells
+# out to libtoolize where pecl did not. PIE also needs unzip, but that is
+# already a shipped RUNTIME tool from the slim-base block above, so it is
+# neither installed nor purged here: purging it broke the Node/bun install in
+# the standard tier, which tests/test-runtime-deps.sh exists to catch ("a tier
+# must not drop a tool the tiers below it ship").
+# Bind-mounted from the build context, not COPYed: a COPY is its own layer, so
+# the 8.6 MB phar would ship in every image forever - deleting it in a later
+# RUN cannot shrink a layer already written. The mount exists only while this
+# RUN executes and leaves nothing behind.
+# Mounted at / and not under /tmp: the cleanup below does `rm -rf /tmp/*`,
+# which cannot remove an active mount ("Device or resource busy") and fails
+# the build.
+RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    apt-get update && apt-get install -y --no-install-recommends libtool && \
+    php /pie.phar install phpredis/phpredis:${REDIS_VERSION} && \
+    php /pie.phar install apcu/apcu:${APCU_VERSION} && \
+    php /pie.phar install msgpack/msgpack-php:${MSGPACK_VERSION} && \
+    # NOT --auto-remove: this repo has a scar from it taking git, git-man and
+    # patch along with an unrelated purge (see the dev tier). Name what goes.
+    apt-get purge -y libtool && \
+    rm -rf /var/lib/apt/lists/* /root/.pie /tmp/* /var/tmp/*
 
 # cboxdk/telemetry-native: SHIPPED, AND NOT LOADED.
 #
@@ -293,7 +326,7 @@ RUN mkdir -p /var/www/html && \
 WORKDIR /var/www/html
 
 # ============================================================================
-# STANDARD BASE - Add ImageMagick, vips, Node.js (DEFAULT)
+# STANDARD BASE - Add ImageMagick, Node.js (DEFAULT)
 # ============================================================================
 FROM slim-base AS standard-base
 
@@ -338,7 +371,7 @@ RUN set -eux; \
     node --version; npm --version; npx --version; bun --version
 
 # ============================================================================
-# STANDARD: Additional runtime deps + ImageMagick/vips extensions
+# STANDARD: Additional runtime deps + ImageMagick extension
 # ============================================================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # AVIF support
@@ -351,8 +384,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     # SVG support for ImageMagick
     librsvg2-bin \
-    # vips runtime
-    libvips42 libvips-tools \
     # Exiftool for image metadata
     libimage-exiftool-perl \
     # Netcat for health checks
@@ -361,10 +392,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxslt1.1 libldap-2.5-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install build deps for ImageMagick/vips + moved extensions
+# Install build deps for ImageMagick + moved extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
-    libavif-dev libmagickwand-dev libvips-dev \
+    libavif-dev libmagickwand-dev \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libxml2-dev libxslt1-dev libldap2-dev libffi-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -404,24 +435,32 @@ RUN docker-php-ext-install -j$(nproc) \
 RUN docker-php-ext-install -j$(nproc) ffi && \
     printf '[ffi]\nffi.enable=preload\n' > /usr/local/etc/php/conf.d/zz-ffi.ini
 
-# Install ImageMagick, vips, and mongodb PECL extensions
+# Install ImageMagick, mongodb and opentelemetry via PIE
 # opentelemetry: installed but NOT in the default scan dir. Loading it enables
 # the Zend observer API, which taxes every PHP function call even with no OTel
 # SDK installed - measured 2026-09-11 on dedicated EPYC (Hetzner ccx33):
 # -18.5% rps on a Laravel app vs 0% on tight-loop code. The earlier claim that
 # it was inert without the SDK was wrong. The entrypoints append conf.d-otel
 # to PHP_INI_SCAN_DIR when PHP_OPENTELEMETRY=true (works on read-only fs).
-RUN pecl install imagick-${IMAGICK_VERSION} && \
-    pecl install vips-${VIPS_VERSION} && \
-    pecl install mongodb-${MONGODB_VERSION} && \
-    pecl install opentelemetry-${OPENTELEMETRY_VERSION} && \
-    docker-php-ext-enable imagick vips mongodb opentelemetry && \
+# vips is GONE from this tier (#23). It was the one extension with no PIE
+# package at all: not published on Packagist under any name, PECL-only, and
+# its upstream repo has been untouched since 2024-10 with its newest git tag
+# (v1.0.10) three releases behind what PECL serves. So it could not survive
+# the pecl retirement by waiting, by migrating, or by building from a tag.
+# GD and ImageMagick stay as the image's image-processing stack - which is
+# what the e2e scenario already called them: "libvips is optional - GD and
+# ImageMagick are the primary image libraries".
+RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    php /pie.phar install imagick/imagick:${IMAGICK_VERSION} && \
+    php /pie.phar install mongodb/mongodb-extension:${MONGODB_VERSION} && \
+    php /pie.phar install open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
     mkdir -p /usr/local/etc/php/conf.d-otel && \
-    mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d-otel/
+    mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d-otel/ && \
+    rm -rf /root/.pie
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
-    libavif-dev libmagickwand-dev libvips-dev \
+    libavif-dev libmagickwand-dev \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libxml2-dev libxslt1-dev libldap2-dev libffi-dev && \
     rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* \
