@@ -131,9 +131,11 @@ jobs:
           echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
 
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building php-base:8.3-bookworm ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 \
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 \
             -f php-base/Dockerfile \
             -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm .
 
@@ -269,12 +271,14 @@ jobs:
           echo "nginx=php-fpm-nginx/Dockerfile" >> $GITHUB_OUTPUT
 
       - name: Build image chain
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PHP="${{ github.event.inputs.php_version }}"
           OS="${{ github.event.inputs.os_variant }}"
 
           echo "=== Building php-base:${PHP}-${OS} ==="
-          docker build --target root --build-arg PHP_VERSION=${PHP} \
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=${PHP} \
             -f ${{ steps.paths.outputs.base }} \
             -t ghcr.io/cboxdk/php-baseimages/php-base:${PHP}-${OS} .
 

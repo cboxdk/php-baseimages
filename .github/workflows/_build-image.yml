@@ -352,7 +352,9 @@ jobs:
           # SLSA provenance + SPDX SBOM attestations. These survive the
           # imagetools-create manifest merge per platform (verified against a
           # test registry before enabling). mode=max is safe: public repo,
-          # no secret build-args.
+          # no secret build-args. The GitHub token below is a build SECRET,
+          # which provenance does not record - that is why it is a secret and
+          # not a build-arg.
           provenance: mode=max
           sbom: true
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-amd64
@@ -361,6 +363,13 @@ jobs:
           # pinned to moby/buildkit v0.31.1 (see the Set up Docker Buildx step).
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-amd64
           build-args: ${{ steps.buildargs.outputs.args }}
+          # PIE downloads extension source from GitHub; unauthenticated that is
+          # 60 requests/hour per IP, which a wide matrix on shared runner IPs
+          # exhausts. Without this, one cell of the matrix dies at random and
+          # its tier's tag is then never promoted (the `merge` job skips).
+          # See php-base/Dockerfile for the measurement.
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           # For pushes: push by digest only (no tags yet — tags applied during merge)
           # For PRs: build only (no push), validates the build still works
           outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
@@ -609,6 +618,9 @@ jobs:
           # Re-enabled — buildkit pinned to v0.31.1 (see the amd64 build step).
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-arm64
           build-args: ${{ steps.buildargs.outputs.args }}
+          # GitHub token for PIE (see the amd64 build step)
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           # For pushes: push by digest only (no tags yet — tags applied during merge)
           # For PRs: build only (no push), validates the build still works
           outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}

@@ -172,6 +172,18 @@ RUN docker-php-ext-install -j$(nproc) \
 # neither installed nor purged here: purging it broke the Node/bun install in
 # the standard tier, which tests/test-runtime-deps.sh exists to catch ("a tier
 # must not drop a tool the tiers below it ship").
+# GITHUB_TOKEN is a build SECRET, not an ARG: PIE resolves from Packagist but
+# downloads the source from GitHub, and unauthenticated GitHub allows 60
+# requests/hour PER IP. CI runners share IP ranges, so a wide matrix burns that
+# in minutes and PIE fails with "Could not authenticate against github.com"
+# (Composer's HTTP layer raising 401/403). It is probabilistic, which is the
+# trap: run 39584014996 lost exactly one cell of 63 - dev-rootless 8.3 amd64 -
+# while 8.3 arm64 and 8.4 amd64 installed the SAME mongodb package fine. One
+# lost cell means its `merge` job skips and that tier's tag is never promoted,
+# so at ~1.6% per job across ~97 jobs the chain is likelier to fail than not.
+# required=false so a local build with no secret still works: PIE then runs
+# unauthenticated, which is fine for one build at a time.
+
 # Bind-mounted from the build context, not COPYed: a COPY is its own layer, so
 # the 8.6 MB phar would ship in every image forever - deleting it in a later
 # RUN cannot shrink a layer already written. The mount exists only while this
@@ -180,6 +192,10 @@ RUN docker-php-ext-install -j$(nproc) \
 # which cannot remove an active mount ("Device or resource busy") and fails
 # the build.
 RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then \
+        GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
+    fi; \
     apt-get update && apt-get install -y --no-install-recommends libtool && \
     php /pie.phar install phpredis/phpredis:${REDIS_VERSION} && \
     php /pie.phar install apcu/apcu:${APCU_VERSION} && \
@@ -451,6 +467,10 @@ RUN docker-php-ext-install -j$(nproc) ffi && \
 # what the e2e scenario already called them: "libvips is optional - GD and
 # ImageMagick are the primary image libraries".
 RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then \
+        GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
+    fi; \
     php /pie.phar install imagick/imagick:${IMAGICK_VERSION} && \
     php /pie.phar install mongodb/mongodb-extension:${MONGODB_VERSION} && \
     php /pie.phar install open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
@@ -543,6 +563,10 @@ ARG SPX_VERSION
 # liberror-perl and patch with it (cweagans/composer-patches needs patch).
 # The SPX clone below uses the git that slim-base already installed.
 RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then \
+        GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
+    fi; \
     apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS zlib1g-dev libtool \
     && php /pie.phar install xdebug/xdebug:${XDEBUG_VERSION} \
