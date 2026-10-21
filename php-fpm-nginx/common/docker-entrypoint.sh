@@ -755,11 +755,28 @@ generate_ssl_config() {
     ssl_verify_client ${MTLS_VERIFY_CLIENT};
     ssl_verify_depth ${MTLS_VERIFY_DEPTH};"
 
+    # nginx moved HTTP/2 from a `listen` parameter to its own directive in
+    # 1.25.1, and emitting the new form on an older build aborts startup
+    # outright: `[emerg] unknown directive "http2"`, so SSL_MODE=on never
+    # booted on bookworm at all (#55). bookworm ships 1.22.1. Pick the form
+    # from the running nginx rather than hardcoding either, so the trixie move
+    # (#52, nginx 1.26+, where the listen parameter is deprecated) needs no
+    # second edit here.
+    local ssl_listen_http2="" ssl_http2_directive="" nginx_ver
+    nginx_ver=$(nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9][0-9.]*\).*|\1|p')
+    if [ -n "$nginx_ver" ] && \
+       [ "$(printf '%s\n' "1.25.1" "$nginx_ver" | sort -V | head -1)" = "1.25.1" ]; then
+        ssl_http2_directive="http2 on;"
+    else
+        ssl_listen_http2="http2"
+    fi
+    log_info "HTTPS enabled (nginx ${nginx_ver:-unknown}, HTTP/2 via ${ssl_http2_directive:-listen parameter})"
+
     cat >> /etc/nginx/conf.d/default.conf <<EOF
 
 server {
-    listen ${NGINX_HTTPS_PORT:-443} ssl ${NGINX_LISTEN_EXTRA};
-    http2 on;
+    listen ${NGINX_HTTPS_PORT:-443} ssl ${ssl_listen_http2} ${NGINX_LISTEN_EXTRA};
+    ${ssl_http2_directive}
     server_name _;
     root ${NGINX_WEBROOT:-/var/www/html/public};
     index ${NGINX_INDEX:-index.php index.html};
@@ -959,22 +976,54 @@ preflight_checks() {
             }
         fi
 
+        # On a release layout, storage is usually a SYMLINK to shared storage
+        # (releases/<id>/storage -> ../../shared/storage), and chown and chmod
+        # disagree about a symlink named on the command line: GNU `chown -R`
+        # defaults to -P and will NOT traverse it, while `chmod -R` follows it.
+        # Measured in bookworm, not assumed (#54):
+        #
+        #   chown -R www-data release/storage  -> app/public still root:root
+        #   chmod -R 775     release/storage  -> an existing 644 file became 775
+        #
+        # So the chown silently did nothing while the chmod rewrote every file
+        # in the SHARED tree - sessions, logs, caches - on every single start.
+        # Resolve the path once up front and let scaffold, chown and chmod all
+        # act on the same real directory.
+        local storage_dir bootstrap_dir
+        storage_dir=$(realpath "$workdir/storage" 2>/dev/null || printf '%s' "$workdir/storage")
+        bootstrap_dir=$(realpath "$workdir/bootstrap/cache" 2>/dev/null || printf '%s' "$workdir/bootstrap/cache")
+
         # Scaffold the Laravel storage tree first: a freshly-provisioned (empty)
         # volume mounted over storage/ otherwise lacks framework/{cache,sessions,
         # views} and logs/, and the app fatals ("directory does not exist").
         for d in framework/cache framework/sessions framework/views app/public logs; do
-            mkdir -p "$workdir/storage/$d" 2>/dev/null || true
+            mkdir -p "$storage_dir/$d" 2>/dev/null || true
         done
-        mkdir -p "$workdir/bootstrap/cache" 2>/dev/null || true
+        mkdir -p "$bootstrap_dir" 2>/dev/null || true
 
         # Auto-fix permissions if running as root (skip in rootless mode)
         if [ "$(id -u)" = "0" ] && ! is_rootless; then
-            log_info "Auto-fixing Laravel directory permissions..."
-            for dir in storage bootstrap/cache; do
-                [ -d "$workdir/$dir" ] && {
-                    chown -R www-data:www-data "$workdir/$dir" 2>/dev/null || true
-                    chmod -R 775 "$workdir/$dir" 2>/dev/null || true
-                }
+            local laravel_user="${APP_USER:-www-data}"
+            local laravel_group="${APP_GROUP:-$laravel_user}"
+            local laravel_uid
+            laravel_uid=$(id -u "$laravel_user" 2>/dev/null || echo "")
+            local dir
+            for dir in "$storage_dir" "$bootstrap_dir"; do
+                [ -d "$dir" ] || continue
+                # Same shortcut as setup_user_permissions: a tree already owned
+                # by the app user needs no recursive walk, and on a large shared
+                # storage that walk is O(files) on every start.
+                if [ -n "$laravel_uid" ] && [ "$(stat -c %u "$dir" 2>/dev/null)" = "$laravel_uid" ]; then
+                    log_info "Ownership of $dir already correct - skipping recursive chown/chmod"
+                    continue
+                fi
+                log_info "Auto-fixing Laravel directory permissions on $dir"
+                chown -R "$laravel_user:$laravel_group" "$dir" 2>/dev/null || true
+                # Directories need the execute bit; files do not. A blanket
+                # `chmod -R 775` marked every log, session and cache file
+                # executable, which is both wrong and noisy in audits.
+                find "$dir" -type d -exec chmod 775 {} + 2>/dev/null || true
+                find "$dir" -type f -exec chmod 664 {} + 2>/dev/null || true
             done
         fi
 
