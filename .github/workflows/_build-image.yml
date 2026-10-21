@@ -228,6 +228,16 @@ jobs:
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
+
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
           ls -la fpm-exporter/binaries/
 
       - name: Determine Dockerfile path
@@ -471,6 +481,16 @@ jobs:
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
+
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
           ls -la fpm-exporter/binaries/
 
       - name: Determine Dockerfile path
