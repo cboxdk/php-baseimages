@@ -34,14 +34,14 @@ for ARCH in amd64 arm64; do
     fi
 
     echo "  ${ARCH}: downloading from ${URL}..."
-    curl -fsSL -o "$DEST" "$URL"
+    curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$DEST" "$URL"
     chmod +x "$DEST"
 done
 
 echo "Verifying SHA256 checksums..."
 CHECKSUMS_FILE="$DEST_DIR/checksums.txt"
 if [ ! -f "$CHECKSUMS_FILE" ]; then
-    curl -fsSL -o "$CHECKSUMS_FILE" "${BASE_URL}/checksums.txt"
+    curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$CHECKSUMS_FILE" "${BASE_URL}/checksums.txt"
 fi
 cd "$DEST_DIR"
 grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
