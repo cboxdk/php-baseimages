@@ -39,7 +39,7 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Git workflow integration
 
 - **[Image Processing Guide](./image-processing)** 🖼️ New
-  - GD, ImageMagick, and libvips comparison
+  - GD and ImageMagick comparison
   - HEIC/HEIF conversion (iPhone photos)
   - PDF generation and SVG rendering
   - Browsershot setup for screenshots/PDFs
@@ -73,7 +73,7 @@ Step-by-step guides for popular PHP frameworks and development workflows.
 - Complete framework setup from scratch
 - Database and caching configuration
 - Development and production environments
-- Image processing with GD, ImageMagick, libvips
+- Image processing with GD and ImageMagick
 - Common mistakes and how to avoid them
 - Testing and debugging strategies
 - Deployment best practices

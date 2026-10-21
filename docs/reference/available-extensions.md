@@ -15,7 +15,7 @@ Cbox images come in four tiers with different extension sets:
 | Tier | Extensions | Best For |
 |------|-----------|----------|
 | **Slim** | 25+ core | APIs, microservices |
-| **Standard** | Slim + ImageMagick, vips, Node.js, Bun | Most apps (DEFAULT) |
+| **Standard** | Slim + ImageMagick, Node.js, Bun | Most apps (DEFAULT) |
 | **Chromium** | Standard + Chromium | Browsershot, Dusk, PDF |
 | **Dev** | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
@@ -55,7 +55,6 @@ These extensions are added in the standard tier (and inherited by chromium/dev):
 | `mongodb` | PECL | MongoDB driver |
 | `opentelemetry` | PECL | OpenTelemetry auto-instrumentation - **opt-in via `PHP_OPENTELEMETRY=true`**: loading it enables the Zend observer API, measured at -18.5% throughput on a Laravel app even with no OTel SDK installed |
 | `imagick` | PECL | ImageMagick bindings |
-| `vips` | PECL | libvips image processing |
 | `soap` | Built-in | SOAP protocol |
 | `xsl` | Built-in | XSL transformations |
 | `ldap` | Built-in | LDAP directory services |
@@ -85,7 +84,6 @@ The Standard tier includes everything in Slim, plus image processing, Node.js, a
 | Extension | Type | Purpose |
 |-----------|------|---------|
 | `imagick` | PECL | ImageMagick for complex image operations |
-| `vips` | PECL | High-performance libvips (4-10x faster) |
 | `gd` (AVIF) | Built-in | GD rebuilt with AVIF support |
 
 ### Additional Tools
@@ -102,17 +100,17 @@ The Standard tier includes everything in Slim, plus image processing, Node.js, a
 
 ### Image Format Support (Standard Tier)
 
-| Format | GD | ImageMagick | libvips |
-|--------|:--:|:-----------:|:-------:|
-| JPEG | ✅ | ✅ | ✅ |
-| PNG | ✅ | ✅ | ✅ |
-| GIF | ✅ | ✅ | ✅ |
-| WebP | ✅ | ✅ | ✅ |
-| AVIF | ✅ | ✅ | ✅ |
-| HEIC/HEIF | ❌ | ✅ | ✅ |
-| PDF | ❌ | ✅ | ❌ |
-| SVG | ❌ | ✅ | ✅ |
-| TIFF | ❌ | ✅ | ✅ |
+| Format | GD | ImageMagick |
+|--------|:--:|:-----------:|
+| JPEG | ✅ | ✅ |
+| PNG | ✅ | ✅ |
+| GIF | ✅ | ✅ |
+| WebP | ✅ | ✅ |
+| AVIF | ✅ | ✅ |
+| HEIC/HEIF | ❌ | ✅ |
+| PDF | ❌ | ✅ |
+| SVG | ❌ | ✅ |
+| TIFF | ❌ | ✅ |
 
 ## Chromium Tier Extensions
 
@@ -243,7 +241,6 @@ docker run --rm -e XDEBUG_MODE=debug \
 | zip | ✅ | ✅ | ✅ | ✅ |
 | gd (AVIF) | ❌ | ✅ | ✅ | ✅ |
 | imagick | ❌ | ✅ | ✅ | ✅ |
-| vips | ❌ | ✅ | ✅ | ✅ |
 | mongodb | ❌ | ✅ | ✅ | ✅ |
 | opentelemetry | ❌ | ✅* | ✅* | ✅* |
 | soap | ❌ | ✅ | ✅ | ✅ |
@@ -370,7 +367,6 @@ All PECL extensions use pinned versions for reproducibility:
 | telemetry_native | 0.1.0 |
 | msgpack | 3.0.1 |
 | imagick | 3.8.1 |
-| vips | 1.0.13 |
 | xdebug | 3.5.3 |
 | pcov | 1.0.12 |
 | spx | 0.4.22 (from GitHub) |

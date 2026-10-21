@@ -542,11 +542,12 @@ ARG SPX_VERSION
 # the only one shipping WITHOUT git. `--auto-remove` took git-man,
 # liberror-perl and patch with it (cweagans/composer-patches needs patch).
 # The SPX clone below uses the git that slim-base already installed.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    $PHPIZE_DEPS zlib1g-dev \
-    && pecl install xdebug-${XDEBUG_VERSION} \
-    && pecl install pcov-${PCOV_VERSION} \
-    && docker-php-ext-enable xdebug pcov \
+RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    apt-get update && apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS zlib1g-dev libtool \
+    && php /pie.phar install xdebug/xdebug:${XDEBUG_VERSION} \
+    && php /pie.phar install pecl/pcov:${PCOV_VERSION} \
+    && rm -rf /root/.pie \
     # SPX from GitHub (not on PECL) — pinned to a tag for reproducibility
     && git clone --depth=1 --branch "${SPX_VERSION}" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
     && cd /tmp/php-spx \
@@ -554,7 +555,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-enable spx \
     && rm -rf /tmp/php-spx \
     # Cleanup
-    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS libtool \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy dev extension configurations

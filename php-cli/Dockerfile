@@ -5,7 +5,7 @@
 #
 # IMAGE TIERS (inherited from php-base):
 # - slim:     Minimal PHP + essential extensions - API/microservices
-# - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
+# - standard: + ImageMagick, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 # - dev:      + Xdebug, PCOV, SPX for development/testing
 #
@@ -100,14 +100,14 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOT (STANDARD): Default - ImageMagick, vips, Node.js
+# ROOT (STANDARD): Default - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm"
-LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and Cbox Init"
+LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
@@ -133,14 +133,14 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOTLESS (STANDARD): Default rootless - ImageMagick, vips, Node.js
+# ROOTLESS (STANDARD): Default rootless - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Rootless)"
-LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js - Rootless"
+LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 

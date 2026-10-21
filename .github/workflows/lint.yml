@@ -71,6 +71,11 @@ jobs:
           # from the repo - nothing renders it in CI and nothing clicks it.
           chmod +x tests/test-docs-links.sh
           ./tests/test-docs-links.sh
+          # php-base's ARG defaults are only used by LOCAL builds (CI passes
+          # them all), so drift from versions.json is invisible until someone
+          # reproduces a bug against a different extension set than production.
+          chmod +x tests/test-arg-defaults.sh
+          ./tests/test-arg-defaults.sh
           # No tier may purge a tool the tiers below it ship - the dev
           # tier shipped without git this way, and nothing noticed.
           chmod +x tests/test-runtime-deps.sh

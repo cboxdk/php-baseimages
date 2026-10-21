@@ -11,8 +11,8 @@
 #   ./test-extensions.sh baseimages-php-fpm-alpine fpm slim # Explicit profile and tier
 #
 # Profiles:
-#   fpm       - php-fpm single-process image (has vips, no msgpack)
-#   fpm-nginx - php-fpm-nginx multi-service image (has msgpack, no vips)
+#   fpm       - php-fpm single-process image (no msgpack)
+#   fpm-nginx - php-fpm-nginx multi-service image (has msgpack)
 #   cli       - php-cli image
 #
 # Tiers:
@@ -204,13 +204,6 @@ test_extension_loaded "gd" "GD extension loaded"
 test_extension_loaded "imagick" "ImageMagick extension loaded"
 test_extension_loaded "exif" "EXIF extension loaded"
 
-# Vips only in php-fpm images (not fpm-nginx)
-if [ "$PROFILE" = "fpm" ]; then
-    test_extension_loaded "vips" "Vips extension loaded"
-else
-    log_skip "Vips extension (not in $PROFILE profile)"
-fi
-
 # ─────────────────────────────────────────────────────────────────────────────
 # GD Format Support Tests
 # ─────────────────────────────────────────────────────────────────────────────
@@ -295,56 +288,6 @@ test_extension_functional "ImageMagick supports ICO" \
     "yes"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Vips Format Support Tests (only in fpm profile)
-# ─────────────────────────────────────────────────────────────────────────────
-if [ "$PROFILE" = "fpm" ]; then
-    log_section "Vips Format Support"
-
-    test_extension_functional "Vips library version" \
-        "echo 'vips ' . vips_version();" \
-        "vips"
-
-    test_extension_functional "Vips can create images" \
-        "\$img = vips_image_new_from_array([[0,0,0],[0,0,0]]); echo is_resource(\$img) ? 'ok' : 'fail';" \
-        "ok"
-
-    # Test vips format support via shell (vips -l)
-    # JPEG support
-    test_extension_functional "Vips supports JPEG" \
-        "exec('vips -l 2>/dev/null | grep -q jpegload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-
-    # PNG support
-    test_extension_functional "Vips supports PNG" \
-        "exec('vips -l 2>/dev/null | grep -q pngload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-
-    # WebP support
-    test_extension_functional "Vips supports WebP" \
-        "exec('vips -l 2>/dev/null | grep -q webpload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-
-    # GIF support
-    test_extension_functional "Vips supports GIF" \
-        "exec('vips -l 2>/dev/null | grep -q gifload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-
-    # TIFF support
-    test_extension_functional "Vips supports TIFF" \
-        "exec('vips -l 2>/dev/null | grep -q tiffload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-
-    # SVG support
-    test_extension_functional "Vips supports SVG" \
-        "exec('vips -l 2>/dev/null | grep -q svgload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-
-    # JPEG2000 support
-    test_extension_functional "Vips supports JPEG2000" \
-        "exec('vips -l 2>/dev/null | grep -q jp2kload && echo yes || echo no', \$out); echo \$out[0];" \
-        "yes"
-fi
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Serialization Extensions
 # ─────────────────────────────────────────────────────────────────────────────

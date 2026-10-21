@@ -6,7 +6,7 @@
 #
 # IMAGE TIERS (inherited from php-fpm):
 # - slim:     Minimal PHP + essential extensions - API/microservices
-# - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
+# - standard: + ImageMagick, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 #
 # PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
@@ -268,7 +268,7 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, vips, Node.js
+# ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
 # open_basedir default retired on measurement (-39% Laravel throughput via

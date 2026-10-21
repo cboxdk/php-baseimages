@@ -6,7 +6,7 @@
 #   linux/amd64  -> the Hetzner runner over an SSH docker context
 #
 # Why this exists: php-base compiles ~8 C extensions from source (redis, imagick,
-# vips, mongodb, ...). Under emulated arm64-on-x86 that compile blows past the CI
+# imagick, mongodb, ...). Under emulated arm64-on-x86 that compile blows past the CI
 # 60-min job timeout. Building each arch on native hardware is ~10x faster (the
 # full multi-arch php-base builds in ~7 min instead of timing out). Use this until
 # a native arm64 CI runner exists (Hetzner CAX), after which CI can do it directly.
@@ -50,7 +50,6 @@ docker buildx build "${COMMON[@]}" --target standard-base -f php-base/Dockerfile
   --build-arg "APCU_VERSION=$(V .extensions.apcu)" \
   --build-arg "MONGODB_VERSION=$(V .extensions.mongodb)" \
   --build-arg "MSGPACK_VERSION=$(V .extensions.msgpack)" \
-  --build-arg "VIPS_VERSION=$(V .extensions.vips)" \
   --build-arg "NODE_VERSION=$(V .node.version)" \
   --build-arg "CBOX_INIT_VERSION=${INIT_V}" \
   --build-arg "XDEBUG_VERSION=$(V '.extensions.xdebug // "3.5.0"')" \

@@ -6,7 +6,7 @@
 #
 # IMAGE TIERS (inherited from php-base):
 # - slim:     Minimal PHP + essential extensions - API/microservices
-# - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
+# - standard: + ImageMagick, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 #
 # ARCHITECTURE: Shared dependency stages install runtime libs ONCE per tier.
@@ -137,13 +137,12 @@ RUN rm -f /usr/local/etc/php-fpm.d/docker.conf \
 # images ship no STOPSIGNAL and sever requests on every `docker stop`.
 STOPSIGNAL SIGQUIT
 
-# --- Standard tier: adds ImageMagick, vips, Node.js runtime deps ---
+# --- Standard tier: adds ImageMagick, Node.js runtime deps ---
 FROM fpm-slim-deps AS fpm-standard-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libavif15 libmagickwand-6.q16-6 \
     libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
     libimage-exiftool-perl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -249,14 +248,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOT (STANDARD): Default - ImageMagick, vips, Node.js
+# ROOT (STANDARD): Default - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-standard-deps AS root
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm"
-LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox Init"
+LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
@@ -302,14 +301,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOTLESS (STANDARD): Default rootless - ImageMagick, vips, Node.js
+# ROOTLESS (STANDARD): Default rootless - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-standard-deps AS rootless
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Rootless)"
-LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js - Rootless"
+LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
