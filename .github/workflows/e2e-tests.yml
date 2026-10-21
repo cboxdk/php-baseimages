@@ -48,6 +48,7 @@ on:
           - 'health-checks'
           - 'image-formats'
           - 'app-processes'
+          - 'memory-limits'
           - 'nginx-template'
 
 env:
@@ -209,6 +210,16 @@ jobs:
           # (#36). All three shipped because nothing ever looked at what uid a
           # queue worker runs as or where it starts.
           tests/e2e/run-e2e-tests.sh "$IMAGE" app-processes
+
+      - name: Run memory-limits E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # php-fpm under -m 256m/512m, where autotune sizes the pool below
+          # the old spare defaults. Plain `docker run` has no limit, so every
+          # other test here sizes a pool large enough to hide that.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" memory-limits
 
   # Full matrix test (manual trigger)
   full-matrix:

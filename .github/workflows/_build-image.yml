@@ -709,12 +709,14 @@ jobs:
       # OS security patches) but never cross a tooling major — pin them for
       # stable behavior without CVE rot. Exact reproducibility = SHA tags.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: Checkout versions.json and CVE baseline
+      - name: Checkout versions.json, CVE baseline and smoke-test scenario
         uses: actions/checkout@v7
         with:
           sparse-checkout: |
             versions.json
             .trivyignore
+            tests/e2e/lib/
+            tests/e2e/scenarios/test-memory-limits.sh
           sparse-checkout-cone-mode: false
 
       - name: Resolve release channel

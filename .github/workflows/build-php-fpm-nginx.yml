@@ -89,6 +89,9 @@ jobs:
         ! docker exec test-slim php -m | grep -q imagick || echo "Warning: imagick found in slim tier"
         ! docker exec test-slim node --version 2>/dev/null || echo "Warning: node found in slim tier"
         docker stop test-slim && docker rm test-slim
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   build-slim-rootless-matrix:
@@ -137,6 +140,9 @@ jobs:
         docker exec test-slim-rootless curl -sf http://127.0.0.1:8080/healthz || { docker logs test-slim-rootless && exit 1; }
         docker exec test-slim-rootless php -v | grep "PHP $PHP_VERSION" || exit 1
         docker stop test-slim-rootless && docker rm test-slim-rootless
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   # =====================================================================
@@ -196,6 +202,9 @@ jobs:
         docker exec test-multi composer --version || exit 1
         docker exec test-multi node --version || exit 1
         docker stop test-multi && docker rm test-multi
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   build-rootless-matrix:
@@ -253,6 +262,9 @@ jobs:
         docker exec test-rootless composer --version || exit 1
         docker exec test-rootless node --version || exit 1
         docker stop test-rootless && docker rm test-rootless
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   # =====================================================================
@@ -308,6 +320,9 @@ jobs:
         # Chromium tier should have chromium
         docker exec test-chromium which chromium-browser || docker exec test-chromium which chromium
         docker stop test-chromium && docker rm test-chromium
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   build-chromium-rootless-matrix:
@@ -362,6 +377,9 @@ jobs:
         # Chromium check
         docker exec test-chromium-rootless which chromium-browser || docker exec test-chromium-rootless which chromium
         docker stop test-chromium-rootless && docker rm test-chromium-rootless
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   # =====================================================================
@@ -418,6 +436,9 @@ jobs:
         # Dev tier should have chromium
         docker exec test-dev which chromium-browser || docker exec test-dev which chromium
         docker stop test-dev && docker rm test-dev
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   build-dev-rootless-matrix:
@@ -473,6 +494,9 @@ jobs:
         # Chromium check
         docker exec test-dev-rootless which chromium-browser || docker exec test-dev-rootless which chromium
         docker stop test-dev-rootless && docker rm test-dev-rootless
+        # php-fpm must start under a memory limit, where autotune sizes the pool
+        # small - /healthz is nginx-only and cannot see a dead php-fpm.
+        bash tests/e2e/scenarios/test-memory-limits.sh
     secrets: inherit
 
   # =====================================================================
