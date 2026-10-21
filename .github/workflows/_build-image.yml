@@ -186,7 +186,6 @@ jobs:
             echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
             echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
             echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-            echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
             echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
@@ -229,6 +228,16 @@ jobs:
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
+
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
           ls -la fpm-exporter/binaries/
 
       - name: Determine Dockerfile path
@@ -307,7 +316,6 @@ jobs:
           APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
           MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-          VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
           OPENTELEMETRY_VERSION=${{ steps.versions.outputs.OPENTELEMETRY_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
           TELEMETRY_NATIVE_VERSION=${{ steps.versions.outputs.TELEMETRY_NATIVE_VERSION }}
@@ -344,7 +352,9 @@ jobs:
           # SLSA provenance + SPDX SBOM attestations. These survive the
           # imagetools-create manifest merge per platform (verified against a
           # test registry before enabling). mode=max is safe: public repo,
-          # no secret build-args.
+          # no secret build-args. The GitHub token below is a build SECRET,
+          # which provenance does not record - that is why it is a secret and
+          # not a build-arg.
           provenance: mode=max
           sbom: true
           cache-from: type=gha,scope=${{ steps.tags.outputs.cache_scope }}-amd64
@@ -353,6 +363,13 @@ jobs:
           # pinned to moby/buildkit v0.31.1 (see the Set up Docker Buildx step).
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-amd64
           build-args: ${{ steps.buildargs.outputs.args }}
+          # PIE downloads extension source from GitHub; unauthenticated that is
+          # 60 requests/hour per IP, which a wide matrix on shared runner IPs
+          # exhausts. Without this, one cell of the matrix dies at random and
+          # its tier's tag is then never promoted (the `merge` job skips).
+          # See php-base/Dockerfile for the measurement.
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           # For pushes: push by digest only (no tags yet — tags applied during merge)
           # For PRs: build only (no push), validates the build still works
           outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
@@ -431,7 +448,6 @@ jobs:
             echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
             echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
             echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-            echo "VIPS_VERSION=$(jq -r '.extensions.vips' versions.json)" >> $GITHUB_OUTPUT
             echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
@@ -474,6 +490,16 @@ jobs:
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
+
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
           ls -la fpm-exporter/binaries/
 
       - name: Determine Dockerfile path
@@ -552,7 +578,6 @@ jobs:
           APCU_VERSION=${{ steps.versions.outputs.APCU_VERSION }}
           MONGODB_VERSION=${{ steps.versions.outputs.MONGODB_VERSION }}
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
-          VIPS_VERSION=${{ steps.versions.outputs.VIPS_VERSION }}
           OPENTELEMETRY_VERSION=${{ steps.versions.outputs.OPENTELEMETRY_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
           TELEMETRY_NATIVE_VERSION=${{ steps.versions.outputs.TELEMETRY_NATIVE_VERSION }}
@@ -593,6 +618,9 @@ jobs:
           # Re-enabled — buildkit pinned to v0.31.1 (see the amd64 build step).
           cache-to: type=gha,mode=max,scope=${{ steps.tags.outputs.cache_scope }}-arm64
           build-args: ${{ steps.buildargs.outputs.args }}
+          # GitHub token for PIE (see the amd64 build step)
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           # For pushes: push by digest only (no tags yet — tags applied during merge)
           # For PRs: build only (no push), validates the build still works
           outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
@@ -769,6 +797,19 @@ jobs:
       - name: Scan for vulnerabilities (SARIF, pre-promotion)
         if: inputs.enable-trivy
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          # trivy-action v0.36 defaults the vulnerability DB to
+          # mirror.gcr.io, which answered `429 Too Many Requests` on run
+          # 39588448211 and failed the merge job for slim 8.5. A failed merge
+          # job promotes NO tag - the same mechanism that kept the 8-20 October
+          # publishing outage invisible - so a scanner that cannot fetch its DB
+          # is a publishing outage, not a flake. ghcr.io goes first because this
+          # job has already run docker/login-action against it, and Trivy's OCI
+          # client reads those credentials out of the docker config, so the pull
+          # is authenticated rather than sharing an anonymous per-IP allowance
+          # with every other runner. mirror.gcr.io stays on as the fallback.
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
           image-ref: ${{ steps.verify_ref.outputs.ref }}
           format: 'sarif'
@@ -790,6 +831,12 @@ jobs:
       - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (pre-promotion gate)
         if: inputs.enable-trivy
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          # Same DB fallback as the SARIF scan above; this step reuses the DB
+          # that one already pulled into ~/.cache/trivy, but must not depend on
+          # it (the SARIF step is skippable via enable-trivy paths).
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
           image-ref: ${{ steps.verify_ref.outputs.ref }}
           format: 'table'

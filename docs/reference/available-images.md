@@ -161,7 +161,6 @@ Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 | **Size (Debian 12)** | ~120 MiB | ~250 MiB | ~700 MiB | ~750 MiB |
 | **Core Extensions** | ✅ 25+ | ✅ 25+ | ✅ 25+ | ✅ 25+ |
 | **ImageMagick** | ❌ | ✅ | ✅ | ✅ |
-| **vips** | ❌ | ✅ | ✅ | ✅ |
 | **Node.js 22 (+ npm/npx)** | ❌ | ✅ | ✅ | ✅ |
 | **Bun** | ❌ | ✅ | ✅ | ✅ |
 | **Chromium** | ❌ | ❌ | ✅ | ✅ |

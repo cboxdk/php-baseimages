@@ -177,6 +177,10 @@ jobs:
         id: goscan
         continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          # DB fallback: mirror.gcr.io 429s under load (see _build-image.yml).
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
           scan-type: rootfs
           scan-ref: ${{ runner.temp }}/go-binaries

@@ -254,7 +254,7 @@ docker inspect cbox-fpm-nginx --format='{{json .State.Health}}' | jq
 ### php-base/Dockerfile
 The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Accepts `ARG PHP_VERSION=8.5`. Multi-stage Dockerfile that builds four tiers:
 - **slim-base**: Minimal PHP + essential extensions (~200MB)
-- **standard-base**: + ImageMagick, vips, AVIF, Node.js (~400MB)
+- **standard-base**: + ImageMagick, AVIF, Node.js (~400MB)
 - **chromium-base**: + Chromium for Browsershot/Dusk (~800MB)
 - **dev-base**: + Xdebug, PCOV, SPX for development
 

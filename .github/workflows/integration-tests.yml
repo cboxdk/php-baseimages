@@ -65,10 +65,22 @@ jobs:
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/Dockerfile .
 
@@ -133,10 +145,22 @@ jobs:
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-bookworm -f php-fpm-nginx/Dockerfile .
 
@@ -200,10 +224,22 @@ jobs:
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build images for scanning (full chain)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-scan:bookworm -f php-fpm-nginx/Dockerfile .
 

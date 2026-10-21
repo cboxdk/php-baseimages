@@ -140,7 +140,7 @@ jobs:
     secrets: inherit
 
   # =====================================================================
-  # STANDARD TIER (DEFAULT) - + ImageMagick, vips, Node.js
+  # STANDARD TIER (DEFAULT) - + ImageMagick, Node.js
   # =====================================================================
   build-matrix:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.tier == 'all' || inputs.tier == 'standard') }}

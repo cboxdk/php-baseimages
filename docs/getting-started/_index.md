@@ -26,7 +26,7 @@ What do you need?
 ├─ PDF generation, browser testing (Browsershot/Dusk)?
 │  └─ Chromium Tier (`8.5-bookworm-chromium`)
 │
-├─ Image processing (ImageMagick, vips), Node.js?
+├─ Image processing (ImageMagick), Node.js?
 │  └─ Standard Tier (`8.5-bookworm`) ✅ DEFAULT
 │
 └─ Minimal footprint, APIs, microservices?
