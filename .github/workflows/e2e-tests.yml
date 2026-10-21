@@ -95,9 +95,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -114,7 +114,7 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
@@ -126,7 +126,14 @@ jobs:
           # to fetch it or the build fails with "pie.phar: not found".
           mkdir -p pie/binaries
           PIE_VERSION=$(jq -r '.tools.pie' versions.json)
-          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
             -o pie/binaries/pie.phar
           echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
 
@@ -228,9 +235,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -247,7 +254,7 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
@@ -259,7 +266,14 @@ jobs:
           # to fetch it or the build fails with "pie.phar: not found".
           mkdir -p pie/binaries
           PIE_VERSION=$(jq -r '.tools.pie' versions.json)
-          curl -fsSL "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
             -o pie/binaries/pie.phar
           echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
 

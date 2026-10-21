@@ -40,7 +40,7 @@ printf '%s\n' "$VERSION" > "$STAMP_FILE"
 if [ -f "$DEST" ]; then
     echo "  already present, skipping (delete to re-download)"
 else
-    curl -fsSL -o "$DEST" "$URL"
+    curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$DEST" "$URL"
 fi
 
 echo "Verifying SHA256 against the pin in versions.json..."
