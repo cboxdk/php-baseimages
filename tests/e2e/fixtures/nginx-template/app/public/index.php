@@ -9,5 +9,6 @@ echo json_encode([
     'document_root' => $_SERVER['DOCUMENT_ROOT'] ?? '',
     'script_filename' => $_SERVER['SCRIPT_FILENAME'] ?? '',
     'http_host' => $_SERVER['HTTP_HOST'] ?? '',
+    'path_translated' => $_SERVER['PATH_TRANSLATED'] ?? '',
     'method' => $_SERVER['REQUEST_METHOD'] ?? '',
 ]);

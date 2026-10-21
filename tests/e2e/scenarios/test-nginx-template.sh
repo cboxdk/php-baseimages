@@ -246,6 +246,60 @@ if wait_for_ready e2e-nginxtpl-off; then
     fi
 fi
 
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST 6 (#49): the template survives cgi.fix_pathinfo=0
+#
+# PATH_TRANSLATED used to be sent unconditionally as <script root> + path
+# info. Path info is empty on every request here (the PHP location is
+# `~ \.php$`, which cannot match a URI with anything after the .php), so the
+# value was the web root DIRECTORY - and with cgi.fix_pathinfo=0 PHP-FPM takes
+# the script from PATH_TRANSLATED instead of SCRIPT_FILENAME, finds a
+# directory, and security.limit_extensions refuses it. Every PHP request 403'd
+# with "Access to the script '<webroot>' has been denied".
+#
+# cgi.fix_pathinfo=0 is a common hardening and is NOT set by the image's own
+# ini, which is exactly why nothing caught this.
+# ═══════════════════════════════════════════════════════════════════════════
+log_section "Test 6: cgi.fix_pathinfo=0 does not 403 every request (#49)"
+
+FIXTREE="$(make_release_tree fixpathinfo)"
+printf 'cgi.fix_pathinfo=0\n' > "$TMP_ROOT/fix-pathinfo.ini"
+
+start_container e2e-nginxtpl-fixpathinfo \
+    -p 18115:80 \
+    -v "$TMP_ROOT/fix-pathinfo.ini:/usr/local/etc/php/conf.d/zz-fix-pathinfo.ini:ro" \
+    -v "$FIXTREE/releases/r1:/var/www/html"
+
+if wait_for_ready e2e-nginxtpl-fixpathinfo; then
+    assert_http_code "http://localhost:18115/" 200 \
+        "a PHP request succeeds with cgi.fix_pathinfo=0"
+
+    DENIED_LOG="$(docker logs e2e-nginxtpl-fixpathinfo 2>&1 || true)"
+    if printf '%s\n' "$DENIED_LOG" | grep -F "has been denied" | head -2; then
+        log_fail "php-fpm refused the script under cgi.fix_pathinfo=0 (the #49 regression)"
+    else
+        log_success "no security.limit_extensions denial in the php-fpm log"
+    fi
+
+    # The param must be absent, not merely harmless: an empty-string
+    # PATH_TRANSLATED would still be wrong for anything that reads it.
+    #
+    # Guarded on PHP having actually answered. A 403 has no JSON body, so an
+    # empty probe would otherwise read as "not sent" and pass on exactly the
+    # broken image this test exists to catch.
+    BODY="$(curl -fsS http://localhost:18115/ 2>/dev/null || true)"
+    if printf '%s' "$BODY" | grep -q '"release"'; then
+        PT="$(probe http://localhost:18115/ path_translated)"
+        if [ -z "$PT" ]; then
+            log_success "PATH_TRANSLATED is not sent when there is no path info"
+        else
+            log_fail "PATH_TRANSLATED is '$PT', expected it to be absent"
+        fi
+    else
+        log_fail "PHP did not answer, so PATH_TRANSLATED could not be checked"
+    fi
+fi
+
 FINAL_FAILED=$TESTS_FAILED
 print_summary 2>/dev/null || true
 

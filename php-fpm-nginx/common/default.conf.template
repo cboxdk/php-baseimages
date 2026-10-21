@@ -65,6 +65,29 @@ map $forwarded_proto $forwarded_https {
     default "";
 }
 
+# PATH_TRANSLATED, only when there is actually path info to translate.
+#
+# The template used to send `PATH_TRANSLATED $realpath_root$fastcgi_path_info`
+# unconditionally. With empty path info - which is EVERY request here, see
+# below - that is the web root DIRECTORY, and with `cgi.fix_pathinfo=0` in a
+# mounted php.ini PHP-FPM takes the script from PATH_TRANSLATED rather than
+# SCRIPT_FILENAME, gets a directory, and security.limit_extensions refuses it:
+# every PHP request 403s with "Access to the script '<webroot>' has been
+# denied". cgi.fix_pathinfo=0 is a common hardening, so the default template
+# has to survive it (#49).
+#
+# Why path info is always empty: the PHP location is `~ \.php$`, which cannot
+# match a URI that has anything after the .php, so fastcgi_split_path_info
+# never has anything to split. Frameworks are reached through try_files
+# instead, as /index.php with a query string. The map keeps this correct
+# anyway if that location pattern is ever widened.
+#
+# Map values may contain variables since nginx 1.11.0; this image ships 1.22.
+map $fastcgi_path_info $cbox_path_translated {
+    ""      "";
+    default ${NGINX_SCRIPT_ROOT}$fastcgi_path_info;
+}
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Access log format — NGINX_LOG_FORMAT: combined (default) | combined_no_query
 # (privacy: query strings never hit disk) | json (structured, for log shippers)
@@ -211,7 +234,9 @@ ${NGINX_MAIN_LOCATION}
         # PREVIOUS release's compiled files until FPM is reloaded. Each request
         # now carries the release's real path, so the swap takes effect on it.
         # (Forge and Envoyer templates have used $realpath_root for years.)
-        fastcgi_param PATH_TRANSLATED ${NGINX_SCRIPT_ROOT}$fastcgi_path_info;
+        # if_not_empty: the param is omitted entirely when the map yields "",
+        # which is what keeps cgi.fix_pathinfo=0 working.
+        fastcgi_param PATH_TRANSLATED $cbox_path_translated if_not_empty;
         fastcgi_param SCRIPT_FILENAME ${NGINX_SCRIPT_ROOT}$fastcgi_script_name;
         include fastcgi_params;
         # DOCUMENT_ROOT has to come AFTER the include: fastcgi_params defines
