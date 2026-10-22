@@ -166,21 +166,62 @@ fix_symfony_permissions() {
 # belong to another mode. Called by both the php-fpm and php-fpm-nginx
 # entrypoints after sizing envs are resolved.
 ###########################################
+
+# FPM refuses to start a dynamic pool unless
+#   1 <= min_spare <= start_servers <= max_spare <= max_children
+# and the spare defaults (start 2, min 1, max 6) do not fit a small
+# max_children: PHP_FPM_MAX_CHILDREN=4 alone was enough to crash-loop it.
+# Clamp the exported values into that order, keeping max_children - the
+# number somebody actually chose - and saying what changed. Non-numeric values
+# are left alone for FPM to name. cbox-init's boot autotune overwrites all four
+# with values it keeps in the same order, so this covers manual sizing.
+clamp_fpm_spare_servers() {
+    local max="${PHP_FPM_MAX_CHILDREN:-}" start="$PHP_FPM_START_SERVERS"
+    local min="$PHP_FPM_MIN_SPARE" spare="$PHP_FPM_MAX_SPARE" v
+    for v in "$max" "$start" "$min" "$spare"; do
+        case "$v" in ''|*[!0-9]*) return 0 ;; esac
+    done
+    [ "$max" -ge 1 ] || return 0
+
+    [ "$min" -lt 1 ] && min=1
+    [ "$min" -gt "$max" ] && min=$max
+    [ "$spare" -lt "$min" ] && spare=$min
+    [ "$spare" -gt "$max" ] && spare=$max
+    [ "$start" -lt "$min" ] && start=$min
+    [ "$start" -gt "$spare" ] && start=$spare
+
+    if [ "$start/$min/$spare" != "$PHP_FPM_START_SERVERS/$PHP_FPM_MIN_SPARE/$PHP_FPM_MAX_SPARE" ]; then
+        log_warn "PHP-FPM pool: start/min_spare/max_spare $PHP_FPM_START_SERVERS/$PHP_FPM_MIN_SPARE/$PHP_FPM_MAX_SPARE do not fit pm.max_children=$max - using $start/$min/$spare"
+    fi
+    export PHP_FPM_START_SERVERS="$start" PHP_FPM_MIN_SPARE="$min" PHP_FPM_MAX_SPARE="$spare"
+}
+
 write_pm_mode_dropin() {
     local mode="${PHP_FPM_PM:-dynamic}"
     local dropin="/usr/local/etc/php-fpm.d/zz-pm-mode.conf"
     case "$mode" in
         dynamic)
-            # The image BAKES a dynamic drop-in with env placeholders, so an
-            # unwritable config dir (read-only rootfs) is fine for the default
-            # mode: FPM expands the exported PHP_FPM_* itself.
+            export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
+            export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+            export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
+            export PHP_FPM_MAX_SPAWN_RATE="${PHP_FPM_MAX_SPAWN_RATE:-32}"
+            clamp_fpm_spare_servers
+            # PLACEHOLDERS, never the values: FPM expands ${PHP_FPM_*} from its
+            # own environment at start. cbox-init's boot autotune runs AFTER this
+            # entrypoint and exports the tuned max_children AND spare counts;
+            # pool.conf expands max_children from that env, so literals here
+            # froze the spare counts at the pre-tune defaults (max_spare 6) and
+            # a 512Mi container tuned to 4 children crash-looped with "cannot be
+            # greater than pm.max_children". Same content as the BAKED drop-in
+            # (pm-mode-dynamic.conf), so a read-only rootfs behaves the same.
+            # shellcheck disable=SC2016
             printf '%s\n' \
                 "; Auto-generated: dynamic warm floor (PHP_FPM_PM=dynamic)" \
                 "[www]" \
-                "pm.start_servers = ${PHP_FPM_START_SERVERS:-2}" \
-                "pm.min_spare_servers = ${PHP_FPM_MIN_SPARE:-1}" \
-                "pm.max_spare_servers = ${PHP_FPM_MAX_SPARE:-6}" \
-                "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
+                'pm.start_servers = ${PHP_FPM_START_SERVERS}' \
+                'pm.min_spare_servers = ${PHP_FPM_MIN_SPARE}' \
+                'pm.max_spare_servers = ${PHP_FPM_MAX_SPARE}' \
+                'pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE}' \
                 > "$dropin" 2>/dev/null || log_info "Config dir not writable - the baked dynamic drop-in stands (env-expanded by FPM)"
             ;;
         ondemand)
