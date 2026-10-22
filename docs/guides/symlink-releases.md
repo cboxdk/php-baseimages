@@ -42,6 +42,29 @@ ln -sfn /app/shared/storage "$RELEASE/storage"
 ln -sfn /app/shared/.env    "$RELEASE/.env"
 ```
 
+## Shared storage and permissions
+
+The entrypoint resolves `storage/` with `realpath` before it touches anything,
+so the scaffold, the ownership fix and the mode fix all act on the real shared
+directory rather than on the symlink. That matters because GNU `chown -R` and
+`chmod -R` disagree about a symlink named on the command line: `chown -R`
+defaults to `-P` and does not traverse it, while `chmod -R` follows it. Before
+this was resolved, a freshly scaffolded `storage/app/public` stayed `root:root`
+and the app could not write it, while every file in shared storage - sessions,
+logs, caches - was rewritten to mode 775 on every container start.
+
+Two consequences worth knowing:
+
+- **Ownership is fixed once, not on every start.** If the top of `storage/` is
+  already owned by the app user, the recursive walk is skipped entirely. On a
+  large shared storage that is the difference between `O(files)` work on each
+  restart and none, which also keeps startup probes happy.
+- **Directories get 775, files get 664.** A blanket `chmod -R 775` marked every
+  log and session file executable; they are no longer.
+
+If you pre-create `shared/storage` yourself, chown it to the app user
+(`PUID`/`PGID`, default uid 33) and the container will leave it alone.
+
 ## Container configuration
 
 ```yaml

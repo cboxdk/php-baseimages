@@ -190,6 +190,29 @@ jobs:
           # include hook and the Statamic static-caching preset (#40).
           tests/e2e/run-e2e-tests.sh "$IMAGE" nginx-template
 
+      - name: Run SSL/TLS E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # Boots with SSL_MODE=on and =full and fetches over TLS (#55).
+          # Nothing covered TLS before, which is how a standalone `http2 on;` -
+          # a directive nginx only learned in 1.25.1, against bookworm's
+          # 1.22.1 - shipped and made the container refuse to start at all.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" ssl
+
+      - name: Run Laravel symlinked-storage E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # storage as a symlink to shared storage (#54). chown -R does not
+          # traverse a command-line symlink while chmod -R does, so the
+          # scaffold stayed root-owned while every file in the shared tree was
+          # rewritten to 775 on each start. Every other Laravel test uses a
+          # plain directory, which is why this was invisible.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" laravel-storage
+
       - name: Run security E2E test
         env:
           IMAGE: test-image:local
