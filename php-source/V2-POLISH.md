@@ -104,3 +104,18 @@ Evidence is retained under ignored `.build/` and `/tmp/cbox-*` paths. The initia
 48-image ARM64 matrix and limited AMD64 source validation are documented in the
 initial report; they were not all rebuilt again for these shell/workflow changes.
 Actual GitHub concurrency, signing and registry promotion remain untested locally.
+
+## Preparation for review
+
+Integrated `main` through `2b1e955`, including approved cbox-init 3.9.0,
+QEMU action v4, Statamic control-panel asset publication and upstream
+memory-limit regression coverage. The overlapping FPM fix retains V2's policy
+of bounding implicit defaults while preserving explicit user settings.
+All 44 regression methods and contract checks passed again after integration;
+a runtime overlay with checksum-verified cbox-init 3.9.0 passed both automatic
+and one-worker HTTP tests at 512 MiB.
+
+Preview publication and published-image usage checks now restrict push triggers
+to main. Draft PRs skip the PR dev-image publisher. This permits branch review
+without image publication. Merging to main still activates publishing workflows
+and must be treated as a separate deployment decision.
