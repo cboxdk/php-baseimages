@@ -304,6 +304,12 @@ or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly
 | `PHP_FPM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | Max request execution time before kill |
 
+In `dynamic` mode implicit start/spare defaults are bounded by `pm.max_children`.
+For example, `PHP_FPM_MAX_CHILDREN=4` on its own boots with `2/1/4` instead
+of an invalid six-worker spare limit. Explicit spare values are preserved;
+invalid combinations are rejected by FPM. With autotune on, cbox-init sets
+all four values before FPM starts.
+
 ### Runtime PHP-FPM tuning (fpm-tune, cbox-init 3.1+)
 
 The boot profile above is a **seed** — it sizes the pool once, before traffic.
