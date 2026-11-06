@@ -119,3 +119,15 @@ Preview publication and published-image usage checks now restrict push triggers
 to main. Draft PRs skip the PR dev-image publisher. This permits branch review
 without image publication. Merging to main still activates publishing workflows
 and must be treated as a separate deployment decision.
+
+## cbox-init security release follow-up
+
+The first remote integration scan caught CVE-2026-78661 in cbox-init 3.9.0's
+embedded x/net v0.60.0. cbox-init 3.9.1 updates x/net to v0.62.0 with its required
+x/sys and x/text versions. The upstream fix passed the full local check suite
+and CI before release. Both published Linux binaries were downloaded, verified
+against release checksums and scanned with Trivy 0.76.2: zero fixable
+HIGH/CRITICAL findings. No vulnerability exception was added.
+
+The PHP images now pin 3.9.1. The integration scanner also uses the same pinned
+Trivy 0.76.2 setup as promotion instead of its previous standalone 0.70.0 install.
