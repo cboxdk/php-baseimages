@@ -8,6 +8,10 @@ weight: 3
 
 Complete reference of all available Cbox base image tags and variants.
 
+> V2 is an unpublished candidate. Size estimates below are v1 reference
+> figures, not measured v2 download sizes; local uncompressed sizes are
+> recorded separately during validation.
+
 ## Image Registry
 
 All images are published to GitHub Container Registry:
@@ -20,7 +24,7 @@ ghcr.io/cboxdk/php-baseimages/{image-type}:{tag}
 
 All images come in four tiers to match your needs:
 
-| Tier | Tag Suffix | Size (Debian 12) | Best For |
+| Tier | Tag Suffix | Size (Debian 13) | Best For |
 |------|------------|------------------|----------|
 | **Slim** | `-slim` | ~120 MiB | APIs, microservices |
 | **Standard** | (none) | ~250 MiB | Most apps (DEFAULT) |
@@ -35,10 +39,10 @@ Single container with both PHP-FPM and Nginx - perfect for simple deployments.
 
 | Image Tag | PHP | OS | Size | Architecture |
 |-----------|-----|----|----- |--------------|
-| `php-fpm-nginx:8.5-bookworm` | 8.5 | Debian 12 | ~250 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.4-bookworm` | 8.4 | Debian 12 | ~250 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.3-bookworm` | 8.3 | Debian 12 | ~250 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.2-bookworm` | 8.2 | Debian 12 | ~250 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.5-trixie` | 8.5 | Debian 13 | ~250 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.4-trixie` | 8.4 | Debian 13 | ~250 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.3-trixie` | 8.3 | Debian 13 | ~250 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.2-trixie` | 8.2 | Debian 13 | ~250 MiB | amd64, arm64 |
 
 ### Slim Tier
 
@@ -46,10 +50,10 @@ Optimized for APIs and microservices with minimal footprint:
 
 | Image Tag | PHP | OS | Size | Architecture |
 |-----------|-----|----|----- |--------------|
-| `php-fpm-nginx:8.5-bookworm-slim` | 8.5 | Debian 12 | ~120 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.4-bookworm-slim` | 8.4 | Debian 12 | ~120 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.3-bookworm-slim` | 8.3 | Debian 12 | ~120 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.2-bookworm-slim` | 8.2 | Debian 12 | ~120 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.5-trixie-slim` | 8.5 | Debian 13 | ~120 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.4-trixie-slim` | 8.4 | Debian 13 | ~120 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.3-trixie-slim` | 8.3 | Debian 13 | ~120 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.2-trixie-slim` | 8.2 | Debian 13 | ~120 MiB | amd64, arm64 |
 
 ### Chromium Tier
 
@@ -57,10 +61,10 @@ Includes Chromium for Browsershot, Dusk, and PDF generation:
 
 | Image Tag | PHP | OS | Size | Architecture |
 |-----------|-----|----|----- |--------------|
-| `php-fpm-nginx:8.5-bookworm-chromium` | 8.5 | Debian 12 | ~700 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.4-bookworm-chromium` | 8.4 | Debian 12 | ~700 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.3-bookworm-chromium` | 8.3 | Debian 12 | ~700 MiB | amd64, arm64 |
-| `php-fpm-nginx:8.2-bookworm-chromium` | 8.2 | Debian 12 | ~700 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.5-trixie-chromium` | 8.5 | Debian 13 | ~700 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.4-trixie-chromium` | 8.4 | Debian 13 | ~700 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.3-trixie-chromium` | 8.3 | Debian 13 | ~700 MiB | amd64, arm64 |
+| `php-fpm-nginx:8.2-trixie-chromium` | 8.2 | Debian 13 | ~700 MiB | amd64, arm64 |
 
 ### Rootless Variants
 
@@ -68,10 +72,10 @@ All tiers support rootless execution (runs as `www-data` user). Available for al
 
 | Image Tag | Tier | Description |
 |-----------|------|-------------|
-| `php-fpm-nginx:{version}-bookworm-rootless` | Standard | Default + rootless |
-| `php-fpm-nginx:{version}-bookworm-slim-rootless` | Slim | Slim + rootless |
-| `php-fpm-nginx:{version}-bookworm-chromium-rootless` | Chromium | Chromium + rootless |
-| `php-fpm-nginx:{version}-bookworm-dev-rootless` | Dev | Dev + rootless |
+| `php-fpm-nginx:{version}-trixie-rootless` | Standard | Default + rootless |
+| `php-fpm-nginx:{version}-trixie-slim-rootless` | Slim | Slim + rootless |
+| `php-fpm-nginx:{version}-trixie-chromium-rootless` | Chromium | Chromium + rootless |
+| `php-fpm-nginx:{version}-trixie-dev-rootless` | Dev | Dev + rootless |
 
 Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 
@@ -81,15 +85,15 @@ Where `{version}` is `8.2`, `8.3`, `8.4`, or `8.5`.
 {type}:{php_version}-{os}[-tier][-rootless][-vN]
 
 Examples:
-php-fpm-nginx:8.5-bookworm-v1           # Standard tier, release channel (RECOMMENDED)
-php-fpm-nginx:8.5-bookworm-slim-v1      # Slim tier, release channel
-php-fpm-nginx:8.5-bookworm-chromium-v1  # Chromium tier, release channel
-php-fpm-nginx:8.5-bookworm-rootless-v1  # Standard + rootless, release channel
-php-fpm-nginx:8.5-bookworm              # Standard tier, rolling (follows latest release)
-php-fpm-nginx:8.5-bookworm-slim-rootless  # Slim + rootless, rolling
+php-fpm-nginx:8.5-trixie-v2           # Standard tier, release channel (RECOMMENDED)
+php-fpm-nginx:8.5-trixie-slim-v2      # Slim tier, release channel
+php-fpm-nginx:8.5-trixie-chromium-v2  # Chromium tier, release channel
+php-fpm-nginx:8.5-trixie-rootless-v2  # Standard + rootless, release channel
+php-fpm-nginx:8.5-trixie              # Standard tier, rolling (follows latest release)
+php-fpm-nginx:8.5-trixie-slim-rootless  # Slim + rootless, rolling
 ```
 
-Every tag in the matrices above also exists with the `-v1` release-channel
+Every tag in the matrices above also exists with the `-v2` release-channel
 suffix — that is the variant to pin in production.
 
 ## Release Channel Tags (Recommended for Production)
@@ -99,8 +103,8 @@ tooling major — your runtime contract stays put, the machine underneath
 stays patched:
 
 ```yaml
-# Behavior pinned to major v1, security patches keep flowing
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+# Behavior pinned to major v2, security patches keep flowing
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 ```
 
 ## Rolling Tags
@@ -110,7 +114,7 @@ tooling release — including future majors:
 
 ```yaml
 # Follows the latest release, rebuilt every Monday
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie
 ```
 
 ## Immutable Digests
@@ -120,7 +124,7 @@ the CVEs of its build day):
 
 ```yaml
 # Locked to a specific build
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1@sha256:abc123...
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2@sha256:abc123...
 ```
 
 See [Tagging Strategy](tagging-strategy) for the full policy.
@@ -138,14 +142,14 @@ Docker automatically pulls the correct architecture:
 
 ```bash
 # Works on both AMD64 and ARM64
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 ```
 
 ## OS Information
 
-Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
+Cbox PHP Base Images use Debian 13 (Trixie) as the base operating system.
 
-| Feature | Debian 12 (Bookworm) |
+| Feature | Debian 13 (Trixie) |
 |---------|----------------------|
 | **Base Size** | ~120 MiB |
 | **Package Manager** | apt-get |
@@ -158,7 +162,7 @@ Cbox PHP Base Images use Debian 12 (Bookworm) as the base operating system.
 
 | Feature | Slim | Standard | Chromium | Dev |
 |---------|------|----------|----------|-----|
-| **Size (Debian 12)** | ~120 MiB | ~250 MiB | ~700 MiB | ~750 MiB |
+| **Size (Debian 13)** | ~120 MiB | ~250 MiB | ~700 MiB | ~750 MiB |
 | **Core Extensions** | ✅ 25+ | ✅ 25+ | ✅ 25+ | ✅ 25+ |
 | **ImageMagick** | ❌ | ✅ | ✅ | ✅ |
 | **Node.js 22 (+ npm/npx)** | ❌ | ✅ | ✅ | ✅ |
@@ -189,17 +193,17 @@ security support ends.
 
 ```bash
 # Pull standard tier (most Laravel/PHP apps)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Pull slim tier (APIs, microservices)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim-v2
 
 # Pull chromium tier (Browsershot, Dusk)
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-v2
 
 # Run with volume mount
 docker run -p 8000:80 -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+  ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 ```
 
 ### Docker Compose
@@ -208,7 +212,7 @@ docker run -p 8000:80 -v $(pwd):/var/www/html \
 services:
   # Standard tier - most Laravel apps
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "8000:80"
     volumes:
@@ -216,13 +220,13 @@ services:
 
   # Slim tier - API service
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim-v2
     ports:
       - "8001:80"
 
   # Chromium tier - PDF generation service
   pdf:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-v2
     environment:
       PHP_MEMORY_LIMIT: "1G"
 ```
@@ -231,7 +235,7 @@ services:
 
 ```dockerfile
 # Standard tier for most apps
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -240,7 +244,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 ```dockerfile
 # Chromium tier for Browsershot
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-v2
 
 COPY --chown=www-data:www-data . /var/www/html
 
@@ -260,7 +264,7 @@ All images are automatically rebuilt every Monday at 03:00 UTC:
 
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 docker-compose up -d --pull always
 ```
 

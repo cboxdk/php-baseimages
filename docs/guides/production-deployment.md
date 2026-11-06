@@ -27,7 +27,7 @@ Guide for deploying Cbox containers to production environments with security, pe
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       # PHP Production
       - PHP_DISPLAY_ERRORS=Off
@@ -280,7 +280,7 @@ For Kubernetes deployments, use the standard Deployment/Service/HPA pattern with
 ```yaml
 containers:
 - name: app
-  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+  image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
   env:
   - name: PHP_OPCACHE_VALIDATE_TIMESTAMPS
     value: "0"

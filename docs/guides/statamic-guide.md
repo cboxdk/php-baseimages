@@ -16,7 +16,7 @@ Statamic-specific and historically painful in containers: **git integration**.
 ```yaml
 services:
   statamic:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "8080:80"
     volumes:
@@ -74,7 +74,7 @@ Add `deploy_key.pub` as a **deploy key with write access** on the repository
 ```yaml
 services:
   statamic:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     volumes:
       - ./:/var/www/html
       - ./deploy_key:/run/secrets/git_key:ro
@@ -150,7 +150,7 @@ multi-stage pattern:
 ```dockerfile
 # Build stage: composer in the CLI image (it ships Node.js too, so a
 # `npm ci && npm run build` stage for the frontend fits the same pattern)
-FROM ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1 AS build
+FROM ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2 AS build
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-autoloader --no-scripts --no-interaction
@@ -158,7 +158,7 @@ COPY . .
 RUN composer dump-autoload --optimize
 
 # Runtime stage: the multi-service image
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 COPY --from=build --chown=www-data:www-data /app /var/www/html
 ```
 

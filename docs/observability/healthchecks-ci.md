@@ -18,7 +18,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
     environment:
       - APP_ENV=local
       - DB_HOST=mysql

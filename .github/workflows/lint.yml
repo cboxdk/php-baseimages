@@ -28,6 +28,17 @@ jobs:
           find . -name '*.sh' -not -path './.git/*' -print0 \
             | xargs -0 -r shellcheck -S error
 
+      - name: PHP source lock and OS patch regression tests
+        run: |
+          python3 tests/test-php-source.py
+          python3 tests/test-image-patch.py
+          python3 tests/test-source-dispatch.py
+          python3 tests/test-source-parents.py
+          python3 tests/test-security-watch.py
+          python3 tests/test-fpm-defaults.py
+          python3 tests/test-image-parity.py
+          python3 scripts/sync-build-defaults.py --check
+
       # --- Dockerfiles ---
       - name: hadolint
         env:
@@ -37,7 +48,7 @@ jobs:
             "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64"
           chmod +x /tmp/hadolint
           rc=0
-          for df in php-base/Dockerfile php-fpm/Dockerfile php-cli/Dockerfile php-fpm-nginx/Dockerfile nginx/Dockerfile; do
+          for df in php-base/Dockerfile php-base/Dockerfile.php86-beta php-fpm/Dockerfile php-cli/Dockerfile php-fpm-nginx/Dockerfile nginx/Dockerfile; do
             echo "::group::hadolint $df"
             /tmp/hadolint --failure-threshold error "$df" || rc=1
             echo "::endgroup::"

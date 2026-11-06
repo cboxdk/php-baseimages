@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1}
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}
     container_name: e2e-dusk-testing
     ports:
       - "8102:80"

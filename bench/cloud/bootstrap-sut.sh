@@ -48,8 +48,8 @@ cd $HOME/cbox-bench
 # Competitors, as shipped
 announce pulling-competitors bootstrapping
 for img in "serversideup/php:8.5-fpm-nginx" "webdevops/php-nginx:8.5" "trafex/php-nginx:latest" \
-           "php:8.5-apache-bookworm" "dunglas/frankenphp:php8.5-bookworm" \
-           "ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1"; do
+           "php:8.5-apache-trixie" "dunglas/frankenphp:php8.5-trixie" \
+           "ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2"; do
   docker pull -q "$img"
 done
 docker images --digests --format '{{.Repository}}:{{.Tag}}@{{.Digest}}' > $HOME/cbox-bench/digests.txt
@@ -57,7 +57,7 @@ docker images --digests --format '{{.Repository}}:{{.Tag}}@{{.Digest}}' > $HOME/
 # Fixtures live in the repo at baseimages/bench/cloud/app (run-sut points there).
 # The Laravel fixture is built once via composer inside the php-cli image.
 if [ ! -d $HOME/cbox-bench/lv-app/vendor ]; then
-  docker pull -q ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+  docker pull -q ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
   bash baseimages/bench/cloud/build-laravel-fixture.sh
 fi
 bash baseimages/bench/cloud/run-sut.sh &

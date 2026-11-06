@@ -25,3 +25,8 @@ tests
 docker-compose*.yml
 LICENSE*
 Makefile
+
+# Rendered Dockerfiles are passed with -f, never copied into an image.
+.build
+
+**/__pycache__/

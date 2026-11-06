@@ -46,7 +46,7 @@ Benchmarks:
 ### Build Images First
 ```bash
 # Build all tiers
-docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-bookworm -f php-fpm-nginx/Dockerfile .
+docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-trixie -f php-fpm-nginx/Dockerfile .
 docker build --target slim --build-arg PHP_VERSION=8.3 -t cbox-slim -f php-fpm-nginx/Dockerfile .
 docker build --target chromium --build-arg PHP_VERSION=8.3 -t cbox-chromium -f php-fpm-nginx/Dockerfile .
 ```
@@ -256,7 +256,7 @@ apt-get install apache2-utils
 ### Images Not Found
 Make sure to build images first:
 ```bash
-docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-bookworm -f php-fpm-nginx/Dockerfile .
+docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-trixie -f php-fpm-nginx/Dockerfile .
 ```
 
 ## Related Documentation

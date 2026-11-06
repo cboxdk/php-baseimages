@@ -3,6 +3,10 @@ name: Build Image Tier
 on:
   workflow_call:
     inputs:
+      force-full:
+        description: 'Ignore the previous publication and rebuild from source'
+        type: boolean
+        default: false
       image-name:
         description: 'Image name (e.g., php-base, php-fpm, php-fpm-nginx)'
         required: true
@@ -16,7 +20,7 @@ on:
         required: true
         type: string
       os-variant:
-        description: 'OS variant (e.g., bookworm)'
+        description: 'OS variant (e.g., trixie)'
         required: true
         type: string
       tier:
@@ -48,7 +52,7 @@ on:
         type: boolean
         default: false
       enable-convenience-tags:
-        description: 'Enable convenience tags (e.g., 8.3 -> 8.3-bookworm for standard tier)'
+        description: 'Enable convenience tags (e.g., 8.3 -> 8.3-trixie for standard tier)'
         required: false
         type: boolean
         default: false
@@ -148,10 +152,39 @@ jobs:
       id-token: write
 
     outputs:
-      digest: ${{ steps.build.outputs.digest }}
+      mode: ${{ steps.patch.outputs.mode }}
+      digest: ${{ steps.build.outputs.digest || steps.patch.outputs.digest }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.client_payload.source_ref || github.sha }}
+
+      - name: Log in for published-image metadata
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Choose OS patch or full build
+        id: patch
+        env:
+          CALLER_BUILD_ARGS: ${{ inputs.build-args }}
+          FORCE_FULL: ${{ inputs.force-full }}
+        run: |
+          EXTRA=()
+          [ "$FORCE_FULL" = "true" ] && EXTRA+=(--force-full)
+          python3 scripts/image-patch.py \
+            --image-type '${{ inputs.image-type }}' --series '${{ inputs.php-version }}' \
+            --target '${{ inputs.target }}' --tier '${{ inputs.tier }}' \
+            --suffix '${{ inputs.tag-suffix }}' --platform linux/amd64 \
+            --repository '${{ github.repository }}' --build-args "$CALLER_BUILD_ARGS" \
+            "${EXTRA[@]}" | tee -a "$GITHUB_OUTPUT"
+
       - name: Free up disk space
+        if: steps.patch.outputs.mode == 'full'
         run: |
           # GitHub-hosted runners have ~14 GB free on / — not enough headroom for
           # the chromium/dev tiers plus build cache. Reclaim ~25 GB by dropping
@@ -160,9 +193,6 @@ jobs:
             /opt/hostedtoolcache/CodeQL /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
           sudo docker image prune -af || true
           df -h /
-
-      - name: Checkout repository
-        uses: actions/checkout@v7
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -188,6 +218,11 @@ jobs:
             echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
             echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+            echo "SPX_VERSION=$(jq -r '.extensions.spx' versions.json)" >> $GITHUB_OUTPUT
+            echo "NPM_VERSION=$(jq -r '.tools.npm' versions.json)" >> $GITHUB_OUTPUT
+            echo "BUN_VERSION=$(jq -r '.tools.bun' versions.json)" >> $GITHUB_OUTPUT
+            echo "PLAYWRIGHT_VERSION=$(jq -r '.tools.playwright' versions.json)" >> $GITHUB_OUTPUT
+            echo "COMPOSER_VERSION=$(jq -r '.tools.composer' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
             echo "TELEMETRY_NATIVE_VERSION=$(jq -r '.extensions.telemetry_native // "0.1.0"' versions.json)" >> $GITHUB_OUTPUT
             echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
@@ -195,7 +230,7 @@ jobs:
           fi
 
       - name: Download and verify Cbox Init binaries
-        if: inputs.image-type == 'php-base'
+        if: inputs.image-type == 'php-base' && steps.patch.outputs.mode == 'full'
         run: |
           mkdir -p cbox-init/binaries
           VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
@@ -250,15 +285,32 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          echo "path=./${{ inputs.image-type }}/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
+          DOCKERFILE="./${{ inputs.image-type }}/Dockerfile"
+          if [ -f "php-source/php$(echo '${{ inputs.php-version }}' | tr -d .)-trixie.lock.json" ]; then
+            DOCKERFILE=".build/php-source/${{ inputs.image-type }}.Dockerfile"
+            python3 scripts/php-source.py --series "${{ inputs.php-version }}" render "${{ inputs.image-type }}" --output "$DOCKERFILE"
+          fi
+          echo "path=$DOCKERFILE" >> "$GITHUB_OUTPUT"
+          echo "base_os=trixie" >> "$GITHUB_OUTPUT"
+
+      - name: Pin matching downstream parents
+        if: steps.patch.outputs.mode == 'full' && inputs.image-type != 'php-base'
+        run: |
+          python3 scripts/pin-source-parents.py \
+            --dockerfile '${{ steps.dockerfile.outputs.path }}' \
+            --target '${{ inputs.target }}' --series '${{ inputs.php-version }}' \
+            --platform linux/amd64 --repository '${{ github.repository }}'
 
       - name: Get PHP patch version
         id: php_patch
         if: inputs.enable-patch-tags
         run: |
           BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          if [ -f "php-source/php$(echo '${{ inputs.php-version }}' | tr -d .)-trixie.lock.json" ]; then
+            PHP_FULL=$(python3 scripts/php-source.py --series "${{ inputs.php-version }}" version)
+          else
+            PHP_FULL=$(docker run --rm "$BASE_IMAGE" php -r 'echo PHP_VERSION;')
+          fi
           echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
           echo "PHP patch version: $PHP_FULL"
 
@@ -270,13 +322,6 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.31.1
             network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compute cache scope
         id: tags
@@ -300,10 +345,9 @@ jobs:
           # inherit the newer major's base through them.
           CHANNEL=$(jq -r '.release.channel // empty' versions.json 2>/dev/null || true)
           [ -n "$CHANNEL" ] && echo "BASE_CHANNEL=-v${CHANNEL}" >> "$ARGS_FILE"
-          # Weekly cache refresh (ISO week) - busts the root apt layers once
-          # per week so scheduled security rebuilds actually install fresh
-          # packages; intra-week pushes keep full layer-cache speed.
-          echo "CACHE_REFRESH=$(date -u +%G-W%V)" >> "$ARGS_FILE"
+          # Always fetch fresh package indexes, including a retry after a CVE
+          # gate failure. The patch path avoids recompiling the toolchain.
+          echo "CACHE_REFRESH=${{ github.run_id }}" >> "$ARGS_FILE"
           # Lifecycle state goes to EVERY image build: php-fpm/php-fpm-nginx
           # declare these ARGs themselves (they COPY from php-base and cannot
           # inherit its baked ENV) — keeping these inside the php-base branch
@@ -325,6 +369,11 @@ jobs:
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
           OPENTELEMETRY_VERSION=${{ steps.versions.outputs.OPENTELEMETRY_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+          COMPOSER_VERSION=${{ steps.versions.outputs.COMPOSER_VERSION }}
+          PLAYWRIGHT_VERSION=${{ steps.versions.outputs.PLAYWRIGHT_VERSION }}
+          BUN_VERSION=${{ steps.versions.outputs.BUN_VERSION }}
+          NPM_VERSION=${{ steps.versions.outputs.NPM_VERSION }}
+          SPX_VERSION=${{ steps.versions.outputs.SPX_VERSION }}
           TELEMETRY_NATIVE_VERSION=${{ steps.versions.outputs.TELEMETRY_NATIVE_VERSION }}
           VERSIONS
             # Dev tier also needs xdebug/pcov versions
@@ -350,11 +399,18 @@ jobs:
 
       - name: Build and push by digest (amd64)
         id: build
+        if: steps.patch.outputs.mode != 'reuse'
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ${{ steps.dockerfile.outputs.path }}
+          file: ${{ steps.patch.outputs.dockerfile || steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
+          labels: |
+            io.cbox.build.debian-suite=trixie
+            io.cbox.build.fingerprint=${{ steps.patch.outputs.fingerprint }}
+            io.cbox.build.php-version=${{ steps.patch.outputs.php_version }}
+            io.cbox.build.patch-depth=${{ steps.patch.outputs.depth }}
+            io.cbox.build.full-built-at=${{ steps.patch.outputs.full_built_at }}
           platforms: linux/amd64
           # SLSA provenance + SPDX SBOM attestations. These survive the
           # imagetools-create manifest merge per platform (verified against a
@@ -381,12 +437,25 @@ jobs:
           # For PRs: build only (no push), validates the build still works
           outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
 
+      - name: Verify native PHP runtime before promotion
+        if: github.event_name != 'pull_request' && steps.patch.outputs.mode != 'reuse'
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@${{ steps.build.outputs.digest }}
+          EXPECTED_PHP: ${{ steps.patch.outputs.php_version }}
+          TIER: ${{ inputs.tier }}
+          IMAGE_TYPE: ${{ inputs.image-type }}
+        run: bash scripts/test-runtime-image.sh "$IMAGE" "$EXPECTED_PHP" "$TIER" "$IMAGE_TYPE"
+
       - name: Export digest
         if: github.event_name != 'pull_request'
         run: |
           rm -rf /tmp/digests && mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
+          digest="${{ steps.build.outputs.digest || steps.patch.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
+          # Retain the old SBOM/provenance alongside byte-identical reuse.
+          for extra in ${{ steps.patch.outputs.extra_digests }}; do
+            touch "/tmp/digests/${extra#sha256:}"
+          done
 
       - name: Upload digest
         if: github.event_name != 'pull_request'
@@ -427,11 +496,36 @@ jobs:
       id-token: write
 
     outputs:
-      digest: ${{ steps.build.outputs.digest }}
+      mode: ${{ steps.patch.outputs.mode }}
+      digest: ${{ steps.build.outputs.digest || steps.patch.outputs.digest }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.client_payload.source_ref || github.sha }}
+
+      - name: Log in for published-image metadata
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Choose OS patch or full build
+        id: patch
+        env:
+          CALLER_BUILD_ARGS: ${{ inputs.build-args }}
+          FORCE_FULL: ${{ inputs.force-full }}
+        run: |
+          EXTRA=()
+          [ "$FORCE_FULL" = "true" ] && EXTRA+=(--force-full)
+          python3 scripts/image-patch.py \
+            --image-type '${{ inputs.image-type }}' --series '${{ inputs.php-version }}' \
+            --target '${{ inputs.target }}' --tier '${{ inputs.tier }}' \
+            --suffix '${{ inputs.tag-suffix }}' --platform linux/arm64 \
+            --repository '${{ github.repository }}' --build-args "$CALLER_BUILD_ARGS" \
+            "${EXTRA[@]}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Get build lifecycle state
         id: lifecycle
@@ -457,6 +551,11 @@ jobs:
             echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
             echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
+            echo "SPX_VERSION=$(jq -r '.extensions.spx' versions.json)" >> $GITHUB_OUTPUT
+            echo "NPM_VERSION=$(jq -r '.tools.npm' versions.json)" >> $GITHUB_OUTPUT
+            echo "BUN_VERSION=$(jq -r '.tools.bun' versions.json)" >> $GITHUB_OUTPUT
+            echo "PLAYWRIGHT_VERSION=$(jq -r '.tools.playwright' versions.json)" >> $GITHUB_OUTPUT
+            echo "COMPOSER_VERSION=$(jq -r '.tools.composer' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
             echo "TELEMETRY_NATIVE_VERSION=$(jq -r '.extensions.telemetry_native // "0.1.0"' versions.json)" >> $GITHUB_OUTPUT
             echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
@@ -464,7 +563,7 @@ jobs:
           fi
 
       - name: Download and verify Cbox Init binaries
-        if: inputs.image-type == 'php-base'
+        if: inputs.image-type == 'php-base' && steps.patch.outputs.mode == 'full'
         run: |
           mkdir -p cbox-init/binaries
           VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
@@ -519,15 +618,32 @@ jobs:
       - name: Determine Dockerfile path
         id: dockerfile
         run: |
-          echo "path=./${{ inputs.image-type }}/Dockerfile" >> $GITHUB_OUTPUT
-          echo "base_os=bookworm" >> $GITHUB_OUTPUT
+          DOCKERFILE="./${{ inputs.image-type }}/Dockerfile"
+          if [ -f "php-source/php$(echo '${{ inputs.php-version }}' | tr -d .)-trixie.lock.json" ]; then
+            DOCKERFILE=".build/php-source/${{ inputs.image-type }}.Dockerfile"
+            python3 scripts/php-source.py --series "${{ inputs.php-version }}" render "${{ inputs.image-type }}" --output "$DOCKERFILE"
+          fi
+          echo "path=$DOCKERFILE" >> "$GITHUB_OUTPUT"
+          echo "base_os=trixie" >> "$GITHUB_OUTPUT"
+
+      - name: Pin matching downstream parents
+        if: steps.patch.outputs.mode == 'full' && inputs.image-type != 'php-base'
+        run: |
+          python3 scripts/pin-source-parents.py \
+            --dockerfile '${{ steps.dockerfile.outputs.path }}' \
+            --target '${{ inputs.target }}' --series '${{ inputs.php-version }}' \
+            --platform linux/arm64 --repository '${{ github.repository }}'
 
       - name: Get PHP patch version
         id: php_patch
         if: inputs.enable-patch-tags
         run: |
           BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-${{ steps.dockerfile.outputs.base_os }}"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          if [ -f "php-source/php$(echo '${{ inputs.php-version }}' | tr -d .)-trixie.lock.json" ]; then
+            PHP_FULL=$(python3 scripts/php-source.py --series "${{ inputs.php-version }}" version)
+          else
+            PHP_FULL=$(docker run --rm "$BASE_IMAGE" php -r 'echo PHP_VERSION;')
+          fi
           echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
           echo "PHP patch version: $PHP_FULL"
 
@@ -539,13 +655,6 @@ jobs:
           driver-opts: |
             image=moby/buildkit:v0.31.1
             network=host
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compute cache scope
         id: tags
@@ -569,10 +678,9 @@ jobs:
           # inherit the newer major's base through them.
           CHANNEL=$(jq -r '.release.channel // empty' versions.json 2>/dev/null || true)
           [ -n "$CHANNEL" ] && echo "BASE_CHANNEL=-v${CHANNEL}" >> "$ARGS_FILE"
-          # Weekly cache refresh (ISO week) - busts the root apt layers once
-          # per week so scheduled security rebuilds actually install fresh
-          # packages; intra-week pushes keep full layer-cache speed.
-          echo "CACHE_REFRESH=$(date -u +%G-W%V)" >> "$ARGS_FILE"
+          # Always fetch fresh package indexes, including a retry after a CVE
+          # gate failure. The patch path avoids recompiling the toolchain.
+          echo "CACHE_REFRESH=${{ github.run_id }}" >> "$ARGS_FILE"
           # Lifecycle state goes to EVERY image build: php-fpm/php-fpm-nginx
           # declare these ARGs themselves (they COPY from php-base and cannot
           # inherit its baked ENV) — keeping these inside the php-base branch
@@ -594,6 +702,11 @@ jobs:
           MSGPACK_VERSION=${{ steps.versions.outputs.MSGPACK_VERSION }}
           OPENTELEMETRY_VERSION=${{ steps.versions.outputs.OPENTELEMETRY_VERSION }}
           NODE_VERSION=${{ steps.versions.outputs.NODE_VERSION }}
+          COMPOSER_VERSION=${{ steps.versions.outputs.COMPOSER_VERSION }}
+          PLAYWRIGHT_VERSION=${{ steps.versions.outputs.PLAYWRIGHT_VERSION }}
+          BUN_VERSION=${{ steps.versions.outputs.BUN_VERSION }}
+          NPM_VERSION=${{ steps.versions.outputs.NPM_VERSION }}
+          SPX_VERSION=${{ steps.versions.outputs.SPX_VERSION }}
           TELEMETRY_NATIVE_VERSION=${{ steps.versions.outputs.TELEMETRY_NATIVE_VERSION }}
           VERSIONS
             # Dev tier also needs xdebug/pcov versions
@@ -619,11 +732,18 @@ jobs:
 
       - name: Build and push by digest (arm64)
         id: build
+        if: steps.patch.outputs.mode != 'reuse'
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ${{ steps.dockerfile.outputs.path }}
+          file: ${{ steps.patch.outputs.dockerfile || steps.dockerfile.outputs.path }}
           target: ${{ inputs.target }}
+          labels: |
+            io.cbox.build.debian-suite=trixie
+            io.cbox.build.fingerprint=${{ steps.patch.outputs.fingerprint }}
+            io.cbox.build.php-version=${{ steps.patch.outputs.php_version }}
+            io.cbox.build.patch-depth=${{ steps.patch.outputs.depth }}
+            io.cbox.build.full-built-at=${{ steps.patch.outputs.full_built_at }}
           platforms: linux/arm64
           # SLSA provenance + SPDX SBOM (see the amd64 build step)
           provenance: mode=max
@@ -639,12 +759,25 @@ jobs:
           # For PRs: build only (no push), validates the build still works
           outputs: ${{ github.event_name != 'pull_request' && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository, inputs.image-name) || '' }}
 
+      - name: Verify native PHP runtime before promotion
+        if: github.event_name != 'pull_request' && steps.patch.outputs.mode != 'reuse'
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@${{ steps.build.outputs.digest }}
+          EXPECTED_PHP: ${{ steps.patch.outputs.php_version }}
+          TIER: ${{ inputs.tier }}
+          IMAGE_TYPE: ${{ inputs.image-type }}
+        run: bash scripts/test-runtime-image.sh "$IMAGE" "$EXPECTED_PHP" "$TIER" "$IMAGE_TYPE"
+
       - name: Export digest
         if: github.event_name != 'pull_request'
         run: |
           rm -rf /tmp/digests && mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
+          digest="${{ steps.build.outputs.digest || steps.patch.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"
+          # Retain the old SBOM/provenance alongside byte-identical reuse.
+          for extra in ${{ steps.patch.outputs.extra_digests }}; do
+            touch "/tmp/digests/${extra#sha256:}"
+          done
 
       - name: Upload digest
         if: github.event_name != 'pull_request'
@@ -661,12 +794,14 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Run once amd64 has succeeded, regardless of whether arm64 built (it may be
-    # disabled or skipped). always() is required so a skipped build-arm64 does
-    # not skip the merge; the result check gates on amd64 actually succeeding.
+    # Both requested platforms must pass. An unchanged main publication needs
+    # no promotion, repeat scan or new signature; preserve its existing index.
+    # Mixed reuse/patch builds still scan both platform digests before promotion.
     if: >-
       always() &&
       needs.build-amd64.result == 'success' &&
+      (!contains(inputs.platforms, 'linux/arm64') || needs.build-arm64.result == 'success') &&
+      !(github.ref == 'refs/heads/main' && needs.build-amd64.outputs.mode == 'reuse' && needs.build-arm64.outputs.mode == 'reuse') &&
       github.event_name != 'pull_request' &&
       github.repository == 'cboxdk/php-baseimages'
     needs:
@@ -693,26 +828,22 @@ jobs:
           name: digests-${{ inputs.cache-scope-prefix }}-${{ inputs.php-version }}-${{ inputs.os-variant }}-${{ inputs.tag-suffix || 'standard' }}-arm64
           path: /tmp/digests
 
-      - name: Log in to Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
       # ─────────────────────────────────────────────────────────────────────────
       # Release channel tag (-vN): versions.json release.channel names the
-      # tooling major this ref builds. Channel tags are REBUILT weekly (fresh
+      # tooling major this ref builds. Channel tags are REBUILT for security updates (fresh
       # OS security patches) but never cross a tooling major — pin them for
       # stable behavior without CVE rot. Exact reproducibility = SHA tags.
       # ─────────────────────────────────────────────────────────────────────────
       - name: Checkout versions.json and CVE baseline
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.client_payload.source_ref || github.sha }}
           sparse-checkout: |
+            scripts/php-source.py
+            php-source/*.lock.json
             versions.json
             .trivyignore
           sparse-checkout-cone-mode: false
@@ -739,7 +870,7 @@ jobs:
 
       # ─────────────────────────────────────────────────────────────────────────
       # Tag generation: compute the tag suffix string for metadata action
-      # For standard root tier: tag-suffix is empty, so tags are like 8.4-bookworm
+      # For standard root tier: tag-suffix is empty, so tags are like 8.4-trixie
       # For other tiers: tag-suffix is e.g. "slim", "rootless", "chromium-rootless"
       # ─────────────────────────────────────────────────────────────────────────
       - name: Compute tag values
@@ -767,8 +898,12 @@ jobs:
         if: inputs.enable-patch-tags
         run: |
           # Pull the base image to detect patch version (runs on amd64 merge runner)
-          BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-bookworm"
-          PHP_FULL=$(docker run --rm $BASE_IMAGE php -r 'echo PHP_VERSION;')
+          BASE_IMAGE="php:${{ inputs.php-version }}-${{ inputs.base-image-type }}-trixie"
+          if [ -f "php-source/php$(echo '${{ inputs.php-version }}' | tr -d .)-trixie.lock.json" ]; then
+            PHP_FULL=$(python3 scripts/php-source.py --series "${{ inputs.php-version }}" version)
+          else
+            PHP_FULL=$(docker run --rm "$BASE_IMAGE" php -r 'echo PHP_VERSION;')
+          fi
           echo "version=$PHP_FULL" >> $GITHUB_OUTPUT
           echo "PHP patch version: $PHP_FULL"
 
@@ -792,8 +927,8 @@ jobs:
       # DIGEST PROMOTION: everything below verifies the pushed-by-digest image
       # BEFORE any production tag moves. If the CVE gate or the smoke test
       # fails, the job stops here and the previous good image stays live under
-      # every tag. Verification runs against the amd64 digest (the runner's
-      # architecture); arm64 shares the exact same Dockerfile and build args.
+      # every tag. Both architecture digests pass the vulnerability gate;
+      # the functional smoke test runs natively on amd64.
       # ─────────────────────────────────────────────────────────────────────────
       - name: Download amd64 digest for pre-promotion verification
         uses: actions/download-artifact@v8
@@ -804,14 +939,17 @@ jobs:
       - name: Resolve verification image ref
         id: verify_ref
         run: |
-          DIGEST=$(basename "$(find /tmp/digest-amd64 -type f | head -1)")
+          # Job output identifies the image/index, never an attestation sibling.
+          DIGEST="${{ needs.build-amd64.outputs.digest }}"
+          DIGEST="${DIGEST#sha256:}"
           echo "ref=ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@sha256:${DIGEST}" >> $GITHUB_OUTPUT
           echo "Verifying against digest sha256:${DIGEST}"
 
       - name: Scan for vulnerabilities (SARIF, pre-promotion)
         if: inputs.enable-trivy
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
+          TRIVY_PLATFORM: linux/amd64
           # trivy-action v0.36 defaults the vulnerability DB to
           # mirror.gcr.io, which answered `429 Too Many Requests` on run
           # 39588448211 and failed the merge job for slim 8.5. A failed merge
@@ -825,6 +963,7 @@ jobs:
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
+          version: v0.76.2
           image-ref: ${{ steps.verify_ref.outputs.ref }}
           format: 'sarif'
           output: 'trivy-results.sarif'
@@ -844,15 +983,36 @@ jobs:
       # posture of the published tags cannot regress.
       - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (pre-promotion gate)
         if: inputs.enable-trivy
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
+          TRIVY_PLATFORM: linux/amd64
           # Same DB fallback as the SARIF scan above; this step reuses the DB
           # that one already pulled into ~/.cache/trivy, but must not depend on
           # it (the SARIF step is skippable via enable-trivy paths).
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
+          version: v0.76.2
           image-ref: ${{ steps.verify_ref.outputs.ref }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
+          trivyignores: '.trivyignore'
+
+      - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (arm64, pre-promotion)
+        if: inputs.enable-trivy && needs.build-arm64.outputs.digest != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_PLATFORM: linux/arm64
+          # Same DB fallback as the SARIF scan above; this step reuses the DB
+          # that one already pulled into ~/.cache/trivy, but must not depend on
+          # it (the SARIF step is skippable via enable-trivy paths).
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
+        with:
+          version: v0.76.2
+          image-ref: ghcr.io/${{ github.repository }}/${{ inputs.image-name }}@${{ needs.build-arm64.outputs.digest }}
           format: 'table'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true

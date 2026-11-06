@@ -10,18 +10,18 @@ weight: 4
 
 | Tag | Tier | Size |
 |-----|------|------|
-| `php-fpm-nginx:8.5-bookworm-slim` | Slim | ~120 MiB |
-| `php-fpm-nginx:8.5-bookworm` | Standard | ~250 MiB |
-| `php-fpm-nginx:8.5-bookworm-chromium` | Chromium | ~700 MiB |
-| `php-fpm-nginx:8.5-bookworm-slim` | Slim | ~120 MiB |
-| `php-fpm-nginx:8.5-bookworm` | Standard | ~250 MiB |
-| `php-fpm-nginx:8.5-bookworm-chromium` | Chromium | ~700 MiB |
-| `php-fpm-nginx:8.3-bookworm-slim` | Slim | ~120 MiB |
-| `php-fpm-nginx:8.3-bookworm` | Standard | ~250 MiB |
-| `php-fpm-nginx:8.3-bookworm-chromium` | Chromium | ~700 MiB |
-| `php-fpm-nginx:8.2-bookworm-slim` | Slim | ~120 MiB |
-| `php-fpm-nginx:8.2-bookworm` | Standard | ~250 MiB |
-| `php-fpm-nginx:8.2-bookworm-chromium` | Chromium | ~700 MiB |
+| `php-fpm-nginx:8.5-trixie-slim` | Slim | ~120 MiB |
+| `php-fpm-nginx:8.5-trixie` | Standard | ~250 MiB |
+| `php-fpm-nginx:8.5-trixie-chromium` | Chromium | ~700 MiB |
+| `php-fpm-nginx:8.5-trixie-slim` | Slim | ~120 MiB |
+| `php-fpm-nginx:8.5-trixie` | Standard | ~250 MiB |
+| `php-fpm-nginx:8.5-trixie-chromium` | Chromium | ~700 MiB |
+| `php-fpm-nginx:8.3-trixie-slim` | Slim | ~120 MiB |
+| `php-fpm-nginx:8.3-trixie` | Standard | ~250 MiB |
+| `php-fpm-nginx:8.3-trixie-chromium` | Chromium | ~700 MiB |
+| `php-fpm-nginx:8.2-trixie-slim` | Slim | ~120 MiB |
+| `php-fpm-nginx:8.2-trixie` | Standard | ~250 MiB |
+| `php-fpm-nginx:8.2-trixie-chromium` | Chromium | ~700 MiB |
 
 All tags also have `-rootless` and `-dev` variants (append the suffix).
 
@@ -29,35 +29,35 @@ All tags also have `-rootless` and `-dev` variants (append the suffix).
 
 | Tag | Tier | Size |
 |-----|------|------|
-| `php-fpm:8.5-bookworm-slim` | Slim | ~100 MiB |
-| `php-fpm:8.5-bookworm` | Standard | ~230 MiB |
-| `php-fpm:8.5-bookworm-slim` | Slim | ~100 MiB |
-| `php-fpm:8.5-bookworm` | Standard | ~230 MiB |
-| `php-fpm:8.3-bookworm-slim` | Slim | ~100 MiB |
-| `php-fpm:8.3-bookworm` | Standard | ~230 MiB |
-| `php-fpm:8.2-bookworm-slim` | Slim | ~100 MiB |
-| `php-fpm:8.2-bookworm` | Standard | ~230 MiB |
+| `php-fpm:8.5-trixie-slim` | Slim | ~100 MiB |
+| `php-fpm:8.5-trixie` | Standard | ~230 MiB |
+| `php-fpm:8.5-trixie-slim` | Slim | ~100 MiB |
+| `php-fpm:8.5-trixie` | Standard | ~230 MiB |
+| `php-fpm:8.3-trixie-slim` | Slim | ~100 MiB |
+| `php-fpm:8.3-trixie` | Standard | ~230 MiB |
+| `php-fpm:8.2-trixie-slim` | Slim | ~100 MiB |
+| `php-fpm:8.2-trixie` | Standard | ~230 MiB |
 
 ### php-cli (single-service)
 
 | Tag | Tier | Size |
 |-----|------|------|
-| `php-cli:8.5-bookworm-slim` | Slim | ~100 MiB |
-| `php-cli:8.5-bookworm` | Standard | ~230 MiB |
-| `php-cli:8.5-bookworm-chromium` | Chromium | ~680 MiB |
-| `php-cli:8.5-bookworm-dev` | Dev | ~700 MiB |
-| `php-cli:8.5-bookworm-slim` | Slim | ~100 MiB |
-| `php-cli:8.5-bookworm` | Standard | ~230 MiB |
-| `php-cli:8.5-bookworm-chromium` | Chromium | ~680 MiB |
-| `php-cli:8.5-bookworm-dev` | Dev | ~700 MiB |
-| `php-cli:8.3-bookworm-slim` | Slim | ~100 MiB |
-| `php-cli:8.3-bookworm` | Standard | ~230 MiB |
-| `php-cli:8.3-bookworm-chromium` | Chromium | ~680 MiB |
-| `php-cli:8.3-bookworm-dev` | Dev | ~700 MiB |
-| `php-cli:8.2-bookworm-slim` | Slim | ~100 MiB |
-| `php-cli:8.2-bookworm` | Standard | ~230 MiB |
-| `php-cli:8.2-bookworm-chromium` | Chromium | ~680 MiB |
-| `php-cli:8.2-bookworm-dev` | Dev | ~700 MiB |
+| `php-cli:8.5-trixie-slim` | Slim | ~100 MiB |
+| `php-cli:8.5-trixie` | Standard | ~230 MiB |
+| `php-cli:8.5-trixie-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.5-trixie-dev` | Dev | ~700 MiB |
+| `php-cli:8.5-trixie-slim` | Slim | ~100 MiB |
+| `php-cli:8.5-trixie` | Standard | ~230 MiB |
+| `php-cli:8.5-trixie-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.5-trixie-dev` | Dev | ~700 MiB |
+| `php-cli:8.3-trixie-slim` | Slim | ~100 MiB |
+| `php-cli:8.3-trixie` | Standard | ~230 MiB |
+| `php-cli:8.3-trixie-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.3-trixie-dev` | Dev | ~700 MiB |
+| `php-cli:8.2-trixie-slim` | Slim | ~100 MiB |
+| `php-cli:8.2-trixie` | Standard | ~230 MiB |
+| `php-cli:8.2-trixie-chromium` | Chromium | ~680 MiB |
+| `php-cli:8.2-trixie-dev` | Dev | ~700 MiB |
 
 All tags also have `-rootless` variants (append the suffix).
 
@@ -79,10 +79,10 @@ All images are prefixed with `ghcr.io/cboxdk/php-baseimages/`.
 
 | Variant | Runs as | Tag example |
 |---------|---------|-------------|
-| Root (default) | `root` at start, drops to `www-data` | `8.5-bookworm` |
-| Rootless | `www-data` from start | `8.5-bookworm-rootless` |
+| Root (default) | `root` at start, drops to `www-data` | `8.5-trixie` |
+| Rootless | `www-data` from start | `8.5-trixie-rootless` |
 
-Rootless variants append `-rootless` to any tag: `8.5-bookworm-slim-rootless`, `8.5-bookworm-chromium-rootless`, etc.
+Rootless variants append `-rootless` to any tag: `8.5-trixie-slim-rootless`, `8.5-trixie-chromium-rootless`, etc.
 
 **Use rootless when:**
 - Kubernetes with `runAsNonRoot: true` security policies
@@ -112,16 +112,16 @@ Rootless variants append `-rootless` to any tag: `8.5-bookworm-slim-rootless`, `
 # Multi-service (recommended for most projects)
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "80:80"
 
 # Single-service (Kubernetes / independent scaling)
 services:
   php:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-trixie-v2
   nginx:
-    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/nginx:trixie-v2
     ports:
       - "80:80"
     depends_on:

@@ -79,7 +79,7 @@ Docker resets the inherited `CMD` whenever a child image defines `ENTRYPOINT`.
 Restate the command:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 ENTRYPOINT ["/my-wrapper.sh"]
 # ❌ Without this line the container starts NOTHING:
 CMD ["/usr/local/bin/docker-entrypoint.sh"]

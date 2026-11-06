@@ -17,7 +17,7 @@ set -euo pipefail
 
 PHP_VERSION="${1:-8.5}"
 AMD64_HOST="${2:-root@77.42.30.235}"
-OS_VARIANT=bookworm
+OS_VARIANT=trixie
 REG=ghcr.io/cboxdk/php-baseimages
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"

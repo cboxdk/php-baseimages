@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/../lib/test-utils.sh"
 
 E2E_ROOT="$(get_e2e_root)"
 FIXTURE_DIR="$E2E_ROOT/fixtures/app-processes"
-IMAGE="${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1}"
+IMAGE="${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}"
 
 # Each case gets its own release tree on the host, so the symlink layout is the
 # real thing and no case reads the identity another case recorded:

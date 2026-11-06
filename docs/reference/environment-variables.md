@@ -51,7 +51,7 @@ id -g    # Your GID (typically 1000)
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     volumes:
       - ./:/var/www/html
     environment:
@@ -723,7 +723,7 @@ next fix to the health endpoints, security blocks or fastcgi params:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     volumes:
       - ./docker/nginx/server.d:/etc/nginx/server.d:ro
 ```
@@ -874,7 +874,7 @@ When mTLS is enabled, client certificate details are available:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"
@@ -931,7 +931,7 @@ The Management API provides runtime control over container processes. It is **di
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "9180:9180"
     environment:

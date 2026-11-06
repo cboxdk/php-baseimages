@@ -53,3 +53,9 @@ pie/binaries/
 
 # Cbox FPM Exporter binaries (downloaded by scripts/download-fpm-exporter.sh)
 fpm-exporter/binaries/
+
+# Generated source-build Dockerfiles
+.build/
+
+# Python tool bytecode
+__pycache__/

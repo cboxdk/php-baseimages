@@ -1,4 +1,7 @@
 name: Build and Push PHP-FPM Images
+run-name: >-
+  Build PHP fpm (${{ inputs.php_version || github.event.client_payload.php_version || 'all' }}) source:${{ github.event.client_payload.source_ref || github.sha }}
+
 
 # IMPORTANT: This workflow depends on php-base tier images being available.
 # Do NOT add push triggers for php-fpm/** paths - this would cause race conditions
@@ -18,12 +21,16 @@ on:
   # Use repository_dispatch from php-base workflow instead
   workflow_dispatch:
     inputs:
+      force_full:
+        description: 'Recompile instead of patching the previous image'
+        type: boolean
+        default: false
       php_version:
         description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
         required: false
         default: 'all'
       os_variant:
-        description: 'OS variant to build (bookworm or all)'
+        description: 'OS variant to build (trixie or all)'
         required: false
         default: 'all'
       tier:
@@ -32,9 +39,6 @@ on:
         default: 'all'
   repository_dispatch:
     types: [php-base-updated]
-  schedule:
-    # Weekly security rebuild - Monday 02:00 UTC (fallback; php-base dispatches php-php-base-updated on success)
-    - cron: '0 2 * * 1'
 
 jobs:
   # ═══════════════════════════════════════════════════════════════════════════
@@ -45,10 +49,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -77,10 +82,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -96,7 +102,7 @@ jobs:
       base-image-type: fpm
       test-script: |
         echo "Testing slim rootless image $IMAGE..."
-        # Verify running as non-root (www-data = uid 33 on Debian Bookworm)
+        # Verify running as non-root (www-data = uid 33 on Debian Trixie)
         docker run --rm $IMAGE id -u | grep -E "^33$"
         docker run --rm $IMAGE php -v
         docker run --rm $IMAGE composer --version
@@ -110,10 +116,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -140,10 +147,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -159,7 +167,7 @@ jobs:
       base-image-type: fpm
       test-script: |
         echo "Testing rootless image $IMAGE..."
-        # Verify running as non-root (www-data = uid 33 on Debian Bookworm)
+        # Verify running as non-root (www-data = uid 33 on Debian Trixie)
         docker run --rm $IMAGE id -u | grep -E "^33$"
         docker run --rm $IMAGE php -v
         docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
@@ -176,10 +184,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -208,10 +217,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -245,10 +255,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -277,10 +288,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm
       image-type: php-fpm
       php-version: ${{ matrix.php_version }}
@@ -316,3 +328,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v4
         with:
           event-type: php-fpm-updated
+          client-payload: >-
+            {"source_ref": "${{ github.event.client_payload.source_ref || github.sha }}", "php_version": "${{ inputs.php_version || github.event.client_payload.php_version || 'all' }}", "force_full": ${{ inputs.force_full || github.event.client_payload.force_full || false }}}

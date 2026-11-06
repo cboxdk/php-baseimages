@@ -1,4 +1,5 @@
 name: Build and Push Nginx Images
+run-name: Build Nginx security:${{ inputs.security_trigger || 'normal' }} OS:${{ inputs.os_revision || 'manual' }}
 
 # One chain per ref at a time: two chains racing on the same branch is how
 # the -v1 tags briefly carried an older build's content (a flake rerun
@@ -21,6 +22,13 @@ on:
     paths:
       - 'nginx/**'
   workflow_dispatch:
+    inputs:
+      os_revision:
+        type: string
+        default: ''
+      security_trigger:
+        type: string
+        default: ''
 
 env:
   REGISTRY: ghcr.io
@@ -32,11 +40,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os_variant: ['bookworm']
+        os_variant: ['trixie']
 
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -48,7 +57,7 @@ jobs:
           echo "path=./nginx/Dockerfile" >> $GITHUB_OUTPUT
           echo "context=." >> $GITHUB_OUTPUT
 
-      # Release channel tag (-vN): rebuilt weekly with security patches,
+      # Release channel tag (-vN): rebuilt with security patches,
       # never crosses a tooling major. See docs/reference/tagging-strategy.md.
       - name: Resolve release channel
         id: channel
@@ -90,7 +99,8 @@ jobs:
             type=raw,value=${{ matrix.os_variant }}${{ steps.channel.outputs.suffix }},enable=${{ steps.channel.outputs.suffix != '' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/v')) }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build and push Docker image
+      - name: Build immutable candidate
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: ${{ steps.dockerfile.outputs.context }}
@@ -102,20 +112,54 @@ jobs:
           # not matter — the PHP tiers, which are not, build natively per
           # architecture in `_build-image.yml`.
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          outputs: ${{ github.event_name != 'pull_request' && format('type=image,name={0}/{1},push-by-digest=true,name-canonical=true,push=true', env.REGISTRY, env.IMAGE_NAME) || '' }}
+          provenance: mode=max
+          sbom: true
+          pull: true
           labels: ${{ steps.meta.outputs.labels }}
-          # Weekly cache refresh - see _build-image.yml: without it, scheduled
-          # security rebuilds replay cached apt layers and patch nothing.
+          # Every mitigation must refresh APT, including two fixes in one week.
           build-args: |
-            CACHE_REFRESH=${{ steps.channel.outputs.week }}
+            CACHE_REFRESH=${{ github.run_id }}
           cache-from: type=gha,scope=nginx-${{ matrix.os_variant }}
           cache-to: type=gha,mode=max,scope=nginx-${{ matrix.os_variant }}
 
-      - name: Test image
+      - uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
         if: github.event_name != 'pull_request'
+        with:
+          version: v0.76.2
+          cache: true
+
+      - name: Gate both platforms before tags move
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         run: |
-          docker run -d --name test-nginx -p 8080:80 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.os_variant }}
-          sleep 5
-          curl -f http://localhost:8080/health || exit 1
-          docker stop test-nginx && docker rm test-nginx
+          for arch in amd64 arm64; do
+            trivy image --image-src remote --platform "linux/$arch" --scanners vuln --severity HIGH,CRITICAL \
+              --ignore-unfixed --ignorefile .trivyignore --exit-code 1 "$IMAGE"
+            bash scripts/test-nginx-image.sh "$IMAGE" "linux/$arch"
+          done
+
+      - uses: sigstore/cosign-installer@v4.1.2
+        if: github.event_name != 'pull_request'
+      - name: Sign verified candidate index
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "$IMAGE"
+
+      - name: Promote verified digest
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          args=()
+          while IFS= read -r tag; do
+            [ -z "$tag" ] || args+=(--tag "$tag")
+          done <<< "$TAGS"
+          test "${#args[@]}" -gt 0
+          # A single existing multi-platform index is copied without changing its digest.
+          docker buildx imagetools create "${args[@]}" "$IMAGE"

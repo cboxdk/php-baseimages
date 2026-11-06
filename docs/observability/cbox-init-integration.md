@@ -15,7 +15,7 @@ Cbox Init is included and enabled by default. Just use the image:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "80:80"
       - "9090:9090"  # Prometheus metrics
@@ -36,18 +36,18 @@ Set process env vars and omit the `command:` -- the entrypoint auto-detects and 
 ```yaml
 services:
   worker:
-    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     environment:
       LARAVEL_QUEUE: "true"
       CBOX_INIT_PROCESS_QUEUE_DEFAULT_SCALE: "5"
 
   scheduler:
-    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     environment:
       LARAVEL_SCHEDULER: "true"
 
   horizon:
-    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     environment:
       LARAVEL_HORIZON: "true"
 ```
@@ -188,7 +188,7 @@ environment:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "80:80"
       - "9180:9180"   # Management API
@@ -322,7 +322,7 @@ Processes start with environment-specific settings
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "80:80"
 ```
@@ -332,7 +332,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       LARAVEL_OPTIMIZE_ENABLED: "true"
       LARAVEL_MIGRATE_ENABLED: "true"
@@ -349,7 +349,7 @@ A complete example configuration for Laravel:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       # Laravel optimizations (runs config:cache, route:cache, view:cache)
       LARAVEL_OPTIMIZE_ENABLED: "true"
@@ -667,7 +667,7 @@ Mount a custom `cbox-init.yaml`:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       CBOX_INIT_CONFIG: /app/config/cbox-init.yaml
     volumes:

@@ -4,7 +4,7 @@ S="$HOME/cbox-bench"
 APP="$HOME/cbox-bench/lv-app"
 echo "=== Bygger ægte Laravel-fixture ==="
 rm -rf "$APP"; mkdir -p "$APP"
-docker run --rm -v "$APP:/var/www/html" -w /var/www/html ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1 sh -c '
+docker run --rm -v "$APP:/var/www/html" -w /var/www/html ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2 sh -c '
   set -e
   composer create-project laravel/laravel . --no-interaction --prefer-dist --quiet 2>&1 | tail -2
   # Benchmark-route: web-middleware (realistisk) + sqlite-query + transform

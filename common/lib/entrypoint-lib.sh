@@ -166,21 +166,39 @@ fix_symfony_permissions() {
 # belong to another mode. Called by both the php-fpm and php-fpm-nginx
 # entrypoints after sizing envs are resolved.
 ###########################################
+resolve_fpm_dynamic_defaults() {
+    local maximum="${PHP_FPM_MAX_CHILDREN:-10}"
+    local start=2 spare=6
+    case "$maximum" in
+        ''|*[!0-9]*) log_error "PHP_FPM_MAX_CHILDREN must be a positive integer"; return 1 ;;
+    esac
+    [ "$maximum" -gt 0 ] || { log_error "PHP_FPM_MAX_CHILDREN must be positive"; return 1; }
+    [ "$maximum" -ge 2 ] || start="$maximum"
+    [ "$maximum" -ge 6 ] || spare="$maximum"
+    export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-$start}"
+    export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+    export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-$spare}"
+    export PHP_FPM_MAX_SPAWN_RATE="${PHP_FPM_MAX_SPAWN_RATE:-32}"
+}
+
 write_pm_mode_dropin() {
+    resolve_fpm_dynamic_defaults || return 1
     local mode="${PHP_FPM_PM:-dynamic}"
     local dropin="/usr/local/etc/php-fpm.d/zz-pm-mode.conf"
     case "$mode" in
         dynamic)
             # The image BAKES a dynamic drop-in with env placeholders, so an
             # unwritable config dir (read-only rootfs) is fine for the default
-            # mode: FPM expands the exported PHP_FPM_* itself.
+            # mode: FPM expands the exported PHP_FPM_* itself. Keep these
+            # placeholders on writable filesystems too: cbox-init autotunes
+            # AFTER this entrypoint and may lower max_children below six.
             printf '%s\n' \
                 "; Auto-generated: dynamic warm floor (PHP_FPM_PM=dynamic)" \
                 "[www]" \
-                "pm.start_servers = ${PHP_FPM_START_SERVERS:-2}" \
-                "pm.min_spare_servers = ${PHP_FPM_MIN_SPARE:-1}" \
-                "pm.max_spare_servers = ${PHP_FPM_MAX_SPARE:-6}" \
-                "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
+                'pm.start_servers = ${PHP_FPM_START_SERVERS}' \
+                'pm.min_spare_servers = ${PHP_FPM_MIN_SPARE}' \
+                'pm.max_spare_servers = ${PHP_FPM_MAX_SPARE}' \
+                'pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE}' \
                 > "$dropin" 2>/dev/null || log_info "Config dir not writable - the baked dynamic drop-in stands (env-expanded by FPM)"
             ;;
         ondemand)

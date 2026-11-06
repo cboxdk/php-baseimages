@@ -33,10 +33,10 @@ on:
       os_variant:
         description: 'OS variant to test'
         required: false
-        default: 'bookworm'
+        default: 'trixie'
         type: choice
         options:
-          - 'bookworm'
+          - 'trixie'
       scenario:
         description: 'Test scenario to run'
         required: false
@@ -141,19 +141,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=== Building php-base:8.3-bookworm ==="
+          bash scripts/render-source-chain.sh 8.3
+          echo "=== Building php-base:8.3-trixie ==="
           docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 \
-            -f php-base/Dockerfile \
-            -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm .
+            -f .build/source-ci/php-base.Dockerfile \
+            -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-trixie .
 
-          echo "=== Building php-fpm:8.3-bookworm ==="
+          echo "=== Building php-fpm:8.3-trixie ==="
           docker build --target root --build-arg PHP_VERSION=8.3 \
-            -f php-fpm/Dockerfile \
-            -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm .
+            -f .build/source-ci/php-fpm.Dockerfile \
+            -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie .
 
-          echo "=== Building php-fpm-nginx:8.3-bookworm ==="
+          echo "=== Building php-fpm-nginx:8.3-trixie ==="
           docker build --target root --build-arg PHP_VERSION=8.3 \
-            -f php-fpm-nginx/Dockerfile \
+            -f .build/source-ci/php-fpm-nginx.Dockerfile \
             -t test-image:local .
 
       - name: Run plain PHP E2E test
@@ -196,7 +197,7 @@ jobs:
         run: |
           # Boots with SSL_MODE=on and =full and fetches over TLS (#55).
           # Nothing covered TLS before, which is how a standalone `http2 on;` -
-          # a directive nginx only learned in 1.25.1, against bookworm's
+          # a directive nginx only learned in 1.25.1, against trixie's
           # 1.22.1 - shipped and made the container refuse to start at all.
           tests/e2e/run-e2e-tests.sh "$IMAGE" ssl
 
@@ -302,10 +303,13 @@ jobs:
 
       - name: Determine Dockerfile paths
         id: paths
+        env:
+          PHP_SERIES: ${{ inputs.php_version }}
         run: |
-          echo "base=php-base/Dockerfile" >> $GITHUB_OUTPUT
-          echo "fpm=php-fpm/Dockerfile" >> $GITHUB_OUTPUT
-          echo "nginx=php-fpm-nginx/Dockerfile" >> $GITHUB_OUTPUT
+          bash scripts/render-source-chain.sh "$PHP_SERIES"
+          echo "base=.build/source-ci/php-base.Dockerfile" >> $GITHUB_OUTPUT
+          echo "fpm=.build/source-ci/php-fpm.Dockerfile" >> $GITHUB_OUTPUT
+          echo "nginx=.build/source-ci/php-fpm-nginx.Dockerfile" >> $GITHUB_OUTPUT
 
       - name: Build image chain
         env:

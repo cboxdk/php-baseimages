@@ -15,7 +15,7 @@ Cbox provides hooks for running custom code at container startup. Use these for 
 Place executable scripts in `/docker-entrypoint-init.d/`:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 COPY scripts/init-*.sh /docker-entrypoint-init.d/
 RUN chmod +x /docker-entrypoint-init.d/*.sh
@@ -40,7 +40,7 @@ Use built-in Laravel features:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       LARAVEL_MIGRATE_ENABLED: "true"    # Run migrations
       LARAVEL_OPTIMIZE_ENABLED: "true"   # Cache config/routes
@@ -51,7 +51,7 @@ services:
 For complete control:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 COPY custom-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 RUN chmod +x /usr/local/bin/custom-entrypoint.sh
@@ -257,7 +257,7 @@ fi
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     volumes:
       - .:/var/www/html
       - ./docker/init:/docker-entrypoint-init.d:ro
@@ -316,7 +316,7 @@ spec:
 
         # Run migrations
         - name: migrations
-          image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+          image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
           command: ['php', 'artisan', 'migrate', '--force']
           volumeMounts:
             - name: app
@@ -324,7 +324,7 @@ spec:
 
       containers:
         - name: app
-          image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+          image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 ```
 
 ### Lifecycle Hooks
@@ -332,7 +332,7 @@ spec:
 ```yaml
 containers:
   - name: app
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     lifecycle:
       postStart:
         exec:

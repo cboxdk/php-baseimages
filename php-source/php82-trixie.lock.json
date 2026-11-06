@@ -1,0 +1,8 @@
+{
+  "series": "8.2",
+  "channel": "stable",
+  "version": "8.2.35",
+  "url": "https://www.php.net/distributions/php-8.2.35.tar.xz",
+  "sha256": "5737b98601fe5ab1b8c5db0c82ed3158acb9283ed3081ffe2faffb9ac81455e6",
+  "docker_library_commit": "edf9e498995663d335b093735cb527b05bbd2bff"
+}

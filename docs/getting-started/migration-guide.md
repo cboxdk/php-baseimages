@@ -8,6 +8,45 @@ weight: 5
 
 Complete guide for migrating to Cbox from other PHP Docker solutions.
 
+## V1 to V2 (unpublished candidate)
+
+V2 changes the OS from Debian 12 Bookworm to Debian 13 Trixie. Rebuild the
+application image from scratch; do not apt-dist-upgrade a v1 container.
+The intended pin changes from `8.5-bookworm-v1` to `8.5-trixie-v2` once v2
+has been published. PHP 8.2, 8.3, 8.4 and 8.5 have independent source locks;
+CLI and FPM for a series use the same archive. PHP 8.6 remains a separate
+preview with ZTS and no promise of stable extension support.
+
+- Recompile custom PHP extensions and native libraries against Trixie. Do not
+  copy extension `.so` files from v1: ICU, ImageMagick and other library ABIs
+  changed. ImageMagick is now 7; validate image rendering in your application.
+  AVIF and HEIC encoders are installed explicitly because Trixie makes them
+  optional packages; local and native CI checks exercise image roundtrips.
+- The PHP `vips` extension is removed. Use GD/ImageMagick or a separate libvips
+  service if your workload needs it.
+- Node remains on the 22 LTS line (22.23.4); npm moves from bundled npm 10
+  to separately pinned npm 12.2.2 to remove its known vulnerable dependencies.
+  Re-run your application's `npm ci` and build scripts before adopting v2.
+- Match your application's Playwright version to `tools.playwright` in
+  `versions.json`, or install that application's browser revision yourself.
+  Composer and Playwright are pinned; apt-only patches do not update them.
+- `SSL_MODE=full` now redirects HTTP to HTTPS while retaining loopback
+  `/healthz`. Check ingress headers, application URLs and health probes.
+- FPM dynamic-pool defaults now follow the final autotune environment. This
+  fixes startup failure in small containers where autotuning chose fewer
+  workers than the previous hard-coded spare-worker count. With manual
+  `PHP_FPM_MAX_CHILDREN=1`, default start/spare counts now fit that pool.
+  Explicit user-provided start/spare values are retained.
+- Validate rootless permissions and your actual host kernel/container runtime.
+  Local macOS/OrbStack tests do not certify old RHEL host seccomp/Landlock
+  behavior. Keep the previous immutable application digest for rollback.
+
+The first v2 build is full. Subsequent OS-only patches require matching source,
+configuration, dependencies, architecture and Debian-suite labels. A new PHP
+patch or other changed build input forces a full build; unchanged apt indexes
+and completed build chains avoid scheduling needless work. See
+[the source-build implementation](https://github.com/cboxdk/php-baseimages/blob/main/php-source/README.md) for local tests.
+
 ## Quick Migration Matrix
 
 | From | Main Differences | Migration Complexity |
@@ -41,7 +80,7 @@ services:
 # After (Cbox)
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
 ```
 
 **2. Update environment variables:**
@@ -109,7 +148,7 @@ services:
 # After (Cbox)
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
     volumes:
       - ./:/var/www/html
 ```
@@ -170,7 +209,7 @@ services:
       - ./:/var/www/html
 
   nginx:
-    image: nginx:bookworm
+    image: nginx:trixie
     volumes:
       - ./:/var/www/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
@@ -178,7 +217,7 @@ services:
 # After (Cbox - combined)
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
     ports:
       - "8000:80"
     volumes:
@@ -193,7 +232,7 @@ FROM php:8.3-fpm
 RUN docker-php-ext-install pdo_mysql redis opcache gd
 
 # After - Extensions pre-installed, no Dockerfile needed!
-# Just use: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+# Just use: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
 ```
 
 **3. Update configuration method:**
@@ -234,7 +273,7 @@ Check if Cbox includes everything you need:
 
 ```bash
 # Check included extensions
-docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1 php -m
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2 php -m
 ```
 
 **Option 2: Extend Cbox Image**
@@ -242,7 +281,7 @@ docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1 php 
 For additional requirements:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
 
 # Add your custom extensions
 RUN apt-get update && apt-get install -y ffmpeg

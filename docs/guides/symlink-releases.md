@@ -70,7 +70,7 @@ If you pre-create `shared/storage` yourself, chown it to the app user
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "80:80"
     volumes:

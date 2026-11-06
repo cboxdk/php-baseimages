@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP-FPM + Nginx Image - Debian (Bookworm)
+# Cbox PHP-FPM + Nginx Image - Debian (Trixie)
 # ============================================================================
 # LAYER 4: Extends php-fpm with Nginx for single-container deployment
 #          Uses Cbox Init as process manager
@@ -22,45 +22,17 @@ ARG BASE_CHANNEL=""
 # ============================================================================
 # Import base images for each tier from php-fpm
 # ============================================================================
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim${BASE_CHANNEL} AS base-slim
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-slim-rootless${BASE_CHANNEL} AS base-slim-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm${BASE_CHANNEL} AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-rootless${BASE_CHANNEL} AS base-standard-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium${BASE_CHANNEL} AS base-chromium
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-chromium-rootless${BASE_CHANNEL} AS base-chromium-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev${BASE_CHANNEL} AS base-dev
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-bookworm-dev-rootless${BASE_CHANNEL} AS base-dev-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-slim${BASE_CHANNEL} AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-slim-rootless${BASE_CHANNEL} AS base-slim-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie${BASE_CHANNEL} AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-rootless${BASE_CHANNEL} AS base-standard-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-chromium${BASE_CHANNEL} AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-chromium-rootless${BASE_CHANNEL} AS base-chromium-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-dev${BASE_CHANNEL} AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm:${PHP_VERSION}-trixie-dev-rootless${BASE_CHANNEL} AS base-dev-rootless
 
-# ═══════════════════════════════════════════════════════════════════════════
-# BROTLI-BUILDER: ngx_brotli dynamic modules for Debian's nginx
-#
-# Bookworm does not package ngx_brotli, so compile it against the exact nginx
-# version apt installs. --with-compat makes the modules ABI-compatible with
-# Debian's differently-configured binary; brotli itself is statically linked,
-# so the tiers need no extra runtime library. Debian stable keeps one nginx
-# version (1.22.1) for its whole lifetime, so weekly rebuilds stay stable.
-# ═══════════════════════════════════════════════════════════════════════════
-FROM debian:bookworm-slim AS brotli-builder
-
-# Keep in sync with tools.ngx_brotli in versions.json
-ARG NGX_BROTLI_COMMIT=a71f9312c2deb28875acc7bacfdd5695a111aa53
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx ca-certificates curl git build-essential cmake libpcre2-dev zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && NGINX_VERSION=$(nginx -v 2>&1 | sed 's|.*nginx/||') \
-    && curl -fsSL "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" | tar -xz -C /usr/src \
-    && git clone https://github.com/google/ngx_brotli.git /usr/src/ngx_brotli \
-    && git -C /usr/src/ngx_brotli checkout "${NGX_BROTLI_COMMIT}" \
-    && git -C /usr/src/ngx_brotli submodule update --init --depth 1 \
-    && cmake -S /usr/src/ngx_brotli/deps/brotli -B /usr/src/ngx_brotli/deps/brotli/out \
-        -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS="-fPIC -O2" \
-    && cmake --build /usr/src/ngx_brotli/deps/brotli/out --config Release --target brotlienc -- -j"$(nproc)" \
-    && cd "/usr/src/nginx-${NGINX_VERSION}" \
-    && ./configure --with-compat --add-dynamic-module=/usr/src/ngx_brotli \
-    && make -j"$(nproc)" modules \
-    && mkdir -p /out \
-    && cp objs/ngx_http_brotli_filter_module.so objs/ngx_http_brotli_static_module.so /out/
+# Debian 13 packages Brotli modules against its nginx ABI. Apt upgrades the
+# server and modules together; no compiler stage or stale copied modules.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM + Nginx
@@ -73,7 +45,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Slim)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM + Nginx with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -106,13 +78,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
@@ -170,7 +139,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Slim Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM + Nginx with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -206,13 +175,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
@@ -278,7 +244,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -311,13 +277,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
@@ -375,7 +338,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all extensions, Composer, Node.js, and Cbox Init - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -411,13 +374,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
@@ -483,7 +443,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Chromium)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Chromium)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -516,13 +476,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
@@ -580,7 +537,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Chromium Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -616,13 +573,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
@@ -688,7 +642,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Dev)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Dev)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -721,13 +675,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
@@ -785,7 +736,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Bookworm (Dev Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM + Nginx ${PHP_VERSION} Trixie (Dev Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM + Nginx with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -821,13 +772,10 @@ RUN echo "cache-refresh=${CACHE_REFRESH}" >/dev/null && \
 
 # Install Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx libnginx-mod-http-headers-more-filter gettext-base \
+    nginx libnginx-mod-http-headers-more-filter \
+    libnginx-mod-http-brotli-filter libnginx-mod-http-brotli-static gettext-base \
     && rm -rf /var/lib/apt/lists/*
 
-# Brotli modules (built in brotli-builder against this exact nginx version)
-COPY --from=brotli-builder /out/ /usr/lib/nginx/modules/
-RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n' \
-    > /etc/nginx/modules-enabled/50-mod-http-brotli.conf
 
 # Create nginx directories with www-data ownership + forward access/error
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker

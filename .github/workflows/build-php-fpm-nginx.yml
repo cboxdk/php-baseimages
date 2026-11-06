@@ -1,4 +1,7 @@
 name: Build and Push PHP-FPM+Nginx Multi-Service Images
+run-name: >-
+  Build PHP fpm-nginx (${{ inputs.php_version || github.event.client_payload.php_version || 'all' }}) source:${{ github.event.client_payload.source_ref || github.sha }}
+
 
 # IMPORTANT: This workflow depends on php-fpm tier images being available.
 # Do NOT add push triggers for php-fpm-nginx/** paths - this would cause race conditions
@@ -18,12 +21,16 @@ on:
   # Use repository_dispatch from php-fpm workflow instead
   workflow_dispatch:
     inputs:
+      force_full:
+        description: 'Recompile instead of patching the previous image'
+        type: boolean
+        default: false
       php_version:
         description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
         required: false
         default: 'all'
       os_variant:
-        description: 'OS variant to build (bookworm or all)'
+        description: 'OS variant to build (trixie or all)'
         required: false
         default: 'all'
       tier:
@@ -32,9 +39,6 @@ on:
         default: 'all'
   repository_dispatch:
     types: [php-fpm-updated]
-  schedule:
-    # Weekly security rebuild - Monday 04:00 UTC (fallback; php-fpm dispatches php-php-fpm-updated on success)
-    - cron: '0 4 * * 1'
 
 jobs:
   # =====================================================================
@@ -45,10 +49,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -96,10 +101,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -147,10 +153,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -203,10 +210,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -263,10 +271,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -315,10 +324,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -372,10 +382,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -425,10 +436,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (github.event_name == 'workflow_dispatch' && inputs.php_version != 'all') && fromJson(format('["{0}"]', inputs.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
-        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["bookworm"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
+      force-full: ${{ inputs.force_full || github.event.client_payload.force_full || false }}
       image-name: php-fpm-nginx
       image-type: php-fpm-nginx
       php-version: ${{ matrix.php_version }}
@@ -489,6 +501,6 @@ jobs:
           echo "Weekly security rebuild completed"
           echo "All images rebuilt with latest security patches"
           echo "PHP versions: 8.2, 8.3, 8.4"
-          echo "OS variants: Debian Bookworm"
+          echo "OS variants: Debian Trixie"
           echo "Rootless variants: Available for all OS variants"
           echo "Image tiers: slim, standard, chromium, dev"

@@ -86,10 +86,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=== Building Bookworm chain ==="
-          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/Dockerfile .
+          bash scripts/render-source-chain.sh 8.3
+          echo "=== Building Trixie chain ==="
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-trixie -f .build/source-ci/php-base.Dockerfile .
+          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie -f .build/source-ci/php-fpm.Dockerfile .
+          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie -f .build/source-ci/php-fpm-nginx.Dockerfile .
 
       - name: Run Docker integration tests
         run: |
@@ -173,10 +174,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=== Building Bookworm chain ==="
-          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-bookworm -f php-fpm-nginx/Dockerfile .
+          bash scripts/render-source-chain.sh 8.3
+          echo "=== Building Trixie chain ==="
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-trixie -f .build/source-ci/php-base.Dockerfile .
+          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie -f .build/source-ci/php-fpm.Dockerfile .
+          docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-trixie -f .build/source-ci/php-fpm-nginx.Dockerfile .
 
       - name: Run performance benchmarks
         run: |
@@ -259,10 +261,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "=== Building Bookworm chain ==="
-          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-scan:bookworm -f php-fpm-nginx/Dockerfile .
+          bash scripts/render-source-chain.sh 8.3
+          echo "=== Building Trixie chain ==="
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-trixie -f .build/source-ci/php-base.Dockerfile .
+          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie -f .build/source-ci/php-fpm.Dockerfile .
+          docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-scan:trixie -f .build/source-ci/php-fpm-nginx.Dockerfile .
 
       - name: Install Trivy
         run: |
@@ -281,24 +284,24 @@ jobs:
         run: |
           trivy image \
             --format sarif \
-            --output trivy-bookworm-results.sarif \
+            --output trivy-trixie-results.sarif \
             --severity CRITICAL,HIGH \
-            cbox-scan:bookworm
+            cbox-scan:trixie
 
       - name: Upload Trivy results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: trivy-bookworm-results.sarif
-          category: trivy-bookworm
+          sarif_file: trivy-trixie-results.sarif
+          category: trivy-trixie
 
       - name: Generate security report summary
         if: always()
         run: |
           echo "# Security Scan Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Debian 12 (Bookworm)" >> $GITHUB_STEP_SUMMARY
-          trivy image --severity CRITICAL,HIGH --format table cbox-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
+          echo "## Debian 13 (Trixie)" >> $GITHUB_STEP_SUMMARY
+          trivy image --severity CRITICAL,HIGH --format table cbox-scan:trixie >> $GITHUB_STEP_SUMMARY || true
 
       # ─────────────────────────────────────────────────────────────────────
       # THE GATE, pre-merge. Everything above this point is a REPORT: it
@@ -328,4 +331,4 @@ jobs:
             --ignorefile .trivyignore \
             --exit-code 1 \
             --format table \
-            cbox-scan:bookworm
+            cbox-scan:trixie

@@ -32,11 +32,11 @@ release contract that separates behavior pinning from security patching.
 | PHP-FPM sizing | Boot-time calculation from cgroup limits **+ runtime autotuning** (live per-worker PSS measurement, graceful pool resizing) | Static configuration via env vars |
 | Health checks | Built-in, drive supervised restarts and readiness | Built-in (native health checks) |
 | Variants | FPM, CLI, FPM+Nginx, standalone Nginx | FPM, CLI, FPM+Nginx, FPM+Apache, FrankenPHP |
-| OS bases | Debian 12 | Debian, Alpine |
+| OS bases | Debian 13 | Debian, Alpine |
 | PHP versions | 8.2–8.5 | 8.1–8.5 |
 | Image tiers | 4 (Slim / Standard / Chromium / Dev), all with rootless variants | Base / Full per variant |
 | Framework startup automation | Laravel, Symfony, WordPress auto-detected (permissions, scheduler, queues, Horizon, Reverb) | Laravel-focused (opt-in automations) |
-| Version pinning | Rolling, **release-channel (`-v1`: behavior pinned, security patches keep flowing)**, and immutable digests | Rolling (weekly rebuilds) and immutable version pins |
+| Version pinning | Rolling, **release-channel (`-v2`: behavior pinned, security patches keep flowing)**, and immutable digests | Rolling (weekly rebuilds) and immutable version pins |
 | Observability | Prometheus metrics, structured JSON logs, OpenTelemetry-aware supervisor, `fpm_tune_*` capacity metrics | Standard container logging |
 | Community & maturity | Newer, smaller community | Large community, years of production use, extensive guides |
 
@@ -66,7 +66,7 @@ Be honest about this list before choosing Cbox:
   owns container readiness (`/readyz`, `/livez`, readiness file), exposes a
   management API/CLI/TUI for live scaling and reloads, and exports Prometheus
   metrics for all of it.
-- **Behavior-pinned, security-patched tags.** The `-v1` release channel means
+- **Behavior-pinned, security-patched tags.** The `-v2` release channel means
   "keep my runtime contract, keep patching the OS underneath" — a middle
   ground between rolling tags and immutable pins that age. See
   [Tagging Strategy](../reference/tagging-strategy).
