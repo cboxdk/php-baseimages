@@ -268,17 +268,10 @@ jobs:
           docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-scan:trixie -f .build/source-ci/php-fpm-nginx.Dockerfile .
 
       - name: Install Trivy
-        run: |
-          # Same version the pre-promotion gate runs (trivy-action v0.36.0
-          # installs 0.70.0). Two scanners of different vintages disagree about
-          # what counts as fixable, and this job now has to give the same
-          # verdict as the gate - a PR that passes here must not fail there.
-          TRIVY_VERSION=0.70.0
-          mkdir -p "$HOME/.local/bin"
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-            | sh -s -- -b "$HOME/.local/bin" "v${TRIVY_VERSION}"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          "$HOME/.local/bin/trivy" --version
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          version: v0.76.2
+          cache: true
 
       - name: Run Trivy vulnerability scanner
         run: |
