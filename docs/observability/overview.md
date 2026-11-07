@@ -72,7 +72,7 @@ The liveness endpoint at `/health/` requires no authentication and works directl
 # docker-compose.yml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       LARAVEL_SCHEDULER: "true"
 ```
@@ -241,7 +241,7 @@ The autoscaler spawns its own `queue:work` child processes — it does **not** u
 # docker-compose.yml
 services:
   autoscaler:
-    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     environment:
       CBOX_QUEUE_AUTOSCALER: "true"
       # Do NOT set LARAVEL_QUEUE or LARAVEL_QUEUE_HIGH — autoscaler manages workers itself
@@ -283,7 +283,7 @@ it is pre-1.0, and its crash recorder installs fatal-signal handlers:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-trixie-v2
     environment:
       PHP_TELEMETRY_NATIVE: "true"
       PHP_TELEMETRY_NATIVE_AUTO: "true"   # FPM only, NOT queue workers
@@ -308,7 +308,7 @@ Complete Laravel setup with all three packages:
 services:
   # Web application with health checks
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "80:80"
       - "9090:9090"    # cbox-init Prometheus metrics
@@ -318,7 +318,7 @@ services:
 
   # Queue autoscaler (manages its own workers)
   autoscaler:
-    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     environment:
       CBOX_QUEUE_AUTOSCALER: "true"
     volumes:

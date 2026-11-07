@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/test-utils.sh"
 
 # Default configuration
-DEFAULT_IMAGE="ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1"
+DEFAULT_IMAGE="ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2"
 SCENARIOS_DIR="$SCRIPT_DIR/scenarios"
 PARALLEL=${PARALLEL:-false}
 VERBOSE=${VERBOSE:-false}

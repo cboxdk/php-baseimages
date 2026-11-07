@@ -21,7 +21,7 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     steps:
       - uses: actions/checkout@v5
       - run: composer install --no-interaction
@@ -46,8 +46,8 @@ What makes this work (and what to know):
   so cbox-init, autotune and framework detection are not involved - your
   steps get a plain toolchain. That is correct for CI: those features manage
   a *serving* container.
-- **Pick the tier by what CI needs**: `-v1` (standard) for most suites,
-  `-chromium-v1` for browser tests, `-dev-v1` when coverage needs
+- **Pick the tier by what CI needs**: `-v2` (standard) for most suites,
+  `-chromium-v2` for browser tests, `-dev-v2` when coverage needs
   PCOV/Xdebug.
 
 ### With databases
@@ -60,7 +60,7 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     services:
       mysql:
         image: mysql:8.0
@@ -104,7 +104,7 @@ jobs:
   browser:
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-chromium-v1
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-chromium-v2
     steps:
       - uses: actions/checkout@v5
       - run: composer install --no-interaction
@@ -129,7 +129,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       app:
-        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
         ports:
           - 8080:80
     steps:

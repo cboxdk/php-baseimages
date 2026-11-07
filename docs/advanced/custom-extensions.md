@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y dependency-package \
 ### Basic Installation
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Install build dependencies, extension, enable, cleanup
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -41,7 +41,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
 ### With Version Pinning
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Pin specific version for reproducibility
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS \
@@ -66,7 +66,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS libssl-dev libcurl4-openss
 #### gRPC + Protobuf
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 RUN apt-get update && apt-get install -y \
     libgrpc-dev libprotobuf-dev protobuf-compiler \
@@ -146,7 +146,7 @@ For extensions not on PECL or needing custom options:
 ### Example: OpenSwoole with Custom Options
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS git libssl-dev libcurl4-openssl-dev \
     && git clone https://github.com/openswoole/swoole-src.git \
@@ -245,14 +245,14 @@ echo $libc->getpid();
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie
     environment:
       PHP_OPCACHE_PRELOAD: /opt/ffi/preload.php
     volumes:
       - ./ffi:/opt/ffi:ro
 ```
 
-Verified on `php-cli:8.5-bookworm`: without the preload, `FFI::scope('LIBC')`
+Verified on `php-cli:8.5-trixie`: without the preload, `FFI::scope('LIBC')`
 fails with `Failed loading scope 'LIBC'`; with it, the call returns.
 
 ### Two things that will bite you
@@ -335,7 +335,7 @@ HEALTHCHECK --interval=30s --timeout=3s \
 docker build --progress=plain -t test .
 
 # Interactive debugging
-docker run --rm -it ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1 sh
+docker run --rm -it ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2 sh
 apt-get update && apt-get install -y build-essential
 pecl install extension-name
 ```
@@ -380,7 +380,7 @@ RUN pecl install msgpack \
 ### Laravel with Swoole + Redis
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Build dependencies
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS libssl-dev libcurl4-openssl-dev \
@@ -397,7 +397,7 @@ RUN composer install --no-dev --optimize-autoloader
 ### API with gRPC + Protobuf
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 RUN apt-get update && apt-get install -y \
     libgrpc-dev libprotobuf-dev protobuf-compiler \

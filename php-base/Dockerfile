@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP Base Image - Debian (Bookworm)
+# Cbox PHP Base Image - Debian (Trixie)
 # ============================================================================
 # LAYER 2: Single source of truth for all PHP extensions, Composer, Node, Cbox Init
 # All other images (php-cli, php-fpm, php-fpm-nginx, php-swoole, etc.) extend this
@@ -18,6 +18,9 @@
 # ============================================================================
 # PHP Version (parameterized - pass via --build-arg)
 # ============================================================================
+ARG COMPOSER_VERSION=2.11.1
+ARG NPM_VERSION=12.2.2
+ARG PLAYWRIGHT_VERSION=1.65.0
 ARG PHP_VERSION=8.5
 
 # ============================================================================
@@ -38,13 +41,15 @@ ARG SPX_VERSION=v0.4.22
 # JS runtimes are installed via RUN (official tarball/zip), not `COPY --from`,
 # because copying from an external image stage triggers a buildx blob-mount
 # failure on our self-hosted runner (the layer gets dropped on push to ghcr).
-ARG NODE_VERSION=22.23.3
+ARG NODE_VERSION=22.23.4
 ARG BUN_VERSION=1.3.14
 
 # ============================================================================
 # Cbox Init binary selection (multi-stage to avoid dead layers)
 # Only the correct architecture binary is ever present in the final image.
 # ============================================================================
+FROM composer:${COMPOSER_VERSION} AS composer-bin
+
 FROM scratch AS cbox-init-amd64
 COPY cbox-init/binaries/cbox-init-linux-amd64 /cbox-init
 
@@ -69,7 +74,7 @@ FROM fpm-exporter-${TARGETARCH} AS fpm-exporter-bin
 # SLIM BASE - Minimal dependencies, essential extensions only
 # ============================================================================
 ARG PHP_VERSION
-FROM php:${PHP_VERSION}-cli-bookworm AS slim-base
+FROM php:${PHP_VERSION}-cli-trixie AS slim-base
 
 ARG PHP_VERSION
 
@@ -81,7 +86,7 @@ ARG PHP_VERSION
 # default to a static value (fast rebuilds, bust manually with --build-arg).
 ARG CACHE_REFRESH=local
 # The bust layer IS the security-upgrade layer: parent images ship packages
-# (php:*-bookworm carries libssh2 via curl, for example) that our later
+# (php:*-trixie carries libssh2 via curl, for example) that our later
 # `apt-get install <other things>` never touches - `install` does not upgrade
 # unrelated already-installed packages. Upgrading here, keyed to the weekly
 # bust, is what makes "rebuilt weekly with security patches" true for the
@@ -108,10 +113,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Cron for Laravel Scheduler
     cron \
     # Runtime libraries (minimal set for slim tier)
-    libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 \
-    libpq5 libicu72 libzip4 \
+    libpng16-16t64 libjpeg62-turbo libfreetype6 libwebp7 \
+    libpq5 libicu76 libzip5 \
     libxml2 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
+    libbz2-1.0 libonig5 libreadline8t64 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
 
 # git 2.35+ refuses to operate on a repo owned by another UID ("dubious
@@ -266,7 +271,7 @@ RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
 # ============================================================================
 # Composer
 # ============================================================================
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer-bin /usr/bin/composer /usr/bin/composer
 
 # ============================================================================
 # Cbox Init (Process Manager)
@@ -391,9 +396,9 @@ RUN set -eux; \
 # ============================================================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # AVIF support
-    libavif15 \
+    libavif16 \
     # ImageMagick runtime
-    libmagickwand-6.q16-6 \
+    libmagickwand-7.q16-10 \
     # HEIC/HEIF support for ImageMagick
     libheif1 \
     # PDF support for ImageMagick (Ghostscript)
@@ -405,7 +410,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Netcat for health checks
     netcat-openbsd \
     # Runtime libs for extensions moved from slim (soap, xsl, ldap)
-    libxslt1.1 libldap-2.5-0 \
+    libxslt1.1 libldap2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install build deps for ImageMagick + moved extensions
@@ -487,8 +492,20 @@ RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
     /root/.pearrc /root/.pear && \
     find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all {} \; 2>/dev/null || true
 
-# ImageMagick Security Policy (Debian uses ImageMagick-6)
-COPY php-base/common/imagemagick-policy.xml /etc/ImageMagick-6/policy.xml
+# ImageMagick Security Policy (Debian uses ImageMagick-7)
+COPY php-base/common/imagemagick-policy.xml /etc/ImageMagick-7/policy.xml
+
+# Node 22 bundles npm 10, whose dependencies retain fixable HIGH CVEs. Pin
+# npm separately; changing this tool must invalidate the full-build fingerprint.
+ARG NPM_VERSION
+RUN npm install --global "npm@${NPM_VERSION}" && npm cache clean --force
+
+
+# Trixie makes HEIC/AVIF encoders optional recommendations. Keep writes
+# working under --no-install-recommends, as they did on Bookworm.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libheif-plugin-aomenc libheif-plugin-x265 \
+    && rm -rf /var/lib/apt/lists/*
 
 # ============================================================================
 # CHROMIUM BASE - Add Chromium for Browsershot/Dusk/Puppeteer
@@ -507,16 +524,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf \
     fonts-liberation \
     libnss3 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
+    libatk1.0-0t64 \
+    libatk-bridge2.0-0t64 \
+    libcups2t64 \
     libdrm2 \
     libxkbcommon0 \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
     libgbm1 \
-    libasound2 \
+    libasound2t64 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Puppeteer to use installed Chromium
@@ -528,14 +545,12 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 # pointed at the distro Chromium (no executablePath/channel option; watch
 # pestphp/pest-plugin-browser#243). So the zero-download path is baking
 # Playwright's own Chromium under a shared PLAYWRIGHT_BROWSERS_PATH. The
-# weekly rebuild tracks playwright@latest - exactly what pest docs tell
-# users to npm install - so app and image agree most weeks. On skew
-# ("Executable doesn't exist at /ms-playwright/..."), `npx playwright
-# install chromium` tops the shared dir up. No install-deps needed: the
-# distro chromium above already pulls every required library. Root is
-# fine: Playwright launches with chromiumSandbox=false by default.
+# version is pinned in versions.json, so its browser revision participates in
+# the full-build fingerprint. Apps must use that Playwright version or install
+# their own matching browser. OS-only patches preserve these browser bytes.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-RUN npm install -g playwright@latest \
+ARG PLAYWRIGHT_VERSION
+RUN npm install -g "playwright@${PLAYWRIGHT_VERSION}" \
     && playwright install chromium \
     && chmod -R a+rX /ms-playwright \
     && npm uninstall -g playwright \

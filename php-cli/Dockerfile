@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP CLI Image - Debian (Bookworm)
+# Cbox PHP CLI Image - Debian (Trixie)
 # ============================================================================
 # LAYER 3: Extends php-base with CLI-specific entrypoint and healthcheck
 #
@@ -22,14 +22,14 @@ ARG BASE_CHANNEL=""
 # ============================================================================
 # Import base images for each tier
 # ============================================================================
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-slim${BASE_CHANNEL} AS base-slim
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-slim-rootless${BASE_CHANNEL} AS base-slim-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm${BASE_CHANNEL} AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-rootless${BASE_CHANNEL} AS base-standard-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-chromium${BASE_CHANNEL} AS base-chromium
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-chromium-rootless${BASE_CHANNEL} AS base-chromium-rootless
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev${BASE_CHANNEL} AS base-dev
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev-rootless${BASE_CHANNEL} AS base-dev-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-slim${BASE_CHANNEL} AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-slim-rootless${BASE_CHANNEL} AS base-slim-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie${BASE_CHANNEL} AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-rootless${BASE_CHANNEL} AS base-standard-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-chromium${BASE_CHANNEL} AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-chromium-rootless${BASE_CHANNEL} AS base-chromium-rootless
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-dev${BASE_CHANNEL} AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-dev-rootless${BASE_CHANNEL} AS base-dev-rootless
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP CLI with essential extensions
@@ -38,7 +38,7 @@ FROM base-slim AS slim-root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Slim)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP CLI with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -71,7 +71,7 @@ FROM base-slim-rootless AS slim-rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Slim Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP CLI with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -106,7 +106,7 @@ FROM base-standard AS root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie"
 LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -139,7 +139,7 @@ FROM base-standard-rootless AS rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -174,7 +174,7 @@ FROM base-chromium AS chromium-root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Chromium)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Chromium)"
 LABEL org.opencontainers.image.description="PHP CLI with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -207,7 +207,7 @@ FROM base-chromium-rootless AS chromium-rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Chromium Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -242,7 +242,7 @@ FROM base-dev AS dev-root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Dev)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Dev)"
 LABEL org.opencontainers.image.description="PHP CLI with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -275,7 +275,7 @@ FROM base-dev-rootless AS dev-rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Dev Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Trixie (Dev Rootless)"
 LABEL org.opencontainers.image.description="PHP CLI with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"

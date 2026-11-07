@@ -9,7 +9,7 @@ Cbox PHP Base Images is a Docker image build system providing production-ready P
 1. **Single-Process Containers**: Separate PHP-FPM, PHP-CLI, and Nginx containers (traditional microservices)
 2. **Multi-Service Containers**: PHP-FPM + Nginx in one container with Cbox Init process manager (no S6 Overlay)
 
-**Key Philosophy**: Lightweight Go-based process management (Cbox Init), comprehensive PHP extensions (40+), Debian 12 (Bookworm) base, and framework auto-detection (Laravel/Symfony/WordPress).
+**Key Philosophy**: Lightweight Go-based process management (Cbox Init), comprehensive PHP extensions (40+), Debian 13 (Trixie) base, and framework auto-detection (Laravel/Symfony/WordPress).
 
 ## Architecture
 
@@ -18,7 +18,7 @@ Cbox PHP Base Images is a Docker image build system providing production-ready P
 The images follow a layered build hierarchy where each layer extends the previous:
 
 ```
-Layer 1: Official PHP images (php:8.x-cli-bookworm, php:8.x-fpm-bookworm)
+Layer 1: Official PHP images (php:8.x-cli-trixie, php:8.x-fpm-trixie)
    ↓
 Layer 2: php-base        — Single source of truth for ALL PHP extensions, Composer, Node.js, Cbox Init
    ↓
@@ -89,19 +89,19 @@ Each image type has a `common/` directory with shared configuration:
 **Dockerfile Pattern**: Downstream images (php-fpm, php-cli) copy extensions and tools from php-base via multi-stage builds:
 ```dockerfile
 # Import pre-built base image
-FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-bookworm AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:8.5-trixie AS base-standard
 
 # Start from official PHP image, then copy everything from base
-FROM php:8.5-fpm-bookworm AS root
+FROM php:8.5-fpm-trixie AS root
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 ```
 
-### OS Configuration (Debian 12 Bookworm)
+### OS Configuration (Debian 12 Trixie)
 
-All images are based on Debian 12 (Bookworm):
+All images are based on Debian 13 (Trixie):
 - Uses glibc for maximum compatibility
 - Package manager: `apt`
 - Nginx user: `www-data`
@@ -145,7 +145,7 @@ open http://localhost:8081
 
 # Run extension tests
 ./tests/test-extensions.sh cbox-fpm
-./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm
+./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie
 
 # Check logs for entrypoint behavior
 docker-compose logs -f php-fpm-nginx
@@ -169,8 +169,8 @@ Located in `.github/workflows/`:
 **Key CI Features**:
 - **Matrix builds**: All PHP versions x tiers (slim/standard/chromium/dev) in parallel
 - **Weekly schedule**: Every Monday 03:00 UTC (`cron: '0 3 * * 1'`)
-- **Rolling tags**: `8.3-bookworm` gets updated weekly with security patches
-- **Immutable tags**: `8.3-bookworm-sha256:...` for reproducibility
+- **Rolling tags**: `8.3-trixie` gets updated weekly with security patches
+- **Immutable tags**: `8.3-trixie-sha256:...` for reproducibility
 - **Trivy scanning**: CVE scanning with results to GitHub Security tab
 - **Multi-arch**: Builds for `linux/amd64` and `linux/arm64`
 
@@ -373,19 +373,19 @@ This is because Dockerfiles copy from `{type}/common/` which is relative to repo
 **Strategy**: Rolling tags for automatic security updates
 
 **Schedule**: GitHub Actions runs every Monday 03:00 UTC
-- Pulls latest upstream base images (php:8.x-fpm-bookworm, etc.)
+- Pulls latest upstream base images (php:8.x-fpm-trixie, etc.)
 - Rebuilds all tiers (slim/standard/chromium/dev)
-- Tags with rolling version (`8.3-bookworm`) AND immutable SHA
+- Tags with rolling version (`8.3-trixie`) AND immutable SHA
 - Runs Trivy CVE scan
 - Pushes to ghcr.io
 
 **Users**: Simply `docker pull` weekly to get security patches
 
 **Tags**:
-- `8.3-bookworm` - Rolling (follows latest release, rebuilt weekly)
-- `8.3-bookworm-v1` - Release channel (recommended for production: behavior locked to tooling major v1, still rebuilt weekly with security patches; never crosses a major)
-- `8.3-bookworm-sha256:abc...` - Immutable (for reproducibility; ages by design)
-- `latest` - Follows `php.newest` in versions.json (currently 8.5-bookworm); `php.default` (8.5) is the documented recommendation
+- `8.3-trixie` - Rolling (follows latest release, rebuilt weekly)
+- `8.3-trixie-v2` - Release channel (recommended for production: behavior locked to tooling major v1, still rebuilt weekly with security patches; never crosses a major)
+- `8.3-trixie-sha256:abc...` - Immutable (for reproducibility; ages by design)
+- `latest` - Follows `php.newest` in versions.json (currently 8.5-trixie); `php.default` (8.5) is the documented recommendation
 
 GitHub releases (vX.Y.Z) version the image tooling (entrypoints, cbox-init, modules), not PHP. The channel comes from `release.channel` in versions.json — bump it when cutting a new MAJOR release, and keep the previous major building from a `release/vN` branch for 6 months.
 
@@ -394,10 +394,10 @@ GitHub releases (vX.Y.Z) version the image tooling (entrypoints, cbox-init, modu
 Images published to GitHub Container Registry: `ghcr.io/cboxdk/php-baseimages/`
 
 **Naming convention**:
-- `php-fpm:8.3-bookworm`
-- `php-cli:8.3-bookworm`
-- `nginx:bookworm`
-- `php-fpm-nginx:8.3-bookworm` (multi-service)
+- `php-fpm:8.3-trixie`
+- `php-cli:8.3-trixie`
+- `nginx:trixie`
+- `php-fpm-nginx:8.3-trixie` (multi-service)
 
 **Authentication** (for CI):
 ```bash

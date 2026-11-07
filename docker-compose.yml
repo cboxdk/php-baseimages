@@ -1,5 +1,5 @@
 services:
-  # PHP-FPM Service (Debian Bookworm)
+  # PHP-FPM Service (Debian Trixie)
   php-fpm:
     build:
       context: .
@@ -12,7 +12,7 @@ services:
     networks:
       - cbox-network
 
-  # PHP-FPM Dev Service (Debian Bookworm with Xdebug)
+  # PHP-FPM Dev Service (Debian Trixie with Xdebug)
   php-fpm-dev:
     build:
       context: .
@@ -31,7 +31,7 @@ services:
     profiles:
       - dev
 
-  # PHP-CLI Service (Debian Bookworm)
+  # PHP-CLI Service (Debian Trixie)
   php-cli:
     build:
       context: .
@@ -45,7 +45,7 @@ services:
       - cbox-network
     command: tail -f /dev/null
 
-  # Nginx Service (Debian Bookworm)
+  # Nginx Service (Debian Trixie)
   nginx:
     build:
       context: .
@@ -60,7 +60,7 @@ services:
     depends_on:
       - php-fpm
 
-  # PHP-FPM + Nginx Multi-Service (Debian Bookworm)
+  # PHP-FPM + Nginx Multi-Service (Debian Trixie)
   php-fpm-nginx:
     build:
       context: .

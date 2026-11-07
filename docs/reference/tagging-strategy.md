@@ -20,31 +20,32 @@ A tag can promise one of two things — **identical bits** (reproducibility) or 
 **stable behavior contract** (no breaking changes) — and no single tag can stay
 CVE-free while promising identical bits. So we publish three kinds of tags:
 
-| Kind | Example | Rebuilt weekly? | Crosses tooling majors? | Use when |
+| Kind | Example | Security updates? | Crosses tooling majors? | Use when |
 |------|---------|-----------------|------------------------|----------|
-| Rolling | `8.5-bookworm` | ✅ yes | ✅ yes (follows latest release) | You track upstream and want everything newest |
-| **Channel** | `8.5-bookworm-v1` | ✅ yes | ❌ never | **Recommended for production**: entrypoint/tooling behavior locked to major v1, OS security patches keep flowing |
-| Digest / SHA | `8.5-bookworm-sha-abc1234` or `@sha256:…` | ❌ immutable | — | Audits, reproductions, byte-exact rollbacks. Ages by design — contains the CVEs of its build day |
+| Rolling | `8.5-trixie` | ✅ yes | ✅ yes (follows latest release) | You track upstream and want everything newest |
+| **Channel** | `8.5-trixie-v2` | ✅ yes | ❌ never | **Recommended for production**: entrypoint/tooling behavior locked to major v2, OS security patches keep flowing |
+| Digest / SHA | `8.5-trixie-sha-abc1234` or `@sha256:…` | ❌ immutable | — | Audits, reproductions, byte-exact rollbacks. Ages by design — contains the CVEs of its build day |
 
 GitHub releases (`vX.Y.Z`) version the **image tooling** — entrypoint behavior,
 cbox-init version, nginx modules, the extension set — not PHP itself. The
 channel tag `-vN` follows the newest release within major `N`.
 
-**Support policy:** the current major's channel tags are rebuilt weekly. When a
+**Support policy:** the current major is checked hourly, with apt-only
+patching at a six-hour cadence and a 30-day full-build limit. When a
 new major ships, the previous major's channel keeps receiving weekly security
 rebuilds for **6 months** (from a `release/vN` maintenance branch), then goes
 EOL. Which majors are in support is recorded in `versions.json` under
 `release.supported_majors`.
 
-**Current status:** `-v1` is the current (and only) channel, built from
-`main`. A v2 channel was briefly opened for a unix-socket default and
-reversed on measurement - FastCGI keepalive on tcp beat it outright - so
-v2 waits for a genuinely breaking need. The `release/v1` branch exists
-and is dormant.
+**Current status:** v2 is an unpublished local candidate using Debian 13
+(Trixie). V1 production remains on Debian 12 (Bookworm). The six-month v1
+maintenance window starts when v2 ships, not while this candidate is tested.
+Before publication, activate and verify builds from the existing `release/v1`
+maintenance branch. A supported-major entry alone does not schedule builds.
 
 ```yaml
 # Recommended production pin: behavior locked, security patches current
-image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 ```
 
 ## Image Tiers
@@ -58,18 +59,18 @@ image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
 
 ## Complete Tag Examples
 
-Every tag below also exists with the `-v1` release-channel suffix (e.g.
-`8.5-bookworm-slim-v1`) — the recommended production pin.
+Every tag below also exists with the `-v2` release-channel suffix (e.g.
+`8.5-trixie-slim-v2`) — the recommended production pin.
 
 ### Standard Tier (Default)
 
 Most applications should use standard tier:
 
 ```text
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-trixie
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-trixie
 ```
 
 ### Slim Tier
@@ -77,10 +78,10 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm
 For APIs and microservices with minimal footprint:
 
 ```text
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-slim
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-slim
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-trixie-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-slim
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-trixie-slim
 ```
 
 ### Chromium Tier
@@ -88,10 +89,10 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-slim
 For Browsershot, Dusk, Puppeteer, and PDF generation:
 
 ```text
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-chromium
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-chromium
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-bookworm-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-trixie-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-chromium
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.2-trixie-chromium
 ```
 
 ### Rootless Variants
@@ -100,18 +101,18 @@ All tiers support rootless execution (runs as `www-data` user):
 
 ```text
 # Standard + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-rootless
 
 # Slim + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim-rootless
 
 # Chromium + rootless
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-rootless
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-rootless
 ```
 
 ## Version Matrix
 
-| PHP Version | Debian 12 (Slim) | Debian 12 (Standard) | Debian 12 (Chromium) | Debian 12 (Dev) |
+| PHP Version | Debian 13 (Slim) | Debian 13 (Standard) | Debian 13 (Chromium) | Debian 13 (Dev) |
 |-------------|------------------|----------------------|----------------------|-----------------|
 | 8.5         | ✅               | ✅                   | ✅                   | ✅              |
 | 8.4         | ✅               | ✅                   | ✅                   | ✅              |
@@ -133,15 +134,15 @@ Two deliberately distinct concepts, both defined in `versions.json`:
   extension ecosystem catches up.
 
 **Latest (follows `php.newest`)**:
-- `latest` → `8.5-bookworm`
-- `8.5` → `8.5-bookworm`
+- `latest` → `8.5-trixie`
+- `8.5` → `8.5-trixie`
 
 **Tier aliases**:
-- `slim` → `8.5-bookworm-slim`
-- `chromium` → `8.5-bookworm-chromium`
+- `slim` → `8.5-trixie-slim`
+- `chromium` → `8.5-trixie-chromium`
 
 Don't use `latest` in production — pin a release channel tag
-(`8.5-bookworm-v1`) instead.
+(`8.5-trixie-v2`) instead.
 
 ## Deprecation Policy
 
@@ -151,7 +152,7 @@ Cbox follows a predictable deprecation schedule based on upstream EOL dates.
 
 - **Active support end**: php.net stops shipping bug fixes; security fixes
   continue for two more years. This is a *normal, supported state* — images
-  keep building weekly, no warnings. Roughly half the PHP fleet is in this
+  keep receiving security updates, no warnings. Roughly half the PHP fleet is in this
   phase at any given time.
 - **Security support end**: the date that matters. 90 days before it, images
   enter the deprecation warning phase; after it, the removal countdown starts.
@@ -218,28 +219,28 @@ When a version is deprecated, migration guides are published at:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie
 ```
 
 ### API/Microservice (Slim Tier)
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim
 ```
 
 ### PDF Generation (Chromium Tier)
 ```yaml
 services:
   pdf:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium
 ```
 
 ### Kubernetes (Rootless)
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-rootless
 ```
 
 ## See Also

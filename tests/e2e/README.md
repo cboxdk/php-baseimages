@@ -5,11 +5,11 @@ End-to-end tests for Cbox PHP Base Images ensuring stability across all code typ
 ## Quick Start
 
 ```bash
-# Run all tests with default image (8.3-bookworm)
+# Run all tests with default image (8.3-trixie)
 ./run-e2e-tests.sh
 
 # Test specific image
-./run-e2e-tests.sh ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm
+./run-e2e-tests.sh ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-trixie
 
 # Test specific scenario
 ./run-e2e-tests.sh local-image:latest laravel
@@ -91,7 +91,7 @@ PHP_VERSIONS="8.2 8.3 8.4" ./tests/e2e/run-all-variants.sh all
 The `.github/workflows/e2e-tests.yml` runs:
 
 1. **Smoke test** (every push): Plain PHP + health checks
-2. **Comprehensive** (main branch): Full suite on 8.3-bookworm, 8.4-bookworm
+2. **Comprehensive** (main branch): Full suite on 8.3-trixie, 8.4-trixie
 3. **Manual trigger**: Any combination of version/scenario
 
 ## Adding New Tests

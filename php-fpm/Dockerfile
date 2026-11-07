@@ -1,5 +1,5 @@
 # ============================================================================
-# Cbox PHP-FPM Image - Debian (Bookworm)
+# Cbox PHP-FPM Image - Debian (Trixie)
 # ============================================================================
 # LAYER 3: Multi-stage build that copies extensions from php-base
 #          and uses official php-fpm as base
@@ -25,10 +25,10 @@ ARG BASE_CHANNEL=""
 # ============================================================================
 # Import base images for each tier (for extension copying)
 # ============================================================================
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-slim${BASE_CHANNEL} AS base-slim
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm${BASE_CHANNEL} AS base-standard
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-chromium${BASE_CHANNEL} AS base-chromium
-FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev${BASE_CHANNEL} AS base-dev
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-slim${BASE_CHANNEL} AS base-slim
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie${BASE_CHANNEL} AS base-standard
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-chromium${BASE_CHANNEL} AS base-chromium
+FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-trixie-dev${BASE_CHANNEL} AS base-dev
 
 # ============================================================================
 # Shared dependency stages (runtime libs installed once per tier)
@@ -36,7 +36,7 @@ FROM ghcr.io/cboxdk/php-baseimages/php-base:${PHP_VERSION}-bookworm-dev${BASE_CH
 
 # --- Slim tier: minimal runtime dependencies ---
 ARG PHP_VERSION
-FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
+FROM php:${PHP_VERSION}-fpm-trixie AS fpm-slim-deps
 
 # Weekly cache refresh: referencing this arg invalidates every later layer in
 # the stage chain once per ISO week, so scheduled security rebuilds install
@@ -46,7 +46,7 @@ FROM php:${PHP_VERSION}-fpm-bookworm AS fpm-slim-deps
 # default to a static value (fast rebuilds, bust manually with --build-arg).
 ARG CACHE_REFRESH=local
 # The bust layer IS the security-upgrade layer: parent images ship packages
-# (php:*-bookworm carries libssh2 via curl, for example) that our later
+# (php:*-trixie carries libssh2 via curl, for example) that our later
 # `apt-get install <other things>` never touches - `install` does not upgrade
 # unrelated already-installed packages. Upgrading here, keyed to the weekly
 # bust, is what makes "rebuilt weekly with security patches" true for the
@@ -92,10 +92,10 @@ ENV PHP_OPEN_BASEDIR=""
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps openssh-client netcat-openbsd libfcgi-bin \
     cron \
-    libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 \
-    libpq5 libicu72 libzip4 \
-    libxml2 libxslt1.1 libldap-2.5-0 \
-    libbz2-1.0 libonig5 libreadline8 libgmp10 \
+    libpng16-16t64 libjpeg62-turbo libfreetype6 libwebp7 \
+    libpq5 libicu76 libzip5 \
+    libxml2 libxslt1.1 libldap2 \
+    libbz2-1.0 libonig5 libreadline8t64 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
 
 # git 2.35+ refuses to operate on a repo owned by another UID ("dubious
@@ -141,8 +141,8 @@ STOPSIGNAL SIGQUIT
 FROM fpm-slim-deps AS fpm-standard-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libavif15 libmagickwand-6.q16-6 \
-    libheif1 ghostscript librsvg2-bin \
+    libavif16 libmagickwand-7.q16-10 \
+    libheif1 libheif-plugin-aomenc libheif-plugin-x265 ghostscript librsvg2-bin \
     libimage-exiftool-perl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -153,8 +153,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium chromium-driver \
     fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf \
     fonts-liberation libnss3 \
-    libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
-    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
+    libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2t64 \
     && rm -rf /var/lib/apt/lists/*
 
 # Playwright's Chromium build for Pest v4 browser testing - baked in
@@ -170,7 +170,7 @@ FROM fpm-slim-deps AS slim-root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Slim)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Slim)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -213,7 +213,7 @@ FROM fpm-slim-deps AS slim-rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Slim Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Slim Rootless)"
 LABEL org.opencontainers.image.description="Minimal PHP-FPM with essential extensions - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -254,7 +254,7 @@ FROM fpm-standard-deps AS root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -282,8 +282,8 @@ COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-standard /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
 
-# Copy ImageMagick policy from base image (Debian uses ImageMagick-6)
-COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+# Copy ImageMagick policy from base image (Debian uses ImageMagick-7)
+COPY --from=base-standard /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 
 # Copy Cbox shared libraries from base image
 COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
@@ -307,7 +307,7 @@ FROM fpm-standard-deps AS rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -328,7 +328,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
 COPY --from=base-standard /usr/bin/composer /usr/bin/composer
 COPY --from=base-standard /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-standard /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
-COPY --from=base-standard /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-standard /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 COPY --from=base-standard /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
@@ -354,7 +354,7 @@ FROM fpm-chromium-deps AS chromium-root
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Chromium)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Chromium)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium for Browsershot/Dusk"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -376,7 +376,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
 COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
 COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-chromium /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
-COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-chromium /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
@@ -397,7 +397,7 @@ FROM fpm-chromium-deps AS chromium-rootless
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Chromium Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Chromium Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with all features including Chromium - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -420,7 +420,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
 COPY --from=base-chromium /usr/bin/composer /usr/bin/composer
 COPY --from=base-chromium /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-chromium /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
-COPY --from=base-chromium /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-chromium /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 COPY --from=base-chromium /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \
@@ -462,7 +462,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Dev)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Dev)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX for development and testing"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -484,7 +484,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
 COPY --from=base-dev /usr/bin/composer /usr/bin/composer
 COPY --from=base-dev /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-dev /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
-COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-dev /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /docker-entrypoint-init.d /var/lib/php/sessions && \
@@ -521,7 +521,7 @@ ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
-LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Dev Rootless)"
+LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Trixie (Dev Rootless)"
 LABEL org.opencontainers.image.description="PHP-FPM with Xdebug, PCOV, SPX - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
@@ -544,7 +544,7 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && 
 COPY --from=base-dev /usr/bin/composer /usr/bin/composer
 COPY --from=base-dev /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-dev /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
-COPY --from=base-dev /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml
+COPY --from=base-dev /etc/ImageMagick-7/policy.xml /etc/ImageMagick-7/policy.xml
 COPY --from=base-dev /usr/local/lib/cbox/ /usr/local/lib/cbox/
 
 RUN mkdir -p /var/www/html /var/www/.composer /var/www/.npm \

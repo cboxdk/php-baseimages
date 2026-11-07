@@ -758,7 +758,7 @@ generate_ssl_config() {
     # nginx moved HTTP/2 from a `listen` parameter to its own directive in
     # 1.25.1, and emitting the new form on an older build aborts startup
     # outright: `[emerg] unknown directive "http2"`, so SSL_MODE=on never
-    # booted on bookworm at all (#55). bookworm ships 1.22.1. Pick the form
+    # booted on trixie at all (#55). trixie ships 1.22.1. Pick the form
     # from the running nginx rather than hardcoding either, so the trixie move
     # (#52, nginx 1.26+, where the listen parameter is deprecated) needs no
     # second edit here.
@@ -835,20 +835,33 @@ ${NGINX_SECURITY_HEADERS}
 }
 EOF
 
-    # Redirect plaintext -> https, but ONLY for genuinely plaintext requests.
-    # Behind a TLS-terminating proxy (Traefik/Cloudflare) the forwarded proto is
-    # already https, so gating on $forwarded_proto avoids an infinite redirect loop.
-    [ "$SSL_MODE" = "full" ] && cat > /etc/nginx/conf.d/http-redirect.conf <<EOF
-server {
-    listen ${NGINX_HTTP_PORT:-80};
-    server_name _;
-    # Redirect only genuine plaintext requests. If the forwarded proto is already
-    # https, TLS was terminated upstream (SSL_MODE=full is misconfigured behind a
-    # proxy) — return 404 instead of looping back to https.
-    if (\$forwarded_proto = "http") { return 301 https://\$host\$request_uri; }
-    return 404;
-}
-EOF
+    # The existing default HTTP server owns this port. A second server with
+    # the same server_name is ignored (#58). Inject the redirect into that
+    # server, exempting liveness before nginx evaluates the server rewrite.
+    # Forwarded HTTPS over plaintext gets 404, preserving the intended full-mode
+    # behavior without exposing the app over HTTP or creating a redirect loop.
+    rm -f /etc/nginx/conf.d/http-redirect.conf
+    if [ "$SSL_MODE" = "full" ]; then
+        local redirect_config
+        redirect_config=$(mktemp)
+        awk '
+            BEGIN {
+                print "map \"$uri:$forwarded_proto\" $cbox_https_redirect {"
+                print "    default 2;"
+                print "    ~^/healthz: 0;"
+                print "    ~:http$ 1;"
+                print "}"
+            }
+            { print }
+            !inserted && /^server[[:space:]]*\{/ {
+                print "    if ($cbox_https_redirect = 1) { return 301 https://$host$request_uri; }"
+                print "    if ($cbox_https_redirect = 2) { return 404; }"
+                inserted=1
+            }
+        ' /etc/nginx/conf.d/default.conf > "$redirect_config"
+        cat "$redirect_config" > /etc/nginx/conf.d/default.conf
+        rm -f "$redirect_config"
+    fi
     return 0
 }
 
@@ -980,7 +993,7 @@ preflight_checks() {
         # (releases/<id>/storage -> ../../shared/storage), and chown and chmod
         # disagree about a symlink named on the command line: GNU `chown -R`
         # defaults to -P and will NOT traverse it, while `chmod -R` follows it.
-        # Measured in bookworm, not assumed (#54):
+        # Measured in trixie, not assumed (#54):
         #
         #   chown -R www-data release/storage  -> app/public still root:root
         #   chmod -R 775     release/storage  -> an existing 644 file became 775
@@ -1233,12 +1246,12 @@ export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
 export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
 export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
 export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-256M}"
-export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
-export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+
+
 # Exported because the BAKED zz-pm-mode.conf carries ${PHP_FPM_MAX_SPAWN_RATE}
 # for FPM's own env expansion (the read-only-rootfs path).
 export PHP_FPM_MAX_SPAWN_RATE="${PHP_FPM_MAX_SPAWN_RATE:-32}"
-export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
+
 export PHP_FPM_MAX_REQUESTS="${PHP_FPM_MAX_REQUESTS:-500}"
 [ -n "$PHP_FPM_AUTOTUNE_PROFILE" ] && log_info "PHP-FPM autotune: profile=$PHP_FPM_AUTOTUNE_PROFILE (memory-derived worker sizing)"
 

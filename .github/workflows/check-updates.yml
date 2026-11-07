@@ -1,10 +1,15 @@
 name: Check Dependency Updates
+run-name: Dependency updates ${{ inputs.security_trigger || 'scheduled' }}
 
 on:
   schedule:
-    # Every Monday at 00:00 UTC (before weekly security rebuilds at 01:00)
-    - cron: '0 0 * * 1'
+    # Daily pin proposals; source/library CVEs cannot all be discovered from OS inventories.
+    - cron: '11 4 * * *'
   workflow_dispatch:
+    inputs:
+      security_trigger:
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -28,8 +33,10 @@ jobs:
           chmod +x scripts/check-eol.sh
 
           # Run EOL check and capture output
-          ./scripts/check-eol.sh 2>&1 | tee ${RUNNER_TEMP}/eol-output.txt || true
-          EOL_EXIT=$?
+          set +e
+          ./scripts/check-eol.sh 2>&1 | tee "${RUNNER_TEMP}/eol-output.txt"
+          EOL_EXIT=${PIPESTATUS[0]}
+          set -e
 
           # Store results
           echo "eol_exit_code=$EOL_EXIT" >> $GITHUB_OUTPUT
@@ -56,6 +63,8 @@ jobs:
           # Apply updates
           ./scripts/update-versions.sh --apply 2>&1 || true
 
+          python3 scripts/sync-build-defaults.py
+
           # Check if versions.json changed
           if git diff --quiet versions.json; then
             echo "has_updates=false" >> $GITHUB_OUTPUT
@@ -65,7 +74,7 @@ jobs:
 
       - name: Check for new PHP minor version
         run: |
-          for version in 8.5 9.0; do
+          for version in 8.6 9.0; do
             if curl -sf "https://www.php.net/releases/index.php?json&version=$version" > /dev/null 2>&1; then
               PHP_NEW=$(curl -s "https://www.php.net/releases/index.php?json&version=$version" | jq -r '.version // empty')
               if [ -n "$PHP_NEW" ] && ! jq -e ".php.supported | index(\"$version\")" versions.json > /dev/null; then
@@ -79,7 +88,10 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          add-paths: versions.json
+          add-paths: |
+            versions.json
+            php-base/Dockerfile
+            php-base/Dockerfile.php86-beta
           commit-message: "chore(deps): update versions.json with latest releases"
           title: "chore(deps): Weekly dependency updates"
           body: |
@@ -176,12 +188,13 @@ jobs:
       - name: Scan binaries for fixable CRITICAL/HIGH CVEs
         id: goscan
         continue-on-error: true
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         env:
           # DB fallback: mirror.gcr.io 429s under load (see _build-image.yml).
           TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
           TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
+          version: v0.76.2
           scan-type: rootfs
           scan-ref: ${{ runner.temp }}/go-binaries
           scanners: vuln
@@ -195,9 +208,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TITLE="Go CVE watch: pinned cbox-init/fpm-exporter binaries carry fixable CRITICAL/HIGH CVEs"
-          BODY="The weekly Go-binary scan found fixable CRITICAL/HIGH vulnerabilities in the pinned runtime binaries (see the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})).
+          BODY="The daily Go-binary scan found fixable CRITICAL/HIGH vulnerabilities in the pinned runtime binaries (see the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})).
 
-          Action: rebuild the affected binary upstream (cboxdk/init or cboxdk/fpm-exporter) against a current Go toolchain, cut a release, and bump the pin in versions.json. The image Trivy gate will BLOCK the next weekly rebuild until this is done."
+          Action: rebuild the affected binary upstream (cboxdk/init or cboxdk/fpm-exporter) against a current Go toolchain, cut a release, and bump the pin in versions.json. The image Trivy gate will BLOCK the next image promotion until this is done."
           existing=$(gh issue list --state open --search "in:title Go CVE watch" --json number --jq '.[0].number // empty')
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body "Still failing as of $(date -u +%F). $BODY"
@@ -217,16 +230,16 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
   # SUITE WATCH - upstream drops Debian suites in UNANNOUNCED patch releases
   # (bullseye vanished mid-LTS, docker-library/php#1596/#1619). This alerts the
-  # week bookworm stops receiving patches, instead of the week our builds freeze.
+  # week trixie stops receiving patches, instead of the week our builds freeze.
   # ═══════════════════════════════════════════════════════════════════════════
   suite-staleness:
-    name: Bookworm suite watch
+    name: Trixie suite watch
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Check bookworm still receives upstream patches
+      - name: Check trixie still receives upstream patches
         id: suite
         continue-on-error: true
         run: |
@@ -238,9 +251,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TITLE="Upstream suite watch: bookworm variants look dropped or lagging"
+          TITLE="Upstream suite watch: trixie variants look dropped or lagging"
           existing=$(gh issue list --state open --search "in:title suite watch" --json number --jq '.[0].number // empty')
-          BODY="php:<latest_patch>-fpm-bookworm is missing upstream while the same patch exists on the next suite. Precedent says the suite was dropped in a patch release with zero notice (docker-library/php#1619). Plan the trixie migration: flip ALL layers in one release (multi-stage COPY requires identical suites), and benchmark bookworm vs trixie first (docker-library/php#1431 was a 30-40% CPU regression at the previous suite jump). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY="php:<latest_patch>-fpm-trixie is missing upstream while the same patch exists on the next suite. Precedent says the suite was dropped in a patch release with zero notice (docker-library/php#1619). Plan the trixie migration: flip ALL layers in one release (multi-stage COPY requires identical suites), and benchmark trixie vs trixie first (docker-library/php#1431 was a 30-40% CPU regression at the previous suite jump). Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body "Still true as of $(date -u +%F). $BODY"
           else

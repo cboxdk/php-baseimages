@@ -220,6 +220,23 @@ fi
 
 echo ""
 
+# Non-APT tooling is part of the build fingerprint. Propose updates for review;
+# never silently float browsers or Composer during an OS-only security patch.
+for tool in composer playwright bun npm; do
+    current=$(echo "$CURRENT" | jq -r --arg tool "$tool" '.tools[$tool]')
+    case "$tool" in
+        composer) latest=$(curl -fsSL --max-time 30 https://getcomposer.org/versions | jq -r '.stable[0].version') ;;
+        npm) latest=$(curl -fsSL --max-time 30 https://registry.npmjs.org/npm/latest | jq -r '.version') ;;
+        playwright) latest=$(curl -fsSL --max-time 30 https://registry.npmjs.org/playwright/latest | jq -r '.version') ;;
+        bun) latest=$(fetch_github_latest "oven-sh/bun"); latest=${latest#bun-v} ;;
+    esac
+    if [[ "$latest" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "$latest" != "$current" ]]; then
+        UPDATE_COUNT=$((UPDATE_COUNT + 1))
+        UPDATE_LIST="${UPDATE_LIST}  - tools.$tool: $current -> $latest\n"
+        UPDATED=$(echo "$UPDATED" | jq --arg tool "$tool" --arg version "$latest" '.tools[$tool] = $version')
+    fi
+done
+
 # ============================================================================
 # Summary and apply
 # ============================================================================

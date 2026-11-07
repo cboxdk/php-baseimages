@@ -35,10 +35,10 @@ Tests framework detection within actual Docker containers across OS variants.
 ```
 
 **What it tests:**
-- Laravel detection in Bookworm container
-- Symfony detection in Bookworm container
-- WordPress detection in Bookworm container
-- Generic PHP detection in Bookworm container
+- Laravel detection in Trixie container
+- Symfony detection in Trixie container
+- WordPress detection in Trixie container
+- Generic PHP detection in Trixie container
 - Real entrypoint execution and behavior
 
 ## Running Tests
@@ -155,7 +155,7 @@ Edit `docker-test.sh` and add a new container test:
 
 ```bash
 test_newframework_container() {
-    info "Testing new framework detection in Bookworm container..."
+    info "Testing new framework detection in Trixie container..."
 
     # Create test structure
     mkdir -p tests/integration/framework-detection/fixtures/newframework
@@ -165,7 +165,7 @@ test_newframework_container() {
     docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/newframework:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm \
+        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie \
         -c "source /usr/local/bin/docker-entrypoint.sh && detect_framework" > /tmp/newframework-test.log 2>&1
 
     RESULT=$(cat /tmp/newframework-test.log | grep -o "newframework" || echo "error")
@@ -175,9 +175,9 @@ test_newframework_container() {
     rm -f /tmp/newframework-test.log
 
     if [ "$RESULT" = "newframework" ]; then
-        pass "New framework detected in Bookworm container"
+        pass "New framework detected in Trixie container"
     else
-        fail "New framework detection in Bookworm container" "Got: $RESULT"
+        fail "New framework detection in Trixie container" "Got: $RESULT"
     fi
 }
 ```
@@ -199,7 +199,7 @@ If Docker tests fail:
 
 3. **Pull latest images:**
    ```bash
-   docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm
+   docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie
    ```
 
 ### Unit Tests Failing

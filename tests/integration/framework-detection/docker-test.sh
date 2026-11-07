@@ -39,7 +39,7 @@ trap cleanup EXIT
 
 # Test Laravel container
 test_laravel_container() {
-    info "Testing Laravel detection in Bookworm container..."
+    info "Testing Laravel detection in Trixie container..."
 
     # Create test Laravel structure. Detection requires artisan PLUS
     # laravel/framework in composer.json (or bootstrap/app.php).
@@ -54,7 +54,7 @@ test_laravel_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/laravel:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm \
+        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/laravel-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -68,15 +68,15 @@ test_laravel_container() {
     rm -f /tmp/laravel-test.log
 
     if [ "$RESULT" = "laravel" ]; then
-        pass "Laravel detected in Bookworm container"
+        pass "Laravel detected in Trixie container"
     else
-        fail "Laravel detection in Bookworm container" "Got: $RESULT"
+        fail "Laravel detection in Trixie container" "Got: $RESULT"
     fi
 }
 
 # Test Symfony container
 test_symfony_container() {
-    info "Testing Symfony detection in Bookworm container..."
+    info "Testing Symfony detection in Trixie container..."
 
     # Create test Symfony structure
     # Note: detect_framework requires both bin/console AND symfony.lock
@@ -92,7 +92,7 @@ test_symfony_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/symfony:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm \
+        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/symfony-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -106,15 +106,15 @@ test_symfony_container() {
     rm -f /tmp/symfony-test.log
 
     if [ "$RESULT" = "symfony" ]; then
-        pass "Symfony detected in Bookworm container"
+        pass "Symfony detected in Trixie container"
     else
-        fail "Symfony detection in Bookworm container" "Got: $RESULT"
+        fail "Symfony detection in Trixie container" "Got: $RESULT"
     fi
 }
 
 # Test WordPress container
 test_wordpress_container() {
-    info "Testing WordPress detection in Bookworm container..."
+    info "Testing WordPress detection in Trixie container..."
 
     # Create test WordPress structure
     mkdir -p tests/integration/framework-detection/fixtures/wordpress
@@ -127,7 +127,7 @@ test_wordpress_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/wordpress:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm \
+        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/wordpress-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -141,15 +141,15 @@ test_wordpress_container() {
     rm -f /tmp/wordpress-test.log
 
     if [ "$RESULT" = "wordpress" ]; then
-        pass "WordPress detected in Bookworm container"
+        pass "WordPress detected in Trixie container"
     else
-        fail "WordPress detection in Bookworm container" "Got: $RESULT"
+        fail "WordPress detection in Trixie container" "Got: $RESULT"
     fi
 }
 
 # Test generic container
 test_generic_container() {
-    info "Testing generic PHP detection in Bookworm container..."
+    info "Testing generic PHP detection in Trixie container..."
 
     # Create test generic structure
     mkdir -p tests/integration/framework-detection/fixtures/generic
@@ -161,7 +161,7 @@ test_generic_container() {
     timeout 30 docker run --rm \
         -v "$(pwd)/tests/integration/framework-detection/fixtures/generic:/var/www/html" \
         --entrypoint /bin/sh \
-        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm \
+        ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie \
         -c ". /usr/local/lib/cbox/entrypoint-lib.sh && detect_framework" > /tmp/generic-test.log 2>&1 || true
 
     # Debug: show full log content
@@ -175,9 +175,9 @@ test_generic_container() {
     rm -f /tmp/generic-test.log
 
     if [ "$RESULT" = "generic" ]; then
-        pass "Generic PHP detected in Bookworm container"
+        pass "Generic PHP detected in Trixie container"
     else
-        fail "Generic PHP detection in Bookworm container" "Got: $RESULT"
+        fail "Generic PHP detection in Trixie container" "Got: $RESULT"
     fi
 }
 

@@ -7,8 +7,8 @@
 #
 # Usage:
 #   ./scripts/get-build-state.sh <php_version> <os_variant>
-#   ./scripts/get-build-state.sh 8.4 bookworm
-#   ./scripts/get-build-state.sh 8.2 bookworm
+#   ./scripts/get-build-state.sh 8.4 trixie
+#   ./scripts/get-build-state.sh 8.2 trixie
 #
 # Output (JSON):
 #   {
@@ -61,11 +61,14 @@ days_until() {
 add_months() {
     local base_date="$1"
     local months="$2"
-    if date --version >/dev/null 2>&1; then
-        date -d "$base_date + $months months" +%Y-%m-%d
-    else
-        date -j -v+"${months}m" -f "%Y-%m-%d" "$base_date" +%Y-%m-%d
-    fi
+    # Preserve the existing Linux release-date contract on macOS too. GNU
+    # date rolls an overflowing day into the next month; BSD date clamps it.
+    python3 - "$base_date" "$months" <<'PYDATE'
+import datetime, sys
+base = datetime.date.fromisoformat(sys.argv[1])
+month = base.year * 12 + base.month - 1 + int(sys.argv[2])
+print(datetime.date(month // 12, month % 12 + 1, 1) + datetime.timedelta(days=base.day - 1))
+PYDATE
 }
 
 # Get policy settings

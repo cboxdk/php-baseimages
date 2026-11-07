@@ -10,6 +10,7 @@ on:
   schedule:
     - cron: '0 7 * * 1'
   push:
+    branches: [main]
     paths:
       - '.github/workflows/verify-actions-usage.yml'
 
@@ -21,7 +22,7 @@ jobs:
     name: container job (test in the deploy image)
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-v1
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-v2
     steps:
       - uses: actions/checkout@v7
 
@@ -54,7 +55,7 @@ jobs:
     name: browser tests (baked Playwright, zero downloads)
     runs-on: ubuntu-24.04
     container:
-      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-bookworm-chromium-v1
+      image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-chromium-v2
     steps:
       - name: Pest browser test against the baked Chromium
         run: |
@@ -64,7 +65,8 @@ jobs:
           composer config allow-plugins.pestphp/pest-plugin true
           composer require --dev pestphp/pest pestphp/pest-plugin-browser -W --no-interaction --quiet
           npm init -y >/dev/null 2>&1
-          npm install playwright@latest >/dev/null 2>&1
+          PLAYWRIGHT_VERSION=$(node -p 'require("/usr/local/lib/node_modules/playwright/package.json").version')
+          npm install "playwright@$PLAYWRIGHT_VERSION" >/dev/null 2>&1
           printf '<h1>gha works</h1>' > public/index.html
           ( cd public && php -S 127.0.0.1:8099 >/dev/null 2>&1 & )
           sleep 1
@@ -72,9 +74,9 @@ jobs:
           printf '<?php it("browses", function () { visit("http://127.0.0.1:8099/")->assertSee("gha works"); });' > tests/Browser/SmokeTest.php
           ./vendor/bin/pest tests/Browser/SmokeTest.php
           if [ "$snap" = "$(printf '%s\n' /ms-playwright/* | md5sum)" ]; then
-            echo "ZERO browser downloads - baked build matched playwright@latest"
+            echo "ZERO browser downloads - baked build matched pinned Playwright"
           else
-            echo "::error::Playwright downloaded a browser: the baked revision no longer matches playwright@latest (version skew - is the weekly rebuild running?)"
+            echo "::error::Playwright downloaded a browser: the baked revision no longer matches the pinned Playwright package"
             exit 1
           fi
 
@@ -84,7 +86,7 @@ jobs:
     services:
       app:
         # The runner waits for the image's HEALTHCHECK before steps start.
-        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+        image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
         ports:
           - 8080:80
     steps:

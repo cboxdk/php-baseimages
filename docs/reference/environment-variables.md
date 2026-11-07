@@ -51,7 +51,7 @@ id -g    # Your GID (typically 1000)
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     volumes:
       - ./:/var/www/html
     environment:
@@ -304,11 +304,11 @@ or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly
 | `PHP_FPM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | Max request execution time before kill |
 
-In `dynamic` mode the spare counts are clamped to fit `pm.max_children`
-(`1 ≤ min_spare ≤ start_servers ≤ max_spare ≤ max_children`), with a `WARN`
-naming the values used, so `PHP_FPM_MAX_CHILDREN=4` on its own boots
-`2/1/4` instead of FPM refusing `max_spare 6 > max_children 4`. With autotune
-on, cbox-init sets all four itself and keeps the same order.
+In `dynamic` mode implicit start/spare defaults are bounded by `pm.max_children`.
+For example, `PHP_FPM_MAX_CHILDREN=4` on its own boots with `2/1/4` instead
+of an invalid six-worker spare limit. Explicit spare values are preserved;
+invalid combinations are rejected by FPM. With autotune on, cbox-init sets
+all four values before FPM starts.
 
 ### Runtime PHP-FPM tuning (fpm-tune, cbox-init 3.1+)
 
@@ -729,7 +729,7 @@ next fix to the health endpoints, security blocks or fastcgi params:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     volumes:
       - ./docker/nginx/server.d:/etc/nginx/server.d:ro
 ```
@@ -880,7 +880,7 @@ When mTLS is enabled, client certificate details are available:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     environment:
       SSL_MODE: "on"
       MTLS_ENABLED: "true"
@@ -937,7 +937,7 @@ The Management API provides runtime control over container processes. It is **di
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "9180:9180"
     environment:

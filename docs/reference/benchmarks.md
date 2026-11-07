@@ -65,15 +65,15 @@ was tuned:
 
 | Label | Image | Deviation from image defaults |
 |---|---|---|
-| cbox 1.6 | `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm` | none (1.6 defaults, built from source at the benchmarked commit) |
+| cbox 1.6 | `ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie` | none (1.6 defaults, built from source at the benchmarked commit) |
 | cbox 1.6 + keepalive | same | `NGINX_FASTCGI_KEEP_CONN=on` (documented opt-in) |
 | cbox 1.6.1 socket | same | `PHP_FPM_LISTEN=unix` - the php-fpm-nginx default since 1.6.1 (measured pre-flip, so socket rows are labeled separately) |
 | serversideup | `serversideup/php:8.5-fpm-nginx` | none |
 | serversideup + opcache | same | `PHP_OPCACHE_ENABLE=1` (their documented production switch; **their default ships OPcache off**) |
 | webdevops | `webdevops/php-nginx:8.5` | none |
 | trafex | `trafex/php-nginx:latest` | none |
-| apache | `php:8.5-apache-bookworm` | none |
-| frankenphp | `dunglas/frankenphp:php8.5-bookworm` | none |
+| apache | `php:8.5-apache-trixie` | none |
+| frankenphp | `dunglas/frankenphp:php8.5-trixie` | none |
 
 Image digests as pulled:
 
@@ -81,8 +81,8 @@ Image digests as pulled:
 serversideup/php:8.5-fpm-nginx@sha256:8f8c2f010ac5082ff3b42dbd1c2b2a77aa8a7ee0adb96d49920f32f45ae730e8
 webdevops/php-nginx:8.5@sha256:4900627696bffe4d24aacc20a2cc74df7719ada62250b6b92a5a136ff51d1ef7
 trafex/php-nginx:latest@sha256:8a82bac3c9c4853e4b0bd33edfbbb0f30d4b3546f177a35944047c3856ac72e7
-php:8.5-apache-bookworm@sha256:824adc2ce556dd5e05e816b1597cad90948e44b0b36ac2642f7449b801fb8dbd
-dunglas/frankenphp:php8.5-bookworm@sha256:519536270a58121c28f63bdb97f9a330b2e53922029792631cf50fe953ecd8d0
+php:8.5-apache-trixie@sha256:824adc2ce556dd5e05e816b1597cad90948e44b0b36ac2642f7449b801fb8dbd
+dunglas/frankenphp:php8.5-trixie@sha256:519536270a58121c28f63bdb97f9a330b2e53922029792631cf50fe953ecd8d0
 ```
 
 The cbox image was built on the SUT from the repository at the benchmarked

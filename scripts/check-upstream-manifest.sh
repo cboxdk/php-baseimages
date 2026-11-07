@@ -22,7 +22,7 @@ REQUIRED_ARCHS=(amd64 arm64)
 fail=0
 
 for variant in "${VARIANTS[@]}"; do
-    ref="php:${PHP_VERSION}-${variant}-bookworm"
+    ref="php:${PHP_VERSION}-${variant}-trixie"
     echo "Checking ${ref}..."
     if ! manifest=$(docker buildx imagetools inspect "docker.io/library/${ref}" --raw 2>&1); then
         echo "::error::Upstream ${ref} does not exist or is not pullable: ${manifest}"

@@ -28,7 +28,7 @@ concurrency:
 jobs:
   build:
     # Fork PRs get no package-write token; skip instead of failing.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -48,11 +48,15 @@ jobs:
         id: php
         run: echo "version=$(jq -r '.php.default' versions.json)" >> "$GITHUB_OUTPUT"
 
+      - name: Render matching PHP lock checks
+        run: |
+          python3 scripts/php-source.py --series "${{ steps.php.outputs.version }}" render php-fpm-nginx --output .build/pr-dev.Dockerfile
+
       - name: Build and push PR image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: php-fpm-nginx/Dockerfile
+          file: .build/pr-dev.Dockerfile
           target: root
           platforms: linux/amd64
           push: true

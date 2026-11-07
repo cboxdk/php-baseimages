@@ -1,0 +1,64 @@
+name: Check PHP source patches
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+# Serial checks avoid racing commits/dispatches. This workflow creates no release.
+concurrency:
+  group: php-source-patches
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Resolve stable patches
+        id: stable
+        run: |
+          failed=false
+          for series in $(jq -r '.php.supported[]' versions.json); do
+            if ! python3 scripts/php-source.py --series "$series" check --apply; then
+              echo "::error::PHP $series metadata check failed; retaining its verified lock"
+              failed=true
+            fi
+          done
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+      - name: Resolve optional PHP 8.6 preview
+        continue-on-error: true
+        run: python3 scripts/php-source.py --series 8.6 check --apply
+      - name: Commit new patch lock
+        run: |
+          if ! git diff --quiet -- php-source/*.lock.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add php-source/*.lock.json
+            git commit -m "build(php): update PHP source locks"
+            git push origin HEAD:main
+          fi
+      - name: Read Debian package-index revision
+        id: os
+        continue-on-error: true
+        run: |
+          REVISION=$(python3 scripts/image-patch.py os-revision)
+          echo "revision=$REVISION" >> "$GITHUB_OUTPUT"
+      - name: Start or retry the build chain
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATCH_OS_REVISION: ${{ steps.os.outputs.revision }}
+        run: |
+          # A Debian metadata outage must not hold back an already verified PHP patch.
+          export PATCH_OS_REVISION="${PATCH_OS_REVISION:-unavailable-$(date -u +%Y%m%d%H)}"
+          bash scripts/dispatch-php-source-builds.sh
+      - name: Report metadata failures after independent updates
+        if: steps.stable.outputs.failed == 'true' || steps.os.outcome == 'failure'
+        run: exit 1

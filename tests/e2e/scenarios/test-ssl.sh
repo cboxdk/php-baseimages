@@ -25,8 +25,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib/test-utils.sh"
 
-IMAGE="${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1}"
+IMAGE="${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}"
+HTTP_CONTAINER_PORT="${HTTP_CONTAINER_PORT:-80}"
+HTTPS_CONTAINER_PORT="${HTTPS_CONTAINER_PORT:-443}"
 TMP_ROOT="$(mktemp -d)"
+chmod 755 "$TMP_ROOT"
 CONTAINERS=""
 
 do_cleanup() {
@@ -51,7 +54,7 @@ start_container() {
     local name="$1"; shift
     docker rm -f "$name" >/dev/null 2>&1 || true
     CONTAINERS="$CONTAINERS $name"
-    docker run -d --name "$name" "$@" "$IMAGE" >/dev/null
+    docker run -d --name "$name" -e "NGINX_HTTP_PORT=$HTTP_CONTAINER_PORT" -e "NGINX_HTTPS_PORT=$HTTPS_CONTAINER_PORT" "$@" "$IMAGE" >/dev/null
 }
 
 # A container that dies on a bad directive never writes /tmp/cbox-ready, so
@@ -87,7 +90,7 @@ start_container e2e-ssl-on \
     -e SSL_MODE=on \
     -e SSL_CERTIFICATE_FILE=/certs/cert.pem \
     -e SSL_PRIVATE_KEY_FILE=/certs/key.pem \
-    -p 18443:443 -p 18080:80 \
+    -p "127.0.0.1:18443:$HTTPS_CONTAINER_PORT" -p "127.0.0.1:18080:$HTTP_CONTAINER_PORT" \
     -v "$TMP_ROOT/app:/var/www/html" \
     -v "$TMP_ROOT:/certs:ro"
 
@@ -137,7 +140,7 @@ start_container e2e-ssl-full \
     -e SSL_MODE=full \
     -e SSL_CERTIFICATE_FILE=/certs/cert.pem \
     -e SSL_PRIVATE_KEY_FILE=/certs/key.pem \
-    -p 18444:443 -p 18081:80 \
+    -p "127.0.0.1:18444:$HTTPS_CONTAINER_PORT" -p "127.0.0.1:18081:$HTTP_CONTAINER_PORT" \
     -v "$TMP_ROOT/app:/var/www/html" \
     -v "$TMP_ROOT:/certs:ro"
 
@@ -151,19 +154,26 @@ if wait_for_ready e2e-ssl-full; then
         log_fail "TLS fetch returned '${BODY:0:60}', expected tls-ok"
     fi
 
-    # The HTTP->HTTPS redirect is NOT asserted here, deliberately. SSL_MODE=full
-    # writes a redirect server to conf.d/http-redirect.conf, but nginx never
-    # reaches it: conf.d loads alphabetically, default.conf comes first, both
-    # servers listen on the same port with `server_name _` which matches no real
-    # Host, so every request falls through to the first-defined default server -
-    # the app. That is #58, and fixing it means deciding how /healthz stays
-    # reachable over plaintext on loopback, which the container healthcheck
-    # depends on. Asserting either behaviour here would encode a guess: a 200
-    # locks in the bug, a 3xx fails until #58 lands. So this test covers what
-    # SSL_MODE=full must do today - boot and serve TLS - and #58 owns the
-    # redirect along with its own assertion.
-    CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 http://localhost:18081/ 2>/dev/null || true)"
-    echo "  note: plain HTTP under SSL_MODE=full currently returns $CODE (see #58)"
+    assert_http_code "http://localhost:18081/" 301 "full mode redirects HTTP (#58)"
+    LOCATION=$(curl -sSI --max-time 15 'http://localhost:18081/path?x=1' | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')
+    if [ "$LOCATION" = 'https://localhost/path?x=1' ]; then
+        log_success "redirect preserves path and query"
+    else
+        log_fail "unexpected redirect target: $LOCATION"
+    fi
+    HEALTH=$(docker exec e2e-ssl-full curl -fsS "http://127.0.0.1:$HTTP_CONTAINER_PORT/healthz")
+    if [ "$HEALTH" = healthy ]; then
+        log_success "loopback HTTP liveness remains available"
+    else
+        log_fail "full mode broke loopback liveness"
+    fi
+    FORWARDED=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -H 'X-Forwarded-Proto: https' http://localhost:18081/)
+    if [ "$FORWARDED" = 404 ]; then
+        log_success "forwarded HTTPS avoids redirect loops"
+    else
+        log_fail "forwarded HTTPS returned $FORWARDED"
+    fi
+
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -172,7 +182,7 @@ fi
 log_section "Test 3: no TLS server when SSL_MODE is unset"
 
 start_container e2e-ssl-off \
-    -p 18082:80 \
+    -p "127.0.0.1:18082:$HTTP_CONTAINER_PORT" \
     -v "$TMP_ROOT/app:/var/www/html"
 
 if wait_for_ready e2e-ssl-off; then

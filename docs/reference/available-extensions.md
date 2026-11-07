@@ -210,12 +210,12 @@ http://your-app/?SPX_KEY=dev&SPX_UI_URI=/
 # Fast coverage in CI
 docker run --rm -e XDEBUG_MODE=off \
   -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-dev-v1 \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-trixie-dev-v2 \
   php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 
 # Step debugging
 docker run --rm -e XDEBUG_MODE=debug \
-  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-dev-v1 \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-trixie-dev-v2 \
   php artisan test
 ```
 
@@ -303,7 +303,7 @@ until you turn it on**:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-trixie-v2
     environment:
       PHP_TELEMETRY_NATIVE: "true"
       # FPM only - see the warning below
@@ -380,7 +380,7 @@ All PECL extensions use pinned versions for reproducibility:
 docker exec myapp php -m
 
 # One-liner
-docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1 php -m
+docker run --rm ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2 php -m
 ```
 
 ### Check Specific Extension
@@ -405,7 +405,7 @@ docker exec myapp php -i | grep -A 10 "redis"
 ### PECL Extensions
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Install PECL extension
 RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
@@ -417,7 +417,7 @@ RUN apt-get update && apt-get install -y $PHPIZE_DEPS && \
 ### Core Extensions
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Enable a disabled core extension
 RUN docker-php-ext-install shmop
@@ -428,7 +428,7 @@ RUN docker-php-ext-install shmop
 Some extensions require system packages:
 
 ```dockerfile
-FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 
 # Example: Adding additional libraries
 RUN apt-get update && apt-get install -y some-package-dev && \

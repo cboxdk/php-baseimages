@@ -1,5 +1,9 @@
 # Cbox PHP Base Images
 
+> V2 candidate: local validation only. The Trixie / `-v2` examples below describe
+> the next release; no v2 images have been published by this work. Existing
+> production deployments should keep their Bookworm / `-v1` pins.
+
 **Production PHP containers with an actual runtime control plane.** They
 supervise their own processes, understand their memory budget, and stay
 security-patched without silently changing their runtime contract.
@@ -24,13 +28,13 @@ understands *how it is being run*:
   that drive scale-out decisions — listen queue, worker saturation,
   max-children-reached.
 - **Pin your behavior, not your vulnerabilities** — release-channel tags
-  (`8.5-bookworm-v1`) lock the runtime contract to a major while weekly
-  rebuilds keep OS security patches flowing. Rolling tags and immutable
+  (`8.5-trixie-v2`) lock the runtime contract to a major while automated
+  patch checks keep OS security updates flowing. Rolling tags and immutable
   digests exist too. [Tagging strategy →](docs/reference/tagging-strategy.md)
 - **Frameworks handled at startup** — Laravel, Symfony, and WordPress are
   auto-detected; permissions, schedulers, and workers configured accordingly.
 - **Four tiers, root and rootless** — Slim (~120 MiB) → Standard → Chromium
-  (Browsershot/Dusk) → Dev (Xdebug/PCOV/SPX), on Debian 12, amd64 + arm64,
+  (Browsershot/Dusk) → Dev (Xdebug/PCOV/SPX), on Debian 13, amd64 + arm64,
   Cosign-signed and Trivy-scanned.
 
 📖 **[Cbox Init Documentation →](docs/observability/cbox-init-integration.md)**
@@ -44,8 +48,8 @@ version: '3.8'
 
 services:
   app:
-    # -v1 = release channel: behavior pinned, security patches keep flowing
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    # -v2 = release channel: behavior pinned, security patches keep flowing
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     ports:
       - "8000:80"
     volumes:
@@ -69,11 +73,11 @@ docker-compose up -d
 
 ### Base OS
 
-All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatibility.
+All images are built on **Debian 13 (Trixie)** with glibc for maximum compatibility.
 
 | Base Image | OS Version | Package Manager | libc |
 |------------|------------|-----------------|------|
-| `php:8.x-cli-bookworm` | Debian 12 (Bookworm) | apt | glibc |
+| Locked php.net source on `debian:trixie-slim` | Debian 13 (Trixie) | apt | glibc |
 
 ### Image Types
 
@@ -82,11 +86,11 @@ All images are built on **Debian 12 (Bookworm)** with glibc for maximum compatib
 | **php-fpm-nginx** | Multi-service container (PHP-FPM + Nginx + Cbox Init) |
 | **php-fpm** | Single-process PHP-FPM |
 | **php-cli** | CLI workers, cron jobs |
-| **nginx** | Standalone Nginx (`bookworm` tag only) |
+| **nginx** | Standalone Nginx (`trixie` tag only) |
 
-**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{php}-bookworm[-tier][-rootless][-vN]`
+**Full image name:** `ghcr.io/cboxdk/php-baseimages/{type}:{php}-trixie[-tier][-rootless][-vN]`
 
-Append `-v1` to any tag for the **release channel** — behavior pinned to tooling major v1, weekly security rebuilds. That is the recommended production pin.
+Append `-v2` to any tag for the **release channel** — behavior pinned to tooling major v2, automatic security updates. That is the recommended production pin.
 
 **PHP versions:** `8.2`, `8.3`, `8.4`, `8.5`
 
@@ -96,28 +100,28 @@ Each PHP image type is available in all tier and rootless combinations:
 
 | Tier | Tag | Rootless Tag |
 |------|-----|--------------|
-| **Standard** (default) | `8.5-bookworm` | `8.5-bookworm-rootless` |
-| **Slim** | `8.5-bookworm-slim` | `8.5-bookworm-slim-rootless` |
-| **Chromium** | `8.5-bookworm-chromium` | `8.5-bookworm-chromium-rootless` |
-| **Dev** | `8.5-bookworm-dev` | `8.5-bookworm-dev-rootless` |
+| **Standard** (default) | `8.5-trixie` | `8.5-trixie-rootless` |
+| **Slim** | `8.5-trixie-slim` | `8.5-trixie-slim-rootless` |
+| **Chromium** | `8.5-trixie-chromium` | `8.5-trixie-chromium-rootless` |
+| **Dev** | `8.5-trixie-dev` | `8.5-trixie-dev-rootless` |
 
 ```bash
 # Standard tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
-ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie-v2
 
 # Slim tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim-v2
 
 # Chromium tier
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-v2
 
 # Dev tier
-ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-dev-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie-dev-v2
 
 # Rootless variants
-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
-ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
+ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-rootless-v2
+ghcr.io/cboxdk/php-baseimages/php-cli:8.2-trixie-slim-rootless-v2
 ```
 
 ### Image Tiers: Slim / Standard / Chromium / Dev
@@ -133,12 +137,12 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
 
 | Tier | Tag Format | Example |
 |------|------------|---------|
-| Standard (default) | `{version}-bookworm` | `8.5-bookworm` |
-| Slim | `{version}-bookworm-slim` | `8.5-bookworm-slim` |
-| Chromium | `{version}-bookworm-chromium` | `8.5-bookworm-chromium` |
-| Dev | `{version}-bookworm-dev` | `8.5-bookworm-dev` |
-| Rootless variants | Add `-rootless` | `8.5-bookworm-rootless`, `8.5-bookworm-dev-rootless` |
-| **Release channel** | Add `-vN` (recommended in production) | `8.5-bookworm-v1`, `8.5-bookworm-slim-v1` |
+| Standard (default) | `{version}-trixie` | `8.5-trixie` |
+| Slim | `{version}-trixie-slim` | `8.5-trixie-slim` |
+| Chromium | `{version}-trixie-chromium` | `8.5-trixie-chromium` |
+| Dev | `{version}-trixie-dev` | `8.5-trixie-dev` |
+| Rootless variants | Add `-rootless` | `8.5-trixie-rootless`, `8.5-trixie-dev-rootless` |
+| **Release channel** | Add `-vN` (recommended in production) | `8.5-trixie-v2`, `8.5-trixie-slim-v2` |
 
 **What's included:**
 
@@ -157,9 +161,9 @@ Add `-dev` suffix for development images with debugging and profiling tools:
 
 | Production | Development |
 |------------|-------------|
-| `php-fpm-nginx:8.5-bookworm-v1` | `php-fpm-nginx:8.5-bookworm-dev-v1` |
-| `php-fpm:8.3-bookworm-v1` | `php-fpm:8.3-bookworm-dev-v1` |
-| `php-fpm:8.2-bookworm-v1` | `php-fpm:8.2-bookworm-dev-v1` |
+| `php-fpm-nginx:8.5-trixie-v2` | `php-fpm-nginx:8.5-trixie-dev-v2` |
+| `php-fpm:8.3-trixie-v2` | `php-fpm:8.3-trixie-dev-v2` |
+| `php-fpm:8.2-trixie-v2` | `php-fpm:8.2-trixie-dev-v2` |
 
 **Dev images include:**
 - **Xdebug 3.5** - Step debugging, code coverage, profiling
@@ -236,7 +240,7 @@ Single container with both PHP-FPM and Nginx:
 - ✅ Laravel Scheduler with cron support
 - ✅ Auto-fixes permissions
 - ✅ Graceful shutdown handling
-- ✅ Automated weekly security updates
+- ✅ Automatic security patching
 
 ### Pre-Installed Extensions
 
@@ -344,9 +348,12 @@ This remaps the container's `www-data` user and automatically fixes ownership of
 
 ## 🔐 Security & Trust
 
-### Weekly Automated Rebuilds
+### Source and Security Updates
 
-**Schedule:** Every Monday at 03:00 UTC
+**Schedule:** Hourly source/index checks. PHP patches trigger a full build;
+OS-only changes use an apt patch at a six-hour cadence. Unchanged images are
+reused, with a full build at least every 30 days. Tool upgrades arrive through
+reviewed dependency PRs.
 
 **What's Updated:**
 - Latest upstream Debian base images
@@ -357,7 +364,7 @@ This remaps the container's `www-data` user and automatically fixes ownership of
 **Stay Secure:**
 ```bash
 # Pull latest security patches
-docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+docker pull ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
 docker-compose up -d
 ```
 
@@ -365,21 +372,21 @@ docker-compose up -d
 
 | Tag Type | Example | Use Case |
 |----------|---------|----------|
-| **Standard** | `8.5-bookworm` | Most apps (default tier) |
-| **Slim** | `8.5-bookworm-slim` | Minimal footprint, microservices |
-| **Chromium** | `8.5-bookworm-chromium` | Browsershot, Dusk, PDF generation |
-| **Dev** | `8.5-bookworm-dev` | Development, testing, CI/CD |
-| **Rootless** | `8.5-bookworm-rootless` | Security-restricted environments |
-| **Slim + Rootless** | `8.5-bookworm-slim-rootless` | Minimal + non-root |
-| **Chromium + Rootless** | `8.5-bookworm-chromium-rootless` | Chromium + non-root |
-| **Dev + Rootless** | `8.5-bookworm-dev-rootless` | Development + non-root |
-| **PHP Pinned** | `8.5.10-bookworm` | Production version lock |
+| **Standard** | `8.5-trixie` | Most apps (default tier) |
+| **Slim** | `8.5-trixie-slim` | Minimal footprint, microservices |
+| **Chromium** | `8.5-trixie-chromium` | Browsershot, Dusk, PDF generation |
+| **Dev** | `8.5-trixie-dev` | Development, testing, CI/CD |
+| **Rootless** | `8.5-trixie-rootless` | Security-restricted environments |
+| **Slim + Rootless** | `8.5-trixie-slim-rootless` | Minimal + non-root |
+| **Chromium + Rootless** | `8.5-trixie-chromium-rootless` | Chromium + non-root |
+| **Dev + Rootless** | `8.5-trixie-dev-rootless` | Development + non-root |
+| **PHP Pinned** | `8.5.12-trixie` | Production version lock |
 
 **Standard Tier** (most applications):
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2
     # ImageMagick, Node.js included
 ```
 
@@ -387,7 +394,7 @@ services:
 ```yaml
 services:
   api:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-slim-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-slim-v2
     # Minimal size (~120 MiB), core extensions only
 ```
 
@@ -395,7 +402,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-chromium-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-v2
     # Includes Chromium for Browsershot/Dusk
 ```
 
@@ -403,7 +410,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-rootless-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-rootless-v2
     # Runs as www-data user, not root
 ```
 
@@ -428,10 +435,10 @@ git clone https://github.com/cboxdk/php-baseimages.git
 cd php-baseimages
 
 # Build multi-service image
-docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t my-image:8.3-bookworm .
+docker build -f php-fpm-nginx/Dockerfile --build-arg PHP_VERSION=8.3 -t my-image:8.3-trixie .
 
 # Test it
-docker run --rm -p 8000:80 my-image:8.3-bookworm
+docker run --rm -p 8000:80 my-image:8.3-trixie
 ```
 
 ## 🧪 Testing
@@ -456,7 +463,7 @@ docker run --rm -p 8000:80 my-image:8.3-bookworm
 ./tests/e2e/run-all-tests.sh --specific security
 
 # Run extension tests
-./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
+./tests/test-extensions.sh ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie-v2
 ```
 
 📖 **Test documentation:** [tests/README.md](tests/README.md)
@@ -488,7 +495,7 @@ version: '3.8'
 
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie-v2
     ports:
       - "8000:80"
     volumes:
@@ -526,12 +533,12 @@ version: '3.8'
 
 services:
   php-fpm:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie-v2
     volumes:
       - ./:/var/www/html
 
   nginx:
-    image: ghcr.io/cboxdk/php-baseimages/nginx:bookworm-v1
+    image: ghcr.io/cboxdk/php-baseimages/nginx:trixie-v2
     ports:
       - "80:80"
     volumes:
@@ -545,7 +552,7 @@ services:
 ```yaml
 services:
   app:
-    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-dev-v1
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-dev-v2
     volumes:
       - ./:/var/www/html
     environment:
@@ -558,7 +565,7 @@ services:
 ```bash
 # 10x faster than Xdebug coverage
 docker run --rm -v $(pwd):/var/www/html \
-  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-bookworm-dev-v1 \
+  ghcr.io/cboxdk/php-baseimages/php-fpm:8.5-trixie-dev-v2 \
   php -d pcov.enabled=1 vendor/bin/phpunit --coverage-text
 ```
 
@@ -586,7 +593,7 @@ We welcome contributions!
 
 - [x] PHP 8.2, 8.3, 8.4, 8.5 support
 - [x] Multi-service containers
-- [x] Weekly security rebuilds
+- [x] Automatic security patching
 - [x] Laravel Scheduler support
 - [x] Framework auto-detection
 - [x] Comprehensive E2E test suite (138+ tests)

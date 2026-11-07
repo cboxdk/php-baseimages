@@ -28,7 +28,7 @@ if [ -f "$LIB_PATH" ]; then
     . "$LIB_PATH"
 fi
 
-# This image is FROM nginx:*-bookworm, whose workers run as `nginx` (uid 101),
+# This image is FROM nginx:*-trixie, whose workers run as `nginx` (uid 101),
 # not `www-data`. PUID/PGID has to remap THAT user to be worth anything here,
 # and the chowns below have to follow it - they used to try `www-data` first,
 # which exists in the base image, so the document root ended up owned by a
