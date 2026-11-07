@@ -112,11 +112,13 @@ jobs:
       - run: vendor/bin/pest   # browser tests included - no playwright install step
 ```
 
-The one rule: the image bakes the browser matching `playwright@latest` at
-its weekly rebuild, so keep your npm `playwright` current (see the
-[Browser Testing guide](browser-testing) for the version-skew symptom and
-fix). Laravel Dusk works the same way via the image's version-matched
-`chromedriver` - no `dusk:chrome-driver` step.
+Pin your project's `playwright` dependency to the image's build version:
+`1.65.0` for v2.0.0, recorded under `tools.playwright` in
+[versions.json](https://github.com/cboxdk/php-baseimages/blob/v2.0.0/versions.json).
+The image includes the browser binaries; your project installs the npm package.
+OS-only patches preserve the browser revision. See the
+[Browser Testing guide](browser-testing) for version-skew fixes. Laravel Dusk
+uses the image's version-matched `chromedriver` without a `dusk:chrome-driver` step.
 
 ## Service containers: integration-test against the running image
 
@@ -153,5 +155,5 @@ unchanged on `ubuntu-24.04` and `ubuntu-24.04-arm` runners.
 |---|---|---|
 | Permission errors writing the workspace | `-rootless` image in a job container | Use the root variant (default tags) for CI |
 | `dubious ownership` from git | You are on a pre-1.6.2 image | Upgrade; `safe.directory` is baked since 1.6.2 |
-| Playwright downloads a browser anyway | npm `playwright` newer than the image's weekly bake | `docker pull` the current image, or pin `playwright` to the image week; see [Browser Testing](browser-testing) |
+| Playwright cannot find its browser | npm `playwright` differs from the image's build pin | Match `tools.playwright` from the image release's `versions.json`, or install your project's browser revision; see [Browser Testing](browser-testing) |
 | Service container never becomes ready | Health options missing on third-party images | Our images ship a `HEALTHCHECK`; for others add `options: --health-cmd ...` |

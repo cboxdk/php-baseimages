@@ -57,15 +57,19 @@ jobs:
     container:
       image: ghcr.io/cboxdk/php-baseimages/php-cli:8.5-trixie-chromium-v2
     steps:
+      - uses: actions/checkout@v7
+
       - name: Pest browser test against the baked Chromium
         run: |
+          # Only browser binaries are baked; the temporary global npm package
+          # is removed after installation. Use the repository's build pin.
+          PLAYWRIGHT_VERSION=$(node -p 'require(process.env.GITHUB_WORKSPACE + "/versions.json").tools.playwright')
           snap=$(printf '%s\n' /ms-playwright/* | md5sum)
           mkdir -p /tmp/bt/public && cd /tmp/bt
           composer init --quiet --no-interaction --name ci/browser
           composer config allow-plugins.pestphp/pest-plugin true
           composer require --dev pestphp/pest pestphp/pest-plugin-browser -W --no-interaction --quiet
           npm init -y >/dev/null 2>&1
-          PLAYWRIGHT_VERSION=$(node -p 'require("/usr/local/lib/node_modules/playwright/package.json").version')
           npm install "playwright@$PLAYWRIGHT_VERSION" >/dev/null 2>&1
           printf '<h1>gha works</h1>' > public/index.html
           ( cd public && php -S 127.0.0.1:8099 >/dev/null 2>&1 & )

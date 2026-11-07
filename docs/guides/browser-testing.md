@@ -22,18 +22,19 @@ browser builds - it cannot use the distro Chromium (no executable override
 in released plugin versions; watch
 [pest-plugin-browser#243](https://github.com/pestphp/pest-plugin-browser/pull/243)).
 The image therefore bakes Playwright's Chromium at
-`PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`, refreshed to `playwright@latest`
-on every weekly rebuild.
+`PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`, using the version pinned under
+`tools.playwright` in the image release's
+[versions.json](https://github.com/cboxdk/php-baseimages/blob/v2.0.0/versions.json).
+For v2.0.0, that version is `1.65.0`. The npm package itself belongs in your project.
 
 ```bash
 composer require pestphp/pest-plugin-browser --dev
-npm install playwright@latest
+npm install --save-exact playwright@1.65.0
 vendor/bin/pest
 ```
 
 Expected: tests run immediately - `npx playwright install` is NOT needed,
-because the baked browsers already match `playwright@latest` on a current
-image.
+when your npm package matches the image's build pin.
 
 Both plugin majors are validated against the same baked build (their
 Playwright contracts overlap): Pest 4 (`pest-plugin-browser` ^4, playwright
@@ -51,8 +52,9 @@ it('has a welcome page', function () {
 ### The one version rule
 
 Playwright browser builds are revision-locked to the npm package version.
-The image bakes the revision matching `playwright@latest` at build time;
-the weekly rebuild keeps that current.
+The image bakes the revision matching its pinned npm package version.
+OS-only patches preserve that browser revision; pulling an OS-patched image
+does not automatically match a newer npm package.
 
 ❌ **Symptom of version skew** (old image + newer npm playwright):
 
@@ -60,10 +62,11 @@ the weekly rebuild keeps that current.
 Error: Executable doesn't exist at /ms-playwright/chromium_headless_shell-.../...
 ```
 
-✅ **Fix**: `docker pull` the current weekly image, or top the shared dir
-up once: `npx playwright install chromium` (it lands in `/ms-playwright`
-because the env is already set; add a named volume on that path in CI to
-cache it across runs).
+✅ **Fix**: pin your npm package to the image release's `tools.playwright`
+version. If your project needs another version, run `npx playwright install
+chromium` after installing that package. It writes to `/ms-playwright`; the
+container user needs write access there. Cache that directory in CI when
+you install your own browser revision.
 
 ### Stability hints (not requirements)
 
@@ -128,7 +131,7 @@ and `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true` are baked in. See the
 |---|---|
 | `chromium` (distro) | Browsershot/Puppeteer, Dusk browser |
 | `chromium-driver` (distro) | Dusk - apt keeps it version-matched with chromium |
-| Playwright Chromium at `/ms-playwright` | Pest v4 browser tests - refreshed weekly to `playwright@latest` |
+| Playwright Chromium at `/ms-playwright` | Pest browser tests - version pinned in `tools.playwright` |
 | `PLAYWRIGHT_BROWSERS_PATH=/ms-playwright` | Any `npx playwright install` lands in the shared dir |
 | Node.js 22 + npm | Playwright's runtime |
 | Emoji/unicode fonts | Deterministic screenshot assertions |
