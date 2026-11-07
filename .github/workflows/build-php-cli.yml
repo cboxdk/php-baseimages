@@ -58,7 +58,7 @@ jobs:
       tag-suffix: slim
       cache-scope-prefix: cli
       enable-patch-tags: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing slim image $IMAGE..."
@@ -87,7 +87,7 @@ jobs:
       tag-suffix: slim-rootless
       cache-scope-prefix: cli
       enable-patch-tags: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing slim rootless image $IMAGE..."
@@ -118,7 +118,7 @@ jobs:
       cache-scope-prefix: cli
       enable-patch-tags: true
       enable-latest-tag: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing $IMAGE..."
@@ -149,7 +149,7 @@ jobs:
       cache-scope-prefix: cli
       enable-patch-tags: true
       enable-latest-tag: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing rootless image $IMAGE..."
@@ -183,7 +183,7 @@ jobs:
       tag-suffix: chromium
       cache-scope-prefix: cli
       enable-patch-tags: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing chromium image $IMAGE..."
@@ -215,7 +215,7 @@ jobs:
       tag-suffix: chromium-rootless
       cache-scope-prefix: cli
       enable-patch-tags: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing chromium rootless image $IMAGE..."
@@ -246,7 +246,7 @@ jobs:
       tag-suffix: dev
       cache-scope-prefix: cli
       enable-patch-tags: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing dev image $IMAGE..."
@@ -278,7 +278,7 @@ jobs:
       tag-suffix: dev-rootless
       cache-scope-prefix: cli
       enable-patch-tags: true
-      enable-cosign: false
+      enable-cosign: true
       base-image-type: cli
       test-script: |
         echo "Testing dev rootless image $IMAGE..."
