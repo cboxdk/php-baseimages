@@ -83,7 +83,7 @@
     "deprecated": []
   },
   "_meta": {
-    "last_updated": "2026-11-06",
+    "last_updated": "2026-11-07",
     "update_frequency": "weekly",
     "auto_pr_enabled": true
   },
@@ -93,6 +93,6 @@
       "2",
       "1"
     ],
-    "_policy": "Channel tags receive source and security updates without crossing tooling majors. Previous major receives security maintenance for 6 months after the new major ships, from its release/vN branch. Channel 2 is an unpublished local candidate until explicit release approval."
+    "_policy": "Channel tags receive source and security updates without crossing tooling majors. Previous major receives security maintenance for 6 months after the new major ships, from its release/vN branch. Channel 2 ships with v2.0.0."
   }
 }

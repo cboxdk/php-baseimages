@@ -2,7 +2,7 @@
 
 All notable changes to Cbox PHP Base Images.
 
-## [Unreleased]
+## [2.0.0] - 2026-11-07
 
 ### Removed
 - **The `vips` extension is gone from the standard tier and above** ([#23](https://github.com/cboxdk/php-baseimages/issues/23)) - **breaking for anyone using it.** It was the one extension with no PIE package under any name: PECL-only, with an upstream repository untouched since 2024-10 whose newest git tag (`v1.0.10`) is three releases behind what PECL serves. `pecl` does not exist in PHP 8.6 images and the PECL service has a stated shelf life, so `vips` could not survive that transition by waiting for a tag, by migrating, or by building from one. `intervention/image` runs on GD or ImageMagick, and ImageMagick covers the formats the comparison table gave libvips (HEIC/HEIF, SVG, colour profiles); what is lost is libvips' memory profile on very large images, which is better served by running libvips as its own service than in the PHP container. The removal also takes `libvips42`/`libvips-tools` out of php-fpm's standard tier, where they were left behind as dead weight
@@ -11,7 +11,7 @@ All notable changes to Cbox PHP Base Images.
 - Hourly Debian security-index changes bypass the ordinary six-hour cadence. Batch PHP dispatches avoid GitHub pending-run replacement; unchanged failures back off without suppressing new security revisions.
 - Add an hourly CVE watch of 18 architecture-specific PHP CLI/dev, FPM/Nginx/dev and standalone Nginx images. Cache immutable Trivy inventories, rescan against current advisories, and route OS fixes to rebuilds and bundled-tool fixes to dependency proposals.
 - Gate standalone Nginx tag promotion on both architectures passing CVE and HTTP checks; refresh APT on every requested rebuild. Pin Trivy actions and scanner versions.
-- V2 candidate: Debian 13 Trixie across all image layers; PHP 8.2–8.5 source builds from per-series SHA256/GPG-verified locks, with PHP 8.6 kept in a separate preview lane.
+- Debian 13 Trixie across all image layers; PHP 8.2–8.5 source builds from per-series SHA256/GPG-verified locks, with PHP 8.6 kept in a separate preview lane.
 - Install Trixie's separate AVIF/HEIC encoders explicitly. Verify image roundtrips, every required PHP extension and running FPM/Nginx health on each native architecture before promotion.
 - Hourly source checks and package-index-aware scheduling. Matching published images receive apt-only patches or digest reuse; changed inputs, a changed Debian suite, packages held back by APT, 16 patch layers or 30 days force a full build. Failed downstream chains are retried.
 - Keep Node on LTS 22 (22.23.4) and pin npm 12.2.2 separately, removing the fixable npm 10 dependency backlog. This is an npm major-version change.
