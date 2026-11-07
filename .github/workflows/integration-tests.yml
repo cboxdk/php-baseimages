@@ -104,86 +104,12 @@ jobs:
           name: test-results
           path: tests/integration/framework-detection/fixtures/
 
-  performance-benchmarks:
-    name: Performance Benchmarks
-    runs-on: ubuntu-24.04
-    needs: framework-detection-tests
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Read Cbox Init version
-        id: versions
-        run: |
-          echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-
-      - name: Download and verify Cbox Init binaries
-        run: |
-          mkdir -p cbox-init/binaries
-          VERSION="${{ steps.versions.outputs.CBOX_INIT_VERSION }}"
-          BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
-
-          echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
-
-          echo "Verifying SHA256 checksums..."
-          cd cbox-init/binaries
-          grep -E "cbox-init-linux-(amd64|arm64)$" checksums.txt | sha256sum -c -
-
-          cd -
-
-          chmod +x cbox-init/binaries/cbox-init-*
-
-          # Cbox FPM Exporter binaries (php-base COPYs them; verified against
-          # the sha256 pins in versions.json - upstream has no checksums.txt
-          # older than v3.1.1, and the pins are the stronger check anyway)
-          mkdir -p fpm-exporter/binaries
-          FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
-          FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
-          for a in amd64 arm64; do
-            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
-            WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
-            echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
-          done
-          chmod +x fpm-exporter/binaries/fpm-exporter-*
-
-          # PIE phar: php-base installs every extension with it, bind-mounted
-          # from the build context. Pinned and sha256-verified in versions.json
-          # like the two binaries above - and gitignored like them, so CI has
-          # to fetch it or the build fails with "pie.phar: not found".
-          mkdir -p pie/binaries
-          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
-          # --retry, like the cbox-init and fpm-exporter downloads above. This
-          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
-          # UTC a brief GitHub 500 took out two build jobs on main at exactly
-          # this line while the retried downloads beside it passed through the
-          # same blip untouched. A lost build job skips its `merge` job, and
-          # that tier's tag is then never promoted.
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
-            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
-            -o pie/binaries/pie.phar
-          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
-
-      - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bash scripts/render-source-chain.sh 8.3
-          echo "=== Building Trixie chain ==="
-          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-trixie -f .build/source-ci/php-base.Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-trixie -f .build/source-ci/php-fpm.Dockerfile .
-          docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-trixie -f .build/source-ci/php-fpm-nginx.Dockerfile .
-
+      # Measure the exact image already built and tested above. Rebuilding it
+      # on another runner doubles compilation/download work and adds flakiness.
       - name: Run performance benchmarks
-        run: |
-          chmod +x tests/benchmarks/run-benchmarks.sh
-          ./tests/benchmarks/run-benchmarks.sh
+        env:
+          BENCHMARK_IMAGE: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-trixie
+        run: bash tests/benchmarks/run-benchmarks.sh
 
       - name: Upload benchmark results
         if: always()
