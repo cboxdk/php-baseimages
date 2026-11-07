@@ -2,6 +2,15 @@
 set -euo pipefail
 image="${1:?image reference required}"
 platform="${2:-linux/amd64}"
+# Classic Docker image stores cannot load two architectures under the same
+# index digest. Resolve the selected platform to its own immutable manifest.
+manifest=$(docker buildx imagetools inspect "$image" --raw)
+if jq -e '.manifests' >/dev/null <<< "$manifest"; then
+    digest=$(jq -er --arg arch "${platform#linux/}"         '[.manifests[] | select(.platform.os == "linux" and .platform.architecture == $arch)] | if length == 1 then .[0].digest else error("Expected one platform manifest") end' <<< "$manifest")
+    repository="${image%@*}"
+    repository="${repository%:*}"
+    image="$repository@$digest"
+fi
 container=$(docker run -d --platform "$platform" -p 127.0.0.1::80 "$image")
 trap 'docker rm -f "$container" >/dev/null' EXIT
 address=$(docker port "$container" 80/tcp)
