@@ -1072,12 +1072,12 @@ jobs:
       - name: Install cosign
         id: cosign
         if: inputs.enable-cosign
-        uses: sigstore/cosign-installer@v4.1.2
+        uses: sigstore/cosign-installer@v4.1.3
         continue-on-error: true
 
       - name: Install cosign (second attempt)
         if: inputs.enable-cosign && steps.cosign.outcome == 'failure'
-        uses: sigstore/cosign-installer@v4.1.2
+        uses: sigstore/cosign-installer@v4.1.3
 
       - name: Sign image with cosign
         if: inputs.enable-cosign
