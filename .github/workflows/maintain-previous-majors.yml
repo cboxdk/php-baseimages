@@ -1,0 +1,50 @@
+name: Rebuild previous majors (security maintenance)
+
+# Scheduled workflows only run on the default branch, so the weekly crons in a
+# release/vN branch never fire. This job starts the maintenance branch's own
+# build chain instead: php-base and nginx there, and php-base dispatches its
+# downstream images on the same branch when it finishes.
+#
+# Which majors are maintained, from which branch and until when, lives in
+# versions.json under release.maintenance.
+on:
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: maintain-previous-majors
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Start each maintained branch's build chain
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TODAY=$(date -u +%F)
+          jq -r --arg today "$TODAY" '
+            .release as $r
+            | $r.maintenance // {} | to_entries[]
+            | select((.key as $k | $r.supported_majors | index($k)) and .value.until >= $today)
+            | .value.branch' versions.json | while read -r BRANCH; do
+            for WF in build-php-base.yml build-nginx.yml; do
+              if gh run list --workflow "$WF" --branch "$BRANCH" --limit 20 --json status \
+                   --jq 'any(.[]; .status != "completed")' | grep -q true; then
+                echo "$WF@$BRANCH already running; skipped"
+                continue
+              fi
+              gh workflow run "$WF" --ref "$BRANCH"
+              echo "Dispatched $WF@$BRANCH" | tee -a "$GITHUB_STEP_SUMMARY"
+            done
+          done

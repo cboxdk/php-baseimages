@@ -37,11 +37,19 @@ rebuilds for **6 months** (from a `release/vN` maintenance branch), then goes
 EOL. Which majors are in support is recorded in `versions.json` under
 `release.supported_majors`.
 
-**Current status:** v2 is an unpublished local candidate using Debian 13
-(Trixie). V1 production remains on Debian 12 (Bookworm). The six-month v1
-maintenance window starts when v2 ships, not while this candidate is tested.
-Before publication, activate and verify builds from the existing `release/v1`
-maintenance branch. A supported-major entry alone does not schedule builds.
+**How v1 is kept patched:** scheduled workflows only run on the default
+branch, so `maintain-previous-majors.yml` on `main` starts the `release/v1`
+build chain every Monday, and the branch chains its own downstream images.
+v1 (Debian 12 Bookworm) is maintained until 2027-05-07, as recorded in
+`versions.json` under `release.maintenance`.
+
+**Known exploited vulnerabilities:** the hourly watch scans the current and
+every maintained channel against CISA's
+[KEV catalog](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) at
+every severity, fixed or not. A fixable KEV entry blocks tag promotion and
+triggers a rebuild. An unfixed one fails the watch until Debian ships a fix,
+unless `security/kev-exceptions.json` records why the image is not exposed,
+with an expiry date.
 
 ```yaml
 # Recommended production pin: behavior locked, security patches current
