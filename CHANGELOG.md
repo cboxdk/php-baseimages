@@ -2,6 +2,14 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [2.0.1] - 2026-11-09
+
+### Changed
+- **cbox-init 3.9.2: warm sleep says why, and a missing checkpoint is no longer a failure.** When a node has no checkpoint images to restore (node replaced or rebooted, images swept, pod moved), cbox-init cold starts the workload in place and keeps warm sleep on, logged at info with `cause=checkpoint_missing`. It used to turn warm sleep off with "a checkpoint was lost", the same report as a real restore failure. `GET /api/v1/snapshot` and `cbox-init snapshot status` add `cause`, `level`, `message`, `last_restore`, `disabled_cause` and `last_event`; existing fields are unchanged. Only a present checkpoint that fails to restore twice in a row, a dump that fails three times, or the node agent itself can turn warm sleep off, and each says why. See the [cbox-init 3.9.2 release](https://github.com/cboxdk/init/releases/tag/v3.9.2)
+
+### Fixed
+- The README still called v2 a local-only candidate with no published images. v2 has been released and published since 2.0.0
+
 ## [2.0.0] - 2026-11-07
 
 ### Removed

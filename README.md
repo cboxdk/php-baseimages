@@ -1,8 +1,9 @@
 # Cbox PHP Base Images
 
-> V2 candidate: local validation only. The Trixie / `-v2` examples below describe
-> the next release; no v2 images have been published by this work. Existing
-> production deployments should keep their Bookworm / `-v1` pins.
+> V2 is released: Debian 13 Trixie with PHP compiled from verified source, a
+> drop-in replacement for v1. Use the `-v2` channel tags shown below. v1
+> (Bookworm, `-v1` tags) receives security maintenance from `release/v1` until
+> 2027-05-07.
 
 **Production PHP containers with an actual runtime control plane.** They
 supervise their own processes, understand their memory budget, and stay
