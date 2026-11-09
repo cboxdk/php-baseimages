@@ -102,6 +102,23 @@ class SecurityWatchTests(unittest.TestCase):
         self.assertEqual([(r['id'], r['kev']) for r in rows], [('CVE-kev', True)])
         self.assertFalse(watch.findings(self.kev_report(), kev={'CVE-other'}))
 
+    def test_baseline_is_read_from_each_channels_branch(self):
+        watch._BASELINES.clear()
+        def fake(cmd, **kw):
+            return '# note\nCVE-v1-only\n'
+        with patch.object(watch.subprocess, 'run'), patch.object(watch.subprocess, 'check_output', side_effect=fake) as show:
+            self.assertEqual(watch.ignored_ids('release/v1'), {'CVE-v1-only'})
+            watch.ignored_ids('release/v1')
+        self.assertEqual(show.call_count, 1)
+        self.assertNotIn('CVE-v1-only', watch.ignored_ids('main'))
+        watch._BASELINES.clear()
+
+    def test_unreadable_branch_baseline_is_stricter_not_looser(self):
+        watch._BASELINES.clear()
+        with patch.object(watch.subprocess, 'run', side_effect=watch.subprocess.CalledProcessError(1, 'git')):
+            self.assertEqual(watch.ignored_ids('release/v9'), set())
+        watch._BASELINES.clear()
+
     def test_trivyignore_cannot_silence_a_kev(self):
         report = self.kev_report(fixed='2', severity='HIGH')
         self.assertFalse(watch.findings(report, kev=set(), ignored={'CVE-kev'}))

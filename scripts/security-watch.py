@@ -46,11 +46,30 @@ def load_kev_exceptions(today=None):
     return [e for e in entries if e['expires'] >= today]
 
 
-def ignored_ids():
-    path = ROOT / '.trivyignore'
-    if not path.exists():
-        return set()
-    return {line.split()[0] for line in path.read_text().splitlines() if line.strip() and not line.startswith('#')}
+def parse_ignore(text):
+    return {line.split()[0] for line in text.splitlines() if line.strip() and not line.startswith('#')}
+
+
+_BASELINES = {}
+
+
+def ignored_ids(branch='main'):
+    """Each channel is judged by its own branch's .trivyignore: v1 keeps a
+    tooling baseline that v2 retired. A baseline never silences a KEV entry."""
+    if branch not in _BASELINES:
+        if branch == 'main':
+            path = ROOT / '.trivyignore'
+            _BASELINES[branch] = parse_ignore(path.read_text()) if path.exists() else set()
+        else:
+            try:
+                subprocess.run(['git', '-C', str(ROOT), 'fetch', '--quiet', '--depth', '1', 'origin', branch], check=True)
+                text = subprocess.check_output(['git', '-C', str(ROOT), 'show', 'FETCH_HEAD:.trivyignore'], text=True)
+            except subprocess.CalledProcessError:
+                # Stricter, never looser: without the branch baseline every finding counts.
+                print(f'warning: could not read .trivyignore from {branch}; using no baseline')
+                text = ''
+            _BASELINES[branch] = parse_ignore(text)
+    return _BASELINES[branch]
 
 
 def read_command(command):
@@ -201,7 +220,7 @@ def scan(targets, cache, output, trivy='trivy', image_source='remote', do_dispat
         # Missing package detection is not evidence of a clean image.
         if not any(r.get('Class') == 'os-pkgs' and r.get('Type') == 'debian' for r in report.get('Results', [])):
             raise ValueError('Scanner did not analyze the Debian package inventory')
-        rows = findings(report, kev, ignored_ids())
+        rows = findings(report, kev, ignored_ids(target.get('branch', 'main')))
         accepted = [f for f in rows if accepted_kev(f, target, exceptions)]
         results.append({**target, 'findings': [f for f in rows if f not in accepted], 'accepted_kev': accepted})
     for stale in cache.glob('*.cdx.json'):
