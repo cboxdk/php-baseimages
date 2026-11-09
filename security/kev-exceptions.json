@@ -24,6 +24,13 @@
       "family": "nginx",
       "reason": "The standalone v1 image is built FROM nginx:1.29-bookworm, i.e. nginx.org's 1.29.x package, not Debian's. nginx added the HTTP/2 Rapid Reset mitigation in 1.25.3 (October 2023), so 1.29.x is not affected; Trivy matches Debian's unfixed advisory for the source package name 'nginx' and reports no fixed version. Re-check if the base ever moves back to Debian's nginx.",
       "expires": "2027-05-07"
+    },
+    {
+      "id": "CVE-2026-123158",
+      "package": "openssh-client",
+      "channel": "2",
+      "reason": "Password authentication bypass in sshd (upstream fix 4353fdc touches only auth-passwd.c and the crypt compat layer). The v2 PHP images ship openssh-client only, pulled in by git for Composer; there is no sshd binary and no openssh-server package (verified 2026-11-09 on php-fpm-nginx:8.5-trixie-dev-v2). Trivy matches the source package name. Debian 13 had no fixed openssh build on 2026-11-09; once it does, this exception stops applying (fixable KEV entries are never excepted) and the watch rebuilds. Short expiry forces a re-check.",
+      "expires": "2026-12-09"
     }
   ]
 }
