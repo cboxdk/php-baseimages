@@ -102,6 +102,8 @@ CVE-2026-6471
 CVE-2026-6473
 
 # --- Go binaries (cbox-init et al.) - fixed by rebuilding with patched Go/deps upstream (cboxdk/init) ---
+# [HIGH] golang.org/x/net: golang.org/x/net/html: Denial of Service via crafted HTML input (added 2026-11-09; fixed by cbox-init 3.9.1 in v2, v1 ships 3.6.x)
+CVE-2026-78661
 # [HIGH] go.opentelemetry.io/otel/sdk: opentelemetry-go: OpenTelemetry-Go Affected by Arbitrary Code Execution via PATH
 CVE-2026-24051
 # [HIGH] stdlib: net/url: Incorrect parsing of IPv6 host literals in net/url
@@ -164,6 +166,10 @@ CVE-2026-84304
 GHSA-hrxh-6v49-42gf
 
 # --- npm packages bundled with Node.js - fixed by Node version bumps (weekly update PR) ---
+# [HIGH] brace-expansion: Denial of Service via stack exhaustion from crafted brace patterns (added 2026-11-09; npm 10 bundle, fixed in v2 by npm 12)
+CVE-2026-102276
+# [HIGH] brace-expansion: Denial of Service via uncontrolled recursion in nested brace patterns (added 2026-11-09; npm 10 bundle, fixed in v2 by npm 12)
+CVE-2026-102278
 # [HIGH] brace-expansion: brace-expansion: Brace-expansion: Denial of Service due to exponential-time comp
 CVE-2026-13149
 # [HIGH] brace-expansion: brace-expansion: Brace-expansion: Denial of Service via memory exhaustion in exp
