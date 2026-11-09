@@ -316,3 +316,19 @@ jobs:
         uses: peter-evans/repository-dispatch@v4
         with:
           event-type: php-fpm-updated
+
+  # Maintenance branches (release/vN): repository_dispatch always runs on the
+  # default branch, which would rebuild the CURRENT major instead of this one.
+  # Chain the downstream images on this same branch with workflow_dispatch.
+  trigger-dependent-builds-maintenance:
+    needs: [build-slim-matrix, build-slim-rootless-matrix, build-matrix, build-rootless-matrix, build-chromium-matrix, build-chromium-rootless-matrix, build-dev-matrix, build-dev-rootless-matrix]
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/heads/release/')
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+    steps:
+      - name: Trigger dependent builds on this branch (php-fpm-nginx)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run build-php-fpm-nginx.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
