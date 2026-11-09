@@ -1,4 +1,4 @@
-FROM nginx:1.29-trixie
+FROM nginx:1.31-trixie
 
 # CI passes the run ID so every requested security rebuild refreshes APT,
 # including multiple fixes in the same week. Local builds retain cache unless
