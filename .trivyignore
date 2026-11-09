@@ -102,6 +102,17 @@ CVE-2026-6471
 CVE-2026-6473
 
 # --- Go binaries (cbox-init et al.) - fixed by rebuilding with patched Go/deps upstream (cboxdk/init) ---
+# Added 2026-11-09, found by the v1 pre-promotion gate. v1 keeps cbox-init 3.6.0 (Go 1.26.8) and
+# fpm-exporter 3.1.1 (Go 1.26.7); v2 ships cbox-init 3.9.1 and fpm-exporter 3.1.2, which carry the fixes.
+# None is in CISA KEV. Fix path for v1: bump both binaries (needs a behaviour review of cbox-init 3.7-3.9).
+# [HIGH] stdlib: crypto/x509: Man-in-the-middle attacks (cbox-init, fpm-exporter)
+CVE-2026-111943
+# [HIGH] stdlib: net/http: Denial of Service via crafted HTTP (cbox-init, fpm-exporter)
+CVE-2026-78667
+# [HIGH] golang.org/x/net/http2 + stdlib net/http/internal/http2 (cbox-init, fpm-exporter)
+CVE-2026-78669
+# [HIGH] stdlib: crypto/tls: Denial of Service (cbox-init, fpm-exporter)
+CVE-2026-97031
 # [HIGH] golang.org/x/net: golang.org/x/net/html: Denial of Service via crafted HTML input (added 2026-11-09; fixed by cbox-init 3.9.1 in v2, v1 ships 3.6.x)
 CVE-2026-78661
 # [HIGH] go.opentelemetry.io/otel/sdk: opentelemetry-go: OpenTelemetry-Go Affected by Arbitrary Code Execution via PATH
