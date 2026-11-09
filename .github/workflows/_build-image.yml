@@ -979,12 +979,20 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
+          # trivy-action drops the severity filter for SARIF unless told
+          # otherwise, which filled the Security tab with LOW/MEDIUM findings.
+          limit-severities-for-sarif: true
 
+      # One category per published image. Without it every matrix entry
+      # uploaded to the same default category (<workflow>:merge), so each
+      # upload replaced the previous image's results and alerts flapped
+      # between open and fixed instead of describing any one image.
       - name: Upload Trivy results to GitHub Security
         if: inputs.enable-trivy
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
+          category: trivy/${{ inputs.image-name }}/${{ inputs.php-version }}-${{ inputs.os-variant }}-${{ inputs.tag-suffix || 'standard' }}
 
       # REGRESSION GATE: fail BEFORE promotion when a fixable CRITICAL/HIGH
       # CVE appears that is not in the .trivyignore baseline. The baseline
