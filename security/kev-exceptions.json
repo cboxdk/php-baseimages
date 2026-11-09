@@ -1,0 +1,29 @@
+{
+  "_policy": "Only for a CISA KEV entry that has NO fix in the distribution. Each entry names the exact package, channel and image family, says why the image is not exposed, and expires. Expired entries stop applying and the watch fails again. A fixable KEV is never excepted: rebuild instead.",
+  "exceptions": [
+    {
+      "id": "CVE-2023-44487",
+      "package": "nginx",
+      "channel": "1",
+      "family": "php-fpm-nginx",
+      "reason": "HTTP/2 Rapid Reset. v1 ships Debian 12's nginx 1.22.1, for which Debian publishes no fix. The shipped v1 configuration serves HTTP/1.1 only: its SSL_MODE block uses the 'http2 on;' directive, which nginx 1.22 rejects, so HTTP/2 is never enabled by the image (verified 2026-11-09 with php-fpm-nginx:8.5-bookworm-v1). keepalive_requests stays at nginx's default of 1000, which nginx's own advisory names as the limiting control. v2 (Debian 13) is not affected. Users who add their own HTTP/2 listener on v1 should move to v2.",
+      "expires": "2027-05-07"
+    },
+    {
+      "id": "CVE-2023-44487",
+      "package": "nginx-common",
+      "channel": "1",
+      "family": "php-fpm-nginx",
+      "reason": "Same nginx 1.22.1 source package as the nginx entry above; nginx-common carries no listener of its own.",
+      "expires": "2027-05-07"
+    },
+    {
+      "id": "CVE-2023-44487",
+      "package": "nginx",
+      "channel": "1",
+      "family": "nginx",
+      "reason": "The standalone v1 image is built FROM nginx:1.29-bookworm, i.e. nginx.org's 1.29.x package, not Debian's. nginx added the HTTP/2 Rapid Reset mitigation in 1.25.3 (October 2023), so 1.29.x is not affected; Trivy matches Debian's unfixed advisory for the source package name 'nginx' and reports no fixed version. Re-check if the base ever moves back to Debian's nginx.",
+      "expires": "2027-05-07"
+    }
+  ]
+}

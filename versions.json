@@ -93,6 +93,20 @@
       "2",
       "1"
     ],
-    "_policy": "Channel tags receive source and security updates without crossing tooling majors. Previous major receives security maintenance for 6 months after the new major ships, from its release/vN branch. Channel 2 ships with v2.0.0."
+    "maintenance": {
+      "1": {
+        "branch": "release/v1",
+        "os": "bookworm",
+        "php": [
+          "8.2",
+          "8.3",
+          "8.4",
+          "8.5"
+        ],
+        "until": "2027-05-07"
+      }
+    },
+    "_policy": "Channel tags receive source and security updates without crossing tooling majors. Previous major receives security maintenance for 6 months after the new major ships, from its release/vN branch. Channel 2 ships with v2.0.0.",
+    "_maintenance": "Previous majors still in support: their release branch, Debian suite, PHP series and EOL date. The CVE/KEV watch scans their published dev and nginx tags and the weekly maintenance job rebuilds them from that branch until 'until'."
   }
 }

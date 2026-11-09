@@ -86,10 +86,73 @@ class SecurityWatchTests(unittest.TestCase):
                                for arch,letter in [('amd64','a'),('arm64','b')]]}
         with patch.object(watch,'read_command',return_value=manifest):
             targets=watch.plan('cboxdk/php-baseimages')
-        self.assertEqual(len(targets),4*len(json.loads((watch.ROOT/'versions.json').read_text())['php']['supported'])+2)
+        lines = watch.channels(json.loads((watch.ROOT/'versions.json').read_text()))
+        self.assertEqual(len(targets), sum(4*len(c['php'])+2 for c in lines))
+        self.assertEqual({t['channel'] for t in targets}, {c['channel'] for c in lines})
         self.assertEqual({t['family'] for t in targets},{'php-cli','php-fpm-nginx','nginx'})
         self.assertEqual({t['platform'] for t in targets},{'linux/amd64','linux/arm64'})
         self.assertTrue(all('@sha256:' in t['reference'] for t in targets))
+
+    def kev_report(self, cve='CVE-kev', fixed='', severity='LOW', kind='os-pkgs', package='nginx'):
+        return {'Results': [{'Class': kind, 'Type': 'debian', 'Vulnerabilities': [
+            dict(VulnerabilityID=cve, PkgName=package, InstalledVersion='1', FixedVersion=fixed, Severity=severity)]}]}
+
+    def test_kev_is_actionable_at_any_severity_and_without_a_fix(self):
+        rows = watch.findings(self.kev_report(), kev={'CVE-kev'})
+        self.assertEqual([(r['id'], r['kev']) for r in rows], [('CVE-kev', True)])
+        self.assertFalse(watch.findings(self.kev_report(), kev={'CVE-other'}))
+
+    def test_trivyignore_cannot_silence_a_kev(self):
+        report = self.kev_report(fixed='2', severity='HIGH')
+        self.assertFalse(watch.findings(report, kev=set(), ignored={'CVE-kev'}))
+        self.assertTrue(watch.findings(report, kev={'CVE-kev'}, ignored={'CVE-kev'}))
+
+    def test_pre_promotion_gate_blocks_only_fixable_kev(self):
+        self.assertTrue(watch.kev_gate(self.kev_report(fixed='2'), {'CVE-kev'}))
+        self.assertFalse(watch.kev_gate(self.kev_report(fixed=''), {'CVE-kev'}))
+        self.assertFalse(watch.kev_gate(self.kev_report(fixed='2'), {'CVE-other'}))
+
+    def test_exception_covers_only_unfixed_kev_for_its_package_channel_and_family(self):
+        exc = [dict(id='CVE-kev', package='nginx', channel='1', family='php-fpm-nginx', reason='r', expires='2999-01-01')]
+        target = dict(channel='1', family='php-fpm-nginx')
+        unfixed = watch.findings(self.kev_report(), kev={'CVE-kev'})[0]
+        fixed = watch.findings(self.kev_report(fixed='2'), kev={'CVE-kev'})[0]
+        self.assertTrue(watch.accepted_kev(unfixed, target, exc))
+        self.assertFalse(watch.accepted_kev(fixed, target, exc))
+        self.assertFalse(watch.accepted_kev(unfixed, dict(channel='2', family='php-fpm-nginx'), exc))
+        self.assertFalse(watch.accepted_kev(unfixed, dict(channel='1', family='nginx'), exc))
+
+    def test_exceptions_expire_and_must_be_justified(self):
+        entries = watch.load_kev_exceptions(today='2000-01-01')
+        self.assertTrue(entries)
+        self.assertTrue(all(e['reason'] and e['expires'] for e in entries))
+        self.assertFalse(watch.load_kev_exceptions(today='2999-01-01'))
+
+    def test_truncated_kev_catalog_is_an_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'kev.json'
+            path.write_text(json.dumps({'vulnerabilities': [{'cveID': 'CVE-1'}]}))
+            with self.assertRaises(ValueError): watch.load_kev(path)
+
+    def test_unfixed_findings_never_request_a_rebuild(self):
+        rows = [dict(series='8.5', findings=watch.findings(self.kev_report(), kev={'CVE-kev'}))]
+        self.assertEqual(watch.remediation(rows), ([], False))
+
+    def test_maintenance_branch_findings_rebuild_that_branch(self):
+        fixable = watch.findings(self.kev_report(fixed='2'), kev={'CVE-kev'})
+        rows = [dict(series='8.5', branch='release/v1', channel='1', findings=fixable),
+                dict(series='nginx', branch='release/v1', channel='1', findings=fixable)]
+        self.assertEqual(watch.remediation(rows), ([], False))
+        with patch.object(watch, 'read_command', return_value=[]), patch.object(watch.subprocess, 'run') as run:
+            watch.dispatch(rows)
+        commands = [c.args[0] for c in run.call_args_list]
+        self.assertEqual(sorted(c[3] for c in commands), ['build-nginx.yml', 'build-php-base.yml'])
+        self.assertTrue(all(c[c.index('--ref') + 1] == 'release/v1' for c in commands))
+
+    def test_channels_include_maintained_majors_until_their_end_date(self):
+        versions = json.loads((watch.ROOT / 'versions.json').read_text())
+        self.assertEqual([c['channel'] for c in watch.channels(versions, today='2026-11-09')], ['2', '1'])
+        self.assertEqual([c['channel'] for c in watch.channels(versions, today='2999-01-01')], ['2'])
 
     def test_plan_requires_both_unique_platforms(self):
         manifest={'manifests':[{'platform':{'os':'linux','architecture':'amd64'},'digest':'sha256:'+'a'*64}]}

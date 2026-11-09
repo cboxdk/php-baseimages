@@ -1,4 +1,4 @@
-name: Published image CVE watch
+name: Published image CVE/KEV watch
 on:
   schedule:
     - cron: '43 * * * *'
@@ -45,10 +45,19 @@ jobs:
           path: .build/trivy-db
           key: security-db-${{ steps.db.outputs.bucket }}
           restore-keys: security-db-
+      - name: Fetch CISA Known Exploited Vulnerabilities catalog
+        run: |
+          # CISA first, its GitHub mirror second. load_kev() rejects a truncated
+          # catalog, so a failed download fails the watch instead of passing it.
+          for url in https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json \
+                     https://raw.githubusercontent.com/cisagov/kev-data/develop/known_exploited_vulnerabilities.json; do
+            curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors "$url" -o .build/kev.json && break
+          done
+          jq -r '"KEV catalog \(.catalogVersion): \(.count) entries"' .build/kev.json
       - name: Scan current CVE database and request mitigation
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/security-watch.py scan --plan .build/security-plan.json --cache .build/security-sboms --output .build/security-results --dispatch
+        run: python3 scripts/security-watch.py scan --plan .build/security-plan.json --cache .build/security-sboms --output .build/security-results --kev .build/kev.json --dispatch
       - uses: actions/cache/save@v6
         if: always() && steps.images.outcome == 'success' && steps.inventory-cache.outputs.cache-hit != 'true'
         with:
