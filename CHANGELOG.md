@@ -4,6 +4,9 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Security
+- **v1 is maintained from the last v1 state again, with cbox-init 3.9.2** - `release/v1` had been cut on 2026-09-10 at v1.5.1, while the v1 line kept shipping from `main` (v1.6.0 to v1.9.1 and later) until v2 took `main` on 2026-11-07. The first maintenance rebuild on 2026-11-09 therefore published v1.5.1-era content, with cbox-init 3.6.0 and fpm-exporter 3.1.1, to the `-v1` tags. The branch now continues from `2b1e955`, the last bookworm state `main` published on 2026-11-06, so every v1 fix since 1.5.1 is back. cbox-init moves from 3.9.0 to 3.9.2: 3.9.1 rebuilds against `golang.org/x/net` v0.62.0 (CVE-2026-78661), and 3.9.2 only adds status detail to warm sleep. fpm-exporter stays at 3.1.2 (Go 1.26.10). This fixes the Go tooling CVEs instead of listing them in `.trivyignore`
+
 ### Removed
 - **The `vips` extension is gone from the standard tier and above** ([#23](https://github.com/cboxdk/php-baseimages/issues/23)) - **breaking for anyone using it.** It was the one extension with no PIE package under any name: PECL-only, with an upstream repository untouched since 2024-10 whose newest git tag (`v1.0.10`) is three releases behind what PECL serves. `pecl` does not exist in PHP 8.6 images and the PECL service has a stated shelf life, so `vips` could not survive that transition by waiting for a tag, by migrating, or by building from one. `intervention/image` runs on GD or ImageMagick, and ImageMagick covers the formats the comparison table gave libvips (HEIC/HEIF, SVG, colour profiles); what is lost is libvips' memory profile on very large images, which is better served by running libvips as its own service than in the PHP container. The removal also takes `libvips42`/`libvips-tools` out of php-fpm's standard tier, where they were left behind as dead weight
 
