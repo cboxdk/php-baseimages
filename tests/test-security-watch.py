@@ -176,6 +176,23 @@ class SecurityWatchTests(unittest.TestCase):
         with patch.object(watch,'read_command',return_value=manifest):
             with self.assertRaises(ValueError): watch.plan('cboxdk/php-baseimages')
 
+    def test_merge_job_checks_out_every_repository_file_it_runs(self):
+        """The merge job uses a sparse checkout. The KEV gate shipped calling
+        scripts/security-watch.py without adding it there, and every merge job
+        failed with "No such file or directory", so no tag was promoted."""
+        import fnmatch, re
+        text = (watch.ROOT / '.github/workflows/_build-image.yml').read_text()
+        job = text[text.index('\n  merge:\n'):]
+        block = re.search(r'sparse-checkout: \|\n((?:\s{12}\S.*\n)+)', job)
+        self.assertIsNotNone(block, 'merge job sparse-checkout list not found')
+        patterns = [line.strip() for line in block.group(1).splitlines()]
+        steps = job[block.end():]
+        used = set(re.findall(r'(?<![\w./-])((?:scripts|tests|security)/[\w./-]+\.(?:py|sh|json))', steps))
+        self.assertIn('scripts/security-watch.py', used)
+        for path in sorted(used):
+            covered = any(path == p or fnmatch.fnmatch(path, p) or (p.endswith('/') and path.startswith(p)) for p in patterns)
+            self.assertTrue(covered, f'{path} is used by the merge job but missing from its sparse checkout')
+
 
 if __name__ == '__main__':
     unittest.main()

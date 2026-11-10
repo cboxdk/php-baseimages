@@ -846,12 +846,15 @@ jobs:
       # OS security patches) but never cross a tooling major — pin them for
       # stable behavior without CVE rot. Exact reproducibility = SHA tags.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: Checkout versions.json, CVE baseline and smoke-test scenario
+      - name: Checkout versions.json, CVE baseline, KEV gate and smoke-test scenario
         uses: actions/checkout@v7
         with:
           ref: ${{ github.event.client_payload.source_ref || github.sha }}
+          # Every repository file a later step in this job runs or reads must be
+          # listed here; tests/test-security-watch.py fails the build otherwise.
           sparse-checkout: |
             scripts/php-source.py
+            scripts/security-watch.py
             php-source/*.lock.json
             versions.json
             .trivyignore
