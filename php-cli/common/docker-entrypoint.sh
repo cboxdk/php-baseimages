@@ -145,12 +145,32 @@ if command -v cbox-init >/dev/null 2>&1; then
     log_info "Cbox Init $(cbox-init --version 2>/dev/null | head -n1)"
 fi
 
+# Resolve WORKDIR and the user the cbox-init app processes run as, before the
+# chown below uses $WORKDIR and before cbox-init expands the config.
+if command -v setup_app_process_identity >/dev/null 2>&1; then
+    setup_app_process_identity
+else
+    WORKDIR="${WORKDIR:-/var/www/html}"
+    export WORKDIR
+fi
+
+# PUID/PGID: remap www-data to the host user before the chown below, which
+# names the user rather than its uid and so follows the remap. Without this the
+# variables were accepted and ignored in this image (#44) - every artefact a
+# `composer install` or `artisan` run wrote came out as uid 33.
+if command -v setup_user_permissions >/dev/null 2>&1; then
+    setup_user_permissions
+fi
+
 # Setup proper permissions (skip in rootless mode)
-if [ -d /var/www/html ] && ! is_rootless; then
-    chown -R www-data:www-data /var/www/html 2>/dev/null || true
+if [ -d "$WORKDIR" ] && ! is_rootless; then
+    chown -R www-data:www-data "$WORKDIR" 2>/dev/null || true
 fi
 
 # Run user-provided init scripts (using shared function if available)
+command -v setup_opentelemetry >/dev/null 2>&1 && setup_opentelemetry
+command -v setup_telemetry_native >/dev/null 2>&1 && setup_telemetry_native
+
 if command -v run_init_scripts >/dev/null 2>&1; then
     run_init_scripts /docker-entrypoint-init.d
 elif [ -d /docker-entrypoint-init.d ]; then

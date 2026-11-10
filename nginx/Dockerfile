@@ -40,6 +40,10 @@ COPY nginx/debian/bookworm/conf.d/default.conf /etc/nginx/conf.d/default.conf
 # Copy entrypoint and health check scripts
 COPY nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# the same rule the PHP images follow, so a repo entrypoint can never call a
+# function an older baked lib does not have.
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
 # Create cache directories

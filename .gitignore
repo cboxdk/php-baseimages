@@ -48,6 +48,8 @@ phpeek-pm/
 
 # Cbox Init binaries (downloaded by scripts/download-cbox-init.sh)
 cbox-init/binaries/
+# PIE phar: pinned in versions.json, fetched by scripts/download-pie.sh
+pie/binaries/
 
 # Cbox FPM Exporter binaries (downloaded by scripts/download-fpm-exporter.sh)
 fpm-exporter/binaries/

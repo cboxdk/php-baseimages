@@ -6,7 +6,7 @@
 #
 # IMAGE TIERS (inherited from php-fpm):
 # - slim:     Minimal PHP + essential extensions - API/microservices
-# - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
+# - standard: + ImageMagick, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 #
 # PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
@@ -66,6 +66,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # SLIM-ROOT: Minimal PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim AS slim-root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -112,7 +116,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -132,6 +136,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -155,6 +163,10 @@ CMD ["cbox-init"]
 # SLIM-ROOTLESS: Minimal PHP-FPM + Nginx running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-slim-rootless AS slim-rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -206,7 +218,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -231,6 +243,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -252,9 +268,13 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["cbox-init"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, vips, Node.js
+# ROOT (STANDARD): Default - PHP-FPM + Nginx with ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -301,7 +321,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -321,6 +341,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -344,6 +368,10 @@ CMD ["cbox-init"]
 # ROOTLESS (STANDARD): Default rootless - PHP-FPM + Nginx
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -395,7 +423,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -420,6 +448,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -444,6 +476,10 @@ CMD ["cbox-init"]
 # CHROMIUM-ROOT: Everything including Chromium for Browsershot/Dusk
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-chromium AS chromium-root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -490,7 +526,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -510,6 +546,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -533,6 +573,10 @@ CMD ["cbox-init"]
 # CHROMIUM-ROOTLESS: Everything including Chromium, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-chromium-rootless AS chromium-rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -584,7 +628,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -609,6 +653,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -633,6 +681,10 @@ CMD ["cbox-init"]
 # DEV-ROOT: Chromium + Xdebug, PCOV, SPX for development/testing
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-dev AS dev-root
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -679,7 +731,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 
 # Create nginx directories + forward access/error logs to docker log
 # collector (stdout/stderr) so kubectl logs / docker logs sees them.
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx && \
     chown -R www-data:www-data /var/log/nginx /run/nginx && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -699,6 +751,10 @@ COPY php-fpm-nginx/common/cbox-init.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 
@@ -722,6 +778,10 @@ CMD ["cbox-init"]
 # DEV-ROOTLESS: Chromium + Xdebug, PCOV, SPX, running as www-data
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-dev-rootless AS dev-rootless
+# open_basedir default retired on measurement (-39% Laravel throughput via
+# the disabled realpath cache); the base layer's inherited ENV must be
+# overridden HERE until a php-fpm publish carries the new default.
+ENV PHP_OPEN_BASEDIR=""
 
 ARG PHP_VERSION
 
@@ -773,7 +833,7 @@ RUN printf 'load_module modules/ngx_http_brotli_filter_module.so;\nload_module m
 # logs to docker log collector (stdout/stderr) so kubectl logs / docker
 # logs sees them.
 # Note: Debian nginx uses /var/lib/nginx for tmp dirs (body, proxy, fastcgi, etc.)
-RUN mkdir -p /etc/nginx/conf.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
+RUN mkdir -p /etc/nginx/conf.d /etc/nginx/server.d /var/log/nginx /run/nginx /var/lib/nginx /var/lib/fpm-tune && \
     chown -R www-data:www-data /var/log/nginx /run/nginx /etc/nginx /var/lib/nginx /var/lib/fpm-tune && \
     ln -sf /dev/stdout /var/log/nginx/access.log && \
     ln -sf /dev/stderr /var/log/nginx/error.log
@@ -798,6 +858,10 @@ COPY php-fpm-nginx/common/cbox-init-rootless.yaml /etc/cbox-init/cbox-init.yaml
 
 # Copy entrypoint and healthcheck (overrides php-fpm versions)
 COPY php-fpm-nginx/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# The shared lib must ship in the SAME layer as the entrypoint that calls it -
+# inheriting it from the php-fpm base invites version skew (a repo entrypoint
+# calling a function the registry base's lib does not have yet = exit 127).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm-nginx/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod 755 /usr/local/bin/docker-entrypoint.sh /usr/local/bin/healthcheck.sh
 

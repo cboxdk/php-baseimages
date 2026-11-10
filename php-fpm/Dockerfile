@@ -6,7 +6,7 @@
 #
 # IMAGE TIERS (inherited from php-base):
 # - slim:     Minimal PHP + essential extensions - API/microservices
-# - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
+# - standard: + ImageMagick, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 #
 # ARCHITECTURE: Shared dependency stages install runtime libs ONCE per tier.
@@ -71,42 +71,26 @@ ENV CBOX_LIFECYCLE=${CBOX_LIFECYCLE} \
     CBOX_REMOVAL_DATE=${CBOX_REMOVAL_DATE} \
     CBOX_PREVIEW_STATUS=${CBOX_PREVIEW_STATUS}
 
-# open_basedir: THE READ-ONLY KERNEL STATISTICS ARE IN IT, AND THE SECRETS ARE
-# NOT.
+# open_basedir: EMPTY BY DEFAULT - MEASUREMENT RETIRED THE RESTRICTION.
 #
-# The old default was `/var/www/html:/tmp:/var/tmp`, which is right about the
-# filesystem and wrong about /proc — and it silently broke this organisation's
-# own observability. `cboxdk/system-metrics`, which `cboxdk/laravel-telemetry`
-# reads CPU, memory, load and cgroup limits through, was refused every file it
-# needs under FPM: the collector degrades to empty, so telemetry reported a
-# healthy application with no metrics rather than an error anybody would notice.
-# The CLI has no open_basedir, so a scheduler or queue worker collected fine,
-# which is exactly why nobody noticed.
+# Setting open_basedir disables PHP's realpath cache entirely, and on a real
+# framework that is not a rounding error: measured on the Laravel benchmark
+# fixture at 2 CPUs, the restriction cost 39% of total throughput
+# (382 -> 625 rps with it removed). On a one-file endpoint it hid at ~3%,
+# which is why it survived this long. The container boundary carries the
+# isolation; the LFI defense-in-depth this bought (blocking reads like
+# /proc/1/environ from application code) is real but priced wrong as a
+# default.
 #
-# THE ONLY DEFINITION. The pool file no longer sets the directive, and both
-# entrypoints write `zz-env-overrides.conf` from this variable — so the default
-# is right AND an application that needs something else can actually override it,
-# which it could not before (PHP-FPM takes the first definition, and the static
-# pool always won).
-#
-# READ OFF THE COLLECTOR, NOT GUESSED. The first version of this list was the
-# files I thought system-metrics needed, and it was still short: a real request
-# through a real image threw on `/etc/os-release`, which it reads to name the
-# operating system. Everything here now comes from grepping that package for the
-# paths it opens — the /etc release files, /proc/1/cgroup for container
-# detection, and the rest — so the next missing one is a change in the collector
-# rather than a gap in my imagination.
-#
-# A LIST, NOT `/proc`. `/proc/1/environ` is deliberately absent: PID 1's
-# environment is every secret the container holds, and a file-read primitive in
-# an application that could reach it would have the database password.
-# `/proc/self/environ` and `/proc/*/cmdline` are absent for the same reason.
-# system-metrics probes `/proc/1/environ` for container detection and degrades
-# cleanly without it.
-ENV PHP_OPEN_BASEDIR="/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/proc/1/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/:/etc/os-release:/etc/lsb-release:/etc/debian_version:/etc/redhat-release:/etc/system-release"
+# Opt back in per deployment with PHP_OPEN_BASEDIR - the entrypoint writes it
+# as a pool admin value, and the curated path list that keeps
+# cboxdk/system-metrics alive under the restriction is documented in the
+# environment reference. History (the list, its /proc entries, and why
+# /proc/1/environ is deliberately absent) lives in git at this line.
+ENV PHP_OPEN_BASEDIR=""
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash curl wget git unzip procps netcat-openbsd libfcgi-bin \
+    bash curl wget git unzip procps openssh-client netcat-openbsd libfcgi-bin \
     cron \
     libpng16-16 libjpeg62-turbo libfreetype6 libwebp7 \
     libpq5 libicu72 libzip4 \
@@ -114,11 +98,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libbz2-1.0 libonig5 libreadline8 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
 
+# git 2.35+ refuses to operate on a repo owned by another UID ("dubious
+# ownership") - which is the NORMAL situation for a bind-mounted app (host
+# UID vs www-data). In a single-app container the protection defends
+# nothing and it breaks Statamic git integration, composer VCS installs
+# and every `git status` in the workdir. Trust all paths at build time:
+# works identically in root, rootless and read-only-rootfs modes.
+RUN git config --system --add safe.directory '*'
+
 # Copy FPM-specific configurations (shared across root/rootless)
 COPY php-fpm/common/fpm-pool.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY php-fpm/common/fpm-global.conf /usr/local/etc/php-fpm.d/zz-global.conf
 COPY php-fpm/common/pm-mode-dynamic.conf /usr/local/etc/php-fpm.d/zz-pm-mode.conf
 COPY php-fpm/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-fpm/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 # Own the pool directory outright. Upstream has reshuffled directives between
 # docker.conf and zz-docker.conf in PATCH releases (docker-library/php#1635),
@@ -142,13 +137,12 @@ RUN rm -f /usr/local/etc/php-fpm.d/docker.conf \
 # images ship no STOPSIGNAL and sever requests on every `docker stop`.
 STOPSIGNAL SIGQUIT
 
-# --- Standard tier: adds ImageMagick, vips, Node.js runtime deps ---
+# --- Standard tier: adds ImageMagick, Node.js runtime deps ---
 FROM fpm-slim-deps AS fpm-standard-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libavif15 libmagickwand-6.q16-6 \
     libheif1 ghostscript librsvg2-bin \
-    libvips42 libvips-tools \
     libimage-exiftool-perl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -156,10 +150,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM fpm-standard-deps AS fpm-chromium-deps
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium fonts-liberation libnss3 \
+    chromium chromium-driver \
+    fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf \
+    fonts-liberation libnss3 \
     libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
     libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
     && rm -rf /var/lib/apt/lists/*
+
+# Playwright's Chromium build for Pest v4 browser testing - baked in
+# php-base (where Node lives) and copied here as static files. See the
+# rationale comment in php-base/Dockerfile.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+COPY --from=base-chromium /ms-playwright /ms-playwright
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM-ROOT: Minimal PHP-FPM with essential extensions
@@ -179,6 +181,8 @@ ENV CBOX_ROOTLESS=false \
 # Copy PHP extensions from slim base
 COPY --from=base-slim /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 
 # Copy Composer from base image
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
@@ -220,6 +224,8 @@ ENV CBOX_ROOTLESS=true \
 
 COPY --from=base-slim /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-slim /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-slim /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-slim /usr/bin/composer /usr/bin/composer
 COPY --from=base-slim /usr/local/bin/cbox-init /usr/local/bin/cbox-init
 COPY --from=base-slim /usr/local/bin/fpm-exporter /usr/local/bin/fpm-exporter
@@ -242,14 +248,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOT (STANDARD): Default - ImageMagick, vips, Node.js
+# ROOT (STANDARD): Default - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-standard-deps AS root
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm"
-LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js, Composer, and Cbox Init"
+LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
@@ -259,6 +265,9 @@ ENV CBOX_ROOTLESS=false \
 # Copy PHP extensions from standard base
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-standard /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 
 # Copy Node.js from standard base
 COPY --from=base-standard /usr/local/bin/node /usr/local/bin/node
@@ -292,14 +301,14 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOTLESS (STANDARD): Default rootless - ImageMagick, vips, Node.js
+# ROOTLESS (STANDARD): Default rootless - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM fpm-standard-deps AS rootless
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP-FPM ${PHP_VERSION} Bookworm (Rootless)"
-LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, vips, Node.js - Rootless"
+LABEL org.opencontainers.image.description="PHP-FPM with ImageMagick, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
@@ -309,6 +318,9 @@ ENV CBOX_ROOTLESS=true \
 
 COPY --from=base-standard /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-standard /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-standard /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-standard /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-standard /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-standard /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -354,6 +366,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -395,6 +410,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-chromium /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-chromium /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-chromium /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-chromium /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-chromium /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -456,6 +474,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-dev /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-dev /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-dev /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
@@ -513,6 +534,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 COPY --from=base-dev /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
 COPY --from=base-dev /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY --from=base-dev /usr/local/etc/php/conf.d-otel/ /usr/local/etc/php/conf.d-otel/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry/ /usr/local/etc/php/conf.d-telemetry/
+COPY --from=base-dev /usr/local/etc/php/conf.d-telemetry-auto/ /usr/local/etc/php/conf.d-telemetry-auto/
 COPY --from=base-dev /usr/local/bin/node /usr/local/bin/node
 COPY --from=base-dev /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \

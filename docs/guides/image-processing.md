@@ -1,6 +1,6 @@
 ---
 title: "Image Processing Guide"
-description: "Complete guide to image manipulation with GD, ImageMagick, libvips, and Browsershot in Cbox"
+description: "Complete guide to image manipulation with GD, ImageMagick, and Browsershot in Cbox"
 weight: 5
 ---
 
@@ -20,28 +20,23 @@ $im = new Imagick('input.heic');
 $im->setImageFormat('jpeg');
 $im->writeImage('output.jpg');
 
-// libvips - High-performance
-$image = vips_image_new_from_file('input.jpg');
-vips_image_write_to_file($image, 'output.webp');
 ```
 
 ## Library Comparison
 
-| Feature | GD | ImageMagick | libvips |
-|---------|:--:|:-----------:|:-------:|
-| Memory usage | Medium | High | **Low** |
-| Speed | Medium | Medium | **Fast** |
-| HEIC/HEIF | - | ✓ | ✓ |
-| PDF read/write | - | ✓ | - |
-| SVG support | - | ✓ | ✓ |
-| Color profiles | - | ✓ | ✓ |
-| Streaming | - | - | ✓ |
-| Laravel Integration | intervention/image | intervention/image | - |
+| Feature | GD | ImageMagick |
+|---------|:--:|:-----------:|
+| Memory usage | Medium | High |
+| Speed | Medium | Medium |
+| HEIC/HEIF | - | ✓ |
+| PDF read/write | - | ✓ |
+| SVG support | - | ✓ |
+| Color profiles | - | ✓ |
+| Laravel Integration | intervention/image | intervention/image |
 
 **Recommendation**:
 - **GD**: Simple thumbnails, basic operations
 - **ImageMagick**: Complex manipulations, format conversions, PDF
-- **libvips**: High-volume processing, memory-constrained environments
 
 ---
 
@@ -188,57 +183,21 @@ echo "SVG: " . ($hasSvg ? 'Yes' : 'No') . "\n";
 
 ---
 
-## libvips
+## libvips (removed)
 
-Best for high-performance, memory-efficient processing.
+The `vips` PHP extension is no longer in these images.
 
-### Basic Operations
+It was the one extension with no PIE package under any name: PECL-only, with
+an upstream repository untouched since October 2024 whose newest git tag is
+three releases behind what PECL serves. `pecl` itself is gone from PHP 8.6
+images and the PECL service has a stated shelf life, so `vips` could not
+survive that transition by waiting, by migrating, or by building from a tag.
 
-```php
-use Jcupitt\Vips\Image;
-
-// Simple resize / thumbnail
-$thumb = Image::thumbnail('input.jpg', 300);
-$thumb->writeToFile('output.jpg');
-
-// Convert format
-$image = Image::newFromFile('input.png');
-$image->writeToFile('output.webp', ['Q' => 80]);
-
-// Crop
-$image = Image::newFromFile('input.jpg');
-$cropped = $image->crop(100, 100, 500, 500);
-$cropped->writeToFile('cropped.jpg');
-```
-
-### Memory-Efficient Processing
-
-```php
-use Jcupitt\Vips\Image;
-
-// Process large image without loading entirely into memory
-$image = Image::newFromFile('huge-image.tiff', [
-    'access' => 'sequential', // Stream processing
-]);
-
-// Apply operations
-$processed = $image->resize(0.5);
-$processed->writeToFile('output.jpg', ['Q' => 85]);
-```
-
-### Check libvips Capabilities
-
-```php
-use Jcupitt\Vips\Image;
-
-if (extension_loaded('vips')) {
-    echo 'libvips version: ' . phpversion('vips') . "\n";
-
-    // Test operation
-    $test = Image::newFromArray([[255, 0], [0, 255]]);
-    echo 'libvips working: ' . ($test instanceof Image ? 'Yes' : 'No') . "\n";
-}
-```
+**If you used it:** `intervention/image` runs on either GD or ImageMagick and
+is the usual replacement, and ImageMagick covers the formats the table above
+gives libvips (HEIC/HEIF, SVG, colour profiles). What you lose is libvips'
+memory profile on very large images - if that is load-bearing for you, run
+libvips as its own service rather than in the PHP container.
 
 ---
 
@@ -453,10 +412,7 @@ echo "Ghostscript: " . ($gs ?: 'NOT INSTALLED') . "\n";
 // Increase memory limit
 ini_set('memory_limit', '512M');
 
-// Use libvips for large images (streams, doesn't load full image)
-$image = vips_image_new_from_file('huge.tiff', ['access' => 'sequential']);
-
-// Or process in chunks with ImageMagick
+// Bound ImageMagick's own memory rather than the request's
 $im = new Imagick();
 $im->setResourceLimit(Imagick::RESOURCETYPE_MEMORY, 256 * 1024 * 1024);
 ```
@@ -465,7 +421,7 @@ $im->setResourceLimit(Imagick::RESOURCETYPE_MEMORY, 256 * 1024 * 1024);
 
 ```bash
 # In container
-docker exec myapp php -m | grep -E "gd|imagick|vips"
+docker exec myapp php -m | grep -E "gd|imagick"
 docker exec myapp php -r "print_r(gd_info());"
 docker exec myapp php -r "print_r(Imagick::queryFormats());"
 docker exec myapp chromium-browser --version

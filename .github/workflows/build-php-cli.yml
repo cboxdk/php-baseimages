@@ -91,7 +91,7 @@ jobs:
     secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # STANDARD TIER (DEFAULT) - With ImageMagick, vips, Node.js
+  # STANDARD TIER (DEFAULT) - With ImageMagick, Node.js
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     strategy:

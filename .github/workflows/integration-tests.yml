@@ -40,9 +40,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -59,16 +59,35 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.3-bookworm -f php-fpm-nginx/Dockerfile .
 
@@ -108,9 +127,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -127,16 +146,35 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build benchmark image chain (php-base → php-fpm → php-fpm-nginx)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-bookworm -f php-fpm-nginx/Dockerfile .
 
@@ -175,9 +213,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -194,22 +232,45 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build images for scanning (full chain)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building Bookworm chain ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm -f php-base/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t ghcr.io/cboxdk/php-baseimages/php-fpm:8.3-bookworm -f php-fpm/Dockerfile .
           docker build --target root --build-arg PHP_VERSION=8.3 -t cbox-scan:bookworm -f php-fpm-nginx/Dockerfile .
 
       - name: Install Trivy
         run: |
-          TRIVY_VERSION=0.69.3
+          # Same version the pre-promotion gate runs (trivy-action v0.36.0
+          # installs 0.70.0). Two scanners of different vintages disagree about
+          # what counts as fixable, and this job now has to give the same
+          # verdict as the gate - a PR that passes here must not fail there.
+          TRIVY_VERSION=0.70.0
           mkdir -p "$HOME/.local/bin"
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
             | sh -s -- -b "$HOME/.local/bin" "v${TRIVY_VERSION}"
@@ -238,3 +299,33 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Debian 12 (Bookworm)" >> $GITHUB_STEP_SUMMARY
           trivy image --severity CRITICAL,HIGH --format table cbox-scan:bookworm >> $GITHUB_STEP_SUMMARY || true
+
+      # ─────────────────────────────────────────────────────────────────────
+      # THE GATE, pre-merge. Everything above this point is a REPORT: it
+      # uploads SARIF and writes a summary table, and passes whatever it
+      # finds. That is why no pull request ever went red while the identical
+      # check on main blocked every publish for twelve days (#47) - the
+      # promotion gate lives in the `merge` job of _build-image.yml, which is
+      # skipped on pull_request events, so the artifact that would actually be
+      # promoted was never verified until after the merge.
+      #
+      # Same flags as that gate, so the answer here is the answer there:
+      # --ignore-unfixed (a CVE with no fix available is not actionable),
+      # --ignorefile .trivyignore (the triaged backlog), --exit-code 1.
+      #
+      # One tier is enough to catch the whole class: every tier COPYs the same
+      # Go binaries and shares the same Debian base, and it was those two
+      # binaries - not a Debian package - that blocked promotion.
+      #
+      # Deliberately LAST, so a failure here never costs the SARIF upload or
+      # the summary table above it.
+      # ─────────────────────────────────────────────────────────────────────
+      - name: Fail on NEW fixable CRITICAL/HIGH vulnerabilities (same gate as promotion)
+        run: |
+          trivy image \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --ignorefile .trivyignore \
+            --exit-code 1 \
+            --format table \
+            cbox-scan:bookworm

@@ -25,7 +25,7 @@ for ARCH in amd64 arm64; do
     DEST="$DEST_DIR/fpm-exporter-linux-${ARCH}"
     if [ ! -f "$DEST" ]; then
         echo "  ${ARCH}: downloading..."
-        curl -fsSL -o "$DEST" "${BASE_URL}/fpm-exporter-linux-${ARCH}"
+        curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$DEST" "${BASE_URL}/fpm-exporter-linux-${ARCH}"
         chmod +x "$DEST"
     fi
 done

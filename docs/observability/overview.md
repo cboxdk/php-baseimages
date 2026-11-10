@@ -6,7 +6,7 @@ weight: 1
 
 # Observability & Health Checks
 
-Cbox images include infrastructure-level observability out of the box (Prometheus metrics on port 9090, process health checks). This guide adds **application-level** observability using three optional packages from Cbox.
+Cbox images include infrastructure-level observability out of the box (Prometheus metrics on port 9090, process health checks). This guide adds **application-level** observability using optional packages from Cbox.
 
 ## Overview
 
@@ -16,6 +16,7 @@ Cbox images include infrastructure-level observability out of the box (Prometheu
 | **Application Health** | Can the app reach DB, Redis, cache, storage? | `cboxdk/laravel-health` |
 | **Queue Observability** | Job P95/P99 latency, failure rates, queue depth, worker utilization | `cboxdk/laravel-queue-metrics` |
 | **Queue Autoscaling** | Dynamic worker count based on load, SLA targets, resource limits | `cboxdk/laravel-queue-autoscale` |
+| **Runtime Telemetry** | Which call stacks burned the CPU, why a connection was slow, what the process was doing when it crashed | `cboxdk/telemetry-native` (PHP extension, opt-in) |
 
 All three packages are optional. Install only what you need.
 
@@ -267,6 +268,37 @@ Configure per-queue SLA targets in `config/queue-autoscale.php`. The main env va
 | `CBOX_QUEUE_AUTOSCALER` | `false` | Enable autoscaler via cbox-init |
 
 ---
+
+## Telemetry Native (runtime profiling)
+
+The three packages above tell you *that* a request took 1,420 ms and burned
+410 ms of PHP CPU. [`cboxdk/telemetry-native`](https://github.com/cboxdk/telemetry-native)
+is the native extension that tells you **which call stacks burned it**, why
+opening the database connection took 180 ms, and what the process was doing
+when it segfaulted.
+
+It ships in every tier from slim up on PHP 8.3+, and it is **off by default** -
+it is pre-1.0, and its crash recorder installs fatal-signal handlers:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.4-bookworm-v1
+    environment:
+      PHP_TELEMETRY_NATIVE: "true"
+      PHP_TELEMETRY_NATIVE_AUTO: "true"   # FPM only, NOT queue workers
+```
+
+`PHP_TELEMETRY_NATIVE_AUTO` opens a unit of work at `RINIT` so the profile
+covers framework boot. In a queue worker or Octane server `RINIT` fires once
+per *process*, so leave it off there and let
+[`cboxdk/laravel-telemetry`](https://github.com/cboxdk/laravel-telemetry) open
+and close a unit per job instead.
+
+Check what a container actually got with
+`php -r 'print_r(cbox_telemetry_status());'`; the full reference, including the
+crash-directory requirement on read-only filesystems, is in
+[Available Extensions](../reference/available-extensions#runtime-telemetry-cbox_telemetry).
 
 ## Full Stack Example
 

@@ -39,7 +39,7 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Git workflow integration
 
 - **[Image Processing Guide](./image-processing)** 🖼️ New
-  - GD, ImageMagick, and libvips comparison
+  - GD and ImageMagick comparison
   - HEIC/HEIF conversion (iPhone photos)
   - PDF generation and SVG rendering
   - Browsershot setup for screenshots/PDFs
@@ -51,6 +51,14 @@ Step-by-step guides for popular PHP frameworks and development workflows.
   - Monitoring and logging
   - CI/CD integration
   - Zero-downtime deployments
+
+- **[Zero-Downtime Symlink Releases](./symlink-releases)** 🚀 New
+  - `releases/<id>` + a `current` symlink on a single server
+  - The atomic swap, the worker restart, and instant rollback
+  - The four traps: root-owned deploy steps, pool admin values beating a
+    mounted php.ini, nginx's open_file_cache outliving the swap, and when a
+    PHP-FPM reload is actually needed
+  - Statamic: per-release Stache, static-cache warming, CP assets
 
 - **[Cbox vs ServerSideUp](./cbox-vs-serversideup)** ✨ New
   - DX, docs, and feature scorecard
@@ -65,7 +73,7 @@ Step-by-step guides for popular PHP frameworks and development workflows.
 - Complete framework setup from scratch
 - Database and caching configuration
 - Development and production environments
-- Image processing with GD, ImageMagick, libvips
+- Image processing with GD and ImageMagick
 - Common mistakes and how to avoid them
 - Testing and debugging strategies
 - Deployment best practices

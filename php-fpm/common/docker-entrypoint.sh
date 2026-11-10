@@ -36,6 +36,10 @@ resolve_fpm_sizing() {
     # Listen transport: "9000" (TCP, default) or a unix socket path with
     # PHP_FPM_LISTEN=unix. Same contract as the php-fpm-nginx image; here the
     # socket use case is a shared volume with a separate nginx container.
+    # tcp stays the DEFAULT here, deliberately diverging from php-fpm-nginx's
+    # unix default (v2): this image's whole purpose is FastCGI from OUTSIDE
+    # the container (nginx sidecars, separate pods), where a unix socket
+    # requires a shared volume nobody mounts by accident.
     if [ "${PHP_FPM_LISTEN:-tcp}" = "unix" ]; then
         sock="${PHP_FPM_SOCKET_PATH:-/run/php/php-fpm.sock}"
         mkdir -p "$(dirname "$sock")" 2>/dev/null || true
@@ -102,6 +106,44 @@ write_env_overrides() {
         || log_warn "Could not write $fpm (read-only rootfs? mount an emptyDir at /usr/local/etc/php-fpm.d)"
 }
 
+# opcache.preload - the only supported way to use the FFI this image ships.
+#
+# It goes in a php.ini drop-in, NOT in the pool conf above. preload is
+# PHP_INI_SYSTEM and runs at MINIT, before the master ever reads a pool's
+# php_admin_value, so a pool directive would be silently ignored - the worst
+# possible failure for a setting whose whole job is to run once at startup.
+#
+# php-fpm-nginx has its own copy inside apply_php_env_overrides. This one
+# exists because php-fpm is also run directly, and without it the variable
+# would be documented but dead in exactly the images that a remote-FastCGI
+# deployment uses.
+write_opcache_preload() {
+    [ -n "${PHP_OPCACHE_PRELOAD:-}" ] || return 0
+
+    if [ ! -f "$PHP_OPCACHE_PRELOAD" ]; then
+        log_error "PHP_OPCACHE_PRELOAD is set to '$PHP_OPCACHE_PRELOAD' but that file does not exist."
+        log_error "Preload runs at startup - fix the path or unset the variable."
+        exit 1
+    fi
+
+    local ini="/usr/local/etc/php/conf.d/zz-opcache-preload.ini"
+    {
+        printf '%s\n' "; Auto-generated from PHP_OPCACHE_PRELOAD"
+        printf '%s\n' "opcache.preload = ${PHP_OPCACHE_PRELOAD}"
+        # PHP refuses to preload as root without preload_user, and says so in
+        # terms of the ini rather than of the container. Rootless images are
+        # already non-root, where PHP ignores the setting.
+        if ! is_rootless; then
+            printf '%s\n' "opcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER:-www-data}"
+        elif [ -n "${PHP_OPCACHE_PRELOAD_USER:-}" ]; then
+            printf '%s\n' "opcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER}"
+        fi
+    } > "$ini" 2>/dev/null \
+        || { log_warn "Could not write $ini (read-only rootfs? mount an emptyDir at /usr/local/etc/php/conf.d)"; return 0; }
+
+    log_info "OPcache preload enabled: $PHP_OPCACHE_PRELOAD"
+}
+
 # Validate PHP-FPM configuration
 validate_fpm_config() {
     log_info "Validating PHP-FPM configuration..."
@@ -122,9 +164,16 @@ setup_fpm_permissions() {
 
     log_info "Setting up permissions..."
 
+    # PUID/PGID first: it remaps www-data to the host user, and the chowns
+    # below name the user rather than its uid, so they then land on the right
+    # one. Without this the variables were accepted and ignored here (#44) -
+    # every file this image wrote into a bind mount came out as uid 33.
+    setup_user_permissions
+
     # Ensure www-data can write to necessary directories
-    if [ -d /var/www/html ]; then
-        chown -R www-data:www-data /var/www/html 2>/dev/null || true
+    _fpm_root="${WORKDIR:-/var/www/html}"
+    if [ -d "$_fpm_root" ]; then
+        chown -R www-data:www-data "$_fpm_root" 2>/dev/null || true
     fi
 
     # Ensure PHP session directory exists and is writable
@@ -188,10 +237,13 @@ fi
 # Run startup checks. The environment's pool settings go in BEFORE validation:
 # php-fpm -t reads what is on disk, so writing them after would validate a
 # configuration the process is not going to run.
+setup_opentelemetry
+setup_telemetry_native
 resolve_fpm_sizing
 export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 write_pm_mode_dropin || exit 1
 write_env_overrides
+write_opcache_preload
 validate_fpm_config
 # Assert the EFFECTIVE pool listen matches the exported address - tripwire
 # against any conf file loading after zz-custom.conf (docker-library/php#1635)

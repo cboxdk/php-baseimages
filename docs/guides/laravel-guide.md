@@ -199,6 +199,7 @@ docker compose exec app php artisan test
 |-------|-------|
 | Xdebug & hot-reload | [Development Workflow](./development-workflow) |
 | Production deploy | [Production Deployment](./production-deployment) |
+| `releases/` + `current` deploys | [Zero-Downtime Symlink Releases](./symlink-releases) |
 | Add extensions | [Extending Images](../advanced/extending-images) |
 | Performance tuning | [Performance Tuning](../advanced/performance-tuning) |
 | All env vars | [Environment Variables](../reference/environment-variables) |

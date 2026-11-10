@@ -19,10 +19,13 @@ RUN --mount=type=secret,id=composer_auth,target=/var/www/html/auth.json \
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-# Only the frontend build here — do NOT run artisan/composer scripts at build time
-# (no app env yet). The base image entrypoint runs package:discover + caching at
-# container start. Autoloader was already optimised in the composer install above.
+# Build frontend and publish Statamic/addon assets into the final image. Discovery
+# was skipped during composer install; statamic:install also publishes CP assets.
+# Use process-local cache/session drivers: no database or production env at build
+# time. Do not cache runtime configuration or run application migrations here.
 RUN npm run build && rm -rf node_modules auth.json
+RUN CACHE_STORE=array SESSION_DRIVER=array php artisan package:discover --no-interaction && \
+    CACHE_STORE=array SESSION_DRIVER=array php artisan statamic:install --no-interaction
 
 # ---- runtime image ----
 FROM ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1

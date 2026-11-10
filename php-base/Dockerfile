@@ -8,7 +8,7 @@
 # - slim:     Core PHP + database/cache/queue extensions - API/microservices
 #             (opcache, pdo_mysql, pdo_pgsql, mysqli, pgsql, redis, apcu, msgpack,
 #              zip, intl, bcmath, gd, exif, pcntl, sockets, bz2, gmp)
-# - standard: + ImageMagick, vips, Node.js, mongodb, soap, ldap, xsl,
+# - standard: + ImageMagick, Node.js, mongodb, soap, ldap, xsl,
 #               calendar, gettext, shmop, sysvmsg, sysvsem, sysvshm - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
 #
@@ -25,12 +25,12 @@ ARG PHP_VERSION=8.5
 # ============================================================================
 ARG REDIS_VERSION=6.3.0
 ARG IMAGICK_VERSION=3.8.1
-ARG APCU_VERSION=5.1.27
-ARG MONGODB_VERSION=2.1.4
-ARG MSGPACK_VERSION=3.0.0
-ARG VIPS_VERSION=1.0.13
+ARG APCU_VERSION=5.1.28
+ARG MONGODB_VERSION=2.5.2
+ARG MSGPACK_VERSION=3.0.1
 ARG OPENTELEMETRY_VERSION=1.2.1
-ARG XDEBUG_VERSION=3.5.0
+ARG TELEMETRY_NATIVE_VERSION=0.1.0
+ARG XDEBUG_VERSION=3.5.3
 ARG PCOV_VERSION=1.0.12
 # SPX is not on PECL; pin the git tag for reproducible dev builds.
 ARG SPX_VERSION=v0.4.22
@@ -38,7 +38,7 @@ ARG SPX_VERSION=v0.4.22
 # JS runtimes are installed via RUN (official tarball/zip), not `COPY --from`,
 # because copying from an external image stage triggers a buildx blob-mount
 # failure on our self-hosted runner (the layer gets dropped on push to ghcr).
-ARG NODE_VERSION=22.23.1
+ARG NODE_VERSION=22.23.3
 ARG BUN_VERSION=1.3.14
 
 # ============================================================================
@@ -104,7 +104,7 @@ ARG MSGPACK_VERSION
 # ============================================================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Essential tools
-    bash curl wget git unzip procps \
+    bash curl wget git unzip procps openssh-client \
     # Cron for Laravel Scheduler
     cron \
     # Runtime libraries (minimal set for slim tier)
@@ -113,6 +113,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2 \
     libbz2-1.0 libonig5 libreadline8 libgmp10 \
     && rm -rf /var/lib/apt/lists/*
+
+# git 2.35+ refuses to operate on a repo owned by another UID ("dubious
+# ownership") - which is the NORMAL situation for a bind-mounted app (host
+# UID vs www-data). In a single-app container the protection defends
+# nothing and it breaks Statamic git integration, composer VCS installs
+# and every `git status` in the workdir. Trust all paths at build time:
+# works identically in root, rootless and read-only-rootfs modes.
+RUN git config --system --add safe.directory '*'
 
 # ============================================================================
 # SLIM: PHP Extensions (essential only)
@@ -141,11 +149,109 @@ RUN docker-php-ext-install -j$(nproc) \
         docker-php-ext-install opcache; \
     fi
 
-# Install PECL extensions with PINNED versions
-RUN pecl install redis-${REDIS_VERSION} && \
-    pecl install apcu-${APCU_VERSION} && \
-    pecl install msgpack-${MSGPACK_VERSION} && \
-    docker-php-ext-enable redis apcu msgpack
+# Extensions via PIE, with PINNED versions.
+#
+# Was `pecl install`. The pecl binary does not exist in php:8.6 images
+# (--with-pear dropped, PECL formally deprecated - docker-library/php#1682),
+# and the PECL network service has a stated shelf life, so this path had to go
+# whether or not 8.6 is added (#23).
+#
+# PIE enables what it installs, writing the SAME ini filename that
+# docker-php-ext-enable produced - /usr/local/etc/php/conf.d/
+# docker-php-ext-<name>.ini containing `extension=<name>`. That is load-bearing
+# downstream: the standard tier MOVES docker-php-ext-opentelemetry.ini out of
+# the scan dir, and the dev tier OVERWRITES the xdebug/spx/pcov ini files with
+# its own. Verified on 8.5 before migrating, not assumed.
+#
+# The package names are NOT mechanical (pecl `redis` is PIE
+# `phpredis/phpredis`); each was verified against Packagist.
+#
+# libtool is PIE's own build requirement, on top of $PHPIZE_DEPS - it shells
+# out to libtoolize where pecl did not. PIE also needs unzip, but that is
+# already a shipped RUNTIME tool from the slim-base block above, so it is
+# neither installed nor purged here: purging it broke the Node/bun install in
+# the standard tier, which tests/test-runtime-deps.sh exists to catch ("a tier
+# must not drop a tool the tiers below it ship").
+# GITHUB_TOKEN is a build SECRET, not an ARG: PIE resolves from Packagist but
+# downloads the source from GitHub, and unauthenticated GitHub allows 60
+# requests/hour PER IP. CI runners share IP ranges, so a wide matrix burns that
+# in minutes and PIE fails with "Could not authenticate against github.com"
+# (Composer's HTTP layer raising 401/403). It is probabilistic, which is the
+# trap: run 39584014996 lost exactly one cell of 63 - dev-rootless 8.3 amd64 -
+# while 8.3 arm64 and 8.4 amd64 installed the SAME mongodb package fine. One
+# lost cell means its `merge` job skips and that tier's tag is never promoted,
+# so at ~1.6% per job across ~97 jobs the chain is likelier to fail than not.
+# required=false so a local build with no secret still works: PIE then runs
+# unauthenticated, which is fine for one build at a time.
+
+# Bind-mounted from the build context, not COPYed: a COPY is its own layer, so
+# the 8.6 MB phar would ship in every image forever - deleting it in a later
+# RUN cannot shrink a layer already written. The mount exists only while this
+# RUN executes and leaves nothing behind.
+# Mounted at / and not under /tmp: the cleanup below does `rm -rf /tmp/*`,
+# which cannot remove an active mount ("Device or resource busy") and fails
+# the build.
+RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then \
+        GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
+    fi; \
+    apt-get update && apt-get install -y --no-install-recommends libtool && \
+    php /pie.phar install phpredis/phpredis:${REDIS_VERSION} && \
+    php /pie.phar install apcu/apcu:${APCU_VERSION} && \
+    php /pie.phar install msgpack/msgpack-php:${MSGPACK_VERSION} && \
+    # NOT --auto-remove: this repo has a scar from it taking git, git-man and
+    # patch along with an unrelated purge (see the dev tier). Name what goes.
+    apt-get purge -y libtool && \
+    rm -rf /var/lib/apt/lists/* /root/.pie /tmp/* /var/tmp/*
+
+# cboxdk/telemetry-native: SHIPPED, AND NOT LOADED.
+#
+# The native half of cboxdk/laravel-telemetry - a statistical CPU profiler,
+# native timing for connects and cURL, bounded runtime counters and a
+# signal-safe crash recorder. laravel-telemetry keeps owning everything
+# semantic; this only measures the runtime.
+#
+# Off by default because it is pre-1.0 and because it installs fatal-signal
+# handlers: an image should not arm those on every application that happens
+# to pull the tag. Its own FPM measurements put loading it inside the noise
+# floor, so the gate here is about maturity, not about a measured tax - the
+# opposite of why opentelemetry is gated. Same mechanism, different reason:
+# the ini lives outside the default scan dir and the entrypoints append it
+# when PHP_TELEMETRY_NATIVE=true.
+#
+# Built from source, not PECL - it is not published there. The two scan dirs
+# are created unconditionally so the COPY --from stages downstream resolve on
+# every PHP version, including the 8.2 images the extension does not support.
+#
+# The two asserts at the end are tripwires. A build that quietly produced a
+# different version than the pin, or a .so that cannot load, has to fail here
+# rather than at somebody else's 3am. `timer_backend` is the other one worth
+# asserting: `thread-walltime` means configure's CPU-timer probe failed and
+# profiles would silently measure wall time instead.
+ARG TELEMETRY_NATIVE_VERSION
+RUN set -eux; \
+    mkdir -p /usr/local/etc/php/conf.d-telemetry /usr/local/etc/php/conf.d-telemetry-auto; \
+    case "$PHP_VERSION" in \
+        8.2*) echo "telemetry-native requires PHP 8.3+ - skipping on ${PHP_VERSION}"; exit 0 ;; \
+    esac; \
+    git clone --depth 1 --branch "v${TELEMETRY_NATIVE_VERSION}" \
+        https://github.com/cboxdk/telemetry-native.git /usr/src/telemetry-native; \
+    cd /usr/src/telemetry-native; \
+    phpize; \
+    ./configure --enable-cbox-telemetry; \
+    make -j"$(nproc)"; \
+    make install; \
+    cd /; rm -rf /usr/src/telemetry-native; \
+    printf 'extension=cbox_telemetry.so\n' \
+        > /usr/local/etc/php/conf.d-telemetry/cbox-telemetry.ini; \
+    printf 'cbox_telemetry.auto=1\n' \
+        > /usr/local/etc/php/conf.d-telemetry-auto/cbox-telemetry-auto.ini; \
+    built="$(php -d extension=cbox_telemetry.so -r 'echo cbox_telemetry_status()["version"];')"; \
+    backend="$(php -d extension=cbox_telemetry.so -r 'echo cbox_telemetry_status()["timer_backend"];')"; \
+    [ "$built" = "$TELEMETRY_NATIVE_VERSION" ] || { echo "telemetry-native: built $built, pinned $TELEMETRY_NATIVE_VERSION" >&2; exit 1; }; \
+    [ "$backend" = "posix-thread-cputime" ] || { echo "telemetry-native: timer backend is '$backend', expected posix-thread-cputime" >&2; exit 1; }; \
+    echo "telemetry-native ${built} built (${backend})"
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
@@ -236,7 +342,7 @@ RUN mkdir -p /var/www/html && \
 WORKDIR /var/www/html
 
 # ============================================================================
-# STANDARD BASE - Add ImageMagick, vips, Node.js (DEFAULT)
+# STANDARD BASE - Add ImageMagick, Node.js (DEFAULT)
 # ============================================================================
 FROM slim-base AS standard-base
 
@@ -281,7 +387,7 @@ RUN set -eux; \
     node --version; npm --version; npx --version; bun --version
 
 # ============================================================================
-# STANDARD: Additional runtime deps + ImageMagick/vips extensions
+# STANDARD: Additional runtime deps + ImageMagick extension
 # ============================================================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # AVIF support
@@ -294,8 +400,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ghostscript \
     # SVG support for ImageMagick
     librsvg2-bin \
-    # vips runtime
-    libvips42 libvips-tools \
     # Exiftool for image metadata
     libimage-exiftool-perl \
     # Netcat for health checks
@@ -304,10 +408,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxslt1.1 libldap-2.5-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install build deps for ImageMagick/vips + moved extensions
+# Install build deps for ImageMagick + moved extensions
 RUN apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS \
-    libavif-dev libmagickwand-dev libvips-dev \
+    libavif-dev libmagickwand-dev \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libxml2-dev libxslt1-dev libldap2-dev libffi-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -347,21 +451,36 @@ RUN docker-php-ext-install -j$(nproc) \
 RUN docker-php-ext-install -j$(nproc) ffi && \
     printf '[ffi]\nffi.enable=preload\n' > /usr/local/etc/php/conf.d/zz-ffi.ini
 
-# Install ImageMagick, vips, and mongodb PECL extensions
-# opentelemetry: the OTel auto-instrumentation extension. Enabled but INERT
-# until the application installs the OTel SDK - no hooks register without it
-# (measured overhead without SDK: none; on-disk cost ~0.3MB). Ships because
-# APM agents that fight PID 1 are the alternative, and this one plugs into
-# the same observability story cbox-init's metrics already serve.
-RUN pecl install imagick-${IMAGICK_VERSION} && \
-    pecl install vips-${VIPS_VERSION} && \
-    pecl install mongodb-${MONGODB_VERSION} && \
-    pecl install opentelemetry-${OPENTELEMETRY_VERSION} && \
-    docker-php-ext-enable imagick vips mongodb opentelemetry
+# Install ImageMagick, mongodb and opentelemetry via PIE
+# opentelemetry: installed but NOT in the default scan dir. Loading it enables
+# the Zend observer API, which taxes every PHP function call even with no OTel
+# SDK installed - measured 2026-09-11 on dedicated EPYC (Hetzner ccx33):
+# -18.5% rps on a Laravel app vs 0% on tight-loop code. The earlier claim that
+# it was inert without the SDK was wrong. The entrypoints append conf.d-otel
+# to PHP_INI_SCAN_DIR when PHP_OPENTELEMETRY=true (works on read-only fs).
+# vips is GONE from this tier (#23). It was the one extension with no PIE
+# package at all: not published on Packagist under any name, PECL-only, and
+# its upstream repo has been untouched since 2024-10 with its newest git tag
+# (v1.0.10) three releases behind what PECL serves. So it could not survive
+# the pecl retirement by waiting, by migrating, or by building from a tag.
+# GD and ImageMagick stay as the image's image-processing stack - which is
+# what the e2e scenario already called them: "libvips is optional - GD and
+# ImageMagick are the primary image libraries".
+RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then \
+        GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
+    fi; \
+    php /pie.phar install imagick/imagick:${IMAGICK_VERSION} && \
+    php /pie.phar install mongodb/mongodb-extension:${MONGODB_VERSION} && \
+    php /pie.phar install open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
+    mkdir -p /usr/local/etc/php/conf.d-otel && \
+    mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d-otel/ && \
+    rm -rf /root/.pie
 
 # Cleanup build deps
 RUN apt-get purge -y --auto-remove $PHPIZE_DEPS \
-    libavif-dev libmagickwand-dev libvips-dev \
+    libavif-dev libmagickwand-dev \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev libwebp-dev \
     libxml2-dev libxslt1-dev libldap2-dev libffi-dev && \
     rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* \
@@ -379,6 +498,13 @@ FROM standard-base AS chromium-base
 # Chromium and dependencies for headless browser
 RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
+    # chromium-driver: apt keeps it version-matched with chromium, which
+    # makes Laravel Dusk zero-download (useChromedriver('/usr/bin/chromedriver')
+    # + ChromeOptions setBinary('/usr/bin/chromium'))
+    chromium-driver \
+    # emoji/unicode fonts: without them Playwright/Puppeteer screenshot
+    # assertions render tofu boxes where the host renders glyphs
+    fonts-noto-color-emoji fonts-unifont fonts-freefont-ttf \
     fonts-liberation \
     libnss3 \
     libatk1.0-0 \
@@ -397,6 +523,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
+# ── Pest v4 browser testing (Playwright) ────────────────────────────────
+# pest-plugin-browser drives Playwright, and released versions CANNOT be
+# pointed at the distro Chromium (no executablePath/channel option; watch
+# pestphp/pest-plugin-browser#243). So the zero-download path is baking
+# Playwright's own Chromium under a shared PLAYWRIGHT_BROWSERS_PATH. The
+# weekly rebuild tracks playwright@latest - exactly what pest docs tell
+# users to npm install - so app and image agree most weeks. On skew
+# ("Executable doesn't exist at /ms-playwright/..."), `npx playwright
+# install chromium` tops the shared dir up. No install-deps needed: the
+# distro chromium above already pulls every required library. Root is
+# fine: Playwright launches with chromiumSandbox=false by default.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npm install -g playwright@latest \
+    && playwright install chromium \
+    && chmod -R a+rX /ms-playwright \
+    && npm uninstall -g playwright \
+    && npm cache clean --force
+
 # ============================================================================
 # DEV BASE - Chromium + Development tools (Xdebug, PCOV, SPX)
 # ============================================================================
@@ -409,11 +553,25 @@ ARG PCOV_VERSION
 ARG SPX_VERSION
 
 # Install dev extensions (Xdebug, PCOV, SPX)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    $PHPIZE_DEPS git zlib1g-dev \
-    && pecl install xdebug-${XDEBUG_VERSION} \
-    && pecl install pcov-${PCOV_VERSION} \
-    && docker-php-ext-enable xdebug pcov \
+#
+# git is deliberately NOT in this install list and NOT in the purge below.
+# It is a RUNTIME dependency of every tier, installed in slim-base - composer
+# VCS installs, `git status` in a bind-mounted app, Statamic git integration.
+# Naming it here re-marked it manually-installed and the cleanup then purged
+# it, so the dev tier - the one tier that exists for CI and local work - was
+# the only one shipping WITHOUT git. `--auto-remove` took git-man,
+# liberror-perl and patch with it (cweagans/composer-patches needs patch).
+# The SPX clone below uses the git that slim-base already installed.
+RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
+    --mount=type=secret,id=github_token,required=false \
+    if [ -s /run/secrets/github_token ]; then \
+        GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
+    fi; \
+    apt-get update && apt-get install -y --no-install-recommends \
+    $PHPIZE_DEPS zlib1g-dev libtool \
+    && php /pie.phar install xdebug/xdebug:${XDEBUG_VERSION} \
+    && php /pie.phar install pecl/pcov:${PCOV_VERSION} \
+    && rm -rf /root/.pie \
     # SPX from GitHub (not on PECL) — pinned to a tag for reproducibility
     && git clone --depth=1 --branch "${SPX_VERSION}" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
     && cd /tmp/php-spx \
@@ -421,7 +579,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-enable spx \
     && rm -rf /tmp/php-spx \
     # Cleanup
-    && apt-get purge -y --auto-remove $PHPIZE_DEPS git \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS libtool \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy dev extension configurations

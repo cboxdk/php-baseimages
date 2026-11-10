@@ -177,6 +177,10 @@ jobs:
         id: goscan
         continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          # DB fallback: mirror.gcr.io 429s under load (see _build-image.yml).
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2,mirror.gcr.io/aquasec/trivy-db:2
+          TRIVY_JAVA_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-java-db:1,mirror.gcr.io/aquasec/trivy-java-db:1
         with:
           scan-type: rootfs
           scan-ref: ${{ runner.temp }}/go-binaries
@@ -198,7 +202,16 @@ jobs:
           if [ -n "$existing" ]; then
             gh issue comment "$existing" --body "Still failing as of $(date -u +%F). $BODY"
           else
-            gh issue create --title "$TITLE" --body "$BODY" --label security
+            # The label has to exist before it can be attached, and a missing
+            # one must never be what silences the alarm. It already was: this
+            # step detected the three Go CVEs on 12 and 19 October, then died
+            # on `could not add label: 'security' not found`, so no issue was
+            # ever opened and the promotion gate blocked every publish for
+            # twelve days with nothing but a red weekly run to show for it.
+            gh label create security --color d93f0b \
+              --description "Security findings that block a publish" 2>/dev/null || true
+            gh issue create --title "$TITLE" --body "$BODY" --label security ||
+              gh issue create --title "$TITLE" --body "$BODY"
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -233,3 +246,41 @@ jobs:
           else
             gh issue create --title "$TITLE" --body "$BODY"
           fi
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PIE readiness watch (issue #23): PHP 8.6 drops the pecl binary, so adding
+  # 8.6 is blocked until every PECL extension we ship has a PIE release that
+  # actually builds on 8.6. As of 2026-09-12 five are blocked (fixes merged
+  # upstream but untagged; pcov's fix not even merged). Packagist is polled
+  # weekly; a NEWER tag than the known-blocked version means a maintainer
+  # shipped something - a human then verifies 8.6 buildability and, once all
+  # are green, runs the PECL->PIE migration. After migrating, retire this job.
+  # ═══════════════════════════════════════════════════════════════════════════
+  pie-readiness:
+    name: PIE 8.6-readiness watch
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Poll Packagist for newer tags than the known-blocked versions
+        id: pie
+        run: |
+          # package=known-blocked-latest (from the 2026-09-12 audit on #23)
+          BLOCKED="phpredis/phpredis=6.3.0 apcu/apcu=5.1.28 msgpack/msgpack-php=3.0.1 imagick/imagick=3.8.1 pecl/pcov=1.0.12 xdebug/xdebug=3.5.3"
+          unblocked=""
+          for entry in $BLOCKED; do
+            pkg="${entry%%=*}"; known="${entry##*=}"
+            latest=$(curl -fsSL "https://repo.packagist.org/p2/${pkg}.json" \
+              | python3 -c "import json,sys; vs=[v['version'].lstrip('v') for v in json.load(sys.stdin)['packages']['${pkg}'] if '-' not in v['version']]; print(vs[0] if vs else '')" 2>/dev/null || echo "")
+            [ -z "$latest" ] && continue
+            newest=$(printf '%s\n%s\n' "$known" "$latest" | sort -V | tail -1)
+            if [ "$newest" = "$latest" ] && [ "$latest" != "$known" ]; then
+              unblocked="$unblocked $pkg:$latest(was:$known)"
+            fi
+          done
+          echo "unblocked=${unblocked# }" >> "$GITHUB_OUTPUT"
+
+      - name: Ping the tracking issue
+        if: steps.pie.outputs.unblocked != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 23 --repo "${{ github.repository }}" --body "PIE readiness watch: new tags since the audit - ${{ steps.pie.outputs.unblocked }}. Verify PHP 8.6 buildability (constraints can lie: phpredis 6.3.0 allowed >=7.4 but failed to compile), then update the known-blocked pins in check-updates.yml or start the PECL->PIE migration if all blockers are clear."

@@ -175,12 +175,31 @@ fi
 # ═══════════════════════════════════════════════════════════════════════════
 log_section "Test 4: Directory Blocking"
 
-# Test vendor directory
-CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/" 2>/dev/null)
-if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
-    log_success "vendor/ directory is blocked (HTTP $CODE)"
+# vendor/ under the web root is public/vendor/ - where Laravel packages publish
+# their browser assets. Denying the whole directory 404'd the Statamic Control
+# Panel and the Horizon dashboard (#37), so the contract is narrower now: the
+# published assets are served, and nothing under it executes.
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/statamic/cp/build/assets/app.js" 2>/dev/null)
+if [ "$CODE" = "200" ]; then
+    log_success "published asset under public/vendor/ is served (HTTP $CODE)"
 else
-    log_fail "vendor/ directory is accessible! (HTTP $CODE)"
+    log_fail "published asset under public/vendor/ is not served! (HTTP $CODE) - the #37 regression"
+fi
+
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/evil.php" 2>/dev/null)
+if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
+    log_success "PHP under public/vendor/ is blocked (HTTP $CODE)"
+else
+    log_fail "PHP under public/vendor/ executed! (HTTP $CODE)"
+fi
+
+# The project's own vendor/ sits beside public/, not under it, so it is not
+# reachable at all - the thing the directory rule was really protecting.
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8101/vendor/autoload.php" 2>/dev/null)
+if [ "$CODE" = "403" ] || [ "$CODE" = "404" ]; then
+    log_success "the project's vendor/autoload.php is not reachable (HTTP $CODE)"
+else
+    log_fail "vendor/autoload.php is reachable! (HTTP $CODE)"
 fi
 
 # Test node_modules directory
@@ -226,6 +245,47 @@ if [ -n "$OPEN_BASEDIR" ] && [ "$OPEN_BASEDIR" != "" ]; then
     log_success "open_basedir is set: $OPEN_BASEDIR"
 else
     log_warn "open_basedir is not set"
+fi
+
+# Session cookie hardening.
+#
+# These are HARD assertions, not warnings: the image ships its own php.ini, so
+# the engine defaults (httponly off, use_strict_mode off) are ours to own, and
+# an app calling session_start() directly - plain PHP, WordPress, legacy code -
+# inherits whatever we leave. httponly off turns any XSS into session theft;
+# use_strict_mode off accepts a session id the attacker chose.
+SESS=$(docker exec "$CONTAINER_NAME" php -r 'printf("%s|%s|%s", ini_get("session.cookie_httponly"), ini_get("session.use_strict_mode"), ini_get("session.cookie_samesite"));' 2>&1) || true
+SESS_HTTPONLY="${SESS%%|*}"
+SESS_REST="${SESS#*|}"
+SESS_STRICT="${SESS_REST%%|*}"
+SESS_SAMESITE="${SESS_REST#*|}"
+
+if [ "$SESS_HTTPONLY" = "1" ] || [ "$SESS_HTTPONLY" = "On" ]; then
+    log_success "session.cookie_httponly is on"
+else
+    log_fail "session.cookie_httponly is '$SESS_HTTPONLY' - JavaScript can read the session cookie"
+fi
+
+if [ "$SESS_STRICT" = "1" ] || [ "$SESS_STRICT" = "On" ]; then
+    log_success "session.use_strict_mode is on"
+else
+    log_fail "session.use_strict_mode is '$SESS_STRICT' - session fixation is accepted"
+fi
+
+if [ -n "$SESS_SAMESITE" ]; then
+    log_success "session.cookie_samesite is set: $SESS_SAMESITE"
+else
+    log_warn "session.cookie_samesite is empty (browsers default to Lax, but be explicit)"
+fi
+
+# OPcache interned strings buffer must not overflow on a warm Laravel request.
+# Measured on a real app: 19.58 MB interned for one request through the HTTP
+# kernel. A buffer below that silently spills to per-process storage.
+INTERNED=$(docker exec "$CONTAINER_NAME" php -r 'echo (int) ini_get("opcache.interned_strings_buffer");' 2>&1) || true
+if [ "${INTERNED:-0}" -ge 32 ] 2>/dev/null; then
+    log_success "opcache.interned_strings_buffer is ${INTERNED}M (>= measured 19.58M warm set)"
+else
+    log_fail "opcache.interned_strings_buffer is ${INTERNED}M - a warm Laravel request interns 19.58M"
 fi
 
 # Check disable_functions

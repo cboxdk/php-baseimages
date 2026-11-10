@@ -35,8 +35,9 @@ These are the most commonly used variables. Just set what you need!
 |----------|---------|-------------|
 | `PUID` | *(container default)* | Set the UID that `www-data` runs as |
 | `PGID` | *(container default)* | Set the GID that `www-data` runs as |
-| `APP_USER` | `www-data` | Application user name |
-| `APP_GROUP` | `www-data` | Application group name |
+| `APP_USER` | `www-data` (`nginx` in the standalone `nginx` image) | Application user name - the user `PUID` remaps |
+| `APP_GROUP` | `www-data` (`nginx` in the standalone `nginx` image) | Application group name |
+| `CBOX_APP_USER` | `$APP_USER` when started as root, else *(empty)* | The user the Cbox Init app processes (queue workers, scheduler, Horizon, Reverb, autoscaler) run as. Resolved automatically - set it only to override |
 
 ### Find your host UID/GID
 
@@ -90,7 +91,10 @@ environment:
 2. Ownership of `/var/www/html` is updated to match
 3. Framework directories (`storage/`, `bootstrap/cache/`, `var/`) are chowned automatically
 4. PHP-FPM runs worker processes as the remapped user
-5. Files created by PHP have the correct ownership on your host
+5. The Cbox Init app processes - queue workers, scheduler, Horizon, Reverb, the
+   queue autoscaler - run as that same user, so what a job writes (cache files,
+   compiled views, logs) stays writable for the PHP-FPM workers that read it next
+6. Files created by PHP have the correct ownership on your host
 
 ### Startup strictness knobs
 
@@ -101,9 +105,12 @@ environment:
 
 ### Important notes
 
+- **Every image honours them** — `php-fpm`, `php-cli`, `php-fpm-nginx` and `nginx` all remap on startup. In the standalone `nginx` image the user being remapped is `nginx` (uid 101), because that is who its workers run as; everywhere else it is `www-data` (uid 33). Override with `APP_USER`/`APP_GROUP`.
 - **Requires root mode** — PUID/PGID only works in root images (the default). Rootless images skip PUID/PGID mapping since the container already runs as `www-data`.
+- **A non-numeric value fails the boot** — `PUID=bob` stops the container with `PUID must be a number (got 'bob')` rather than guessing a uid and leaving you to find out later.
 - **Docker Desktop (macOS/Windows)** — Docker Desktop handles permission translation automatically via its VM layer, so PUID/PGID is usually not needed. It won't break anything if set, though.
 - **Only set what you need** — if you only need to change the UID, just set `PUID`. If you only need the GID, just set `PGID`.
+- **Containers that are already unprivileged** — a rootless image, `--user 1000:1000`, or OpenShift's arbitrary UID cannot switch user at all, so `CBOX_APP_USER` resolves to empty and the app processes simply run as the container's own user. That user *is* the app user there, so nothing is lost. Setting `CBOX_APP_USER` explicitly in such a container asks for a privilege drop that cannot happen, and Cbox Init refuses to start the process rather than silently running it as the wrong user.
 
 ---
 
@@ -160,7 +167,49 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | `PHP_ERROR_LOG` | `/dev/stderr` | Error log destination |
 | `PHP_SESSION_COOKIE_SECURE` | *(not set)* | Restrict session cookies to HTTPS (`1` recommended for prod) |
 | `PHP_REALPATH_CACHE_TTL` | `600` | Path cache TTL in seconds |
-| `PHP_OPEN_BASEDIR` | the app's directories + read-only kernel statistics (below) | `open_basedir` for the FPM pool. Empty means no restriction — which is what the **dev** tier sets. |
+| `PHP_OPCACHE_PRELOAD` | *(unset)* | **php-fpm and php-fpm-nginx only** - path to an `opcache.preload` script, loaded once at startup. This is the **only supported way to use the FFI extension the standard, chromium and dev tiers ship** (slim has no FFI): FFI is compiled with `ffi.enable=preload`, so preloaded code may call into C while request code may not. A path that does not exist fails the container at boot with a named cause instead of PHP's opaque startup fatal. Not wired in php-cli: `opcache.enable_cli` is off by default there, so a preload would be built and thrown away once per process |
+| `PHP_OPCACHE_PRELOAD_USER` | `www-data` | **php-fpm and php-fpm-nginx only** - user the preload script runs as. PHP refuses to preload as root without it, and says so in terms of the ini rather than of the container. Only written for root images; rootless images already run as a non-root user and PHP ignores it there |
+| `PHP_OPEN_BASEDIR` | *(empty - no restriction)* | `open_basedir` for the FPM pool. Empty since 1.6: the restriction disables PHP's realpath cache, measured at **-39% throughput on the Laravel fixture** (382 vs 625 rps). Set it for LFI defense-in-depth; include the kernel-statistics paths from the curated list below if you use cboxdk/system-metrics |
+| `PHP_OPENTELEMETRY` | `false` | Load the OpenTelemetry auto-instrumentation extension. Off by default since 1.6: the extension enables the Zend observer API, which taxes every PHP function call even with no OTel SDK installed - measured at **-18.5% throughput on a Laravel app** (0% on tight-loop code). Enable it when you actually ship OTel traces. If what you want is Laravel telemetry without taxing every function call, [cboxdk/laravel-telemetry](https://github.com/cboxdk/laravel-telemetry) does it in userland at the framework's own hooks - measured impact: none |
+| `PHP_TELEMETRY_NATIVE` | `false` | Load [cboxdk/telemetry-native](https://github.com/cboxdk/telemetry-native) (`cbox_telemetry`) - CPU profiler, native connect/cURL timing, runtime counters and a signal-safe crash recorder, the native half of [cboxdk/laravel-telemetry](https://github.com/cboxdk/laravel-telemetry). Off by default because it is **pre-1.0** and because its crash recorder installs fatal-signal handlers - not a performance gate: upstream's FPM measurements put loading it inside the harness's noise floor. Shipped in every tier from slim up, on PHP 8.3+ only |
+| `PHP_TELEMETRY_NATIVE_AUTO` | `false` | Open a telemetry unit of work at `RINIT`, so a profile covers framework boot instead of starting in middleware (`cbox_telemetry.auto=1`). Needs `PHP_TELEMETRY_NATIVE=true`. **FPM only** - in a queue worker or Octane server `RINIT` fires once per *process*, so an automatic unit would span hours and mean nothing; there the consumer calls `begin()`/`finish()` per job |
+
+#### Performance vs. security: should you enable `open_basedir`?
+
+The default is **off**, and that is a measured trade, not an oversight:
+setting `open_basedir` disables PHP's realpath cache entirely, which costs
+**~39% throughput on a real Laravel application** (382 → 666 req/s at
+2 CPUs on our benchmark fixture - the cache saves repeated filesystem
+lookups across the hundreds of files a framework request touches). On a
+single-file endpoint the cost hides at ~3%, which is exactly why this class
+of regression goes unnoticed.
+
+What enabling it buys: a defense-in-depth line against **local file
+inclusion in your own application code** - with the restriction on, a
+compromised `include`/`file_get_contents` cannot read paths like
+`/proc/1/environ` (which holds every secret in the container's
+environment). The container boundary does NOT protect the app from itself;
+`open_basedir` does.
+
+**Enable it when** the application executes less-trusted code (plugins,
+user templates), serves user uploads near executable paths, or compliance
+requires it - and accept the realpath cost. **Leave it off when** raw
+framework throughput matters and your LFI surface is handled at the
+application layer.
+
+Copy-paste re-enable, including the kernel-statistics paths that keep
+`cboxdk/system-metrics` (and `laravel-telemetry`) working under the
+restriction:
+
+```yaml
+environment:
+  PHP_OPEN_BASEDIR: "/var/www/html:/tmp:/var/tmp:/proc/stat:/proc/loadavg:/proc/meminfo:/proc/uptime:/proc/cpuinfo:/proc/diskstats:/proc/mounts:/proc/net/:/proc/self/cgroup:/proc/1/cgroup:/sys/fs/cgroup:/sys/class/dmi/id/:/etc/os-release:/etc/lsb-release:/etc/debian_version:/etc/redhat-release:/etc/system-release"
+```
+
+`/proc/1/environ` and `/proc/*/cmdline` are deliberately absent from that
+list - they are the secrets the restriction exists to protect. Verified
+behavior: with the list applied, `file_get_contents('/proc/1/environ')`
+fails while `/proc/meminfo` (metrics) succeeds.
 
 #### One definition, and why that took three attempts
 
@@ -255,6 +304,12 @@ or disable with `PHP_FPM_AUTOTUNE_PROFILE=""` and set the pool values explicitly
 | `PHP_FPM_MAX_REQUESTS` | `500` | Requests per child before recycling (0 = unlimited) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | Max request execution time before kill |
 
+In `dynamic` mode the spare counts are clamped to fit `pm.max_children`
+(`1 ≤ min_spare ≤ start_servers ≤ max_spare ≤ max_children`), with a `WARN`
+naming the values used, so `PHP_FPM_MAX_CHILDREN=4` on its own boots
+`2/1/4` instead of FPM refusing `max_spare 6 > max_children 4`. With autotune
+on, cbox-init sets all four itself and keeps the same order.
+
 ### Runtime PHP-FPM tuning (fpm-tune, cbox-init 3.1+)
 
 The boot profile above is a **seed** — it sizes the pool once, before traffic.
@@ -323,22 +378,23 @@ Both transports are first-class - pick per deployment:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PHP_FPM_LISTEN` | `tcp` | `tcp` = classic `127.0.0.1:9000`; `unix` = serve the nginx->FPM hop over a unix socket |
+| `PHP_FPM_LISTEN` | `unix` (php-fpm-nginx) / `tcp` (standalone php-fpm) | `unix` = the nginx->FPM hop over a unix socket (+21% transport throughput, cleanest p99.9 - the multi-service default since 1.6.1); `tcp` = classic `127.0.0.1:9000`, the standalone default and the right choice when FPM is scraped/proxied from outside the container |
 | `PHP_FPM_SOCKET_PATH` | `/run/php/php-fpm.sock` | Socket location in `unix` mode |
 
 **When to use which:**
 
-- **`unix`** - single-container throughput. Measured on these images:
-  ~**+23% PHP requests/second** on the same hardware (the TCP loopback hop
-  is pure overhead when nginx and FPM share a container). nginx follows
-  automatically (`NGINX_FASTCGI_PASS` is derived unless you set it), the
-  health probe switches with it, and fpm-exporter/fpm-tune autodiscover
-  the socket - `phpfpm_up{socket="unix://..."}`.
-- **`tcp`** (default) - anything that talks to FPM from OUTSIDE the
-  container: a sidecar exporter, a separate nginx container without a
-  shared socket volume, debugging with `cgi-fcgi` from another netns.
-  Also the conservative choice for existing deployments; defaults do not
-  change behavior.
+- **`tcp`** (default) - with FastCGI keepalive on (the 1.6 default) this
+  is also the FASTEST configuration measured: 15.2k hello rps at 2 CPUs
+  vs the socket's 13.3k. And it is the only transport that works from
+  OUTSIDE the container (sidecar exporters, separate nginx, `cgi-fcgi`
+  debugging).
+- **`unix`** - the keepalive-free alternative for single-container
+  setups: +12-24% over PLAIN tcp (without keepalive), and the right
+  choice where connection pooling is undesirable. nginx follows
+  automatically (`NGINX_FASTCGI_PASS` derived), the health probe
+  switches with it, and fpm-exporter/fpm-tune autodiscover the socket.
+  Keepalive is deliberately NOT defaulted on the socket - measured
+  counterproductive there (12.2k).
 
 ```yaml
 environment:
@@ -557,19 +613,34 @@ environment:
   - NGINX_OPEN_FILE_CACHE=off
 ```
 
+> **Release-based deploys:** the cache is keyed by path, so after you swap
+> `current` to a new release nginx can keep serving **static** files - including
+> a static page cache under `public/` - from the previous one for up to
+> `NGINX_OPEN_FILE_CACHE_VALID` (30s). Reload nginx after the swap (its new
+> workers start with an empty cache):
+>
+> ```bash
+> docker exec <container> nginx -s reload
+> ```
+>
+> If you cannot reload, set `NGINX_OPEN_FILE_CACHE=off` or shorten
+> `NGINX_OPEN_FILE_CACHE_VALID`. The PHP side is already handled by
+> `NGINX_USE_REALPATH_ROOT`, which is on by default.
+
 ### FastCGI Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NGINX_FASTCGI_PASS` | `127.0.0.1:9000` | PHP-FPM address |
+| `NGINX_USE_REALPATH_ROOT` | `true` | Pass `$realpath_root` as `SCRIPT_FILENAME`/`DOCUMENT_ROOT` instead of `$document_root`. Identical for a web root with no symlinks; required for release-based deploys. `false` restores `$document_root` |
 | `NGINX_FASTCGI_BUFFERS` | `8 8k` | FastCGI buffers |
 | `NGINX_FASTCGI_BUFFER_SIZE` | `8k` | Buffer size |
 | `NGINX_FASTCGI_BUSY_BUFFERS_SIZE` | `16k` | Busy buffers size |
 | `NGINX_FASTCGI_CONNECT_TIMEOUT` | `60s` | Connect timeout |
 | `NGINX_FASTCGI_SEND_TIMEOUT` | `60s` | Send timeout |
 | `NGINX_FASTCGI_READ_TIMEOUT` | `60s` | Read timeout |
-| `NGINX_FASTCGI_KEEP_CONN` | `off` | Pool nginx→FPM connections (`on`). Helps CPU-throttled runtimes (Cloud Run) and very high rps; off by default because idle pooled connections occupy FPM workers on small pools |
-| `NGINX_FASTCGI_KEEPALIVE` | `8` | Pooled connections when `NGINX_FASTCGI_KEEP_CONN=on` |
+| `NGINX_FASTCGI_KEEP_CONN` | `off` | Pool nginx→FPM connections. A MICRO-REQUEST optimization: measured +25-29% on sub-ms endpoints (tcp), but **-12% on a real Laravel app** and worse over the unix socket - enable for high-rps micro-APIs and CPU-throttled runtimes (Cloud Run), not for framework apps |
+| `NGINX_FASTCGI_KEEPALIVE` | `32` | Pooled-connection count. Do NOT shrink below ~4x nginx workers: a small pool interacts with `pm.max_requests` worker recycling into second-long tail stalls (measured: 8 conns -> CO-corrected p99 534ms; 32 conns -> 8.4ms) |
 
 ### Logging
 
@@ -642,6 +713,80 @@ which is loaded in all `php-fpm-nginx` images. Custom configs mounted into
 | `NGINX_STATIC_CACHE_CONTROL` | `public, immutable` | Cache-Control header |
 | `NGINX_STATIC_ACCESS_LOG` | `off` | Static file access logging |
 | `NGINX_TRY_FILES` | `/index.php?$query_string` | try_files fallback |
+
+---
+
+## Adding Your Own Nginx Locations
+
+Two hooks, so you never have to fork `default.conf.template` and then miss the
+next fix to the health endpoints, security blocks or fastcgi params:
+
+| Path | Level | Use it for |
+|------|-------|-----------|
+| `/etc/nginx/conf.d/*.conf` | http | extra `server` blocks, `map`s, rate-limit zones, `upstream`s |
+| `/etc/nginx/server.d/*.conf` | server | `location` blocks inside the image's own server block |
+
+```yaml
+services:
+  app:
+    image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
+    volumes:
+      - ./docker/nginx/server.d:/etc/nginx/server.d:ro
+```
+
+```nginx
+# docker/nginx/server.d/redirects.conf
+location = /old-url {
+    return 301 /new-url;
+}
+```
+
+**Order matters.** `server.d` is included *before* the image's own locations, and
+nginx tries regex locations in the order they appear — so a block here can take
+precedence over the built-in static-asset, PHP and deny rules. That is the
+point, and it is also the footgun: a `location ~ \.php$` of your own replaces
+the image's, fastcgi params and all.
+
+A `location /` of your own **collides** with the image's and nginx refuses to
+start. Use `NGINX_TRY_FILES` for small changes, or the Statamic preset below.
+Either way a bad file fails `nginx -t` at startup, with its own filename and
+line number, instead of at 3am.
+
+---
+
+## Statamic Static Caching
+
+Statamic's *full measure* static caching writes rendered pages as `.html` under
+`public/` and expects nginx to serve them without booting PHP — that is the
+whole point of it. Those rules replace `location /`, so they cannot go in a
+`server.d` drop-in; this preset renders them instead.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `STATAMIC_STATIC_CACHING` | `$STATAMIC_STATIC_CACHING_STRATEGY`, else `off` | `off`, `half` or `full` |
+| `STATAMIC_STATIC_PATH` | `static` | Directory under the web root that Statamic writes to |
+| `STATAMIC_STATIC_IGNORE_QUERY_STRINGS` | `false` | Must match `static_caching.ignore_query_strings` in the app's config |
+
+```yaml
+environment:
+  - STATAMIC_STATIC_CACHING=full
+  - STATAMIC_STATIC_IGNORE_QUERY_STRINGS=true   # if the app ignores them too
+```
+
+- **`half`** needs nothing from nginx — Statamic serves it from the app, after
+  Laravel boots. It is accepted so you can set the same value in both places.
+- **`full`** generates Statamic's documented chain: a cache hit is served from
+  disk, while a non-GET request or a `?live-preview=` request always reaches
+  PHP.
+- `STATAMIC_STATIC_CACHING` defaults to `STATAMIC_STATIC_CACHING_STRATEGY`, the
+  variable Statamic's own config reads, so passing that one into the container
+  configures both halves and they cannot drift apart.
+- `STATAMIC_STATIC_IGNORE_QUERY_STRINGS` picks the filename nginx looks for
+  (`/static/<uri>_.html` vs `/static/<uri>_<query>.html`). A mismatch is safe
+  in both directions — nginx simply misses the file and the request falls
+  through to PHP — but you lose the cache.
+- Pair it with `NGINX_OPEN_FILE_CACHE` on release-based deploys: see the note
+  under [Open File Cache](#open-file-cache).
 
 ---
 
@@ -879,7 +1024,7 @@ environment:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `WORKDIR` | `/var/www/html` | Working directory |
+| `WORKDIR` | `/var/www/html` | Application root. Moves framework detection, the permission fixes, the Laravel log tail **and** the working directory of every Cbox Init app process - set it to your `current` symlink for release-based deploys |
 | `CBOX_INIT_CONFIG` | `/etc/cbox-init/cbox-init.yaml` | Cbox Init config path |
 | `REVERB_PORT` | `8080` | Reverb port for healthcheck (override if using non-default port) |
 

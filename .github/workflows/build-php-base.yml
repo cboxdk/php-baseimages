@@ -107,7 +107,7 @@ jobs:
         docker run --rm $IMAGE php -v
         docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd"
         docker run --rm $IMAGE composer --version
-        # Slim does NOT have node, imagemagick, vips - that's expected
+        # Slim does NOT have node or imagemagick - that's expected
     secrets: inherit
 
   build-slim-rootless-matrix:
@@ -137,7 +137,7 @@ jobs:
     secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # STANDARD TIER (DEFAULT) - ImageMagick, vips, Node.js included
+  # STANDARD TIER (DEFAULT) - ImageMagick, Node.js included
   # ═══════════════════════════════════════════════════════════════════════════
   build-matrix:
     needs: upstream-preflight
@@ -162,7 +162,7 @@ jobs:
       test-script: |
         echo "Testing $IMAGE..."
         docker run --rm $IMAGE php -v
-        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
         docker run --rm $IMAGE bun --version
@@ -194,7 +194,7 @@ jobs:
         echo "Testing rootless image $IMAGE..."
         docker run --rm $IMAGE id -u | grep -E "^(33|82)$"
         docker run --rm $IMAGE php -v
-        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
         docker run --rm $IMAGE bun --version
@@ -226,7 +226,7 @@ jobs:
       test-script: |
         echo "Testing chromium $IMAGE..."
         docker run --rm $IMAGE php -v
-        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips"
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
         docker run --rm $IMAGE bun --version
@@ -287,7 +287,7 @@ jobs:
       test-script: |
         echo "Testing dev $IMAGE..."
         docker run --rm $IMAGE php -v
-        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|vips|xdebug|pcov|spx"
+        docker run --rm $IMAGE php -m | grep -E "opcache|redis|pdo_mysql|gd|imagick|xdebug|pcov|spx"
         docker run --rm $IMAGE composer --version
         docker run --rm $IMAGE node --version
         docker run --rm $IMAGE bun --version

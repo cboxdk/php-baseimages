@@ -51,8 +51,7 @@ promoted to their tags after a per-image smoke test and CVE gate pass.
 
 - Conventional commits (`feat:`, `fix:`, `docs:`, `ci:` ...) - the changelog
   is written from them
-- Add a line to `docs/changelog.md` under `[Unreleased]` for user-visible
-  changes
+- Add a line to `CHANGELOG.md` under `[Unreleased]` for user-visible changes
 - New env vars must be documented in
   `docs/reference/environment-variables.md`
 

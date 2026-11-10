@@ -19,6 +19,24 @@ log_error() {
     echo "${RED}[ERROR]${NC} $1"
 }
 
+# Shared library (PUID/PGID mapping, validators, is_rootless). Sourced after
+# the fallbacks above so its own log helpers win when it is present, and the
+# fallbacks still work in a derived image that drops it.
+LIB_PATH="${CBOX_LIB_PATH:-/usr/local/lib/cbox/entrypoint-lib.sh}"
+if [ -f "$LIB_PATH" ]; then
+    # shellcheck source=/dev/null
+    . "$LIB_PATH"
+fi
+
+# This image is FROM nginx:*-bookworm, whose workers run as `nginx` (uid 101),
+# not `www-data`. PUID/PGID has to remap THAT user to be worth anything here,
+# and the chowns below have to follow it - they used to try `www-data` first,
+# which exists in the base image, so the document root ended up owned by a
+# user nginx does not run as.
+APP_USER="${APP_USER:-nginx}"
+APP_GROUP="${APP_GROUP:-nginx}"
+export APP_USER APP_GROUP
+
 # Validate nginx configuration
 validate_config() {
     log_info "Validating nginx configuration..."
@@ -33,6 +51,13 @@ validate_config() {
 setup_permissions() {
     log_info "Setting up permissions..."
 
+    # PUID/PGID: remap $APP_USER to the host user, so a bind-mounted document
+    # root that is only readable by its owner is readable by nginx too. Before
+    # this, the variables were accepted and ignored in this image (#44).
+    if command -v setup_user_permissions >/dev/null 2>&1; then
+        setup_user_permissions
+    fi
+
     # Ensure nginx cache directories exist with proper permissions
     mkdir -p /var/cache/nginx/client_temp \
              /var/cache/nginx/proxy_temp \
@@ -40,13 +65,12 @@ setup_permissions() {
              /var/cache/nginx/uwsgi_temp \
              /var/cache/nginx/scgi_temp
 
-    chown -R www-data:www-data /var/cache/nginx 2>/dev/null || \
-    chown -R nginx:nginx /var/cache/nginx 2>/dev/null || true
+    chown -R "$APP_USER:$APP_GROUP" /var/cache/nginx 2>/dev/null || true
 
     # Ensure document root exists
-    if [ -d /var/www/html ]; then
-        chown -R www-data:www-data /var/www/html 2>/dev/null || \
-        chown -R nginx:nginx /var/www/html 2>/dev/null || true
+    _nginx_root="${WORKDIR:-/var/www/html}"
+    if [ -d "$_nginx_root" ]; then
+        chown -R "$APP_USER:$APP_GROUP" "$_nginx_root" 2>/dev/null || true
     fi
 }
 

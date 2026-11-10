@@ -102,90 +102,10 @@ sanitize_nginx_value() {
     echo "$1" | sed 's/[;{}$`\\]//g'
 }
 
-###########################################
-# PUID/PGID Runtime User Mapping
-# NOTE: This is an extended version of setup_user_permissions() from
-# entrypoint-lib.sh. It adds rootless-mode awareness, current UID/GID
-# checks before modifying, and ownership updates for the workdir and
-# common framework directories (storage, bootstrap/cache, var/).
-# Not using the lib version because the logic is a complete superset.
-###########################################
-setup_user_permissions_extended() {
-    # Skip PUID/PGID mapping in rootless mode
-    if is_rootless; then
-        log_info "Rootless mode - skipping PUID/PGID user mapping"
-        return 0
-    fi
-
-    local target_uid="${PUID:-}"
-    local target_gid="${PGID:-}"
-    local app_user="${APP_USER:-www-data}"
-    local app_group="${APP_GROUP:-www-data}"
-
-    [ -z "$target_uid" ] && [ -z "$target_gid" ] && return 0
-
-    if [ "$(id -u)" != "0" ]; then
-        log_warn "PUID/PGID specified but not running as root - skipping user mapping"
-        return 0
-    fi
-
-    [ -n "$target_uid" ] && ! validate_numeric "$target_uid" && return 1
-    [ -n "$target_gid" ] && ! validate_numeric "$target_gid" && return 1
-
-    log_info "Setting up PUID=${target_uid:-unchanged} PGID=${target_gid:-unchanged}"
-
-    # Modify group if PGID specified
-    if [ -n "$target_gid" ]; then
-        local current_gid
-        current_gid=$(id -g "$app_user" 2>/dev/null || echo "")
-        if [ "$current_gid" != "$target_gid" ]; then
-            if getent group "$target_gid" >/dev/null 2>&1; then
-                local existing_group
-                existing_group=$(getent group "$target_gid" | cut -d: -f1)
-                log_info "GID $target_gid already exists as group '$existing_group'"
-            else
-                groupmod -g "$target_gid" "$app_group" 2>/dev/null || \
-                    addgroup -g "$target_gid" "$app_group" 2>/dev/null || \
-                    groupadd -g "$target_gid" "$app_group" 2>/dev/null || true
-            fi
-        fi
-    fi
-
-    # Modify user if PUID specified
-    if [ -n "$target_uid" ]; then
-        local current_uid
-        current_uid=$(id -u "$app_user" 2>/dev/null || echo "")
-        if [ "$current_uid" != "$target_uid" ]; then
-            if getent passwd "$target_uid" >/dev/null 2>&1; then
-                local existing_user
-                existing_user=$(getent passwd "$target_uid" | cut -d: -f1)
-                log_info "UID $target_uid already exists as user '$existing_user'"
-            else
-                usermod -u "$target_uid" "$app_user" 2>/dev/null || \
-                    adduser -u "$target_uid" -D -S -G "$app_group" "$app_user" 2>/dev/null || \
-                    useradd -u "$target_uid" -g "$app_group" "$app_user" 2>/dev/null || true
-            fi
-        fi
-    fi
-
-    # Update ownership only when it isn't already correct. `chown -R` over a
-    # large mounted volume (Statamic content, uploaded assets) on every start
-    # is O(files) and slows rollouts / trips startupProbes — so skip when the
-    # workdir is already owned by the target user.
-    local workdir="${WORKDIR:-/var/www/html}"
-    if [ -d "$workdir" ]; then
-        local numeric_uid
-        numeric_uid=$(id -u "$app_user" 2>/dev/null || echo "")
-        if [ -n "$numeric_uid" ] && [ "$(stat -c %u "$workdir" 2>/dev/null)" = "$numeric_uid" ]; then
-            log_info "Ownership of $workdir already correct - skipping recursive chown"
-        else
-            log_info "Updating ownership of $workdir"
-            chown -R "$app_user:$app_group" "$workdir" 2>/dev/null || true
-        fi
-    fi
-
-    log_info "User permissions configured successfully"
-}
+# PUID/PGID mapping: setup_user_permissions() in entrypoint-lib.sh. This file
+# used to carry a private superset of it, which is exactly why php-fpm, php-cli
+# and nginx silently ignored PUID/PGID (#44) - one implementation now, called
+# by every image.
 
 # Laravel .env decryption: uses laravel_decrypt_env() from entrypoint-lib.sh
 
@@ -196,15 +116,35 @@ setup_user_permissions_extended() {
 # invalid user input early. The lib version trusts input without validation.
 ###########################################
 ###########################################
-# PHP-FPM listen transport (TCP vs unix socket)
-# PHP_FPM_LISTEN=tcp (default) keeps the classic 127.0.0.1:9000 - the right
-# choice when something outside the container scrapes or proxies FPM
-# directly. PHP_FPM_LISTEN=unix serves the nginx->FPM hop over a unix
-# socket instead (measured ~+25% PHP throughput single-container);
+# PHP-FPM listen transport (unix socket vs TCP)
+# PHP_FPM_LISTEN=unix (default) serves the nginx->FPM hop over a unix
+# socket - measured +21% on the transport path with the cleanest tails
+# (dedicated-EPYC rig, bench/cloud/results/2026-09-11). PHP_FPM_LISTEN=tcp
+# restores the classic 127.0.0.1:9000 - the right choice when something
+# outside the container scrapes or proxies FPM directly.
 # PHP_FPM_SOCKET_PATH overrides the default socket location.
 ###########################################
 setup_fpm_listen() {
-    local mode="${PHP_FPM_LISTEN:-tcp}"
+    # unix is the default in THIS image (nginx and FPM share the container;
+    # the hop never leaves it). Decided on dedicated-EPYC measurements
+    # (2026-09-11, bench/cloud/results): socket +21% over plain tcp on the
+    # transport path with the cleanest open-loop tail of any variant
+    # (p99.9 4.6ms), Laravel equal, work/static unchanged. The earlier
+    # laptop run that reversed this (tcp+keepalive 15.2k vs socket 13.3k)
+    # did not transfer to cloud cores, where per-request connect cost
+    # weighs 3x heavier. Keepalive stays opt-in: +9% more peak on micro,
+    # but 742ms p99.9 recycling spikes - wrong tradeoff for a default.
+    # Standalone php-fpm keeps tcp: remote FastCGI is its purpose.
+    # Whether the operator chose explicitly matters to the read-only-rootfs
+    # fallback below: a default can quietly degrade with the baked config
+    # set, an explicit choice must be honored or refused loud.
+    if [ -n "${PHP_FPM_LISTEN+x}" ]; then
+        CBOX_FPM_LISTEN_EXPLICIT=true
+    else
+        CBOX_FPM_LISTEN_EXPLICIT=false
+    fi
+    local mode="${PHP_FPM_LISTEN:-unix}"
+    export PHP_FPM_LISTEN="$mode"
     case "$mode" in
         tcp)
             export PHP_FPM_LISTEN_ADDR="9000"
@@ -317,6 +257,38 @@ apply_php_env_overrides() {
     [ -n "$PHP_ERROR_LOG" ] && content="${content}\nerror_log = $PHP_ERROR_LOG"
     [ -n "$PHP_SESSION_COOKIE_SECURE" ] && content="${content}\nsession.cookie_secure = $PHP_SESSION_COOKIE_SECURE"
     [ -n "$PHP_REALPATH_CACHE_TTL" ] && content="${content}\nrealpath_cache_ttl = $PHP_REALPATH_CACHE_TTL"
+
+    # opcache.preload - the ONLY supported way to use the FFI this image ships.
+    #
+    # php-base compiles FFI with `ffi.enable=preload`, which is upstream's own
+    # default and the right one: preloaded code may call into C, request code
+    # may not. But until now the image offered no way to preload anything, so
+    # the sanctioned path was closed and FFI was effectively dead weight.
+    #
+    # preload is PHP_INI_SYSTEM and runs once at MINIT, which is why it belongs
+    # in a file written before php-fpm starts rather than in a pool directive.
+    #
+    # A missing script is checked here on purpose. PHP's own failure is a
+    # startup fatal that names the ini setting but not the fact that the path
+    # does not exist, in a container that then crash-loops.
+    if [ -n "${PHP_OPCACHE_PRELOAD:-}" ]; then
+        if [ ! -f "$PHP_OPCACHE_PRELOAD" ]; then
+            log_error "PHP_OPCACHE_PRELOAD is set to '$PHP_OPCACHE_PRELOAD' but that file does not exist."
+            log_error "Preload runs at startup - fix the path or unset the variable."
+            exit 1
+        fi
+        content="${content}\nopcache.preload = $PHP_OPCACHE_PRELOAD"
+        # PHP refuses to preload as root without preload_user, and the message
+        # it gives is about the ini, not about the container running as root.
+        # Rootless images are already a non-root user, where the setting is
+        # unnecessary and PHP ignores it.
+        if ! is_rootless; then
+            content="${content}\nopcache.preload_user = ${PHP_OPCACHE_PRELOAD_USER:-www-data}"
+        elif [ -n "${PHP_OPCACHE_PRELOAD_USER:-}" ]; then
+            content="${content}\nopcache.preload_user = $PHP_OPCACHE_PRELOAD_USER"
+        fi
+        log_info "OPcache preload enabled: $PHP_OPCACHE_PRELOAD"
+    fi
     # NOT open_basedir. It belongs to the FPM pool alone — see below — and this
     # file is php.ini, which the CLI reads too. Composer lives at
     # /usr/bin/composer, artisan runs from a scheduler, a queue worker opens
@@ -426,12 +398,16 @@ generate_runtime_configs() {
         : ${NGINX_FASTCGI_CONNECT_TIMEOUT:=60s}
         : ${NGINX_FASTCGI_SEND_TIMEOUT:=60s}
         : ${NGINX_FASTCGI_READ_TIMEOUT:=60s}
-        # Optional FastCGI connection reuse toward FPM. OFF by default: with
-        # keepalive an idle pooled connection is held by an FPM worker, which
-        # can pin workers on small pools. It earns its keep on CPU-throttled
-        # runtimes (Cloud Run cold starts) and very high-rps TCP setups.
+        # FastCGI connection reuse toward FPM. OPT-IN, deliberately: it is a
+        # MICRO-REQUEST optimization, not a universal one. Measured at 2 CPUs:
+        # +25-29% on sub-ms hello requests (tcp), but -12% on a real Laravel
+        # app, actively worse over the unix socket, and the pool size
+        # interacts with pm.max_requests worker recycling (8 pooled conns put
+        # a recycle stall on every connection: CO-corrected p99 534ms; 32
+        # conns -> 8.4ms). Enable for high-rps micro-APIs and CPU-throttled
+        # runtimes; leave off for framework apps.
         : ${NGINX_FASTCGI_KEEP_CONN:=off}
-        : ${NGINX_FASTCGI_KEEPALIVE:=8}
+        : ${NGINX_FASTCGI_KEEPALIVE:=32}
         if [ "${NGINX_FASTCGI_KEEP_CONN}" = "on" ] || [ "${NGINX_FASTCGI_KEEP_CONN}" = "true" ]; then
             NGINX_FASTCGI_KEEP_CONN=on
             NGINX_UPSTREAM_CONFIG="upstream cbox_fpm {\n    server ${NGINX_FASTCGI_PASS};\n    keepalive ${NGINX_FASTCGI_KEEPALIVE};\n}"
@@ -461,6 +437,28 @@ generate_runtime_configs() {
         : ${NGINX_OPEN_FILE_CACHE_VALID:=30s}
         : ${NGINX_OPEN_FILE_CACHE_MIN_USES:=2}
         : ${NGINX_OPEN_FILE_CACHE_ERRORS:=on}
+
+        # The root every fastcgi block hands PHP. $realpath_root by default:
+        # for a web root with no symlinks it is the same string as
+        # $document_root, and for a release-based deploy (/app/current ->
+        # releases/<id>) it is the only correct one - otherwise PHP resolves
+        # includes through the symlink and opcache (validate_timestamps=0 in
+        # production) keeps serving the previous release until FPM is reloaded.
+        # Forge and Envoyer templates have shipped $realpath_root for years.
+        # NGINX_USE_REALPATH_ROOT=false restores $document_root.
+        #
+        # NOTE for release-based deploys: nginx's own open_file_cache can still
+        # serve STATIC files (including a static page cache under public/) from
+        # the previous release for up to NGINX_OPEN_FILE_CACHE_VALID (30s)
+        # after a swap. Reload nginx after the swap - new workers start with an
+        # empty cache - or set NGINX_OPEN_FILE_CACHE=off.
+        : ${NGINX_USE_REALPATH_ROOT:=true}
+        if is_true "${NGINX_USE_REALPATH_ROOT}"; then
+            NGINX_SCRIPT_ROOT='$realpath_root'
+        else
+            NGINX_SCRIPT_ROOT='$document_root'
+        fi
+        export NGINX_SCRIPT_ROOT
         : ${NGINX_TRUSTED_PROXIES:=}
         : ${NGINX_REAL_IP_HEADER:=X-Forwarded-For}
         : ${NGINX_REAL_IP_RECURSIVE:=on}
@@ -562,6 +560,13 @@ generate_runtime_configs() {
         # Append the format name to the access_log directives (invalid after "off")
         [ "${NGINX_ACCESS_LOG}" != "off" ] && NGINX_ACCESS_LOG="${NGINX_ACCESS_LOG} ${NGINX_LOG_FORMAT}"
         [ "${NGINX_STATIC_ACCESS_LOG}" != "off" ] && NGINX_STATIC_ACCESS_LOG="${NGINX_STATIC_ACCESS_LOG} ${NGINX_LOG_FORMAT}"
+        # NOTE, measured and rejected: buffering the access log (buffer=64k)
+        # LOWERED throughput here (20.1k vs 25.5k hello at 8 CPUs) - the log
+        # is a symlink to docker's stdout pipe, and large batched writes
+        # block workers against the pipe while the collector drains it.
+        # Small per-request writes flow better. NGINX_ACCESS_LOG=off remains
+        # the documented knob for squeezing the last ~7% out of micro-request
+        # workloads that do not need request logs.
 
         # Server header rebrand/removal via headers-more (more_set_headers can
         # replace or strip headers, which add_header cannot). Operator-supplied
@@ -580,7 +585,94 @@ generate_runtime_configs() {
         fi
         export NGINX_SERVER_HEADER_CONFIG
 
-        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_UPSTREAM_CONFIG} ${NGINX_FASTCGI_KEEP_CONN} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC}' \
+        # ─────────────────────────────────────────────────────────────────────
+        # Main location, and the optional Statamic static-caching chain.
+        #
+        # Statamic's "full measure" static caching writes rendered pages as
+        # .html under public/ and expects nginx to serve them WITHOUT booting
+        # PHP - that is the whole point of it. Those rules replace `location /`,
+        # so they cannot live in a drop-in next to it; the entrypoint renders
+        # one or the other here.
+        #
+        # STATAMIC_STATIC_CACHING: off (default) | half | full
+        #   half needs nothing from nginx - Statamic serves it from the app,
+        #   after Laravel boots - and is accepted so the same value can be set
+        #   in both places. It defaults to STATAMIC_STATIC_CACHING_STRATEGY
+        #   when that is in the container's environment, which is the variable
+        #   Statamic's own config reads, so the two cannot drift apart.
+        # STATAMIC_STATIC_PATH: directory under the web root (default: static)
+        # STATAMIC_STATIC_IGNORE_QUERY_STRINGS: must match
+        #   static_caching.ignore_query_strings in the app's config. Default
+        #   false, like Statamic's own. A mismatch is safe either way - nginx
+        #   simply misses the file and the request falls through to PHP.
+        #
+        # https://statamic.dev/advanced-topics/static-caching#nginx
+        # ─────────────────────────────────────────────────────────────────────
+        : "${STATAMIC_STATIC_CACHING:=${STATAMIC_STATIC_CACHING_STRATEGY:-off}}"
+        : ${STATAMIC_STATIC_PATH:=static}
+        : ${STATAMIC_STATIC_IGNORE_QUERY_STRINGS:=false}
+
+        case "${STATAMIC_STATIC_CACHING}" in
+            full|half|off) : ;;
+            *)
+                log_warn "Unknown STATAMIC_STATIC_CACHING '${STATAMIC_STATIC_CACHING}' (valid: off, half, full) - using off"
+                STATAMIC_STATIC_CACHING=off
+                ;;
+        esac
+
+        if [ "${STATAMIC_STATIC_CACHING}" = "full" ]; then
+            # Strip surrounding slashes so both `static` and `/static/` work.
+            _statamic_path=$(sanitize_nginx_value "${STATAMIC_STATIC_PATH}" | sed 's#^/*##; s#/*$##')
+            if is_true "${STATAMIC_STATIC_IGNORE_QUERY_STRINGS}"; then
+                _statamic_file="/${_statamic_path}\${uri}_.html"
+            else
+                _statamic_file="/${_statamic_path}\${uri}_\${args}.html"
+            fi
+            # Quoted heredoc: every $ in here is an nginx variable, not a shell
+            # one. The two @@...@@ tokens are filled in below.
+            NGINX_MAIN_LOCATION=$(cat <<'STATAMIC_EOF'
+    # Statamic full static caching (STATAMIC_STATIC_CACHING=full).
+    # A cache hit is served straight from disk; anything that must not be
+    # cached - a non-GET request, a live preview - goes to PHP.
+    set $try_location @static;
+    if ($request_method != GET) { set $try_location @not_static; }
+    if ($args ~* "live-preview=(.*)") { set $try_location @not_static; }
+
+    location / {
+        try_files $uri $try_location;
+    }
+
+    location @static {
+        try_files @@STATAMIC_FILE@@ $uri $uri/ @@TRY_FILES@@;
+    }
+
+    location @not_static {
+        try_files $uri @@TRY_FILES@@;
+    }
+STATAMIC_EOF
+)
+            NGINX_MAIN_LOCATION="${NGINX_MAIN_LOCATION//@@STATAMIC_FILE@@/$_statamic_file}"
+            log_info "Statamic full static caching: serving /${_statamic_path}/ from disk before PHP"
+            # The preset only exists in the RENDERED config. On a read-only
+            # /etc/nginx the fallback below boots the baked default instead,
+            # which has the plain `location /` - every page would quietly go
+            # through PHP again. Join the list that makes that failure fatal
+            # instead of a warning.
+            NGINX_USER_OVERRIDES="${NGINX_USER_OVERRIDES:-}STATAMIC_STATIC_CACHING "
+        else
+            NGINX_MAIN_LOCATION=$(cat <<'MAIN_EOF'
+    location / {
+        try_files $uri $uri/ @@TRY_FILES@@;
+    }
+MAIN_EOF
+)
+            [ "${STATAMIC_STATIC_CACHING}" = "half" ] && \
+                log_info "Statamic half static caching needs no nginx rules - the app serves it"
+        fi
+        NGINX_MAIN_LOCATION="${NGINX_MAIN_LOCATION//@@TRY_FILES@@/$NGINX_TRY_FILES}"
+        export NGINX_MAIN_LOCATION
+
+        envsubst '${NGINX_HTTP_PORT} ${NGINX_HTTPS_PORT} ${NGINX_WEBROOT} ${NGINX_INDEX} ${NGINX_CLIENT_MAX_BODY_SIZE} ${NGINX_CLIENT_BODY_TIMEOUT} ${NGINX_CLIENT_HEADER_TIMEOUT} ${NGINX_SERVER_TOKENS} ${NGINX_ACCESS_LOG} ${NGINX_ERROR_LOG} ${NGINX_ERROR_LOG_LEVEL} ${NGINX_TRY_FILES} ${NGINX_FASTCGI_PASS} ${NGINX_FASTCGI_BUFFERS} ${NGINX_FASTCGI_BUFFER_SIZE} ${NGINX_FASTCGI_BUSY_BUFFERS_SIZE} ${NGINX_FASTCGI_CONNECT_TIMEOUT} ${NGINX_FASTCGI_SEND_TIMEOUT} ${NGINX_FASTCGI_READ_TIMEOUT} ${NGINX_STATIC_EXPIRES} ${NGINX_STATIC_CACHE_CONTROL} ${NGINX_STATIC_ACCESS_LOG} ${NGINX_GZIP} ${NGINX_GZIP_VARY} ${NGINX_GZIP_PROXIED} ${NGINX_GZIP_COMP_LEVEL} ${NGINX_GZIP_MIN_LENGTH} ${NGINX_GZIP_TYPES} ${NGINX_OPEN_FILE_CACHE} ${NGINX_OPEN_FILE_CACHE_VALID} ${NGINX_OPEN_FILE_CACHE_MIN_USES} ${NGINX_OPEN_FILE_CACHE_ERRORS} ${NGINX_REAL_IP_CONFIG} ${NGINX_UPSTREAM_CONFIG} ${NGINX_FASTCGI_KEEP_CONN} ${NGINX_MTLS_CONFIG} ${NGINX_SECURITY_HEADERS} ${NGINX_LISTEN_EXTRA} ${NGINX_GZIP_STATIC} ${NGINX_LOG_FORMAT_CONFIG} ${NGINX_SERVER_HEADER_CONFIG} ${NGINX_BROTLI} ${NGINX_BROTLI_COMP_LEVEL} ${NGINX_BROTLI_TYPES} ${NGINX_BROTLI_STATIC} ${NGINX_SCRIPT_ROOT} ${NGINX_MAIN_LOCATION}' \
             < /etc/nginx/conf.d/default.conf.template \
             > /etc/nginx/conf.d/default.conf || {
             # A read-only /etc/nginx (readOnlyRootFilesystem without an
@@ -594,7 +686,21 @@ generate_runtime_configs() {
                 log_error "Failed to render Nginx config while these were configured via env: ${NGINX_USER_OVERRIDES}- refusing to boot on the baked defaults. Mount a writable emptyDir at /etc/nginx/conf.d (see docs: restricted runtimes)."
                 exit 1
             fi
+            if [ "${CBOX_FPM_LISTEN_EXPLICIT:-false}" = "true" ] && [ "${PHP_FPM_LISTEN}" = "unix" ]; then
+                log_error "Failed to render Nginx config while PHP_FPM_LISTEN=unix was set explicitly - the baked fallback config speaks TCP, so the socket cannot be honored. Mount a writable emptyDir at /etc/nginx/conf.d (see docs: restricted runtimes)."
+                exit 1
+            fi
             log_warn "Could not write /etc/nginx/conf.d/default.conf (read-only rootfs?) - booting on the image's baked default config. For env-driven nginx config, mount an emptyDir at /etc/nginx/conf.d."
+            if [ "${PHP_FPM_LISTEN}" = "unix" ]; then
+                # The baked configs are a consistent TCP pair (nginx pass,
+                # FPM listen via env, cbox-init health probe). The socket
+                # DEFAULT degrades with them as a set; an explicit choice
+                # was refused above instead.
+                log_warn "Socket default degrades to TCP with the baked config set (PHP_FPM_LISTEN=unix explicitly to insist)."
+                export PHP_FPM_LISTEN=tcp
+                export PHP_FPM_LISTEN_ADDR=9000
+                unset PHP_FPM_SOCKET_URI 2>/dev/null || true
+            fi
         }
     fi
 
@@ -649,11 +755,28 @@ generate_ssl_config() {
     ssl_verify_client ${MTLS_VERIFY_CLIENT};
     ssl_verify_depth ${MTLS_VERIFY_DEPTH};"
 
+    # nginx moved HTTP/2 from a `listen` parameter to its own directive in
+    # 1.25.1, and emitting the new form on an older build aborts startup
+    # outright: `[emerg] unknown directive "http2"`, so SSL_MODE=on never
+    # booted on bookworm at all (#55). bookworm ships 1.22.1. Pick the form
+    # from the running nginx rather than hardcoding either, so the trixie move
+    # (#52, nginx 1.26+, where the listen parameter is deprecated) needs no
+    # second edit here.
+    local ssl_listen_http2="" ssl_http2_directive="" nginx_ver
+    nginx_ver=$(nginx -v 2>&1 | sed -n 's|.*nginx/\([0-9][0-9.]*\).*|\1|p')
+    if [ -n "$nginx_ver" ] && \
+       [ "$(printf '%s\n' "1.25.1" "$nginx_ver" | sort -V | head -1)" = "1.25.1" ]; then
+        ssl_http2_directive="http2 on;"
+    else
+        ssl_listen_http2="http2"
+    fi
+    log_info "HTTPS enabled (nginx ${nginx_ver:-unknown}, HTTP/2 via ${ssl_http2_directive:-listen parameter})"
+
     cat >> /etc/nginx/conf.d/default.conf <<EOF
 
 server {
-    listen ${NGINX_HTTPS_PORT:-443} ssl ${NGINX_LISTEN_EXTRA};
-    http2 on;
+    listen ${NGINX_HTTPS_PORT:-443} ssl ${ssl_listen_http2} ${NGINX_LISTEN_EXTRA};
+    ${ssl_http2_directive}
     server_name _;
     root ${NGINX_WEBROOT:-/var/www/html/public};
     index ${NGINX_INDEX:-index.php index.html};
@@ -853,22 +976,54 @@ preflight_checks() {
             }
         fi
 
+        # On a release layout, storage is usually a SYMLINK to shared storage
+        # (releases/<id>/storage -> ../../shared/storage), and chown and chmod
+        # disagree about a symlink named on the command line: GNU `chown -R`
+        # defaults to -P and will NOT traverse it, while `chmod -R` follows it.
+        # Measured in bookworm, not assumed (#54):
+        #
+        #   chown -R www-data release/storage  -> app/public still root:root
+        #   chmod -R 775     release/storage  -> an existing 644 file became 775
+        #
+        # So the chown silently did nothing while the chmod rewrote every file
+        # in the SHARED tree - sessions, logs, caches - on every single start.
+        # Resolve the path once up front and let scaffold, chown and chmod all
+        # act on the same real directory.
+        local storage_dir bootstrap_dir
+        storage_dir=$(realpath "$workdir/storage" 2>/dev/null || printf '%s' "$workdir/storage")
+        bootstrap_dir=$(realpath "$workdir/bootstrap/cache" 2>/dev/null || printf '%s' "$workdir/bootstrap/cache")
+
         # Scaffold the Laravel storage tree first: a freshly-provisioned (empty)
         # volume mounted over storage/ otherwise lacks framework/{cache,sessions,
         # views} and logs/, and the app fatals ("directory does not exist").
         for d in framework/cache framework/sessions framework/views app/public logs; do
-            mkdir -p "$workdir/storage/$d" 2>/dev/null || true
+            mkdir -p "$storage_dir/$d" 2>/dev/null || true
         done
-        mkdir -p "$workdir/bootstrap/cache" 2>/dev/null || true
+        mkdir -p "$bootstrap_dir" 2>/dev/null || true
 
         # Auto-fix permissions if running as root (skip in rootless mode)
         if [ "$(id -u)" = "0" ] && ! is_rootless; then
-            log_info "Auto-fixing Laravel directory permissions..."
-            for dir in storage bootstrap/cache; do
-                [ -d "$workdir/$dir" ] && {
-                    chown -R www-data:www-data "$workdir/$dir" 2>/dev/null || true
-                    chmod -R 775 "$workdir/$dir" 2>/dev/null || true
-                }
+            local laravel_user="${APP_USER:-www-data}"
+            local laravel_group="${APP_GROUP:-$laravel_user}"
+            local laravel_uid
+            laravel_uid=$(id -u "$laravel_user" 2>/dev/null || echo "")
+            local dir
+            for dir in "$storage_dir" "$bootstrap_dir"; do
+                [ -d "$dir" ] || continue
+                # Same shortcut as setup_user_permissions: a tree already owned
+                # by the app user needs no recursive walk, and on a large shared
+                # storage that walk is O(files) on every start.
+                if [ -n "$laravel_uid" ] && [ "$(stat -c %u "$dir" 2>/dev/null)" = "$laravel_uid" ]; then
+                    log_info "Ownership of $dir already correct - skipping recursive chown/chmod"
+                    continue
+                fi
+                log_info "Auto-fixing Laravel directory permissions on $dir"
+                chown -R "$laravel_user:$laravel_group" "$dir" 2>/dev/null || true
+                # Directories need the execute bit; files do not. A blanket
+                # `chmod -R 775` marked every log, session and cache file
+                # executable, which is both wrong and noisy in audits.
+                find "$dir" -type d -exec chmod 775 {} + 2>/dev/null || true
+                find "$dir" -type f -exec chmod 664 {} + 2>/dev/null || true
             done
         fi
 
@@ -914,11 +1069,20 @@ log_info "PHP Version: $PHP_VERSION"
 NGINX_USER_OVERRIDES=$(env | grep -oE '^NGINX_[A-Z0-9_]+' | tr '\n' ' ')
 
 # Map environment variable aliases
+setup_opentelemetry
+setup_telemetry_native
 setup_fpm_listen
 map_env_aliases
 
-# Setup PUID/PGID user permissions
-setup_user_permissions_extended
+# Resolve WORKDIR and the user the cbox-init app processes run as, before
+# anything reads either. Must run BEFORE setup_user_permissions,
+# which chowns $WORKDIR, and before preflight_checks.
+if command -v setup_app_process_identity >/dev/null 2>&1; then
+    setup_app_process_identity
+fi
+
+# Setup PUID/PGID user permissions, and bring $WORKDIR's ownership with it
+setup_user_permissions "$WORKDIR"
 
 # Decrypt Laravel .env.encrypted (uses lib function if available)
 if command -v laravel_decrypt_env >/dev/null 2>&1; then
@@ -938,7 +1102,7 @@ if command -v apply_nginx_worker_processes >/dev/null 2>&1; then
     apply_nginx_worker_processes /etc/nginx/nginx.conf
 fi
 
-# Set working directory
+# Set working directory (resolved and exported by setup_app_process_identity)
 WORKDIR="${WORKDIR:-/var/www/html}"
 cd "$WORKDIR" 2>/dev/null || cd /var/www/html
 

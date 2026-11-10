@@ -125,7 +125,7 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
 | Tier | Size | Extensions | Best For |
 |------|------|------------|----------|
 | **Slim** | ~120 MiB | 25+ core | API/microservices, minimal footprint |
-| **Standard** (default) | ~250 MiB | 30+ with ImageMagick, vips, Node.js | Most Laravel/PHP apps |
+| **Standard** (default) | ~250 MiB | 30+ with ImageMagick, Node.js | Most Laravel/PHP apps |
 | **Chromium** | ~700 MiB | Standard + Chromium | Browsershot, Dusk, PDF generation |
 | **Dev** | ~750 MiB | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
@@ -145,7 +145,7 @@ ghcr.io/cboxdk/php-baseimages/php-cli:8.2-bookworm-slim-rootless-v1
 | Tier | Extensions |
 |------|------------|
 | **Slim** | Redis, APCu, msgpack, GD (WebP), intl, bcmath, zip, PCNTL, sockets |
-| **Standard** | Slim + ImageMagick, libvips, GD (AVIF), Node.js 22, MongoDB, exiftool |
+| **Standard** | Slim + ImageMagick, GD (AVIF), Node.js 22, MongoDB, exiftool |
 | **Chromium** | Standard + Chromium, Puppeteer support |
 | **Dev** | Chromium + Xdebug 3.5, PCOV 1.0, SPX profiler |
 
@@ -243,12 +243,13 @@ Single container with both PHP-FPM and Nginx:
 **Slim Tier (all tiers inherit these):**
 - **Core:** opcache, apcu, redis, pdo_mysql, pdo_pgsql, mysqli, pgsql, zip, intl, bcmath, sockets, pcntl
 - **Data:** msgpack
+- **Telemetry:** cbox_telemetry ([telemetry-native](https://github.com/cboxdk/telemetry-native) - CPU profiler, connect/cURL timing, crash records; opt-in via `PHP_TELEMETRY_NATIVE=true`, PHP 8.3+)
 - **Images:** gd (WebP), exif
 - **Features:** bz2, gmp
 
 **Standard + Chromium + Dev Tiers add:**
 - **Data:** mongodb
-- **Images:** imagick, vips, gd (AVIF support)
+- **Images:** imagick, gd (AVIF support)
 - **Features:** soap, xsl, ldap, calendar, gettext, sysv IPC
 - **Tools:** Node.js 22, npm, exiftool
 
@@ -379,7 +380,7 @@ docker-compose up -d
 services:
   app:
     image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1
-    # ImageMagick, vips, Node.js included
+    # ImageMagick, Node.js included
 ```
 
 **Slim Tier** (microservices, APIs):

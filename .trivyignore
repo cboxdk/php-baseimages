@@ -102,19 +102,6 @@ CVE-2026-6471
 CVE-2026-6473
 
 # --- Go binaries (cbox-init et al.) - fixed by rebuilding with patched Go/deps upstream (cboxdk/init) ---
-# Added 2026-11-09, found by the v1 pre-promotion gate. v1 keeps cbox-init 3.6.0 (Go 1.26.8) and
-# fpm-exporter 3.1.1 (Go 1.26.7); v2 ships cbox-init 3.9.1 and fpm-exporter 3.1.2, which carry the fixes.
-# None is in CISA KEV. Fix path for v1: bump both binaries (needs a behaviour review of cbox-init 3.7-3.9).
-# [HIGH] stdlib: crypto/x509: Man-in-the-middle attacks (cbox-init, fpm-exporter)
-CVE-2026-111943
-# [HIGH] stdlib: net/http: Denial of Service via crafted HTTP (cbox-init, fpm-exporter)
-CVE-2026-78667
-# [HIGH] golang.org/x/net/http2 + stdlib net/http/internal/http2 (cbox-init, fpm-exporter)
-CVE-2026-78669
-# [HIGH] stdlib: crypto/tls: Denial of Service (cbox-init, fpm-exporter)
-CVE-2026-97031
-# [HIGH] golang.org/x/net: golang.org/x/net/html: Denial of Service via crafted HTML input (added 2026-11-09; fixed by cbox-init 3.9.1 in v2, v1 ships 3.6.x)
-CVE-2026-78661
 # [HIGH] go.opentelemetry.io/otel/sdk: opentelemetry-go: OpenTelemetry-Go Affected by Arbitrary Code Execution via PATH
 CVE-2026-24051
 # [HIGH] stdlib: net/url: Incorrect parsing of IPv6 host literals in net/url
@@ -177,10 +164,6 @@ CVE-2026-84304
 GHSA-hrxh-6v49-42gf
 
 # --- npm packages bundled with Node.js - fixed by Node version bumps (weekly update PR) ---
-# [HIGH] brace-expansion: Denial of Service via stack exhaustion from crafted brace patterns (added 2026-11-09; npm 10 bundle, fixed in v2 by npm 12)
-CVE-2026-102276
-# [HIGH] brace-expansion: Denial of Service via uncontrolled recursion in nested brace patterns (added 2026-11-09; npm 10 bundle, fixed in v2 by npm 12)
-CVE-2026-102278
 # [HIGH] brace-expansion: brace-expansion: Brace-expansion: Denial of Service due to exponential-time comp
 CVE-2026-13149
 # [HIGH] brace-expansion: brace-expansion: Brace-expansion: Denial of Service via memory exhaustion in exp
@@ -199,5 +182,9 @@ CVE-2026-69192
 CVE-2026-73566
 # [HIGH] pacote: Versions of the package pacote from 11.2.7 and before 21.5.1 are vulne ...
 CVE-2026-9496
+# [HIGH] brace-expansion: DoS (fixed in 2.1.5); npm 10.9.9, bundled with Node 22.23.3, still ships 2.0.2 (added 2026-10-08)
+CVE-2026-102276
+# [HIGH] brace-expansion: DoS (fixed in 2.1.6); same npm-bundled 2.0.2 as above (added 2026-10-08)
+CVE-2026-102278
 
 

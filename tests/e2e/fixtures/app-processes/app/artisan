@@ -1,0 +1,26 @@
+#!/usr/bin/env php
+<?php
+// Stand-in for Laravel's artisan, used by the app-processes scenario.
+//
+// It records the identity and working directory it was started with, then idles
+// like a real worker so the supervisor keeps it running and the test can look
+// at it. A real `queue:work` would need Redis; what is under test here is who
+// the process runs as and where it starts, which needs neither.
+$command = implode(' ', array_slice($argv, 1));
+$uid = trim((string) shell_exec('id -u'));
+$user = trim((string) shell_exec('id -un'));
+
+fwrite(STDOUT, "[fixture-artisan] cwd=" . getcwd() . " uid={$uid} user={$user} cmd={$command}\n");
+
+if (preg_match('/queue:work|schedule:work|horizon|reverb|queue:autoscale/', $command)) {
+    @mkdir(getcwd() . '/storage/logs', 0775, true);
+    // One line per start, so a crash-loop is visible as repetition.
+    @file_put_contents(
+        getcwd() . '/storage/logs/app-process-identity.txt',
+        getcwd() . ' ' . $uid . ' ' . $user . "\n",
+        FILE_APPEND
+    );
+    while (true) {
+        sleep(1);
+    }
+}

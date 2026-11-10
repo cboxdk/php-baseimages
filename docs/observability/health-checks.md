@@ -335,8 +335,8 @@ Cbox Init exposes health metrics on port 9090:
 curl http://localhost:9090/metrics | grep health
 
 # Example output:
-# cbox_init_health_check_status{process="php-fpm",check_type="tcp"} 1
-# cbox_init_health_check_status{process="nginx",check_type="http"} 1
+# cbox_init_health_check_status{name="php-fpm",type="tcp"} 1
+# cbox_init_health_check_status{name="nginx",type="http"} 1
 ```
 
 ## Troubleshooting

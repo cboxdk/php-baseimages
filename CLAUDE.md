@@ -254,7 +254,7 @@ docker inspect cbox-fpm-nginx --format='{{json .State.Health}}' | jq
 ### php-base/Dockerfile
 The single source of truth for all PHP extensions, Composer, Node.js, and Cbox Init. Accepts `ARG PHP_VERSION=8.5`. Multi-stage Dockerfile that builds four tiers:
 - **slim-base**: Minimal PHP + essential extensions (~200MB)
-- **standard-base**: + ImageMagick, vips, AVIF, Node.js (~400MB)
+- **standard-base**: + ImageMagick, AVIF, Node.js (~400MB)
 - **chromium-base**: + Chromium for Browsershot/Dusk (~800MB)
 - **dev-base**: + Xdebug, PCOV, SPX for development
 
@@ -291,6 +291,12 @@ Comprehensive docs in `docs/` following ServerSideUp quality standards:
 - `docs/getting-started/quickstart.md` - 5-minute setup
 - `docs/guides/laravel-guide.md` - Complete Laravel guide with common mistakes
 - `docs/advanced/extending-images.md` - Customization examples
+
+**The changelog is ONE file**: `CHANGELOG.md` at the repository root. cbox.dk
+reads the changelog from the root file, so it is the exception to the /docs
+rule below - do NOT add a `docs/changelog.md` copy to get it onto the site.
+That copy existed once, drifted twice, and the lint gate meant to catch it
+only ever compared the two files in one direction.
 
 **Documentation Principles**:
 - Copy-paste ready examples

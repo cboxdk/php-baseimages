@@ -200,6 +200,42 @@ services:
 ],
 ```
 
+## Who the Workers Run As, and Where
+
+Both answers follow PHP-FPM, so a job never leaves behind a file the web
+requests cannot write.
+
+**User.** When the container starts as root, the workers, scheduler, Horizon,
+Reverb and the queue autoscaler all run as the PHP-FPM pool user — `www-data`,
+remapped if you set `PUID`/`PGID`. That matters more than it sounds: a job that
+writes a cache entry, compiles a view, appends to a log, or commits through
+Statamic's git automation used to leave those files root-owned, and the next web
+request could not write them.
+
+```bash
+# Workers and the FPM pool report the same uid
+docker compose exec app ps -eo user,uid,args | grep -E "queue:work|php-fpm: pool"
+```
+
+In a container that is already unprivileged — a `-rootless` image,
+`--user 1000:1000`, OpenShift's arbitrary UID — there is nothing to drop to, and
+the processes simply run as the container's own user. Override a single process
+with `CBOX_INIT_PROCESS_<NAME>_USER` when you really need to.
+
+**Directory.** Every app process starts in `$WORKDIR` (default
+`/var/www/html`). Set `WORKDIR` and the workers follow, which is what makes
+release-based deploys work:
+
+```yaml
+environment:
+  WORKDIR: /app/current          # a symlink to the live release
+  NGINX_WEBROOT: /app/current/public
+  LARAVEL_QUEUE: "true"
+```
+
+After a release swap, `php artisan queue:restart` is enough: the workers exit,
+Cbox Init restarts them, and they come back up in the new release.
+
 ## Queue Drivers
 
 ### Redis (Recommended)
@@ -457,6 +493,28 @@ spec:
 2. Check queue connection: `php artisan queue:monitor`
 3. Check Redis connection: `redis-cli ping`
 4. Check job syntax: `php artisan queue:work --once`
+
+### `Could not open input file: artisan` in the worker log
+
+The workers start in `$WORKDIR`, and your app is somewhere else. Set `WORKDIR`
+to the directory that holds `artisan` (for release-based deploys, your `current`
+symlink) and the workers follow it.
+
+### A job wrote a file the web requests cannot read or write
+
+Check that the workers and the FPM pool agree on a uid:
+
+```bash
+docker compose exec app ps -eo user,uid,args | grep -E "queue:work|php-fpm: pool"
+```
+
+They should match. If the worker shows `root` while the pool shows your app
+user, something overrode it — look for a `CBOX_INIT_PROCESS_*_USER` or an
+explicit `CBOX_APP_USER` in your environment. To repair what is already on disk:
+
+```bash
+docker compose exec app chown -R www-data:www-data storage bootstrap/cache
+```
 
 ### Memory Exhaustion
 

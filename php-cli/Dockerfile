@@ -5,7 +5,7 @@
 #
 # IMAGE TIERS (inherited from php-base):
 # - slim:     Minimal PHP + essential extensions - API/microservices
-# - standard: + ImageMagick, vips, Node.js - Most Laravel apps (DEFAULT)
+# - standard: + ImageMagick, Node.js - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk - PDF generation, testing
 # - dev:      + Xdebug, PCOV, SPX for development/testing
 #
@@ -46,6 +46,9 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 ENV CBOX_IMAGE_TIER=slim
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -77,6 +80,9 @@ ENV CBOX_IMAGE_TIER=slim
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -94,20 +100,23 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOT (STANDARD): Default - ImageMagick, vips, Node.js
+# ROOT (STANDARD): Default - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard AS root
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm"
-LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js, Composer, and Cbox Init"
+LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, Node.js, Composer, and Cbox Init"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
 ENV CBOX_IMAGE_TIER=standard
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -124,14 +133,14 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --start-interval=3s --
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ROOTLESS (STANDARD): Default rootless - ImageMagick, vips, Node.js
+# ROOTLESS (STANDARD): Default rootless - ImageMagick, Node.js
 # ═══════════════════════════════════════════════════════════════════════════
 FROM base-standard-rootless AS rootless
 
 ARG PHP_VERSION
 
 LABEL org.opencontainers.image.title="Cbox PHP CLI ${PHP_VERSION} Bookworm (Rootless)"
-LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, vips, Node.js - Rootless"
+LABEL org.opencontainers.image.description="PHP CLI with ImageMagick, Node.js - Rootless"
 LABEL org.opencontainers.image.vendor="Cbox"
 LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 
@@ -139,6 +148,9 @@ ENV CBOX_IMAGE_TIER=standard
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -170,6 +182,9 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 ENV CBOX_IMAGE_TIER=chromium
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -201,6 +216,9 @@ ENV CBOX_IMAGE_TIER=chromium
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -232,6 +250,9 @@ LABEL org.opencontainers.image.source="https://github.com/cboxdk/php-baseimages"
 ENV CBOX_IMAGE_TIER=dev
 
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh
@@ -263,6 +284,9 @@ ENV CBOX_IMAGE_TIER=dev
 
 USER root
 COPY php-cli/common/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Keep the shared lib in lockstep with the entrypoint that sources it
+# (inheriting it from an older base layer = calling functions it lacks).
+COPY common/lib/entrypoint-lib.sh /usr/local/lib/cbox/entrypoint-lib.sh
 COPY php-cli/common/healthcheck.sh /usr/local/bin/healthcheck.sh
 COPY php-cli/common/healthcheck-worker.sh /usr/local/bin/healthcheck-worker.sh
 COPY php-cli/common/healthcheck-schedule.sh /usr/local/bin/healthcheck-schedule.sh

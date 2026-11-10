@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# SUT scheduler: run each configuration for a fixed window, announce the
+# current one on :8090/state.json. The client polls and measures :8080.
+set -u
+B="${CBOX_BENCH_DIR:-$HOME/cbox-bench}"
+ST="$B/state"; mkdir -p "$ST"
+WINDOW="${BENCH_WINDOW:-240}"
+cd "$B"
+( cd "$ST" && python3 -m http.server 8090 >/dev/null 2>&1 9>&- & ) || true
+announce() { printf '{"name":"%s","phase":"%s","kind":"%s","ts":"%s"}\n' "$1" "$2" "$3" "$(date -u +%FT%TZ)" > "$ST/state.json.tmp" && mv "$ST/state.json.tmp" "$ST/state.json"; }
+cp "$B/digests.txt" "$ST/" 2>/dev/null; cp "$B"/*.sha "$ST/" 2>/dev/null
+
+run_slot() { # name kind image cpus mem mount extra...
+  name="$1"; kind="$2"; img="$3"; cpus="$4"; mem="$5"; mnt="$6"; shift 6
+  echo "== slot $name =="
+  docker rm -f sut >/dev/null 2>&1
+  docker run -d --name sut --cpus="$cpus" --memory="$mem" -p 8080:${PORT_OVERRIDE:-80} -v "$mnt" "$@" "$img" >/dev/null || { announce "$name" error "$kind"; return; }
+  probe="/hello.php"; [ "$kind" = laravel ] && probe="/items"
+  ok=""
+  for i in $(seq 1 300); do curl -sf -o /dev/null "http://127.0.0.1:8080$probe" && { ok=1; break; }; sleep 0.5; done
+  # Never announce ready on a dead container - a crashed slot must show as
+  # error, not send the client measuring a corpse (learned from exit-127 boot).
+  if [ -z "$ok" ]; then
+    echo "slot $name never became ready:"; docker logs sut 2>&1 | tail -15
+    announce "$name" error "$kind"; docker rm -f sut >/dev/null 2>&1; return
+  fi
+  announce "$name" ready "$kind"
+  sleep "$WINDOW"
+  announce "$name" done "$kind"
+  docker rm -f sut >/dev/null 2>&1
+}
+
+APP="$B/baseimages/bench/cloud/app"
+LV="$B/lv-app"
+SSU=serversideup/php:8.5-fpm-nginx
+
+# Pass 5 (mini A/B): is the socket's -3% on 2c Laravel real? Interleaved
+# plain/sock slots so machine drift hits both arms equally. Laravel-only
+# slots need ~110s of measurement, so the window shrinks accordingly.
+WINDOW=150
+NOOTEL="/dev/null:/usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini:ro"
+run_slot lvab-plain-1  laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL"
+run_slot lvab-sock-1   laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+run_slot lvab-plain-2  laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL"
+run_slot lvab-sock-2   laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+run_slot lvab-plain-3  laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL"
+run_slot lvab-sock-3   laravel cbox:pkg 2 1g "$LV:/var/www/html" -v "$NOOTEL" -e PHP_FPM_LISTEN=unix
+announce finished finished none
+touch "$B/RUN_DONE"
+echo "SUT-SCHEDULE-DONE"

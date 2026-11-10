@@ -166,21 +166,62 @@ fix_symfony_permissions() {
 # belong to another mode. Called by both the php-fpm and php-fpm-nginx
 # entrypoints after sizing envs are resolved.
 ###########################################
+
+# FPM refuses to start a dynamic pool unless
+#   1 <= min_spare <= start_servers <= max_spare <= max_children
+# and the spare defaults (start 2, min 1, max 6) do not fit a small
+# max_children: PHP_FPM_MAX_CHILDREN=4 alone was enough to crash-loop it.
+# Clamp the exported values into that order, keeping max_children - the
+# number somebody actually chose - and saying what changed. Non-numeric values
+# are left alone for FPM to name. cbox-init's boot autotune overwrites all four
+# with values it keeps in the same order, so this covers manual sizing.
+clamp_fpm_spare_servers() {
+    local max="${PHP_FPM_MAX_CHILDREN:-}" start="$PHP_FPM_START_SERVERS"
+    local min="$PHP_FPM_MIN_SPARE" spare="$PHP_FPM_MAX_SPARE" v
+    for v in "$max" "$start" "$min" "$spare"; do
+        case "$v" in ''|*[!0-9]*) return 0 ;; esac
+    done
+    [ "$max" -ge 1 ] || return 0
+
+    [ "$min" -lt 1 ] && min=1
+    [ "$min" -gt "$max" ] && min=$max
+    [ "$spare" -lt "$min" ] && spare=$min
+    [ "$spare" -gt "$max" ] && spare=$max
+    [ "$start" -lt "$min" ] && start=$min
+    [ "$start" -gt "$spare" ] && start=$spare
+
+    if [ "$start/$min/$spare" != "$PHP_FPM_START_SERVERS/$PHP_FPM_MIN_SPARE/$PHP_FPM_MAX_SPARE" ]; then
+        log_warn "PHP-FPM pool: start/min_spare/max_spare $PHP_FPM_START_SERVERS/$PHP_FPM_MIN_SPARE/$PHP_FPM_MAX_SPARE do not fit pm.max_children=$max - using $start/$min/$spare"
+    fi
+    export PHP_FPM_START_SERVERS="$start" PHP_FPM_MIN_SPARE="$min" PHP_FPM_MAX_SPARE="$spare"
+}
+
 write_pm_mode_dropin() {
     local mode="${PHP_FPM_PM:-dynamic}"
     local dropin="/usr/local/etc/php-fpm.d/zz-pm-mode.conf"
     case "$mode" in
         dynamic)
-            # The image BAKES a dynamic drop-in with env placeholders, so an
-            # unwritable config dir (read-only rootfs) is fine for the default
-            # mode: FPM expands the exported PHP_FPM_* itself.
+            export PHP_FPM_START_SERVERS="${PHP_FPM_START_SERVERS:-2}"
+            export PHP_FPM_MIN_SPARE="${PHP_FPM_MIN_SPARE:-1}"
+            export PHP_FPM_MAX_SPARE="${PHP_FPM_MAX_SPARE:-6}"
+            export PHP_FPM_MAX_SPAWN_RATE="${PHP_FPM_MAX_SPAWN_RATE:-32}"
+            clamp_fpm_spare_servers
+            # PLACEHOLDERS, never the values: FPM expands ${PHP_FPM_*} from its
+            # own environment at start. cbox-init's boot autotune runs AFTER this
+            # entrypoint and exports the tuned max_children AND spare counts;
+            # pool.conf expands max_children from that env, so literals here
+            # froze the spare counts at the pre-tune defaults (max_spare 6) and
+            # a 512Mi container tuned to 4 children crash-looped with "cannot be
+            # greater than pm.max_children". Same content as the BAKED drop-in
+            # (pm-mode-dynamic.conf), so a read-only rootfs behaves the same.
+            # shellcheck disable=SC2016
             printf '%s\n' \
                 "; Auto-generated: dynamic warm floor (PHP_FPM_PM=dynamic)" \
                 "[www]" \
-                "pm.start_servers = ${PHP_FPM_START_SERVERS:-2}" \
-                "pm.min_spare_servers = ${PHP_FPM_MIN_SPARE:-1}" \
-                "pm.max_spare_servers = ${PHP_FPM_MAX_SPARE:-6}" \
-                "pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE:-32}" \
+                'pm.start_servers = ${PHP_FPM_START_SERVERS}' \
+                'pm.min_spare_servers = ${PHP_FPM_MIN_SPARE}' \
+                'pm.max_spare_servers = ${PHP_FPM_MAX_SPARE}' \
+                'pm.max_spawn_rate = ${PHP_FPM_MAX_SPAWN_RATE}' \
                 > "$dropin" 2>/dev/null || log_info "Config dir not writable - the baked dynamic drop-in stands (env-expanded by FPM)"
             ;;
         ondemand)
@@ -271,6 +312,62 @@ verify_fpm_listen() {
         exit 1
     fi
     log_info "PHP-FPM listen verified: $effective"
+}
+
+###########################################
+# OpenTelemetry extension (opt-in)
+###########################################
+# The otel extension enables the Zend observer API, which taxes every PHP
+# function call even with no OTel SDK installed - measured 2026-09-11 on
+# dedicated EPYC (Hetzner ccx33): -18.5% rps on a Laravel app, 0% on
+# tight-loop code. Its ini therefore lives in conf.d-otel, outside the
+# default scan dir. A leading colon in PHP_INI_SCAN_DIR appends to the
+# compiled-in default, so this works without touching the filesystem
+# (read-only containers included). Exported before PHP starts; cbox-init
+# passes the environment through to its services.
+setup_opentelemetry() {
+    if is_true "${PHP_OPENTELEMETRY:-false}"; then
+        if [ -f /usr/local/etc/php/conf.d-otel/docker-php-ext-opentelemetry.ini ]; then
+            export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-}:/usr/local/etc/php/conf.d-otel"
+            log_info "OpenTelemetry extension enabled (PHP_OPENTELEMETRY=true)"
+        else
+            log_warn "PHP_OPENTELEMETRY=true but the extension is not in this tier (slim has no otel)"
+        fi
+    fi
+}
+
+###########################################
+# Cbox Telemetry Native extension (opt-in)
+###########################################
+# cboxdk/telemetry-native is the native half of cboxdk/laravel-telemetry: a
+# statistical CPU profiler, native timing for connects and cURL, bounded
+# runtime counters and a signal-safe crash recorder. The image ships the .so
+# but leaves it unloaded - it is pre-1.0, and it installs fatal-signal
+# handlers, which is not something an image should arm on an application's
+# behalf. Its ini therefore lives in conf.d-telemetry, outside the default
+# scan dir; same read-only-safe mechanism as setup_opentelemetry above.
+#
+# PHP_TELEMETRY_NATIVE_AUTO opens a unit of work at RINIT, so a profile
+# covers framework boot instead of starting wherever middleware runs. Right
+# for FPM. WRONG for queue workers and Octane, where RINIT fires once per
+# PROCESS - an automatic unit there would span hours and mean nothing, and
+# the consumer should call begin()/finish() per job instead. That is why it
+# is a separate switch rather than something PHP_TELEMETRY_NATIVE implies.
+setup_telemetry_native() {
+    if is_true "${PHP_TELEMETRY_NATIVE:-false}"; then
+        if [ -f /usr/local/etc/php/conf.d-telemetry/cbox-telemetry.ini ]; then
+            export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-}:/usr/local/etc/php/conf.d-telemetry"
+            log_info "telemetry-native extension enabled (PHP_TELEMETRY_NATIVE=true)"
+            if is_true "${PHP_TELEMETRY_NATIVE_AUTO:-false}"; then
+                export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR}:/usr/local/etc/php/conf.d-telemetry-auto"
+                log_info "telemetry-native automatic units enabled (cbox_telemetry.auto=1)"
+            fi
+        else
+            log_warn "PHP_TELEMETRY_NATIVE=true but the extension is not in this image (it needs PHP 8.3+)"
+        fi
+    elif is_true "${PHP_TELEMETRY_NATIVE_AUTO:-false}"; then
+        log_warn "PHP_TELEMETRY_NATIVE_AUTO=true does nothing without PHP_TELEMETRY_NATIVE=true"
+    fi
 }
 
 ###########################################
@@ -426,47 +523,157 @@ validate_cbox_init() {
 
 ###########################################
 # PUID/PGID User Mapping
+#
+# Remaps the app user to the uid/gid the host uses, which is the whole point of
+# PUID/PGID: files the container writes into a bind mount come out owned by
+# somebody who can edit them afterwards.
+#
+# THIS is the one implementation. php-fpm-nginx used to carry a private copy
+# and the other three images carried nothing, so `PUID=1000` was accepted and
+# silently ignored on php-fpm, php-cli and nginx while the docs promised it
+# everywhere (#44). One function, called by every entrypoint.
+#
+# Optional arguments are directories to chown after the remap - pass the ones
+# the image owns. Without PUID/PGID nothing is remapped and nothing is chowned,
+# so a caller that wants its usual unconditional chown keeps doing it itself.
+#
+# APP_USER/APP_GROUP name the user to remap; the standalone nginx image runs
+# its workers as `nginx`, not `www-data`, and defaults them accordingly.
 ###########################################
 setup_user_permissions() {
+    # Rootless images already run AS the app user: nothing to remap, and no
+    # privilege to remap it with.
+    if is_rootless; then
+        log_info "Rootless mode - skipping PUID/PGID user mapping"
+        return 0
+    fi
+
     local target_uid="${PUID:-}"
     local target_gid="${PGID:-}"
     local app_user="${APP_USER:-www-data}"
     local app_group="${APP_GROUP:-www-data}"
 
-    # Skip if no PUID/PGID specified
     [ -z "$target_uid" ] && [ -z "$target_gid" ] && return 0
 
-    # Only root can change ownership
     if [ "$(id -u)" != "0" ]; then
-        log_warn "PUID/PGID specified but not running as root - skipping"
+        log_warn "PUID/PGID specified but not running as root - skipping user mapping"
         return 0
     fi
 
-    # Validate numeric
-    [ -n "$target_uid" ] && ! validate_numeric "$target_uid" && return 1
-    [ -n "$target_gid" ] && ! validate_numeric "$target_gid" && return 1
+    # A typo here is a deploy-time mistake, and every image fails the boot on it
+    # rather than guessing a uid. Name the variable - "Value must be numeric" on
+    # its own sent people reading the wrong part of their compose file.
+    if [ -n "$target_uid" ] && ! validate_numeric "$target_uid" >/dev/null 2>&1; then
+        log_error "PUID must be a number (got '$target_uid')"
+        return 1
+    fi
+    if [ -n "$target_gid" ] && ! validate_numeric "$target_gid" >/dev/null 2>&1; then
+        log_error "PGID must be a number (got '$target_gid')"
+        return 1
+    fi
 
-    log_info "Setting up PUID=${target_uid:-unchanged} PGID=${target_gid:-unchanged}"
+    log_info "Setting up PUID=${target_uid:-unchanged} PGID=${target_gid:-unchanged} for ${app_user}:${app_group}"
 
-    # Modify group
+    # Group first: a usermod that moves the user into a group needs it to exist.
     if [ -n "$target_gid" ]; then
-        if ! getent group "$target_gid" >/dev/null 2>&1; then
-            groupmod -g "$target_gid" "$app_group" 2>/dev/null || \
-            addgroup -g "$target_gid" "$app_group" 2>/dev/null || \
-            groupadd -g "$target_gid" "$app_group" 2>/dev/null || true
+        local current_gid
+        current_gid=$(id -g "$app_user" 2>/dev/null || echo "")
+        if [ "$current_gid" != "$target_gid" ]; then
+            if getent group "$target_gid" >/dev/null 2>&1; then
+                # Taken by something else. Say so instead of leaving the
+                # operator to wonder why the mapping did not happen.
+                log_info "GID $target_gid already exists as group '$(getent group "$target_gid" | cut -d: -f1)'"
+            else
+                groupmod -g "$target_gid" "$app_group" 2>/dev/null || \
+                    addgroup -g "$target_gid" "$app_group" 2>/dev/null || \
+                    groupadd -g "$target_gid" "$app_group" 2>/dev/null || true
+            fi
         fi
     fi
 
-    # Modify user
     if [ -n "$target_uid" ]; then
-        if ! getent passwd "$target_uid" >/dev/null 2>&1; then
-            usermod -u "$target_uid" "$app_user" 2>/dev/null || \
-            adduser -u "$target_uid" -D -S -G "$app_group" "$app_user" 2>/dev/null || \
-            useradd -u "$target_uid" -g "$app_group" "$app_user" 2>/dev/null || true
+        local current_uid
+        current_uid=$(id -u "$app_user" 2>/dev/null || echo "")
+        if [ "$current_uid" != "$target_uid" ]; then
+            if getent passwd "$target_uid" >/dev/null 2>&1; then
+                log_info "UID $target_uid already exists as user '$(getent passwd "$target_uid" | cut -d: -f1)'"
+            else
+                usermod -u "$target_uid" "$app_user" 2>/dev/null || \
+                    adduser -u "$target_uid" -D -S -G "$app_group" "$app_user" 2>/dev/null || \
+                    useradd -u "$target_uid" -g "$app_group" "$app_user" 2>/dev/null || true
+            fi
         fi
     fi
 
-    log_info "User permissions configured"
+    # Ownership of the paths the caller named. `chown -R` over a large mounted
+    # volume (Statamic content, uploaded assets) on every start is O(files) and
+    # slows rollouts / trips startupProbes - so skip a path that is already
+    # owned by the target user.
+    local numeric_uid
+    numeric_uid=$(id -u "$app_user" 2>/dev/null || echo "")
+    local dir
+    for dir in "$@"; do
+        [ -d "$dir" ] || continue
+        if [ -n "$numeric_uid" ] && [ "$(stat -c %u "$dir" 2>/dev/null)" = "$numeric_uid" ]; then
+            log_info "Ownership of $dir already correct - skipping recursive chown"
+            continue
+        fi
+        log_info "Updating ownership of $dir"
+        chown -R "$app_user:$app_group" "$dir" 2>/dev/null || true
+    done
+
+    log_info "User permissions configured: ${app_user} is uid $(id -u "$app_user" 2>/dev/null || echo '?')"
+}
+
+###########################################
+# App Process Identity (cbox-init app processes)
+#
+# The app processes in cbox-init.yaml - queue workers, scheduler, Horizon,
+# Reverb, the queue autoscaler - carry two placeholders that cbox-init expands
+# when it loads the config:
+#
+#   working_dir: ${WORKDIR:-/var/www/html}
+#   user: ${CBOX_APP_USER:-}
+#
+# This resolves both, once, before cbox-init is exec'd.
+#
+# WORKDIR was hardcoded to /var/www/html in the config, so a symlink-release
+# layout (WORKDIR=/app/current) crash-looped every worker with "Could not open
+# input file: artisan" while php-fpm and the entrypoint used the real path.
+#
+# CBOX_APP_USER makes the workers match the php-fpm pool user instead of
+# staying root: a job that writes a cache file, a compiled view, a log line or
+# a git object left it root-owned, and the php-fpm workers could not write
+# there afterwards.
+#
+# It is deliberately EMPTY whenever this container cannot drop privileges -
+# the rootless images, `--user 1000:1000`, OpenShift's arbitrary uid. cbox-init
+# fails a process closed when it cannot setuid to the configured user, so
+# asking for www-data from a container that is already an unprivileged user
+# would turn "the workers run as the wrong user" into "the workers do not run".
+# Nothing is lost there: the container's own user IS the app user.
+#
+# An explicit CBOX_APP_USER is always honored, as is a per-process
+# CBOX_INIT_PROCESS_<NAME>_USER / _WORKING_DIR override.
+###########################################
+setup_app_process_identity() {
+    WORKDIR="${WORKDIR:-/var/www/html}"
+    export WORKDIR
+
+    # Explicitly set (even to empty) = the operator decided; don't second-guess.
+    if [ -n "${CBOX_APP_USER+x}" ]; then
+        export CBOX_APP_USER
+        return 0
+    fi
+
+    if [ "$(id -u)" = "0" ] && ! is_rootless; then
+        export CBOX_APP_USER="${APP_USER:-www-data}"
+        log_info "App processes (workers, scheduler, Horizon, Reverb) run as ${CBOX_APP_USER} in ${WORKDIR}"
+    else
+        export CBOX_APP_USER=""
+        log_info "App processes run as this container's own user (uid $(id -u)) in ${WORKDIR}"
+    fi
+    return 0
 }
 
 ###########################################

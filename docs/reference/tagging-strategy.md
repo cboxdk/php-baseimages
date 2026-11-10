@@ -36,6 +36,12 @@ rebuilds for **6 months** (from a `release/vN` maintenance branch), then goes
 EOL. Which majors are in support is recorded in `versions.json` under
 `release.supported_majors`.
 
+**Current status:** `-v1` is the current (and only) channel, built from
+`main`. A v2 channel was briefly opened for a unix-socket default and
+reversed on measurement - FastCGI keepalive on tcp beat it outright - so
+v2 waits for a genuinely breaking need. The `release/v1` branch exists
+and is dormant.
+
 ```yaml
 # Recommended production pin: behavior locked, security patches current
 image: ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-bookworm-v1

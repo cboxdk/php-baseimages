@@ -34,6 +34,9 @@ QUICK_TESTS=(
     "test-plain-php.sh"
     "test-health-checks.sh"
     "test-env-config.sh"
+    "test-app-processes.sh"
+    "test-memory-limits.sh"
+    "test-nginx-template.sh"
 )
 
 FRAMEWORK_TESTS=(

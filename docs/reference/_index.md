@@ -91,7 +91,7 @@ Looking for a specific setting or variable?
 
 - **Image tier**: Check [Choosing Your Image](../getting-started/choosing-your-image)
 - **Environment variable**: Check [Environment Variables](./environment-variables)
-- **PHP setting**: Check [Configuration Options](./configuration-options#php-ini)
+- **PHP setting**: Check [Configuration Options](./configuration-options#phpini-customization)
 - **Extension availability**: Check [Available Extensions](./available-extensions)
 - **Image tag**: Check [Available Images](./available-images)
 

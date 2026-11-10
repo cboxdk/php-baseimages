@@ -57,7 +57,7 @@ Available test scenarios in `tests/e2e/scenarios/`:
 | `health-checks` | Health check endpoints |
 | `database` | MySQL, PostgreSQL, Redis connectivity |
 | `security` | Security headers, file permissions |
-| `image-formats` | GD, ImageMagick, libvips support |
+| `image-formats` | GD and ImageMagick support |
 | `cbox-init` | Process manager integration |
 | `pest` | Pest/PHPUnit test execution |
 | `browsershot` | Puppeteer/Browsershot capabilities |

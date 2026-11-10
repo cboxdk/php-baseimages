@@ -47,16 +47,35 @@ on:
           - 'plain-php'
           - 'health-checks'
           - 'image-formats'
+          - 'app-processes'
+          - 'memory-limits'
+          - 'nginx-template'
 
 env:
   REGISTRY: ghcr.io/cboxdk/php-baseimages
 
 jobs:
   # Quick smoke test on every push - builds entire chain locally
+  #
+  # Runs on BOTH architectures. We publish arm64 manifests on every build, and
+  # until now nothing ever executed one: every test job was ubuntu-24.04, so
+  # arm64 shipped on the strength of "it compiled". GitHub's ARM runners are
+  # free for public repositories and effectively unlimited in concurrency
+  # (see the note in _build-image.yml), so the honest version costs a runner,
+  # not money.
   smoke-test:
     if: github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    name: smoke-test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -77,9 +96,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -96,16 +115,35 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
 
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
+
       - name: Build image chain (php-base → php-fpm → php-fpm-nginx)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "=== Building php-base:8.3-bookworm ==="
-          docker build --target root --build-arg PHP_VERSION=8.3 \
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=8.3 \
             -f php-base/Dockerfile \
             -t ghcr.io/cboxdk/php-baseimages/php-base:8.3-bookworm .
 
@@ -143,6 +181,69 @@ jobs:
         run: |
           tests/e2e/run-e2e-tests.sh "$IMAGE" image-formats
 
+      - name: Run nginx-template E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # $realpath_root on a real symlink-release swap (#38), the server.d
+          # include hook and the Statamic static-caching preset (#40).
+          tests/e2e/run-e2e-tests.sh "$IMAGE" nginx-template
+
+      - name: Run SSL/TLS E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # Boots with SSL_MODE=on and =full and fetches over TLS (#55).
+          # Nothing covered TLS before, which is how a standalone `http2 on;` -
+          # a directive nginx only learned in 1.25.1, against bookworm's
+          # 1.22.1 - shipped and made the container refuse to start at all.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" ssl
+
+      - name: Run Laravel symlinked-storage E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # storage as a symlink to shared storage (#54). chown -R does not
+          # traverse a command-line symlink while chmod -R does, so the
+          # scaffold stayed root-owned while every file in the shared tree was
+          # rewritten to 775 on each start. Every other Laravel test uses a
+          # plain directory, which is why this was invisible.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" laravel-storage
+
+      - name: Run security E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # Asserts the shipped php.ini security defaults (session cookie
+          # HttpOnly/strict-mode, opcache sizing). These were warnings that
+          # nothing ran on a push, which is how session.cookie_httponly=0
+          # shipped unnoticed.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" security
+
+      - name: Run app-processes E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # Worker identity (#34), WORKDIR (#35) and numeric env overrides
+          # (#36). All three shipped because nothing ever looked at what uid a
+          # queue worker runs as or where it starts.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" app-processes
+
+      - name: Run memory-limits E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # php-fpm under -m 256m/512m, where autotune sizes the pool below
+          # the old spare defaults. Plain `docker run` has no limit, so every
+          # other test here sizes a pool large enough to hide that.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" memory-limits
+
   # Full matrix test (manual trigger)
   full-matrix:
     if: github.event_name == 'workflow_dispatch'
@@ -168,9 +269,9 @@ jobs:
           BASE_URL="https://github.com/cboxdk/init/releases/download/v${VERSION}"
 
           echo "Downloading Cbox Init v${VERSION}..."
-          curl -fsSL "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
-          curl -fsSL "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
-          curl -fsSL "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-amd64" -o cbox-init/binaries/cbox-init-linux-amd64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/cbox-init-linux-arm64" -o cbox-init/binaries/cbox-init-linux-arm64
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${BASE_URL}/checksums.txt" -o cbox-init/binaries/checksums.txt
 
           echo "Verifying SHA256 checksums..."
           cd cbox-init/binaries
@@ -187,11 +288,28 @@ jobs:
           FPX_VERSION=$(jq -r '.tools.fpm_exporter' versions.json)
           FPX_URL="https://github.com/cboxdk/fpm-exporter/releases/download/v${FPX_VERSION}"
           for a in amd64 arm64; do
-            curl -fsSL "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors "${FPX_URL}/fpm-exporter-linux-${a}" -o "fpm-exporter/binaries/fpm-exporter-linux-${a}"
             WANT=$(jq -r ".tools.fpm_exporter_sha256[\"linux-${a}\"]" versions.json)
             echo "${WANT}  fpm-exporter/binaries/fpm-exporter-linux-${a}" | sha256sum -c -
           done
           chmod +x fpm-exporter/binaries/fpm-exporter-*
+
+          # PIE phar: php-base installs every extension with it, bind-mounted
+          # from the build context. Pinned and sha256-verified in versions.json
+          # like the two binaries above - and gitignored like them, so CI has
+          # to fetch it or the build fails with "pie.phar: not found".
+          mkdir -p pie/binaries
+          PIE_VERSION=$(jq -r '.tools.pie' versions.json)
+          # --retry, like the cbox-init and fpm-exporter downloads above. This
+          # curl was the ONLY one here without it, and on 2026-10-21 at 12:05
+          # UTC a brief GitHub 500 took out two build jobs on main at exactly
+          # this line while the retried downloads beside it passed through the
+          # same blip untouched. A lost build job skips its `merge` job, and
+          # that tier's tag is then never promoted.
+          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/php/pie/releases/download/${PIE_VERSION}/pie.phar" \
+            -o pie/binaries/pie.phar
+          echo "$(jq -r '.tools.pie_sha256' versions.json)  pie/binaries/pie.phar" | sha256sum -c -
 
       - name: Determine Dockerfile paths
         id: paths
@@ -201,12 +319,14 @@ jobs:
           echo "nginx=php-fpm-nginx/Dockerfile" >> $GITHUB_OUTPUT
 
       - name: Build image chain
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PHP="${{ github.event.inputs.php_version }}"
           OS="${{ github.event.inputs.os_variant }}"
 
           echo "=== Building php-base:${PHP}-${OS} ==="
-          docker build --target root --build-arg PHP_VERSION=${PHP} \
+          docker build --secret id=github_token,env=GITHUB_TOKEN --target root --build-arg PHP_VERSION=${PHP} \
             -f ${{ steps.paths.outputs.base }} \
             -t ghcr.io/cboxdk/php-baseimages/php-base:${PHP}-${OS} .
 

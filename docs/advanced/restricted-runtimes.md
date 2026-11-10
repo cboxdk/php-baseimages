@@ -37,7 +37,9 @@ Why these matter:
 With only `/tmp` and `/run` writable, the container boots on the **baked
 default config**: the entrypoint logs which runtime files it could not write
 and continues, and any `NGINX_*`/`PHP_FPM_*` env overrides that would need
-those files fail loud instead of being silently ignored.
+those files fail loud instead of being silently ignored. The same applies to
+`STATAMIC_STATIC_CACHING=full`, which exists only in the rendered server block
+— without it every page would quietly go back through PHP.
 
 For the full env-driven config surface under `readOnlyRootFilesystem: true`,
 give the entrypoint its render targets as emptyDirs:
