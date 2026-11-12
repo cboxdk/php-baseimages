@@ -1,8 +1,8 @@
 {
   "series": "8.6",
   "channel": "preview",
-  "version": "8.6.0RC5",
-  "url": "https://downloads.php.net/~svpernova09/php-8.6.0RC5.tar.xz",
-  "sha256": "abd7e3a652cfec56a2904abef7e8f37206fa07a8c1505a5a8a9bfdd25a1f1ba9",
+  "version": "8.6.0RC7",
+  "url": "https://downloads.php.net/~svpernova09/php-8.6.0RC7.tar.xz",
+  "sha256": "63dba3b693d2f2689f12d5264d212d7b813acfd56fb375c620d04e1eef4bb00a",
   "docker_library_commit": "edf9e498995663d335b093735cb527b05bbd2bff"
 }
