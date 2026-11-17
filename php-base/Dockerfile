@@ -201,9 +201,11 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     if [ -s /run/secrets/github_token ]; then \
         GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
     fi; \
-    # GitHub intermittently answers PIE's download with "Could not authenticate"
-    # (a different matrix job each run): try each install three times.
-    pie() { for i in 1 2 3; do php /pie.phar install "$@" && return 0; echo "pie install $* failed (try $i)"; sleep $((i * 15)); done; return 1; }; \
+    # PIE asks GitHub's API for release assets. The job's GITHUB_TOKEN shares one
+    # hourly quota across every job in the repository, and a full matrix (or v1
+    # and v2 building at once) spends it: "Could not authenticate against
+    # github.com". Retry without the token, on this runner's own anonymous quota.
+    pie() { php /pie.phar install "$@" && return 0; for i in 1 2; do echo "pie install $* failed; retry $i without the GitHub token"; sleep $((i * 10)); env -u GITHUB_TOKEN php /pie.phar install "$@" && return 0; done; return 1; }; \
     apt-get update && apt-get install -y --no-install-recommends libtool && \
     pie phpredis/phpredis:${REDIS_VERSION} && \
     pie apcu/apcu:${APCU_VERSION} && \
@@ -479,9 +481,11 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     if [ -s /run/secrets/github_token ]; then \
         GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
     fi; \
-    # GitHub intermittently answers PIE's download with "Could not authenticate"
-    # (a different matrix job each run): try each install three times.
-    pie() { for i in 1 2 3; do php /pie.phar install "$@" && return 0; echo "pie install $* failed (try $i)"; sleep $((i * 15)); done; return 1; }; \
+    # PIE asks GitHub's API for release assets. The job's GITHUB_TOKEN shares one
+    # hourly quota across every job in the repository, and a full matrix (or v1
+    # and v2 building at once) spends it: "Could not authenticate against
+    # github.com". Retry without the token, on this runner's own anonymous quota.
+    pie() { php /pie.phar install "$@" && return 0; for i in 1 2; do echo "pie install $* failed; retry $i without the GitHub token"; sleep $((i * 10)); env -u GITHUB_TOKEN php /pie.phar install "$@" && return 0; done; return 1; }; \
     pie imagick/imagick:${IMAGICK_VERSION} && \
     pie mongodb/mongodb-extension:${MONGODB_VERSION} && \
     pie open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
@@ -588,9 +592,11 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     if [ -s /run/secrets/github_token ]; then \
         GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
     fi; \
-    # GitHub intermittently answers PIE's download with "Could not authenticate"
-    # (a different matrix job each run): try each install three times.
-    pie() { for i in 1 2 3; do php /pie.phar install "$@" && return 0; echo "pie install $* failed (try $i)"; sleep $((i * 15)); done; return 1; }; \
+    # PIE asks GitHub's API for release assets. The job's GITHUB_TOKEN shares one
+    # hourly quota across every job in the repository, and a full matrix (or v1
+    # and v2 building at once) spends it: "Could not authenticate against
+    # github.com". Retry without the token, on this runner's own anonymous quota.
+    pie() { php /pie.phar install "$@" && return 0; for i in 1 2; do echo "pie install $* failed; retry $i without the GitHub token"; sleep $((i * 10)); env -u GITHUB_TOKEN php /pie.phar install "$@" && return 0; done; return 1; }; \
     apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS zlib1g-dev libtool \
     && pie xdebug/xdebug:${XDEBUG_VERSION} \
