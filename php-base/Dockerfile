@@ -482,7 +482,18 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     # github.com". Retry without the token, on this runner's own anonymous quota.
     pie() { php /pie.phar install "$@" && return 0; for i in 1 2; do echo "pie install $* failed; retry $i without the GitHub token"; sleep $((i * 10)); env -u GITHUB_TOKEN php /pie.phar install "$@" && return 0; done; return 1; }; \
     pie imagick/imagick:${IMAGICK_VERSION} && \
-    pie mongodb/mongodb-extension:${MONGODB_VERSION} && \
+    # mongodb is PIE's one "pre-packaged-source" package: PIE finds the release
+    # asset through GitHub's API, which CI runners keep hitting the limit of on
+    # both quotas. Fall back to the same asset on github.com's release download
+    # (not the API, not rate limited), built the way PIE builds it.
+    { pie mongodb/mongodb-extension:${MONGODB_VERSION} || { \
+        echo "mongodb: building ${MONGODB_VERSION} from the release download"; \
+        d="$(mktemp -d)" && \
+        curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
+            "https://github.com/mongodb/mongo-php-driver/releases/download/${MONGODB_VERSION}/mongodb-${MONGODB_VERSION}.tgz" \
+            | tar -xz -C "$d" && \
+        (cd "$d/mongodb-${MONGODB_VERSION}" && phpize && ./configure --with-php-config="$(command -v php-config)" && make -j"$(nproc)" && make install) && \
+        docker-php-ext-enable mongodb && rm -rf "$d"; }; } && \
     pie open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
     mkdir -p /usr/local/etc/php/conf.d-otel && \
     mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d-otel/ && \
