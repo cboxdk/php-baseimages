@@ -8,7 +8,7 @@ All notable changes to Cbox PHP Base Images.
 - **cbox-init 3.10.0: an opt-in circuit breaker for restarts.** Set `CBOX_INIT_GLOBAL_RESTART_COOLDOWN` (for example `1m`) and a process that has spent `max_restart_attempts` is no longer given up for good while the container keeps running: it stays failed (readiness red) and, after the cooldown, gets one more start; the cooldown doubles per failed attempt up to `CBOX_INIT_GLOBAL_RESTART_COOLDOWN_MAX` (default `10m`). Unset, nothing changes. Also skips a restart whose backoff ends after the instance was stopped, and is built with Go 1.26.11. See the [cbox-init 3.10.0 release](https://github.com/cboxdk/init/releases/tag/v3.10.0)
 
 ### Fixed
-- **Builds failed on a random matrix job**: PIE's extension download got "Could not authenticate against github.com" once the job token's shared hourly API quota was spent by the rest of the matrix. A failed PIE install is now retried twice without the token, on the runner's own anonymous quota
+- **Builds failed on a random matrix job**: PIE's extension download got "Could not authenticate against github.com" once the job token's shared hourly API quota was spent by the rest of the matrix. A failed PIE install is now retried twice without the token, and mongodb (the one package PIE resolves through the API) falls back to building the same release archive from github.com's release download
 
 ## [2.0.1] - 2026-11-09
 
