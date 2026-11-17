@@ -201,10 +201,13 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     if [ -s /run/secrets/github_token ]; then \
         GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
     fi; \
+    # GitHub intermittently answers PIE's download with "Could not authenticate"
+    # (a different matrix job each run): try each install three times.
+    pie() { for i in 1 2 3; do php /pie.phar install "$@" && return 0; echo "pie install $* failed (try $i)"; sleep $((i * 15)); done; return 1; }; \
     apt-get update && apt-get install -y --no-install-recommends libtool && \
-    php /pie.phar install phpredis/phpredis:${REDIS_VERSION} && \
-    php /pie.phar install apcu/apcu:${APCU_VERSION} && \
-    php /pie.phar install msgpack/msgpack-php:${MSGPACK_VERSION} && \
+    pie phpredis/phpredis:${REDIS_VERSION} && \
+    pie apcu/apcu:${APCU_VERSION} && \
+    pie msgpack/msgpack-php:${MSGPACK_VERSION} && \
     # NOT --auto-remove: this repo has a scar from it taking git, git-man and
     # patch along with an unrelated purge (see the dev tier). Name what goes.
     apt-get purge -y libtool && \
@@ -476,9 +479,12 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     if [ -s /run/secrets/github_token ]; then \
         GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
     fi; \
-    php /pie.phar install imagick/imagick:${IMAGICK_VERSION} && \
-    php /pie.phar install mongodb/mongodb-extension:${MONGODB_VERSION} && \
-    php /pie.phar install open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
+    # GitHub intermittently answers PIE's download with "Could not authenticate"
+    # (a different matrix job each run): try each install three times.
+    pie() { for i in 1 2 3; do php /pie.phar install "$@" && return 0; echo "pie install $* failed (try $i)"; sleep $((i * 15)); done; return 1; }; \
+    pie imagick/imagick:${IMAGICK_VERSION} && \
+    pie mongodb/mongodb-extension:${MONGODB_VERSION} && \
+    pie open-telemetry/ext-opentelemetry:${OPENTELEMETRY_VERSION} && \
     mkdir -p /usr/local/etc/php/conf.d-otel && \
     mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d-otel/ && \
     rm -rf /root/.pie
@@ -582,10 +588,13 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     if [ -s /run/secrets/github_token ]; then \
         GITHUB_TOKEN="$(cat /run/secrets/github_token)"; export GITHUB_TOKEN; \
     fi; \
+    # GitHub intermittently answers PIE's download with "Could not authenticate"
+    # (a different matrix job each run): try each install three times.
+    pie() { for i in 1 2 3; do php /pie.phar install "$@" && return 0; echo "pie install $* failed (try $i)"; sleep $((i * 15)); done; return 1; }; \
     apt-get update && apt-get install -y --no-install-recommends \
     $PHPIZE_DEPS zlib1g-dev libtool \
-    && php /pie.phar install xdebug/xdebug:${XDEBUG_VERSION} \
-    && php /pie.phar install pecl/pcov:${PCOV_VERSION} \
+    && pie xdebug/xdebug:${XDEBUG_VERSION} \
+    && pie pecl/pcov:${PCOV_VERSION} \
     && rm -rf /root/.pie \
     # SPX from GitHub (not on PECL) — pinned to a tag for reproducibility
     && git clone --depth=1 --branch "${SPX_VERSION}" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
