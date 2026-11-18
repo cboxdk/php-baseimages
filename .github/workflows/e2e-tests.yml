@@ -54,6 +54,11 @@ on:
 env:
   REGISTRY: ghcr.io/cboxdk/php-baseimages
 
+concurrency:
+  # A new push to a pull request cancels its older run; runs on main are never cancelled.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # Quick smoke test on every push - builds entire chain locally
   #
