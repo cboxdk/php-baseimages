@@ -2,6 +2,11 @@
 
 All notable changes to Cbox PHP Base Images.
 
+## [Unreleased]
+
+### Security
+- **fpm-exporter 3.1.3** (from 3.1.2): rebuilt with Go 1.26.11 for CVE-2026-97054 (HIGH, `net/http`). The pre-promotion gate rejected 3.1.2's binary, so no PHP image tag was promoted, including the PHP 8.2.36 / 8.3.37 / 8.4.28 / 8.5.13 security releases and Debian's nginx DSA-6642-1. No behaviour change. See the [fpm-exporter 3.1.3 release](https://github.com/cboxdk/fpm-exporter/releases/tag/v3.1.3)
+
 ## [2.0.2] - 2026-11-17
 
 ### Changed
