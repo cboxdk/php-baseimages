@@ -53,7 +53,7 @@ jobs:
             "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-x86_64"
           chmod +x /tmp/hadolint
           rc=0
-          for df in php-base/Dockerfile php-base/Dockerfile.php86-beta php-fpm/Dockerfile php-cli/Dockerfile php-fpm-nginx/Dockerfile nginx/Dockerfile; do
+          for df in php-base/Dockerfile php-fpm/Dockerfile php-cli/Dockerfile php-fpm-nginx/Dockerfile nginx/Dockerfile; do
             echo "::group::hadolint $df"
             /tmp/hadolint --failure-threshold error "$df" || rc=1
             echo "::endgroup::"

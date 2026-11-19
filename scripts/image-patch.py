@@ -37,7 +37,7 @@ def fingerprint(image_type, series, target, tier, suffix, platform, build_args='
                        or name.startswith(f'php-source/upstream/{series}/')
                        or (len(parts) == 3 and parts[1] == 'upstream'))
         include |= name in {'scripts/php-source.py', 'scripts/pin-source-parents.py', 'scripts/test-runtime-image.sh', 'scripts/image-patch.py', 'scripts/get-build-state.sh', '.github/workflows/_build-image.yml', '.dockerignore', '.trivyignore'}
-        if name.endswith('.md') or name == 'php-base/Dockerfile.php86-beta':
+        if name.endswith('.md'):
             include = False
         if include:
             selected.append(name)
@@ -198,7 +198,7 @@ def main():
     lock = ROOT / f'php-source/php{args.series.replace(".", "")}-trixie.lock.json'
     if lock.exists():
         result['php_version'] = json.loads(lock.read_text())['version']
-    if result['php_version'] and args.series != '8.6' and not args.force_full:
+    if result['php_version'] and not args.force_full:
         versions = json.loads((ROOT / 'versions.json').read_text())
         channel = versions['release']['channel']
         suffix = '-' + args.suffix if args.suffix else ''

@@ -25,7 +25,7 @@ class SourceTests(unittest.TestCase):
             {'filename': f'php-{self.version}.tar.xz', 'sha256': 'a' * 64}]}
 
     def test_stable_patches_are_isolated_per_series(self):
-        for series in ['8.2', '8.3', '8.4', '8.5']:
+        for series in [s for s in source.SERIES if s not in source.PREVIEW_SERIES]:
             lock = source.read_lock(source.lock_path(series))
             version = series + '.' + str(int(lock['version'].split('.')[-1]) + 1)
             release = {'version': version, 'source': [{'filename': f'php-{version}.tar.xz', 'sha256': 'a' * 64}]}
@@ -40,6 +40,7 @@ class SourceTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     source.patch_candidate(lock, {'version': invalid})
 
+    @patch.object(source, 'PREVIEW_SERIES', ('8.6',))
     def test_bad_hash_missing_archive_and_injected_url_fail_closed(self):
         self.release['source'][0]['sha256'] = 'bad'
         with self.assertRaises(ValueError):
@@ -47,15 +48,16 @@ class SourceTests(unittest.TestCase):
         self.release['source'] = []
         with self.assertRaises(StopIteration):
             source.patch_candidate(self.lock, self.release)
-        lock = {**source.read_lock(source.lock_path('8.6')), 'version': '8.6.0RC1',
+        lock = {**json.loads(source.lock_path('8.6').read_text()), 'channel': 'preview', 'version': '8.6.0RC1',
                 'url': 'https://downloads.php.net/~user/php-8.6.0RC1.tar.xz'}
         for url in ['https://evil.example/php-8.6.0RC6.tar.xz', 'https://downloads.php.net/../bad',
                     'https://downloads.php.net/~user/php-8.6.0RC6.tar.xz"\nRUN false']:
             with self.assertRaises(ValueError):
                 source.patch_candidate(lock, {'version': '8.6.0RC6', 'files': {'xz': {'path': url, 'sha256': 'a' * 64}}})
 
+    @patch.object(source, 'PREVIEW_SERIES', ('8.6',))
     def test_preview_orders_rc_numerically_without_promoting_to_ga(self):
-        lock = {**source.read_lock(source.lock_path('8.6')), 'version': '8.6.0RC1',
+        lock = {**json.loads(source.lock_path('8.6').read_text()), 'channel': 'preview', 'version': '8.6.0RC1',
                 'url': 'https://downloads.php.net/~user/php-8.6.0RC1.tar.xz'}
         self.assertGreater(source.version_key('8.6.0RC10', '8.6', 'preview'), source.version_key('8.6.0RC9', '8.6', 'preview'))
         for invalid in ['8.6.0', '8.6.1RC1', '8.7.0RC1']:
@@ -112,15 +114,19 @@ class SourceTests(unittest.TestCase):
         for image in ['php-fpm', 'php-cli', 'php-fpm-nginx']:
             text = source.render(image, self.lock)
             self.assertEqual(text.count('RUN test "$(php -r'), text.count('FROM ghcr.io/cboxdk/php-baseimages/'))
-        preview = source.read_lock(source.lock_path('8.6'))
-        with self.assertRaises(ValueError):
-            source.render('php-base', preview)
-        text = source.render('php86-fpm', preview)
-        self.assertNotIn('FROM php:', text)
-        self.assertEqual(text.count('AS php-source-runtime'), 1)
-        self.assertEqual(text.count('AS php-source-fpm'), 1)
-        for tier in ['slim', 'standard', 'chromium', 'dev']:
-            self.assertIn('AS beta-fpm-' + tier, text)
+        with patch.object(source, 'PREVIEW_SERIES', ('8.6',)), self.assertRaises(ValueError):
+            source.render('php-base', {**json.loads(source.lock_path('8.6').read_text()), 'channel': 'preview'})
+
+    def test_86_is_a_stable_series_from_ga(self):
+        lock = source.read_lock(source.lock_path('8.6'))
+        self.assertEqual(lock['channel'], 'stable')
+        self.assertNotIn('8.6', source.PREVIEW_SERIES)
+        versions = json.loads((ROOT / 'versions.json').read_text())
+        self.assertIn('8.6', versions['php']['supported'])
+        self.assertEqual(versions['php']['latest_patch']['8.6'], lock['version'])
+        text = source.render('php-base', lock)
+        self.assertIn('ARG PHP_VERSION=8.6\n', text)
+        self.assertIn('--enable-zts', text)
 
     def test_dispatch_distinguishes_series_retries_failures_and_refreshes_os(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -131,14 +137,14 @@ class SourceTests(unittest.TestCase):
             gh.chmod(0o755)
             now = 1793966400
             recent = '2026-11-06T11:30:00Z'
-            for runs, count in [([], 3),
-                ([{'status': 'in_progress', 'conclusion': '', 'displayTitle': 'Build PHP base (8.4)', 'createdAt': recent}], 3),
-                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3) OS:same-revision', 'createdAt': '2026-11-05T00:00:00Z'}], 3),
-                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3) OS:old-revision', 'createdAt': '2026-11-05T00:00:00Z'}], 3),
-                ([{'status': 'in_progress', 'conclusion': '', 'displayTitle': 'Build PHP base (8.2)', 'createdAt': recent}], 3),
-                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3)', 'createdAt': recent}], 3),
-                ([{'status': 'completed', 'conclusion': 'failure', 'displayTitle': 'Build PHP base (8.3)', 'createdAt': recent}], 3),
-                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3)', 'createdAt': '2026-11-05T00:00:00Z'}], 3)]:
+            for runs, count in [([], 2),
+                ([{'status': 'in_progress', 'conclusion': '', 'displayTitle': 'Build PHP base (8.4)', 'createdAt': recent}], 2),
+                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3) OS:same-revision', 'createdAt': '2026-11-05T00:00:00Z'}], 2),
+                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3) OS:old-revision', 'createdAt': '2026-11-05T00:00:00Z'}], 2),
+                ([{'status': 'in_progress', 'conclusion': '', 'displayTitle': 'Build PHP base (8.2)', 'createdAt': recent}], 2),
+                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3)', 'createdAt': recent}], 2),
+                ([{'status': 'completed', 'conclusion': 'failure', 'displayTitle': 'Build PHP base (8.3)', 'createdAt': recent}], 2),
+                ([{'status': 'completed', 'conclusion': 'success', 'displayTitle': 'Build PHP base (8.3)', 'createdAt': '2026-11-05T00:00:00Z'}], 2)]:
                 log.unlink(missing_ok=True)
                 env = {**os.environ, 'PATH': tmp + os.pathsep + os.environ['PATH'], 'PATCH_NGINX_REVISION': 'same-nginx', 'PATCH_NOW': str(now), 'PATCH_OS_REVISION': 'same-revision',
                        'TEST_RUNS': json.dumps(runs), 'TEST_LOG': str(log)}

@@ -17,7 +17,7 @@ spec.loader.exec_module(source)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--series', default='8.5', choices=['8.2', '8.3', '8.4', '8.5'])
+    parser.add_argument('--series', default='8.5', choices=['8.2', '8.3', '8.4', '8.5', '8.6'])
     parser.add_argument('--platform', default='linux/arm64', choices=['linux/arm64', 'linux/amd64'])
     parser.add_argument('--tiers', nargs='+', default=['slim', 'standard', 'chromium', 'dev'])
     parser.add_argument('--image-types', nargs='+', choices=['php-base', 'php-cli', 'php-fpm', 'php-fpm-nginx'], default=['php-base', 'php-cli', 'php-fpm', 'php-fpm-nginx'])
@@ -34,8 +34,9 @@ def main():
                        'CBOX_PREVIEW_STATUS': lifecycle.get('preview_status', '')}
     for key, value in lifecycle_args.items():
         build_args += ['--build-arg', key + '=' + value]
-    for group in ['extensions', 'tools']:
-        for key, value in versions[group].items():
+    extensions = {**versions['extensions'], **versions.get('extension_overrides', {}).get(args.series, {})}
+    for group in [extensions, versions['tools']]:
+        for key, value in group.items():
             if isinstance(value, str) and not key.endswith('sha256'):
                 build_args += ['--build-arg', f'{key.upper()}_VERSION={value}']
     build_args += ['--build-arg', 'NODE_VERSION=' + versions['node']['version']]
@@ -65,6 +66,8 @@ def main():
                     required += ['imagick', 'mongodb', 'soap', 'ldap', 'xsl']
                 if tier == 'dev':
                     required += ['xdebug', 'pcov', 'spx']
+                omitted = versions.get('extension_overrides', {}).get(args.series, {})
+                required = [ext for ext in required if omitted.get(ext) != 'none']
                 check = 'foreach (' + json.dumps(required) + ' as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing extension: ".$ext); exit(1); } }'
                 command += '; php -r ' + shlex.quote(check)
                 if tier != 'slim':

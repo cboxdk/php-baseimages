@@ -26,7 +26,7 @@ on:
         type: boolean
         default: false
       php_version:
-        description: 'PHP Version to build (8.2, 8.3, 8.4, or all)'
+        description: 'PHP Version to build (8.2, 8.3, 8.4, 8.5, 8.6, or all)'
         required: false
         default: 'all'
       os_variant:
@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -82,7 +82,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -116,7 +116,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -147,7 +147,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -184,7 +184,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -217,7 +217,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -255,7 +255,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:
@@ -288,7 +288,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5"]') }}
+        php_version: ${{ (inputs.php_version || github.event.client_payload.php_version || 'all') != 'all' && fromJson(format('["{0}"]', inputs.php_version || github.event.client_payload.php_version)) || fromJson('["8.2","8.3","8.4","8.5","8.6"]') }}
         os_variant: ${{ (github.event_name == 'workflow_dispatch' && inputs.os_variant != 'all') && fromJson(format('["{0}"]', inputs.os_variant)) || fromJson('["trixie"]') }}
     uses: ./.github/workflows/_build-image.yml
     with:

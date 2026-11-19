@@ -33,9 +33,6 @@ jobs:
             fi
           done
           echo "failed=$failed" >> "$GITHUB_OUTPUT"
-      - name: Resolve optional PHP 8.6 preview
-        continue-on-error: true
-        run: python3 scripts/php-source.py --series 8.6 check --apply
       - name: Commit new patch lock
         run: |
           if ! git diff --quiet -- php-source/*.lock.json; then

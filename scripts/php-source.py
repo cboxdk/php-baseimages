@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Locked PHP source builds on Trixie, including the separate 8.6 preview lane."""
+"""Locked PHP source builds on Trixie.
+
+A series in PREVIEW_SERIES follows php.net's alpha/beta/RC builds; every other
+series follows stable patch releases only. 8.6 left the preview lane at GA
+(8.6.0, 2026-11-19) and now builds through the same stable chain as 8.2-8.5.
+"""
 import argparse
 import json
 from pathlib import Path
@@ -8,6 +13,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parent.parent
 SERIES = ('8.2', '8.3', '8.4', '8.5', '8.6')
+PREVIEW_SERIES = ()
 LOCK = ROOT / 'php-source/php85-trixie.lock.json'
 
 
@@ -27,7 +33,7 @@ def version_key(version, series, channel):
 
 def validate_lock(lock):
     series, channel = lock['series'], lock['channel']
-    if series not in SERIES or channel != ('preview' if series == '8.6' else 'stable'):
+    if series not in SERIES or channel != ('preview' if series in PREVIEW_SERIES else 'stable'):
         raise ValueError('Unsupported source lane/channel')
     version_key(lock['version'], series, channel)
     for key, length in [('sha256', 64), ('docker_library_commit', 40)]:
@@ -108,12 +114,11 @@ def runtime_dockerfile(variant, lock):
 def render(image, lock):
     if image in ('cli', 'fpm'):
         return runtime_dockerfile(image, lock)
-    preview = image in ('php86-base', 'php86-fpm')
-    if (lock['channel'] == 'preview') != preview:
-        raise ValueError('8.6 must use the separate preview image lane')
-    original = (ROOT / ('php-base/Dockerfile.php86-beta' if preview else image + '/Dockerfile')).read_text()
+    if lock['channel'] == 'preview':
+        raise ValueError(f'PHP {lock["series"]} is a preview lane; it has no release image')
+    original = (ROOT / image / 'Dockerfile').read_text()
     original = re.sub(r'^ARG PHP_VERSION=.*$', f'ARG PHP_VERSION={lock["series"]}', original, count=1, flags=re.M)
-    if image not in ('php-base', 'php-fpm', 'php86-base', 'php86-fpm'):
+    if image not in ('php-base', 'php-fpm'):
         return re.sub(r'^(FROM ghcr.io/cboxdk/php-baseimages/.*)$',
                       lambda m: m[0] + '\nRUN test "$(php -r \'echo PHP_VERSION;\')" = "' + lock['version'] + '"',
                       original, flags=re.M)
@@ -125,23 +130,6 @@ def render(image, lock):
         body = re.sub(r'^(FROM .* AS base-(?:slim|standard|chromium|dev))$',
                       lambda m: m[0] + '\nRUN test "$(php -r \'echo PHP_VERSION;\')" = "' + lock['version'] + '"', body, flags=re.M)
     runtime = runtime_dockerfile(variant, lock)
-    if image == 'php86-fpm':
-        # Keep the preview's extensions and runtime libraries; add the matching
-        # FPM binary/config. Both runtimes use their version-specific official
-        # recipes (8.6 is ZTS), and the same archive, flags and extension ABI.
-        runtime += '\n' + runtime_dockerfile('fpm', lock).replace('AS php-source-runtime', 'AS php-source-fpm')
-        for tier in ('slim', 'standard', 'chromium', 'dev'):
-            body += f'''\nFROM beta-{tier} AS beta-fpm-{tier}
-COPY --from=php-source-fpm /usr/local/sbin/php-fpm /usr/local/sbin/php-fpm
-COPY --from=php-source-fpm /usr/local/etc/php-fpm.conf /usr/local/etc/php-fpm.conf
-COPY --from=php-source-fpm /usr/local/etc/php-fpm.d/ /usr/local/etc/php-fpm.d/
-COPY --from=php-source-fpm /usr/local/etc/php/conf.d/docker-fpm.ini /usr/local/etc/php/conf.d/docker-fpm.ini
-RUN php-fpm -t
-WORKDIR /var/www/html
-EXPOSE 9000
-STOPSIGNAL SIGQUIT
-CMD ["php-fpm"]
-'''
     return globals_ + '\n' + runtime + '\n' + body
 
 
@@ -156,7 +144,7 @@ def main():
     check.add_argument('--release-json', type=Path)
     check.add_argument('--apply', action='store_true')
     build = sub.add_parser('render')
-    build.add_argument('image', choices=['cli', 'fpm', 'php-base', 'php-fpm', 'php-cli', 'php-fpm-nginx', 'php86-base', 'php86-fpm'])
+    build.add_argument('image', choices=['cli', 'fpm', 'php-base', 'php-fpm', 'php-cli', 'php-fpm-nginx'])
     build.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     path = args.lock or lock_path(args.series)

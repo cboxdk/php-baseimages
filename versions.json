@@ -4,7 +4,8 @@
       "8.2",
       "8.3",
       "8.4",
-      "8.5"
+      "8.5",
+      "8.6"
     ],
     "default": "8.5",
     "newest": "8.5",
@@ -12,19 +13,22 @@
       "8.2": "2024-12-31",
       "8.3": "2025-12-31",
       "8.4": "2026-12-31",
-      "8.5": "2027-12-31"
+      "8.5": "2027-12-31",
+      "8.6": "2028-12-31"
     },
     "security_support_until": {
       "8.2": "2026-12-31",
       "8.3": "2027-12-31",
       "8.4": "2028-12-31",
-      "8.5": "2029-12-31"
+      "8.5": "2029-12-31",
+      "8.6": "2030-12-31"
     },
     "latest_patch": {
-      "8.2": "8.2.35",
-      "8.3": "8.3.36",
-      "8.4": "8.4.27",
-      "8.5": "8.5.12"
+      "8.2": "8.2.36",
+      "8.3": "8.3.37",
+      "8.4": "8.4.28",
+      "8.5": "8.5.13",
+      "8.6": "8.6.0"
     },
     "preview": {}
   },
@@ -61,6 +65,19 @@
     "opentelemetry": "1.2.1",
     "telemetry_native": "0.1.0"
   },
+  "extension_overrides": {
+    "_policy": "Per-series extension sources for a PHP series that shipped before an extension tagged a release that builds on it. Each value replaces extensions[name] for that series only; 'none' leaves the extension out. Commit pins are full SHAs (immutable). Replace each with the upstream release as soon as one builds; the check-updates pie-readiness job reports new tags. Verified on PHP 8.6.0 GA (ZTS) with PIE 1.5.2 on 2026-11-19.",
+    "8.6": {
+      "redis": "dev-develop#5b60b125aba347159b0c9c319296fbb3c5ed9214",
+      "apcu": "dev-master#fb2c942552a3f5dab7f4dea4afb5cf0831222c57",
+      "msgpack": "dev-master#4a6890850a9065f9a211951df4fc39c5a4c498ab",
+      "imagick": "dev-master#55ed2e9fda264395636a2e27e51f31673f5566ab",
+      "opentelemetry": "1.5.0",
+      "xdebug": "3.6.0alpha1",
+      "pcov": "dev-issue-php86a2#f04029fa86ae58c6dfff8049de8433669dbf1394",
+      "spx": "none"
+    }
+  },
   "tools": {
     "composer": "2.11.1",
     "cbox_init": "3.10.0",
@@ -83,7 +100,7 @@
     "deprecated": []
   },
   "_meta": {
-    "last_updated": "2026-11-07",
+    "last_updated": "2026-11-19",
     "update_frequency": "weekly",
     "auto_pr_enabled": true
   },

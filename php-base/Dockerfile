@@ -12,7 +12,7 @@
 #               calendar, gettext, shmop, sysvmsg, sysvsem, sysvshm - Most Laravel apps (DEFAULT)
 # - chromium: + Chromium for Browsershot/Dusk (~800MB) - PDF generation, testing
 #
-# PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5
+# PARAMETERIZED: Build with --build-arg PHP_VERSION=8.2|8.3|8.4|8.5|8.6
 # ============================================================================
 
 # ============================================================================
@@ -113,7 +113,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Cron for Laravel Scheduler
     cron \
     # Runtime libraries (minimal set for slim tier)
-    libpng16-16t64 libjpeg62-turbo libfreetype6 libwebp7 \
+    # libwebpdemux2/libwebpmux3: PHP 8.6's bundled gd links them
+    libpng16-16t64 libjpeg62-turbo libfreetype6 libwebp7 libwebpdemux2 libwebpmux3 \
     libpq5 libicu76 libzip5 \
     libxml2 \
     libbz2-1.0 libonig5 libreadline8t64 libgmp10 \
@@ -152,6 +153,12 @@ RUN docker-php-ext-install -j$(nproc) \
     gmp \
     && if echo "$PHP_VERSION" | grep -qvE '^8\.[5-9]|^[9]'; then \
         docker-php-ext-install opcache; \
+    fi \
+    # Up to 8.5 the official recipe compiles mbstring into PHP. The 8.6
+    # recipe dropped --enable-mbstring (it existed only for pecl), so build
+    # it as an extension wherever PHP itself does not have it.
+    && if ! php -m | grep -qx mbstring; then \
+        docker-php-ext-install -j$(nproc) mbstring; \
     fi
 
 # Extensions via PIE, with PINNED versions.
@@ -613,12 +620,16 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
     && pie xdebug/xdebug:${XDEBUG_VERSION} \
     && pie pecl/pcov:${PCOV_VERSION} \
     && rm -rf /root/.pie \
-    # SPX from GitHub (not on PECL) — pinned to a tag for reproducibility
-    && git clone --depth=1 --branch "${SPX_VERSION}" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
-    && cd /tmp/php-spx \
-    && phpize && ./configure && make && make install \
-    && docker-php-ext-enable spx \
-    && rm -rf /tmp/php-spx \
+    # SPX from GitHub (not on PECL) — pinned to a tag for reproducibility.
+    # SPX_VERSION=none (versions.json extension_overrides) leaves it out: no
+    # SPX release or master commit compiles on PHP 8.6 yet.
+    && if [ "${SPX_VERSION}" != "none" ]; then \
+        git clone --depth=1 --branch "${SPX_VERSION}" https://github.com/NoiseByNorthwest/php-spx.git /tmp/php-spx \
+        && cd /tmp/php-spx \
+        && phpize && ./configure && make && make install \
+        && docker-php-ext-enable spx \
+        && cd / && rm -rf /tmp/php-spx; \
+    fi \
     # Cleanup
     && apt-get purge -y --auto-remove $PHPIZE_DEPS libtool \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -627,6 +638,8 @@ RUN --mount=type=bind,source=pie/binaries/pie.phar,target=/pie.phar \
 COPY php-base/common/xdebug.ini /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 COPY php-base/common/spx.ini /usr/local/etc/php/conf.d/docker-php-ext-spx.ini
 COPY php-base/common/pcov.ini /usr/local/etc/php/conf.d/docker-php-ext-pcov.ini
+# An ini for an extension that was not built would warn on every PHP start.
+RUN [ -f "$(php-config --extension-dir)/spx.so" ] || rm -f /usr/local/etc/php/conf.d/docker-php-ext-spx.ini
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SLIM VARIANTS (root + rootless)

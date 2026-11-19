@@ -92,7 +92,7 @@ ENV PHP_OPEN_BASEDIR=""
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash curl wget git unzip procps openssh-client netcat-openbsd libfcgi-bin \
     cron \
-    libpng16-16t64 libjpeg62-turbo libfreetype6 libwebp7 \
+    libpng16-16t64 libjpeg62-turbo libfreetype6 libwebp7 libwebpdemux2 libwebpmux3 \
     libpq5 libicu76 libzip5 \
     libxml2 libxslt1.1 libldap2 \
     libbz2-1.0 libonig5 libreadline8t64 libgmp10 \
