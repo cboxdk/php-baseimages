@@ -122,6 +122,7 @@ ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-chromium-rootless
 
 | PHP Version | Debian 13 (Slim) | Debian 13 (Standard) | Debian 13 (Chromium) | Debian 13 (Dev) |
 |-------------|------------------|----------------------|----------------------|-----------------|
+| 8.6         | ✅               | ✅                   | ✅                   | ✅ (no SPX)     |
 | 8.5         | ✅               | ✅                   | ✅                   | ✅              |
 | 8.4         | ✅               | ✅                   | ✅                   | ✅              |
 | 8.3         | ✅               | ✅                   | ✅                   | ✅              |

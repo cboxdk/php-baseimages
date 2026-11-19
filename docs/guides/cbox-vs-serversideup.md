@@ -33,7 +33,7 @@ release contract that separates behavior pinning from security patching.
 | Health checks | Built-in, drive supervised restarts and readiness | Built-in (native health checks) |
 | Variants | FPM, CLI, FPM+Nginx, standalone Nginx | FPM, CLI, FPM+Nginx, FPM+Apache, FrankenPHP |
 | OS bases | Debian 13 | Debian, Alpine |
-| PHP versions | 8.2–8.5 | 8.1–8.5 |
+| PHP versions | 8.2–8.6 | 8.1–8.5 |
 | Image tiers | 4 (Slim / Standard / Chromium / Dev), all with rootless variants | Base / Full per variant |
 | Framework startup automation | Laravel, Symfony, WordPress auto-detected (permissions, scheduler, queues, Horizon, Reverb) | Laravel-focused (opt-in automations) |
 | Version pinning | Rolling, **release-channel (`-v2`: behavior pinned, security patches keep flowing)**, and immutable digests | Rolling (weekly rebuilds) and immutable version pins |

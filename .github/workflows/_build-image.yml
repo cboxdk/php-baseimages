@@ -211,22 +211,27 @@ jobs:
         id: versions
         run: |
           if [ -f versions.json ]; then
-            echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-            echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-            echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-            echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-            echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-            echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
+            # A PHP series can pin its own extension source while the shared
+            # release does not support it yet (8.6.0 shipped before redis,
+            # apcu, msgpack, imagick, xdebug, pcov and spx tagged 8.6 builds).
+            # extension_overrides[series][name] wins over extensions[name].
+            ext() { jq -r --arg v "${{ inputs.php-version }}" --arg k "$1" --arg d "${2:-}" '(.extension_overrides[$v][$k] // .extensions[$k] // $d)' versions.json; }
+            echo "REDIS_VERSION=$(ext redis)" >> $GITHUB_OUTPUT
+            echo "IMAGICK_VERSION=$(ext imagick)" >> $GITHUB_OUTPUT
+            echo "APCU_VERSION=$(ext apcu)" >> $GITHUB_OUTPUT
+            echo "MONGODB_VERSION=$(ext mongodb)" >> $GITHUB_OUTPUT
+            echo "MSGPACK_VERSION=$(ext msgpack)" >> $GITHUB_OUTPUT
+            echo "OPENTELEMETRY_VERSION=$(ext opentelemetry 1.2.1)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-            echo "SPX_VERSION=$(jq -r '.extensions.spx' versions.json)" >> $GITHUB_OUTPUT
+            echo "SPX_VERSION=$(ext spx)" >> $GITHUB_OUTPUT
             echo "NPM_VERSION=$(jq -r '.tools.npm' versions.json)" >> $GITHUB_OUTPUT
             echo "BUN_VERSION=$(jq -r '.tools.bun' versions.json)" >> $GITHUB_OUTPUT
             echo "PLAYWRIGHT_VERSION=$(jq -r '.tools.playwright' versions.json)" >> $GITHUB_OUTPUT
             echo "COMPOSER_VERSION=$(jq -r '.tools.composer' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-            echo "TELEMETRY_NATIVE_VERSION=$(jq -r '.extensions.telemetry_native // "0.1.0"' versions.json)" >> $GITHUB_OUTPUT
-            echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
-            echo "PCOV_VERSION=$(jq -r '.extensions.pcov // "1.0.12"' versions.json)" >> $GITHUB_OUTPUT
+            echo "TELEMETRY_NATIVE_VERSION=$(ext telemetry_native 0.1.0)" >> $GITHUB_OUTPUT
+            echo "XDEBUG_VERSION=$(ext xdebug 3.4.0)" >> $GITHUB_OUTPUT
+            echo "PCOV_VERSION=$(ext pcov 1.0.12)" >> $GITHUB_OUTPUT
           fi
 
       - name: Download and verify Cbox Init binaries
@@ -544,22 +549,27 @@ jobs:
         id: versions
         run: |
           if [ -f versions.json ]; then
-            echo "REDIS_VERSION=$(jq -r '.extensions.redis' versions.json)" >> $GITHUB_OUTPUT
-            echo "IMAGICK_VERSION=$(jq -r '.extensions.imagick' versions.json)" >> $GITHUB_OUTPUT
-            echo "APCU_VERSION=$(jq -r '.extensions.apcu' versions.json)" >> $GITHUB_OUTPUT
-            echo "MONGODB_VERSION=$(jq -r '.extensions.mongodb' versions.json)" >> $GITHUB_OUTPUT
-            echo "MSGPACK_VERSION=$(jq -r '.extensions.msgpack' versions.json)" >> $GITHUB_OUTPUT
-            echo "OPENTELEMETRY_VERSION=$(jq -r '.extensions.opentelemetry // "1.2.1"' versions.json)" >> $GITHUB_OUTPUT
+            # A PHP series can pin its own extension source while the shared
+            # release does not support it yet (8.6.0 shipped before redis,
+            # apcu, msgpack, imagick, xdebug, pcov and spx tagged 8.6 builds).
+            # extension_overrides[series][name] wins over extensions[name].
+            ext() { jq -r --arg v "${{ inputs.php-version }}" --arg k "$1" --arg d "${2:-}" '(.extension_overrides[$v][$k] // .extensions[$k] // $d)' versions.json; }
+            echo "REDIS_VERSION=$(ext redis)" >> $GITHUB_OUTPUT
+            echo "IMAGICK_VERSION=$(ext imagick)" >> $GITHUB_OUTPUT
+            echo "APCU_VERSION=$(ext apcu)" >> $GITHUB_OUTPUT
+            echo "MONGODB_VERSION=$(ext mongodb)" >> $GITHUB_OUTPUT
+            echo "MSGPACK_VERSION=$(ext msgpack)" >> $GITHUB_OUTPUT
+            echo "OPENTELEMETRY_VERSION=$(ext opentelemetry 1.2.1)" >> $GITHUB_OUTPUT
             echo "NODE_VERSION=$(jq -r '.node.version' versions.json)" >> $GITHUB_OUTPUT
-            echo "SPX_VERSION=$(jq -r '.extensions.spx' versions.json)" >> $GITHUB_OUTPUT
+            echo "SPX_VERSION=$(ext spx)" >> $GITHUB_OUTPUT
             echo "NPM_VERSION=$(jq -r '.tools.npm' versions.json)" >> $GITHUB_OUTPUT
             echo "BUN_VERSION=$(jq -r '.tools.bun' versions.json)" >> $GITHUB_OUTPUT
             echo "PLAYWRIGHT_VERSION=$(jq -r '.tools.playwright' versions.json)" >> $GITHUB_OUTPUT
             echo "COMPOSER_VERSION=$(jq -r '.tools.composer' versions.json)" >> $GITHUB_OUTPUT
             echo "CBOX_INIT_VERSION=$(jq -r '.tools.cbox_init' versions.json)" >> $GITHUB_OUTPUT
-            echo "TELEMETRY_NATIVE_VERSION=$(jq -r '.extensions.telemetry_native // "0.1.0"' versions.json)" >> $GITHUB_OUTPUT
-            echo "XDEBUG_VERSION=$(jq -r '.extensions.xdebug // "3.4.0"' versions.json)" >> $GITHUB_OUTPUT
-            echo "PCOV_VERSION=$(jq -r '.extensions.pcov // "1.0.12"' versions.json)" >> $GITHUB_OUTPUT
+            echo "TELEMETRY_NATIVE_VERSION=$(ext telemetry_native 0.1.0)" >> $GITHUB_OUTPUT
+            echo "XDEBUG_VERSION=$(ext xdebug 3.4.0)" >> $GITHUB_OUTPUT
+            echo "PCOV_VERSION=$(ext pcov 1.0.12)" >> $GITHUB_OUTPUT
           fi
 
       - name: Download and verify Cbox Init binaries

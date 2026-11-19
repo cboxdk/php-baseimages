@@ -19,6 +19,33 @@ Cbox images come in four tiers with different extension sets:
 | **Chromium** | Standard + Chromium | Browsershot, Dusk, PDF |
 | **Dev** | Chromium + Xdebug, PCOV, SPX | Development, testing, CI/CD |
 
+## PHP 8.6 Extension Sources
+
+PHP 8.6.0 was released on 2026-11-19, before several extensions tagged a
+release that compiles on it. Rather than leave 8.6 without Redis or APCu,
+the 8.6 images build those extensions from a pinned upstream commit. A commit
+pin is a full SHA, so the build is reproducible; it is replaced by the
+extension's release as soon as one builds on 8.6.
+
+| Extension | 8.2 - 8.5 | 8.6 |
+|-----------|-----------|-----|
+| `redis` | 6.3.0 | `phpredis/phpredis` develop @ `5b60b12` (reports 6.3.0RC1) |
+| `apcu` | 5.1.28 | `apcu/apcu` master @ `fb2c942` (reports 5.1.29-dev) |
+| `msgpack` | 3.0.1 | `msgpack/msgpack-php` master @ `4a68908` |
+| `imagick` | 3.8.1 | `imagick/imagick` master @ `55ed2e9` |
+| `opentelemetry` | 1.2.1 | 1.5.0 (1.2.1 does not compile on 8.6) |
+| `xdebug` (dev) | 3.5.3 | 3.6.0alpha1 |
+| `pcov` (dev) | 1.0.12 | `pecl/pcov` branch `issue-php86a2` @ `f04029f` |
+| `spx` (dev) | v0.4.22 | **Not included** - no SPX release or commit compiles on 8.6 |
+
+Every other extension is the same version on every series. PHP 8.6 itself is
+built with ZTS (thread safety), as the official 8.6 recipe is; extensions are
+compiled against that build, so a custom extension must be built in the 8.6
+image too, not copied from an 8.5 one.
+
+The pins live in `versions.json` under `extension_overrides`. The default and
+`latest` tags stay on PHP 8.5 while 8.6 depends on unreleased extension code.
+
 ## Slim Tier Extensions
 
 The Slim tier includes all core extensions needed for most PHP applications.
@@ -443,7 +470,7 @@ All Laravel requirements are satisfied by **Slim tier**:
 
 | Requirement | Extension | Status |
 |-------------|-----------|--------|
-| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4, 8.5 |
+| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4, 8.5, 8.6 |
 | Ctype | ctype | ✅ Built-in |
 | cURL | curl | ✅ Built-in |
 | DOM | dom | ✅ Built-in |
@@ -460,7 +487,7 @@ All Symfony requirements are satisfied by **Slim tier**:
 
 | Requirement | Extension | Status |
 |-------------|-----------|--------|
-| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4, 8.5 |
+| PHP >= 8.2 | - | ✅ PHP 8.2, 8.3, 8.4, 8.5, 8.6 |
 | Ctype | ctype | ✅ Built-in |
 | iconv | iconv | ✅ Built-in |
 | JSON | json | ✅ Built-in |

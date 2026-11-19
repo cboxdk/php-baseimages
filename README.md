@@ -592,7 +592,7 @@ We welcome contributions!
 
 ## 🗺️ Roadmap
 
-- [x] PHP 8.2, 8.3, 8.4, 8.5 support
+- [x] PHP 8.2, 8.3, 8.4, 8.5, 8.6 support
 - [x] Multi-service containers
 - [x] Automatic security patching
 - [x] Laravel Scheduler support

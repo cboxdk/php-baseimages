@@ -6,11 +6,14 @@ expected="${2:?expected PHP patch required}"
 tier="${3:?tier required}"
 image_type="${4:?image type required}"
 case "$tier" in slim|standard|chromium|dev) ;; *) exit 2;; esac
+# Extensions versions.json leaves out for this series (extension_overrides: none).
+omitted=$(jq -r --arg s "${expected%.*}" '[(.extension_overrides[$s] // {}) | to_entries[] | select(.value == "none") | .key] | join(",")' "$(dirname "$0")/../versions.json")
 docker run --rm --entrypoint php "$image" -r '
     if (PHP_VERSION !== $argv[1]) { fwrite(STDERR, "Wrong PHP version: ".PHP_VERSION); exit(1); }
     $required = ["Zend OPcache", "redis", "apcu", "msgpack", "pdo_mysql", "pdo_pgsql", "mysqli", "pgsql", "zip", "intl", "bcmath", "gd", "exif", "pcntl", "sockets", "bz2", "gmp", "mbstring"];
     if ($argv[2] !== "slim") $required = array_merge($required, ["imagick", "mongodb", "soap", "ldap", "xsl"]);
     if ($argv[2] === "dev") $required = array_merge($required, ["xdebug", "pcov", "spx"]);
+    $required = array_diff($required, array_filter(explode(",", $argv[3])));
     foreach ($required as $extension) {
         if (!extension_loaded($extension)) { fwrite(STDERR, "Missing extension: ".$extension); exit(1); }
     }
@@ -22,7 +25,7 @@ docker run --rm --entrypoint php "$image" -r '
         }
     }
     echo "PASS: PHP ".PHP_VERSION." with all ".$argv[2]." extensions\n";
-' "$expected" "$tier"
+' "$expected" "$tier" "$omitted"
 case "$image_type" in
     php-fpm|php-fpm-nginx)
         container=$(docker run -d --memory 512m --cpus 1 -e HEALTHCHECK_MAX_FAILURES=1 "$image")

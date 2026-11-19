@@ -18,11 +18,8 @@ def matching(runs, title, sha=None):
 
 
 def should_dispatch(series, runs, children, sha, revision, now):
-    preview = series == '8.6'
-    candidates = matching(runs, 'Build PHP 8.6 preview' if preview else f'Build PHP base ({series})')
-    if not preview:
-        candidates += matching(runs, 'Build PHP base (all)')
-        candidates.sort(key=timestamp, reverse=True)
+    candidates = matching(runs, f'Build PHP base ({series})') + matching(runs, 'Build PHP base (all)')
+    candidates.sort(key=timestamp, reverse=True)
     if not candidates:
         return True
     latest = candidates[0]
@@ -34,11 +31,9 @@ def should_dispatch(series, runs, children, sha, revision, now):
         failures = candidates[:3]
         repeated = len(failures) == 3 and all(
             r['status'] == 'completed' and r['conclusion'] != 'success'
-            and (preview or r['displayTitle'].endswith(' OS:' + revision)) for r in failures)
+            and r['displayTitle'].endswith(' OS:' + revision) for r in failures)
         return not repeated or now - timestamp(latest) >= 21600
     age = now - timestamp(latest)
-    if preview:
-        return age >= 604800
     # A base completion dispatches children asynchronously. Allow propagation,
     # but never let a failed child hide behind a successful base publication.
     incomplete = False
@@ -106,7 +101,6 @@ def main():
         return json.loads(subprocess.check_output(command, text=True))
     base = runs('build-php-base.yml', True)
     children = {v: runs(f'build-php-{v}.yml') for v in ('cli', 'fpm', 'fpm-nginx')}
-    preview = runs('build-php86-beta.yml', True)
     from pathlib import Path
     supported = json.loads((Path(__file__).resolve().parents[1] / 'versions.json').read_text())['php']['supported']
     needed = [series for series in supported if should_dispatch(series, base, children, sha, revision, now)]
@@ -119,8 +113,6 @@ def main():
                         '-f', 'os_variant=trixie', '-f', 'tier=all'], check=True)
     else:
         print('Stable PHP: active or complete chains; no dispatch.')
-    if should_dispatch('8.6', preview, children, sha, revision, now):
-        subprocess.run(['gh', 'workflow', 'run', 'build-php86-beta.yml', '--ref', 'main'], check=True)
     nginx = runs('build-nginx.yml')
     nginx_os = os.environ.get('PATCH_NGINX_REVISION') or nginx_revision(revision)
     if should_dispatch_nginx(nginx, nginx_os, now):

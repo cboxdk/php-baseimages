@@ -4,7 +4,14 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Added
+- **PHP 8.6.** PHP 8.6.0 (released 2026-11-19) now builds in the same release chain as 8.2-8.5: all four tiers, root and rootless, amd64 and arm64, from a SHA256/GPG-verified php.net archive. 8.6 is built with ZTS, as the official 8.6 recipe is. Several extensions had no release that compiles on 8.6 on release day, so the 8.6 images pin them to upstream commits (full SHAs) in `versions.json` `extension_overrides`: redis, apcu, msgpack and imagick; opentelemetry moves to 1.5.0 and xdebug to 3.6.0alpha1 on 8.6 only; pcov comes from its unmerged 8.6 branch. SPX is left out of the 8.6 dev tier because nothing compiles on 8.6 yet. Each pin was verified by installing it on the official PHP 8.6.0 image with PIE 1.5.2. The default and `latest` tags stay on PHP 8.5 until those extensions tag releases. See [PHP 8.6 extension sources](docs/reference/available-extensions.md#php-86-extension-sources)
+
+### Removed
+- The PHP 8.6 preview lane (`build-php86-beta.yml`, `php-base/Dockerfile.php86-beta`, the `8.6-rc-*-beta` tags). It existed to measure 8.6 readiness before GA and is replaced by the release builds above
+
 ### Security
+- **PHP 8.2.36, 8.3.37, 8.4.28 and 8.5.13** (released 2026-11-19), and Debian's nginx security update DSA-6642-1 (`1.26.3-3+deb13u11`, fixing CVE-2026-125283, CVE-2026-123007, CVE-2026-121810, CVE-2026-123634 and CVE-2026-113425) in the php-fpm-nginx images. The standalone `nginx` image already ran nginx 1.31.9 with these fixes
 - **fpm-exporter 3.1.3** (from 3.1.2): rebuilt with Go 1.26.11 for CVE-2026-97054 (HIGH, `net/http`). The pre-promotion gate rejected 3.1.2's binary, so no PHP image tag was promoted, including the PHP 8.2.36 / 8.3.37 / 8.4.28 / 8.5.13 security releases and Debian's nginx DSA-6642-1. No behaviour change. See the [fpm-exporter 3.1.3 release](https://github.com/cboxdk/fpm-exporter/releases/tag/v3.1.3)
 
 ## [2.0.2] - 2026-11-17

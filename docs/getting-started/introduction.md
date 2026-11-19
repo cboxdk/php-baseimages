@@ -46,7 +46,7 @@ Cbox images come in four tiers -- Slim (~120 MiB), Standard (~250 MiB), Chromium
 | Process Manager | Cbox Init (Go binary) | S6 Overlay |
 | Image Tiers | 4 (Slim/Standard/Chromium/Dev) | 2 (Base/Full) |
 | Framework Support | Laravel/Symfony/WordPress | Laravel-focused |
-| PHP Versions | 8.2, 8.3, 8.4, 8.5 | 8.1, 8.2, 8.3, 8.4, 8.5 |
+| PHP Versions | 8.2, 8.3, 8.4, 8.5, 8.6 | 8.1, 8.2, 8.3, 8.4, 8.5 |
 | Community | Newer project | Established, active |
 
 **When to choose Cbox**: You need Symfony/WordPress support, built-in Prometheus metrics, or prefer a single-binary process manager.

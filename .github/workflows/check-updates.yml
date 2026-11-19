@@ -74,7 +74,7 @@ jobs:
 
       - name: Check for new PHP minor version
         run: |
-          for version in 8.6 9.0; do
+          for version in 8.7 9.0; do
             if curl -sf "https://www.php.net/releases/index.php?json&version=$version" > /dev/null 2>&1; then
               PHP_NEW=$(curl -s "https://www.php.net/releases/index.php?json&version=$version" | jq -r '.version // empty')
               if [ -n "$PHP_NEW" ] && ! jq -e ".php.supported | index(\"$version\")" versions.json > /dev/null; then
@@ -91,7 +91,6 @@ jobs:
           add-paths: |
             versions.json
             php-base/Dockerfile
-            php-base/Dockerfile.php86-beta
           commit-message: "chore(deps): update versions.json with latest releases"
           title: "chore(deps): Weekly dependency updates"
           body: |
@@ -261,13 +260,13 @@ jobs:
           fi
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # PIE readiness watch (issue #23): PHP 8.6 drops the pecl binary, so adding
-  # 8.6 is blocked until every PECL extension we ship has a PIE release that
-  # actually builds on 8.6. As of 2026-09-12 five are blocked (fixes merged
-  # upstream but untagged; pcov's fix not even merged). Packagist is polled
-  # weekly; a NEWER tag than the known-blocked version means a maintainer
-  # shipped something - a human then verifies 8.6 buildability and, once all
-  # are green, runs the PECL->PIE migration. After migrating, retire this job.
+  # PIE readiness watch (issue #23): PHP 8.6.0 shipped (2026-11-19) before
+  # these extensions tagged a release that builds on it, so the 8.6 images pin
+  # upstream commits in versions.json `extension_overrides.8.6`. Packagist is
+  # polled weekly; a NEWER tag than the known-blocked version means a
+  # maintainer shipped something - a human then verifies 8.6 buildability and
+  # replaces that commit pin with the release. Retire this job when
+  # extension_overrides.8.6 is empty.
   # ═══════════════════════════════════════════════════════════════════════════
   pie-readiness:
     name: PIE 8.6-readiness watch
@@ -296,4 +295,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue comment 23 --repo "${{ github.repository }}" --body "PIE readiness watch: new tags since the audit - ${{ steps.pie.outputs.unblocked }}. Verify PHP 8.6 buildability (constraints can lie: phpredis 6.3.0 allowed >=7.4 but failed to compile), then update the known-blocked pins in check-updates.yml or start the PECL->PIE migration if all blockers are clear."
+          gh issue comment 23 --repo "${{ github.repository }}" --body "PIE readiness watch: new tags since the audit - ${{ steps.pie.outputs.unblocked }}. Verify PHP 8.6 buildability (constraints can lie: phpredis 6.3.0 allowed >=7.4 but failed to compile), then replace that package's commit pin in versions.json extension_overrides.8.6 with the release and update the known-blocked list in check-updates.yml."

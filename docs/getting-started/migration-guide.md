@@ -13,9 +13,11 @@ Complete guide for migrating to Cbox from other PHP Docker solutions.
 V2 changes the OS from Debian 12 Bookworm to Debian 13 Trixie. Rebuild the
 application image from scratch; do not apt-dist-upgrade a v1 container.
 The intended pin changes from `8.5-bookworm-v1` to `8.5-trixie-v2` once v2
-has been published. PHP 8.2, 8.3, 8.4 and 8.5 have independent source locks;
-CLI and FPM for a series use the same archive. PHP 8.6 remains a separate
-preview with ZTS and no promise of stable extension support.
+has been published. PHP 8.2, 8.3, 8.4, 8.5 and 8.6 have independent source
+locks; CLI and FPM for a series use the same archive. PHP 8.6 is built with
+ZTS (thread safety), as the official 8.6 recipe is, and some of its extensions
+are pinned to upstream commits until they tag a release - see
+[PHP 8.6 extension sources](../reference/available-extensions#php-86-extension-sources).
 
 - Recompile custom PHP extensions and native libraries against Trixie. Do not
   copy extension `.so` files from v1: ICU, ImageMagick and other library ABIs
