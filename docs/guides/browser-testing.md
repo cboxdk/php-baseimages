@@ -24,8 +24,8 @@ in released plugin versions; watch
 The image therefore bakes Playwright's Chromium at
 `PLAYWRIGHT_BROWSERS_PATH=/ms-playwright`, using the version pinned under
 `tools.playwright` in the image release's
-[versions.json](https://github.com/cboxdk/php-baseimages/blob/v2.0.0/versions.json).
-For v2.0.0, that version is `1.65.0`. The npm package itself belongs in your project.
+[versions.json](https://github.com/cboxdk/php-baseimages/blob/v2.1.0/versions.json).
+For v2.1.0, that version is `1.65.0`. The npm package itself belongs in your project.
 
 ```bash
 composer require pestphp/pest-plugin-browser --dev
