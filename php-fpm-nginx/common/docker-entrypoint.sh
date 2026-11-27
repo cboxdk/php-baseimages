@@ -328,12 +328,11 @@ apply_php_env_overrides() {
     [ -n "$PHP_FPM_PM_MAX_SPARE_SERVERS" ] && content="${content}\npm.max_spare_servers = $PHP_FPM_PM_MAX_SPARE_SERVERS"
     [ -n "$PHP_FPM_PM_MAX_REQUESTS" ] && content="${content}\npm.max_requests = $PHP_FPM_PM_MAX_REQUESTS"
     [ -n "$PHP_FPM_REQUEST_TERMINATE_TIMEOUT" ] && content="${content}\nrequest_terminate_timeout = $PHP_FPM_REQUEST_TERMINATE_TIMEOUT"
-    # FPM pool overrides for PHP values (php_admin_value wins over php.ini)
-    [ -n "$PHP_MEMORY_LIMIT" ] && content="${content}\nphp_admin_value[memory_limit] = $PHP_MEMORY_LIMIT"
-    [ -n "$PHP_MAX_EXECUTION_TIME" ] && content="${content}\nphp_admin_value[max_execution_time] = $PHP_MAX_EXECUTION_TIME"
-    [ -n "$PHP_MAX_INPUT_TIME" ] && content="${content}\nphp_admin_value[max_input_time] = $PHP_MAX_INPUT_TIME"
-    [ -n "$PHP_UPLOAD_MAX_FILESIZE" ] && content="${content}\nphp_admin_value[upload_max_filesize] = $PHP_UPLOAD_MAX_FILESIZE"
-    [ -n "$PHP_POST_MAX_SIZE" ] && content="${content}\nphp_admin_value[post_max_size] = $PHP_POST_MAX_SIZE"
+    # memory_limit, max_execution_time, max_input_time, upload_max_filesize
+    # and post_max_size are NOT written here. They used to be, as a second
+    # php_admin_value after the one in the pool file, and PHP-FPM keeps the
+    # first - so setting them did nothing. The pool file now expands them from
+    # the environment (resolve_fpm_php_limits), one definition each.
     [ -n "$PHP_OPEN_BASEDIR" ] && content="${content}\nphp_admin_value[open_basedir] = $PHP_OPEN_BASEDIR"
     printf '%b\n' "$content" > "$fpm" 2>/dev/null || log_warn "Could not write $fpm (read-only rootfs? mount an emptyDir at /usr/local/etc/php-fpm.d)"
 }
@@ -1245,7 +1244,7 @@ export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
 export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
 export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
-export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-256M}"
+resolve_fpm_php_limits
 
 
 # Exported because the BAKED zz-pm-mode.conf carries ${PHP_FPM_MAX_SPAWN_RATE}

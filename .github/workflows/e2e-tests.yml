@@ -252,6 +252,16 @@ jobs:
           # other test here sizes a pool large enough to hide that.
           tests/e2e/run-e2e-tests.sh "$IMAGE" memory-limits
 
+      - name: Run env-config E2E test
+        env:
+          IMAGE: test-image:local
+          VERBOSE: "true"
+        run: |
+          # PHP_UPLOAD_MAX_FILESIZE and friends read back through nginx and
+          # PHP-FPM. The pool pins them, so only a real request shows whether
+          # the environment reached it.
+          tests/e2e/run-e2e-tests.sh "$IMAGE" env-config
+
   # Full matrix test (manual trigger)
   full-matrix:
     if: github.event_name == 'workflow_dispatch'

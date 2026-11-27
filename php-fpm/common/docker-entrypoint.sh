@@ -60,7 +60,7 @@ resolve_fpm_sizing() {
     export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
     export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
     export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
-    export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-256M}"
+    resolve_fpm_php_limits
 }
 
 # Write the pool settings that come from the environment.

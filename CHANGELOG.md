@@ -4,6 +4,12 @@ All notable changes to Cbox PHP Base Images.
 
 ## [Unreleased]
 
+### Fixed
+- **`PHP_UPLOAD_MAX_FILESIZE`, `PHP_POST_MAX_SIZE`, `PHP_MAX_FILE_UPLOADS`, `PHP_MAX_EXECUTION_TIME`, `PHP_MAX_INPUT_TIME` and `PHP_MEMORY_LIMIT` did nothing for web requests.** The FPM pool file pinned those limits as literal `php_admin_value` lines (100M, 20, 60) and the entrypoint wrote the environment's value as a second `php_admin_value` in a later file. PHP-FPM keeps the first definition, so a request always ran with the defaults while the CLI got the new value, with no warning. The pool file now expands each limit from the environment, one definition each, in both `php-fpm` and `php-fpm-nginx`. **If you set one of these variables, web requests now get the value you set**; with none set, nothing changes. Because FPM expands them itself, this also works on a read-only root filesystem
+
+### Added
+- `PHP_FPM_UPLOAD_MAX_FILESIZE`, `PHP_FPM_POST_MAX_SIZE`, `PHP_FPM_MAX_FILE_UPLOADS`, `PHP_FPM_MAX_EXECUTION_TIME` and `PHP_FPM_MAX_INPUT_TIME` set a limit for web requests only, the way `PHP_FPM_MEMORY_LIMIT` already did. Each falls back to its `PHP_*` variable, then to the default. `PHP_FPM_MEMORY_LIMIT` now falls back to `PHP_MEMORY_LIMIT` before `256M`
+
 ## [2.1.0] - 2026-11-20
 
 ### Added

@@ -21,7 +21,7 @@ These are the most commonly used variables. Just set what you need!
 | `LARAVEL_REVERB` | `false` | Enable Laravel Reverb WebSockets |
 | `LARAVEL_QUEUE` | `false` | Enable queue workers |
 | `PHP_MEMORY_LIMIT` | `256M` | PHP memory limit |
-| `PHP_MAX_EXECUTION_TIME` | `30` | Max script execution time |
+| `PHP_MAX_EXECUTION_TIME` | `60` | Max script execution time |
 
 ---
 
@@ -153,7 +153,7 @@ These user-friendly variables are automatically mapped to Cbox Init process cont
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PHP_MEMORY_LIMIT` | `256M` | Memory limit |
-| `PHP_MAX_EXECUTION_TIME` | `30` | Max execution time |
+| `PHP_MAX_EXECUTION_TIME` | `60` | Max execution time |
 | `PHP_MAX_INPUT_TIME` | `60` | Max input time |
 | `PHP_POST_MAX_SIZE` | `100M` | Max POST size |
 | `PHP_UPLOAD_MAX_FILESIZE` | `100M` | Max upload size |
@@ -363,7 +363,21 @@ explicitly (explicit env always wins).
 | `PHP_FPM_LISTEN_BACKLOG` | `511` | all | Accept backlog (kernel `somaxconn` caps it) |
 | `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` | `60s` | all | Hard kill for runaway requests |
 | `PHP_FPM_REQUEST_SLOWLOG_TIMEOUT` | `5s` | all | Stack-trace slow requests to stderr |
-| `PHP_FPM_MEMORY_LIMIT` | `256M` | all | Per-worker memory_limit (pool admin value; CLI keeps php.ini's) |
+| `PHP_FPM_MEMORY_LIMIT` | `PHP_MEMORY_LIMIT`, else `256M` | all | Per-worker memory_limit (pool admin value; CLI keeps php.ini's) |
+| `PHP_FPM_UPLOAD_MAX_FILESIZE` | `PHP_UPLOAD_MAX_FILESIZE`, else `100M` | all | upload_max_filesize for web requests only |
+| `PHP_FPM_POST_MAX_SIZE` | `PHP_POST_MAX_SIZE`, else `100M` | all | post_max_size for web requests only |
+| `PHP_FPM_MAX_FILE_UPLOADS` | `PHP_MAX_FILE_UPLOADS`, else `20` | all | max_file_uploads for web requests only |
+| `PHP_FPM_MAX_EXECUTION_TIME` | `PHP_MAX_EXECUTION_TIME`, else `60` | all | max_execution_time for web requests only |
+| `PHP_FPM_MAX_INPUT_TIME` | `PHP_MAX_INPUT_TIME`, else `60` | all | max_input_time for web requests only |
+
+The pool pins these six as `php_admin_value`, so a mounted `php.ini` or
+`ini_set()` cannot change them for a web request. The general `PHP_*`
+variable sets both `php.ini` (which the CLI reads) and the pool; the
+`PHP_FPM_*` variable sets the pool alone, for when web requests and
+`artisan`/queue workers need different limits. Raise
+`NGINX_CLIENT_MAX_BODY_SIZE` together with the upload and POST sizes, and
+`PHP_FPM_REQUEST_TERMINATE_TIMEOUT` and `NGINX_FASTCGI_READ_TIMEOUT` together
+with the execution time, or the request is cut off before PHP's own limit.
 
 Mode-specific directives are written as a drop-in (`zz-pm-mode.conf`) so no
 mode ever boots with another mode's directives. With `CBOX_FPM_TUNE=true`

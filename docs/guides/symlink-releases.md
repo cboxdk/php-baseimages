@@ -233,6 +233,12 @@ environment:
   - PHP_FPM_REQUEST_TERMINATE_TIMEOUT=120s
 ```
 
+`upload_max_filesize`, `post_max_size`, `max_file_uploads`,
+`max_execution_time` and `max_input_time` are pinned by the pool the same way.
+Set `PHP_UPLOAD_MAX_FILESIZE`, `PHP_POST_MAX_SIZE`, `PHP_MAX_FILE_UPLOADS`,
+`PHP_MAX_EXECUTION_TIME` or `PHP_MAX_INPUT_TIME` and both `php.ini` and the
+pool follow. See [PHP-FPM pool variables](../reference/environment-variables.md).
+
 (The CLI SAPI has no pool, so queue workers and `artisan` commands *do* see a
 mounted `php.ini`. That asymmetry is why this one is hard to spot: the same
 code works from the worker and dies under a web request.)
