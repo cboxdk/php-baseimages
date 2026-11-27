@@ -80,6 +80,31 @@ services:
       retries: 10
       start_period: 10s
 
+  # Test 7: PHP limits raised through the environment
+  app-php-limits:
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}
+    container_name: e2e-env-limits
+    ports:
+      - "8099:80"
+    volumes:
+      - ./public:/var/www/html/public
+    environment:
+      # General variables: must reach php.ini AND the FPM pool
+      PHP_UPLOAD_MAX_FILESIZE: "1024M"
+      PHP_POST_MAX_SIZE: "1024M"
+      PHP_MAX_FILE_UPLOADS: "50"
+      PHP_MAX_EXECUTION_TIME: "1800"
+      PHP_MAX_INPUT_TIME: "900"
+      # Pool-only variable wins over the general one for web requests
+      PHP_MEMORY_LIMIT: "1024M"
+      PHP_FPM_MEMORY_LIMIT: "2048M"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
   # Test 3: No environment variables at all
   app-no-env:
     image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}

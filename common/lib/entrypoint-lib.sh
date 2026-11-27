@@ -160,6 +160,27 @@ fix_symfony_permissions() {
 }
 
 ###########################################
+# PHP limits pinned in the FPM pool
+# fpm-pool.conf sets these as php_admin_value and expands them from the
+# environment; this resolves what it expands. Order for each: the pool-only
+# PHP_FPM_* variable, then the general PHP_* variable (which also sets
+# php.ini, so the CLI follows it), then the image default.
+#
+# The general variable has to reach the pool: PHP_UPLOAD_MAX_FILESIZE=1G
+# that raises php.ini but leaves the pool's admin value at 100M changes
+# nothing for a web request, which is the only place an upload happens.
+# Called by both the php-fpm and php-fpm-nginx entrypoints.
+###########################################
+resolve_fpm_php_limits() {
+    export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-${PHP_MEMORY_LIMIT:-256M}}"
+    export PHP_FPM_UPLOAD_MAX_FILESIZE="${PHP_FPM_UPLOAD_MAX_FILESIZE:-${PHP_UPLOAD_MAX_FILESIZE:-100M}}"
+    export PHP_FPM_POST_MAX_SIZE="${PHP_FPM_POST_MAX_SIZE:-${PHP_POST_MAX_SIZE:-100M}}"
+    export PHP_FPM_MAX_FILE_UPLOADS="${PHP_FPM_MAX_FILE_UPLOADS:-${PHP_MAX_FILE_UPLOADS:-20}}"
+    export PHP_FPM_MAX_EXECUTION_TIME="${PHP_FPM_MAX_EXECUTION_TIME:-${PHP_MAX_EXECUTION_TIME:-60}}"
+    export PHP_FPM_MAX_INPUT_TIME="${PHP_FPM_MAX_INPUT_TIME:-${PHP_MAX_INPUT_TIME:-60}}"
+}
+
+###########################################
 # PHP-FPM process-manager mode
 # Writes the mode-specific pm directives as a drop-in, so the static pool
 # file stays mode-neutral and php-fpm never warns about directives that

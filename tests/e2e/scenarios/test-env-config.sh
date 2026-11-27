@@ -163,6 +163,40 @@ else
     log_info "PATH may be available in PHP (check clear_env setting)"
 fi
 
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST 7: PHP limits from the environment reach a web request
+# ═══════════════════════════════════════════════════════════════════════════
+log_section "Test 7: PHP limits from the environment"
+
+# The pool pins these as php_admin_value. They were once defined twice (a
+# literal in the pool file, then the env value in a later file) and PHP-FPM
+# kept the first, so PHP_UPLOAD_MAX_FILESIZE=1024M still gave a request 100M.
+# Asserted over HTTP on purpose: the CLI never had the problem.
+
+# Defaults first, on the container that sets none of them.
+docker compose -f "$FIXTURE_DIR/docker-compose.yml" -p "$PROJECT_NAME" start app-no-env 2>&1 || true
+wait_for_healthy "e2e-env-none" 60
+wait_for_http "http://localhost:8098/limits.php" 200 30
+for expected in "memory_limit=256M" "upload_max_filesize=100M" "post_max_size=100M" "max_file_uploads=20" "max_execution_time=60" "max_input_time=60"; do
+    assert_http_contains "http://localhost:8098/limits.php" "$expected" "Default pool limit: $expected"
+done
+
+docker compose -f "$FIXTURE_DIR/docker-compose.yml" -p "$PROJECT_NAME" up -d app-php-limits 2>&1 || true
+wait_for_healthy "e2e-env-limits" 60
+wait_for_http "http://localhost:8099/limits.php" 200 30
+for expected in "upload_max_filesize=1024M" "post_max_size=1024M" "max_file_uploads=50" "max_execution_time=1800" "max_input_time=900"; do
+    assert_http_contains "http://localhost:8099/limits.php" "$expected" "PHP_* variable reaches the pool: $expected"
+done
+assert_http_contains "http://localhost:8099/limits.php" "memory_limit=2048M" "PHP_FPM_MEMORY_LIMIT wins over PHP_MEMORY_LIMIT for a web request"
+
+# The CLI has no pool: it follows the general variable only.
+CLI_MEMORY_LIMIT=$(docker exec e2e-env-limits php -r "echo ini_get('memory_limit');") || true
+if [ "$CLI_MEMORY_LIMIT" = "1024M" ]; then
+    log_success "CLI memory_limit follows PHP_MEMORY_LIMIT (1024M)"
+else
+    log_fail "CLI memory_limit is $CLI_MEMORY_LIMIT (expected 1024M from PHP_MEMORY_LIMIT)"
+fi
+
 # Store test results before any cleanup that might affect shell state
 FINAL_PASSED=$TESTS_PASSED
 FINAL_FAILED=$TESTS_FAILED
