@@ -58,6 +58,41 @@ class FpmDefaultsTests(unittest.TestCase):
             for directive in ['memory_limit', 'upload_max_filesize', 'post_max_size', 'max_execution_time', 'max_input_time']:
                 self.assertNotIn('php_admin_value[' + directive + ']', text)
 
+    def test_values_php_would_misread_stop_startup_and_name_the_variable(self):
+        # PHP reads abc as 0, 100MB as 100 bytes and 1.5G as 1G, with one
+        # warning and a healthy container. The entrypoint refuses instead.
+        for assignment in ['PHP_UPLOAD_MAX_FILESIZE=abc', 'PHP_POST_MAX_SIZE=100MB', 'PHP_FPM_MEMORY_LIMIT=1.5G', 'PHP_MEMORY_LIMIT=-2', 'PHP_UPLOAD_MAX_FILESIZE=-1', 'PHP_MAX_FILE_UPLOADS=many', 'PHP_FPM_MAX_EXECUTION_TIME=30s', 'PHP_MAX_EXECUTION_TIME=-1', 'PHP_MAX_INPUT_TIME=1.5']:
+            result = self.resolve_limits(assignment)
+            self.assertNotEqual(result.returncode, 0, assignment)
+            self.assertIn(assignment.split('=')[0] + '=', result.stderr)
+            self.assertEqual(result.stdout, '', assignment)
+
+    def test_every_bad_value_is_reported_in_one_start(self):
+        result = self.resolve_limits('PHP_UPLOAD_MAX_FILESIZE=abc; PHP_MAX_INPUT_TIME=soon')
+        self.assertIn('PHP_UPLOAD_MAX_FILESIZE="abc"', result.stderr)
+        self.assertIn('PHP_MAX_INPUT_TIME="soon"', result.stderr)
+
+    def test_values_php_reads_as_written_are_accepted(self):
+        result = self.resolve_limits('PHP_MEMORY_LIMIT=-1; PHP_UPLOAD_MAX_FILESIZE=512k; PHP_POST_MAX_SIZE=2G; PHP_MAX_FILE_UPLOADS=0; PHP_MAX_EXECUTION_TIME=0; PHP_MAX_INPUT_TIME=-1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, '-1,512k,2G,0,0,-1,')
+
+    def resolve_access_log(self, assignments):
+        return subprocess.run(['env', '-i', 'sh', '-c', '. "$1"; eval "$2"; resolve_fpm_access_log || exit; printf "%s" "$PHP_FPM_ACCESS_LOG"', 'test', str(ROOT/'common/lib/entrypoint-lib.sh'), assignments], text=True, capture_output=True)
+
+    def test_access_log_defaults_to_stderr_and_can_be_turned_off(self):
+        self.assertEqual(self.resolve_access_log(':').stdout, '/proc/self/fd/2')
+        for value in ['off', 'OFF', 'false', '0', 'no']:
+            self.assertEqual(self.resolve_access_log('PHP_FPM_ACCESS_LOG=' + value).stdout, '/dev/null', value)
+        self.assertEqual(self.resolve_access_log('PHP_FPM_ACCESS_LOG=/var/log/fpm-access.log').stdout, '/var/log/fpm-access.log')
+
+    def test_pool_access_log_is_resolved_by_both_entrypoints(self):
+        # A ${VAR} in the pool file that nothing exports stops php-fpm booting.
+        pool = (ROOT/'php-fpm/common/fpm-pool.conf').read_text()
+        self.assertEqual([line for line in pool.splitlines() if line.startswith('access.log')], ['access.log = ${PHP_FPM_ACCESS_LOG}'])
+        for entrypoint in ['php-fpm/common/docker-entrypoint.sh', 'php-fpm-nginx/common/docker-entrypoint.sh']:
+            self.assertIn('resolve_fpm_access_log', (ROOT/entrypoint).read_text())
+
     def test_lifecycle_dates_match_existing_linux_contract(self):
         result=json.loads(subprocess.check_output(['bash',str(ROOT/'scripts/get-build-state.sh'),'8.2','trixie'],text=True))
         self.assertEqual(result['removal_date'],'2027-07-01')

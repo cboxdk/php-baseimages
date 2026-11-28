@@ -160,6 +160,57 @@ fix_symfony_permissions() {
 }
 
 ###########################################
+# PHP limits: refuse a value PHP cannot read
+# PHP does not reject a malformed size or time. It warns once and carries on
+# with what it could read: PHP_UPLOAD_MAX_FILESIZE=abc is 0, 100MB is 100
+# bytes and 1.5G is 1G. The container reports healthy and every upload
+# fails. So the entrypoint stops
+# here, the way it does for a PHP_FPM_MAX_CHILDREN that is not a number, and
+# names the variable.
+#
+# Both the general variable (php.ini, so the CLI) and the pool-only one are
+# checked. Empty means unset and is left to the default.
+###########################################
+php_limit_is_valid() {
+    local kind="$1" value="$2"
+    case "$kind" in
+        size_or_unlimited|seconds_or_unlimited) [ "$value" = "-1" ] && return 0 ;;
+    esac
+    case "$kind" in
+        size|size_or_unlimited) value="${value%[KkMmGg]}" ;;
+    esac
+    case "$value" in
+        ''|*[!0-9]*) return 1 ;;
+    esac
+}
+
+validate_php_limits() {
+    local failed=0 entry kind name value expected
+    for entry in \
+        size_or_unlimited:PHP_MEMORY_LIMIT size_or_unlimited:PHP_FPM_MEMORY_LIMIT \
+        size:PHP_UPLOAD_MAX_FILESIZE size:PHP_FPM_UPLOAD_MAX_FILESIZE \
+        size:PHP_POST_MAX_SIZE size:PHP_FPM_POST_MAX_SIZE \
+        count:PHP_MAX_FILE_UPLOADS count:PHP_FPM_MAX_FILE_UPLOADS \
+        count:PHP_MAX_EXECUTION_TIME count:PHP_FPM_MAX_EXECUTION_TIME \
+        seconds_or_unlimited:PHP_MAX_INPUT_TIME seconds_or_unlimited:PHP_FPM_MAX_INPUT_TIME; do
+        kind="${entry%%:*}"
+        name="${entry#*:}"
+        eval "value=\"\${$name:-}\""
+        [ -n "$value" ] || continue
+        php_limit_is_valid "$kind" "$value" && continue
+        case "$kind" in
+            size) expected="a whole number of bytes, optionally followed by K, M or G (for example 100M)" ;;
+            size_or_unlimited) expected="a whole number of bytes, optionally followed by K, M or G (for example 256M), or -1 for no limit" ;;
+            seconds_or_unlimited) expected="a whole number of seconds, or -1 for no limit" ;;
+            *) expected="a whole number" ;;
+        esac
+        log_error "$name=\"$value\" is not a value PHP can read: expected $expected"
+        failed=1
+    done
+    return "$failed"
+}
+
+###########################################
 # PHP limits pinned in the FPM pool
 # fpm-pool.conf sets these as php_admin_value and expands them from the
 # environment; this resolves what it expands. Order for each: the pool-only
@@ -172,12 +223,27 @@ fix_symfony_permissions() {
 # Called by both the php-fpm and php-fpm-nginx entrypoints.
 ###########################################
 resolve_fpm_php_limits() {
+    validate_php_limits || return 1
     export PHP_FPM_MEMORY_LIMIT="${PHP_FPM_MEMORY_LIMIT:-${PHP_MEMORY_LIMIT:-256M}}"
     export PHP_FPM_UPLOAD_MAX_FILESIZE="${PHP_FPM_UPLOAD_MAX_FILESIZE:-${PHP_UPLOAD_MAX_FILESIZE:-100M}}"
     export PHP_FPM_POST_MAX_SIZE="${PHP_FPM_POST_MAX_SIZE:-${PHP_POST_MAX_SIZE:-100M}}"
     export PHP_FPM_MAX_FILE_UPLOADS="${PHP_FPM_MAX_FILE_UPLOADS:-${PHP_MAX_FILE_UPLOADS:-20}}"
     export PHP_FPM_MAX_EXECUTION_TIME="${PHP_FPM_MAX_EXECUTION_TIME:-${PHP_MAX_EXECUTION_TIME:-60}}"
     export PHP_FPM_MAX_INPUT_TIME="${PHP_FPM_MAX_INPUT_TIME:-${PHP_MAX_INPUT_TIME:-60}}"
+}
+
+###########################################
+# PHP-FPM access log
+# fpm-pool.conf expands PHP_FPM_ACCESS_LOG as the pool's access.log. Default:
+# the container's stderr, as before. off/false/0/no turns it off; anything
+# else is taken as a path.
+###########################################
+resolve_fpm_access_log() {
+    case "${PHP_FPM_ACCESS_LOG:-}" in
+        '') export PHP_FPM_ACCESS_LOG="/proc/self/fd/2" ;;
+        off|OFF|false|FALSE|0|no|NO) export PHP_FPM_ACCESS_LOG="/dev/null" ;;
+        *) export PHP_FPM_ACCESS_LOG ;;
+    esac
 }
 
 ###########################################

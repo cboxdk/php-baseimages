@@ -197,6 +197,82 @@ else
     log_fail "CLI memory_limit is $CLI_MEMORY_LIMIT (expected 1024M from PHP_MEMORY_LIMIT)"
 fi
 
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST 8: PHP_FPM_ACCESS_LOG=off
+# ═══════════════════════════════════════════════════════════════════════════
+log_section "Test 8: PHP-FPM access log can be turned off"
+
+# cbox-init tags each line with the process that wrote it. Matching the script
+# name alone would also match nginx's access line for the same request.
+FPM_ACCESS_LINE='limits\.php.*process"?[:=]"?php-fpm'
+
+curl -s "http://localhost:8098/limits.php" >/dev/null || true
+# Into a variable first: under pipefail, grep -q closing the pipe early makes
+# `docker logs` fail and the match read as a miss.
+DEFAULT_LOGS=$(docker logs e2e-env-none 2>&1 || true)
+if echo "$DEFAULT_LOGS" | grep -Eq "$FPM_ACCESS_LINE"; then
+    log_success "Default: PHP-FPM logs the request"
+else
+    log_fail "Default: no PHP-FPM access line for limits.php (the pattern no longer matches access.format?)"
+fi
+
+docker compose -f "$FIXTURE_DIR/docker-compose.yml" -p "$PROJECT_NAME" up -d app-access-log-off 2>&1 || true
+wait_for_healthy "e2e-env-access-log-off" 60
+wait_for_http "http://localhost:8100/limits.php" 200 30
+curl -s "http://localhost:8100/limits.php" >/dev/null || true
+ACCESS_LOG_OFF_LOGS=$(docker logs e2e-env-access-log-off 2>&1 || true)
+if echo "$ACCESS_LOG_OFF_LOGS" | grep -Eq "$FPM_ACCESS_LINE"; then
+    log_fail "PHP_FPM_ACCESS_LOG=off still logs every request"
+else
+    log_success "PHP_FPM_ACCESS_LOG=off: no PHP-FPM access line"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST 9: A limit PHP would misread stops startup
+# ═══════════════════════════════════════════════════════════════════════════
+log_section "Test 9: Malformed PHP limits stop startup"
+
+E2E_IMAGE="${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}"
+
+# PHP reads 100MB as 100 bytes and keeps going, so without the check this
+# container would come up healthy and reject every upload.
+set +e
+BAD_LIMIT_OUTPUT=$(timeout 60 docker run --rm -e PHP_UPLOAD_MAX_FILESIZE=100MB "$E2E_IMAGE" 2>&1)
+BAD_LIMIT_EXIT=$?
+set -e
+if [ "$BAD_LIMIT_EXIT" -ne 0 ] && echo "$BAD_LIMIT_OUTPUT" | grep -q 'PHP_UPLOAD_MAX_FILESIZE="100MB"'; then
+    log_success "PHP_UPLOAD_MAX_FILESIZE=100MB stops startup and names the variable"
+else
+    log_fail "PHP_UPLOAD_MAX_FILESIZE=100MB did not stop startup (exit $BAD_LIMIT_EXIT)"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST 10: CBOX_INIT_SKIP_RUNTIME_VALIDATION skips the nginx config check
+# ═══════════════════════════════════════════════════════════════════════════
+log_section "Test 10: nginx config check can be skipped"
+
+# A container that never starts nginx (a migration job, a CLI profile) must
+# not be stopped by an nginx config that cannot pass there. `php -v` as the
+# command: the entrypoint runs its setup, then the command instead of cbox-init.
+BROKEN_NGINX_MOUNT="$FIXTURE_DIR/broken-nginx/broken.conf:/etc/nginx/conf.d/zz-broken.conf:ro"
+
+set +e
+CHECKED_OUTPUT=$(timeout 60 docker run --rm -v "$BROKEN_NGINX_MOUNT" "$E2E_IMAGE" php -v 2>&1)
+CHECKED_EXIT=$?
+SKIPPED_OUTPUT=$(timeout 60 docker run --rm -v "$BROKEN_NGINX_MOUNT" -e CBOX_INIT_SKIP_RUNTIME_VALIDATION=true "$E2E_IMAGE" php -v 2>&1)
+SKIPPED_EXIT=$?
+set -e
+if [ "$CHECKED_EXIT" -ne 0 ] && echo "$CHECKED_OUTPUT" | grep -q "Nginx configuration is invalid"; then
+    log_success "Default: an invalid nginx config stops startup"
+else
+    log_fail "Default: an invalid nginx config did not stop startup (exit $CHECKED_EXIT)"
+fi
+if [ "$SKIPPED_EXIT" -eq 0 ] && echo "$SKIPPED_OUTPUT" | grep -q "^PHP "; then
+    log_success "CBOX_INIT_SKIP_RUNTIME_VALIDATION=true: the command runs past the invalid nginx config"
+else
+    log_fail "CBOX_INIT_SKIP_RUNTIME_VALIDATION=true did not skip the nginx config check (exit $SKIPPED_EXIT)"
+fi
+
 # Store test results before any cleanup that might affect shell state
 FINAL_PASSED=$TESTS_PASSED
 FINAL_FAILED=$TESTS_FAILED

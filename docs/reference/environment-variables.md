@@ -102,6 +102,7 @@ environment:
 |----------|---------|-------------|
 | `CBOX_PREFLIGHT_STRICT` | `false` | Abort boot when a framework-writable path (Laravel `storage/`, Symfony `var/`, WordPress uploads) is not writable - default only warns, naming the path, owner and runtime UID |
 | `CBOX_INIT_SCRIPTS_STRICT` | `false` | Abort boot when a `/docker-entrypoint-init.d/` script fails - default warns and continues |
+| `CBOX_INIT_SKIP_RUNTIME_VALIDATION` | `false` | Skip the `nginx -t` the php-fpm-nginx entrypoint runs before anything starts, as well as cbox-init's own `php-fpm -t` and `nginx -t`. For a container that shares the image but never starts nginx (a migration job, a CLI profile) and has an nginx config that cannot pass there, for example without its TLS certificates mounted |
 
 ### Important notes
 
@@ -369,6 +370,7 @@ explicitly (explicit env always wins).
 | `PHP_FPM_MAX_FILE_UPLOADS` | `PHP_MAX_FILE_UPLOADS`, else `20` | all | max_file_uploads for web requests only |
 | `PHP_FPM_MAX_EXECUTION_TIME` | `PHP_MAX_EXECUTION_TIME`, else `60` | all | max_execution_time for web requests only |
 | `PHP_FPM_MAX_INPUT_TIME` | `PHP_MAX_INPUT_TIME`, else `60` | all | max_input_time for web requests only |
+| `PHP_FPM_ACCESS_LOG` | stderr | all | Where PHP-FPM writes one line per request. `off` (or `false`, `0`, `no`) turns it off; anything else is a file path |
 
 The pool pins these six as `php_admin_value`, so a mounted `php.ini` or
 `ini_set()` cannot change them for a web request. The general `PHP_*`
@@ -378,6 +380,18 @@ variable sets both `php.ini` (which the CLI reads) and the pool; the
 `NGINX_CLIENT_MAX_BODY_SIZE` together with the upload and POST sizes, and
 `PHP_FPM_REQUEST_TERMINATE_TIMEOUT` and `NGINX_FASTCGI_READ_TIMEOUT` together
 with the execution time, or the request is cut off before PHP's own limit.
+
+A size is a whole number of bytes with an optional `K`, `M` or `G` (`100M`,
+`2G`); a time or a count is a whole number. `-1` means no limit for
+`memory_limit` and `max_input_time`, `0` for `max_execution_time`. Anything
+else (`100MB`, `1.5G`, `30s`) stops the container at startup with the
+variable named. PHP itself would not refuse it: it reads `100MB` as 100 bytes
+and `1.5G` as `1G`, logs one warning, and the container reports healthy.
+
+Behind nginx every request is already in nginx's access log, and at a few
+hundred requests a second the PHP-FPM access line is most of what the
+container writes. `PHP_FPM_ACCESS_LOG=off` drops it; errors and the slow log
+still go to stderr.
 
 Mode-specific directives are written as a drop-in (`zz-pm-mode.conf`) so no
 mode ever boots with another mode's directives. With `CBOX_FPM_TUNE=true`
