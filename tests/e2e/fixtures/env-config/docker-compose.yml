@@ -105,6 +105,23 @@ services:
       retries: 10
       start_period: 10s
 
+  # Test 8: PHP-FPM access log turned off
+  app-access-log-off:
+    image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}
+    container_name: e2e-env-access-log-off
+    ports:
+      - "8100:80"
+    volumes:
+      - ./public:/var/www/html/public
+    environment:
+      PHP_FPM_ACCESS_LOG: "off"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
   # Test 3: No environment variables at all
   app-no-env:
     image: ${IMAGE:-ghcr.io/cboxdk/php-baseimages/php-fpm-nginx:8.5-trixie-v2}

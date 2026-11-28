@@ -710,7 +710,12 @@ MAIN_EOF
     # value surfaces here with a clear message instead of crash-looping nginx
     # under cbox-init. `nginx -t` only checks syntax, not upstream liveness, so
     # it is safe to run before php-fpm is up.
-    if command -v nginx >/dev/null 2>&1; then
+    #
+    # CBOX_INIT_SKIP_RUNTIME_VALIDATION=true skips it, as it does for the same
+    # check inside cbox-init: an image that runs a profile without nginx (a
+    # migration job, without the TLS certificates its server blocks name) has a
+    # config that cannot pass and a process that will never start.
+    if command -v nginx >/dev/null 2>&1 && ! is_true "${CBOX_INIT_SKIP_RUNTIME_VALIDATION:-false}"; then
         if ! nginx -t 2>/tmp/nginx-test.err; then
             log_error "Generated Nginx configuration is invalid:"
             cat /tmp/nginx-test.err >&2 || true
@@ -1244,7 +1249,8 @@ export PHP_FPM_PM="${PHP_FPM_PM:-dynamic}"
 export PHP_FPM_LISTEN_BACKLOG="${PHP_FPM_LISTEN_BACKLOG:-511}"
 export PHP_FPM_REQUEST_TERMINATE_TIMEOUT="${PHP_FPM_REQUEST_TERMINATE_TIMEOUT:-60s}"
 export PHP_FPM_REQUEST_SLOWLOG_TIMEOUT="${PHP_FPM_REQUEST_SLOWLOG_TIMEOUT:-5s}"
-resolve_fpm_php_limits
+resolve_fpm_php_limits || exit 1
+resolve_fpm_access_log
 
 
 # Exported because the BAKED zz-pm-mode.conf carries ${PHP_FPM_MAX_SPAWN_RATE}
