@@ -113,8 +113,8 @@ jobs:
 ```
 
 Pin your project's `playwright` dependency to the image's build version:
-`1.65.0` for v2.1.0, recorded under `tools.playwright` in
-[versions.json](https://github.com/cboxdk/php-baseimages/blob/v2.1.0/versions.json).
+`1.65.0` for v2.2.0, recorded under `tools.playwright` in
+[versions.json](https://github.com/cboxdk/php-baseimages/blob/v2.2.0/versions.json).
 The image includes the browser binaries; your project installs the npm package.
 OS-only patches preserve the browser revision. See the
 [Browser Testing guide](browser-testing) for version-skew fixes. Laravel Dusk
